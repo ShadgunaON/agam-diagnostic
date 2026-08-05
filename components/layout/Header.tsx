@@ -71,7 +71,7 @@ export function Header({ className = '' }: HeaderProps) {
 
             {/* Cart Icon Trigger */}
             <Link 
-              href="/cart" 
+              href="/book" 
               className="btn btn--outline btn--sm" 
               style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px', borderColor: 'var(--color-primary)', color: 'var(--color-primary)', textDecoration: 'none' }}
               title="View Booking Cart"
