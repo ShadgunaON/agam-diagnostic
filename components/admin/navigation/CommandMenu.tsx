@@ -71,7 +71,7 @@ export function CommandMenu() {
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] sm:pt-[20vh]">
       <div 
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-slate-900/20 transition-opacity"
         onClick={() => setIsOpen(false)}
       />
       
