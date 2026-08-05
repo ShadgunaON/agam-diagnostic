@@ -1,2 +1,1 @@
-export * from './AuthSidebar';
-export * from './AuthFormSection';
+export * from './ProgressiveSignupForm';
