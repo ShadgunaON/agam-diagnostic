@@ -60,25 +60,41 @@ export function ProgressiveBookingFlow() {
                     <Link href="/services" style={{ color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'none' }}>Browse Services</Link>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {items.map(item => (
-                      <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', padding: '20px', borderRadius: '16px', border: '1px solid rgba(14,165,233,0.15)', boxShadow: '0 4px 12px rgba(14,165,233,0.06)', transition: 'all 0.3s' }}>
-                        <div>
-                          <div style={{ fontSize: '12px', color: 'var(--color-primary)', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{item.category}</div>
-                          <h4 style={{ margin: 0, fontSize: '16px', color: 'var(--color-dark)' }}>{item.title}</h4>
+                      <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', padding: '16px', borderRadius: '16px', border: '1px solid var(--color-border)', transition: 'all 0.2s' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--color-bg-alt)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="20" height="20">
+                              <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                            </svg>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '11px', color: 'var(--color-text-light)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>{item.category}</div>
+                            <h4 style={{ margin: 0, fontSize: '15px', color: 'var(--color-dark)', fontWeight: 600 }}>{item.title}</h4>
+                          </div>
                         </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--color-dark)' }}>₹{item.price}</div>
-                          <button onClick={() => removeItem(item.id)} style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '12px', cursor: 'pointer', padding: '4px 8px', marginTop: '4px', fontWeight: 600, borderRadius: '4px' }}>Remove</button>
+                        <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+                          <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--color-dark)' }}>₹{item.price}</div>
+                          <button onClick={() => removeItem(item.id)} style={{ background: 'none', border: 'none', color: 'var(--color-text-light)', fontSize: '12px', cursor: 'pointer', padding: '0', display: 'flex', alignItems: 'center', gap: '4px', transition: 'color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.color = '#ef4444'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--color-text-light)'}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            Remove
+                          </button>
                         </div>
                       </div>
                     ))}
+
+                    <Link href="/services" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '14px', background: '#fff', borderRadius: '16px', color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 600, fontSize: '14px', border: '2px dashed rgba(14,165,233,0.3)', transition: 'all 0.2s', marginTop: '4px' }} onMouseOver={(e) => e.currentTarget.style.background = 'var(--color-bg-alt)'} onMouseOut={(e) => e.currentTarget.style.background = '#fff'}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                      Add Extra Tests
+                    </Link>
+
                     <button 
                       onClick={handleNext} 
                       style={{ 
                         width: '100%', background: 'var(--color-dark)', color: '#fff', padding: '16px', borderRadius: '100px', border: 'none', 
                         fontSize: '15px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.3s',
-                        boxShadow: '0 4px 12px rgba(11,27,61,0.15)', marginTop: '8px'
+                        boxShadow: '0 4px 12px rgba(11,27,61,0.15)', marginTop: '16px'
                       }}
                     >
                       Proceed to Details &nbsp;→
