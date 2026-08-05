@@ -24,6 +24,7 @@ export interface PackageDetailData {
   category: string;
   title: string;
   description: string;
+  price: string;
   icon: string;
   includes: string[];
   whoShouldGet: string;
@@ -163,6 +164,7 @@ export const packageDetailMock: PackageDetailData = {
   category: "Health Package",
   title: "Lipid Profile Test",
   description: "A comprehensive lipid screening that measures cholesterol levels, triglycerides, HDL, LDL, and VLDL to assess your cardiovascular health risk.",
+  price: "1999",
   icon: "❤️",
   includes: [
     "Total Cholesterol",

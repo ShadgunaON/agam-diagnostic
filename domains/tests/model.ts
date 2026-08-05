@@ -18,3 +18,17 @@ export interface TestCategory {
   id: string;
   label: string;
 }
+
+export interface TestDetailData {
+  slug: string;
+  category: string;
+  title: string;
+  description: string;
+  price: string;
+  tag: string;
+  whoShouldGet: string;
+  preparation: string;
+  turnaroundTime: string;
+  faqs: Array<{ question: string; answer: string }>;
+  relatedTests: Array<{ title: string; category: string; description: string; slug: string }>;
+}

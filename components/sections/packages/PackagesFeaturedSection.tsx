@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { FeaturedPackage } from '@/domains/packages/model';
 import { useCart } from '@/context/CartContext';
-import { Section, Container, Grid, Card } from '@/components/ui';
+import { Section, Container } from '@/components/ui';
+import { PremiumCard } from '@/components/ui/PremiumCard';
 
 interface PackagesFeaturedSectionProps {
   data: FeaturedPackage[];
@@ -37,7 +38,6 @@ export function PackagesFeaturedSection({
     if (pkg.ageGroups && pkg.ageGroups.length > 0) {
       return pkg.ageGroups.includes(activeAge);
     }
-    // Fallback matching if ageGroups is omitted
     const text = (pkg.highlightText + ' ' + pkg.title + ' ' + pkg.benefit).toLowerCase();
     if (activeAge === '20-30') return text.includes('20') || text.includes('basic') || text.includes('pcos') || text.includes('anemia');
     if (activeAge === '30-50') return text.includes('30') || text.includes('40') || text.includes('advanced') || text.includes('executive') || text.includes('cardiac');
@@ -45,51 +45,10 @@ export function PackagesFeaturedSection({
     return true;
   });
 
-  React.useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible');
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.05, rootMargin: '0px 0px -20px 0px' }
-    );
-
-    const cards = document.querySelectorAll('.premium-card-anim');
-    cards.forEach((card) => {
-      const rect = card.getBoundingClientRect();
-      if (rect.top < window.innerHeight && rect.bottom > 0) {
-        card.classList.add('is-visible');
-      } else {
-        observer.observe(card);
-      }
-    });
-
-    return () => observer.disconnect();
-  }, [filteredPackages]);
-
   const parsePrice = (priceStr?: string) => {
     if (!priceStr) return 1999;
     const cleaned = priceStr.replace(/\D/g, '');
     return cleaned ? parseInt(cleaned, 10) : 1999;
-  };
-
-  const renderIcon = (iconName: string) => {
-    switch (iconName) {
-      case 'female':
-        return <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />;
-      case 'male':
-        return <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />;
-      case 'activity':
-        return <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />;
-      case 'heart':
-        return <path d="M22 12h-4l-3 9L9 3l-3 9H2" />;
-      default:
-        return <circle cx="12" cy="12" r="10" />;
-    }
   };
 
   const renderHighlightIcon = (iconName: string) => {
@@ -141,94 +100,79 @@ export function PackagesFeaturedSection({
             {filteredPackages.map((pkg, idx) => {
               const numPrice = parsePrice(pkg.price);
               return (
-                <div key={pkg.slug || idx} className={`card--service-premium premium-card-anim accent--${pkg.badgeColor}`}>
-                  <Link href={`/health-packages/${pkg.slug}`} style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
-                    <div className="card-premium__header">
-                      <div className={`card-premium__badge accent--${pkg.badgeColor}`}>{pkg.badgeText}</div>
-                      <div className="card-premium__icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          {renderIcon(pkg.highlightIcon)}
-                        </svg>
-                      </div>
-                    </div>
-
-                    <h3 className="card-premium__title">{pkg.title}</h3>
-                    <p className="card-premium__benefit">{pkg.benefit}</p>
-                    
-                    <div style={{ fontSize: '12px', color: 'var(--color-text-light)', marginBottom: 'var(--sp-3)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '13px', height: '13px' }}>
-                        {renderHighlightIcon(pkg.highlightIcon)}
-                      </svg>
-                      {pkg.highlightText}
-                    </div>
-                  </Link>
-
-                  <div className="card-premium__footer">
-                    <div className="card-premium__price">
-                      <span style={{ fontSize: '11px', color: 'var(--color-text-light)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', lineHeight: 1, marginBottom: '4px' }}>
-                        Starting From
-                      </span>
-                      ₹{pkg.price}
-                    </div>
-                    
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      {(() => {
-                        const cartItem = items.find(i => i.id === `pkg-${pkg.slug}` || i.slug === pkg.slug);
-                        if (cartItem) {
-                          return (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid var(--color-primary)', borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: 'var(--color-primary-light)' }}>
-                              <button 
-                                type="button" 
-                                style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)', fontWeight: 'bold', cursor: 'pointer', background: 'transparent', border: 'none' }}
-                                onClick={() => {
-                                  if (cartItem.quantity <= 1) {
-                                    removeItem(cartItem.id);
-                                  } else {
-                                    updateQuantity(cartItem.id, -1);
-                                  }
-                                }}
-                              >
-                                -
-                              </button>
-                              <span style={{ fontSize: '12px', fontWeight: 'bold', width: '16px', textAlign: 'center', color: 'var(--color-text)' }}>{cartItem.quantity}</span>
-                              <button 
-                                type="button" 
-                                style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)', fontWeight: 'bold', cursor: 'pointer', background: 'transparent', border: 'none' }}
-                                onClick={() => updateQuantity(cartItem.id, 1)}
-                              >
-                                +
-                              </button>
-                            </div>
-                          );
-                        }
+                <PremiumCard
+                  key={pkg.slug || idx}
+                  title={pkg.title}
+                  category={pkg.badgeText}
+                  price={numPrice}
+                  originalPrice={Math.round(numPrice * 1.35)}
+                  discountLabel="25% Off"
+                  slug={pkg.slug}
+                  type="package"
+                  features={[
+                    { 
+                      text: 'Parameters', 
+                      subtext: pkg.highlightText,
+                      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '14px', height: '14px' }}>{renderHighlightIcon(pkg.highlightIcon)}</svg>
+                    },
+                    { 
+                      text: 'Benefits', 
+                      subtext: pkg.benefit,
+                      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '14px', height: '14px' }}><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></svg>
+                    }
+                  ]}
+                  onAddToCart={() => {
+                    addItem({
+                      id: `pkg-${pkg.slug}`,
+                      slug: pkg.slug,
+                      title: pkg.title,
+                      type: 'package',
+                      category: 'Health Package',
+                      price: numPrice,
+                      originalPrice: Math.round(numPrice * 1.35),
+                      badgeColor: pkg.badgeColor,
+                      badgeText: pkg.badgeText,
+                      highlightText: pkg.highlightText,
+                    });
+                  }}
+                  actionButton={
+                    (() => {
+                      const cartItem = items.find(i => i.id === `pkg-${pkg.slug}` || i.slug === pkg.slug);
+                      if (cartItem) {
                         return (
-                          <button
-                            type="button"
-                            className="btn btn--primary btn--sm"
-                            style={{ padding: '6px 12px' }}
-                            onClick={() => addItem({
-                              id: `pkg-${pkg.slug}`,
-                              slug: pkg.slug,
-                              title: pkg.title,
-                              type: 'package',
-                              category: 'Health Package',
-                              price: numPrice,
-                              originalPrice: Math.round(numPrice * 1.35),
-                              badgeColor: pkg.badgeColor,
-                              badgeText: pkg.badgeText,
-                              highlightText: pkg.highlightText,
-                            })}
-                          >
-                            + Add
-                          </button>
+                          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px', border: '1px solid var(--color-primary-light)', borderRadius: '6px', background: 'var(--color-primary-light)' }}>
+                            <button 
+                              type="button" 
+                              style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)', fontWeight: 'bold', cursor: 'pointer', background: '#fff', border: 'none', borderRadius: '4px' }}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (cartItem.quantity <= 1) {
+                                  removeItem(cartItem.id);
+                                } else {
+                                  updateQuantity(cartItem.id, -1);
+                                }
+                              }}
+                            >
+                              -
+                            </button>
+                            <span style={{ fontSize: '12px', fontWeight: 'bold', width: '20px', textAlign: 'center', color: 'var(--color-primary)' }}>{cartItem.quantity}</span>
+                            <button 
+                              type="button" 
+                              style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)', fontWeight: 'bold', cursor: 'pointer', background: '#fff', border: 'none', borderRadius: '4px' }}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                updateQuantity(cartItem.id, 1);
+                              }}
+                            >
+                              +
+                            </button>
+                          </div>
                         );
-                      })()}
-                      <Link href={`/health-packages/${pkg.slug}`} className="btn btn--outline btn--sm" style={{ padding: '6px 12px' }}>
-                        Details <span className="cta-arrow">→</span>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
+                      }
+                      return null;
+                    })()
+                  }
+                />
               );
             })}
           </div>

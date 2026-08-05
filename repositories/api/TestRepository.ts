@@ -1,5 +1,5 @@
 import { ITestsRepository } from '@/domains/tests/repository';
-import { TestItem, TestsHero, TestCategory } from '@/domains/tests/model';
+import { TestItem, TestsHero, TestCategory, TestDetailData } from '@/domains/tests/model';
 import { Result, failure } from '@/shared/result';
 import { PaginatedResponse } from '@/lib/api/types';
 import { ServerError } from '@/lib/api/errors';
@@ -19,6 +19,11 @@ export class ApiTestRepository implements ITestsRepository {
   }
 
   async getHeroData(): Promise<Result<TestsHero>> {
+    return failure(new ServerError('Not implemented'));
+  }
+
+  async getTestBySlug(slug: string): Promise<Result<TestDetailData>> {
+    void slug;
     return failure(new ServerError('Not implemented'));
   }
 }

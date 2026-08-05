@@ -14,4 +14,8 @@ export class TestCatalogService {
   async getHeroData() {
     return this.repository.getHeroData();
   }
+
+  async getTestBySlug(slug: string) {
+    return this.repository.getTestBySlug(slug);
+  }
 }

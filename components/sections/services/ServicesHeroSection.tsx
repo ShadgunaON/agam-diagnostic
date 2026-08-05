@@ -29,12 +29,6 @@ export function ServicesHeroSection({ data, className = '' }: ServicesHeroSectio
           <p className="hero-premium__desc" style={{ fontSize: 'var(--fs-base)', color: 'var(--color-text)', marginBottom: 'var(--sp-5)', lineHeight: 'var(--lh-relaxed)', maxWidth: '480px' }}>
             {data.description}
           </p>
-          
-          <div>
-            <Button href="#services-grid" variant="primary">
-              Explore Services
-            </Button>
-          </div>
         </div>
 
         {/* Image Right */}

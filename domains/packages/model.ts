@@ -14,6 +14,7 @@ export interface PackageDetailData {
   category: string;
   title: string;
   description: string;
+  price: string;
   icon: string;
   includes: string[];
   whoShouldGet: string;

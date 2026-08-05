@@ -1,7 +1,10 @@
-import React from 'react';
+"use client";
+
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Section, Container, Grid, Card } from '@/components/ui';
 import { Button } from '@/components/ui/Button';
+import { useCart } from '@/context/CartContext';
 
 import { ServiceItem } from '@/domains/services/model';
 
@@ -11,6 +14,39 @@ export interface ServicesCatalogSectionProps {
 }
 
 export function ServicesCatalogSection({ data, className = '' }: ServicesCatalogSectionProps) {
+  const [showAll, setShowAll] = useState(false);
+  const visibleData = showAll ? data : data.slice(0, 3);
+  const { items, addItem, updateQuantity, removeItem } = useCart();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !containerRef.current) return;
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.1
+    });
+
+    const cards = containerRef.current.querySelectorAll('.fade-in');
+    cards.forEach(card => observer.observe(card));
+
+    return () => observer.disconnect();
+  }, [visibleData]);
+
+  const parsePrice = (priceStr?: string) => {
+    if (!priceStr) return 499;
+    const cleaned = priceStr.replace(/\D/g, '');
+    return cleaned ? parseInt(cleaned, 10) : 499;
+  };
+
   const getIcon = (iconName: string) => {
     const style = { width: '24px', height: '24px' };
     switch (iconName) {
@@ -35,13 +71,12 @@ export function ServicesCatalogSection({ data, className = '' }: ServicesCatalog
   };
 
   return (
-    <Section id="services-grid" className={`section ${className}`.trim()}>
+    <Section id="services-grid" className={`section ${className}`.trim()} ref={containerRef}>
       <Container>
         <Grid className="grid--3">
-          {data.map((service, idx) => (
-            <Link 
+          {visibleData.map((service, idx) => (
+            <div 
               key={idx} 
-              href={`/services/${service.slug}`}
               className={`card--service-premium premium-card-anim accent--${service.color || 'blue'} fade-in`}
             >
               <div className="card-premium__header">
@@ -52,20 +87,91 @@ export function ServicesCatalogSection({ data, className = '' }: ServicesCatalog
                   {getIcon(service.icon)}
                 </div>
               </div>
-              <h3 className="card-premium__title">{service.title}</h3>
+              <h3 className="card-premium__title">
+                <Link href={`/services/${service.slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  {service.title}
+                </Link>
+              </h3>
               <p className="card-premium__benefit">{service.description}</p>
-              <div className="card-premium__footer">
-                <div className="card-premium__price">
-                  <span style={{ fontSize: '11px', color: 'var(--color-text-lighter)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', lineHeight: 1, marginBottom: '4px' }}>
-                    Starting From
-                  </span>
-                  ₹{service.price}
+              <div className="card-premium__footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'var(--sp-4)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div className="card-premium__price">
+                    <span style={{ fontSize: '11px', color: 'var(--color-text-lighter)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', lineHeight: 1, marginBottom: '4px' }}>
+                      Starting From
+                    </span>
+                    ₹{parsePrice(service.price)}
+                  </div>
+                  <Link href={`/services/${service.slug}`} className="btn btn--outline btn--sm" style={{ padding: '6px 12px', fontSize: '12px', alignSelf: 'flex-start' }}>
+                    View Details <span className="cta-arrow">→</span>
+                  </Link>
                 </div>
-                <span className="btn btn--outline btn--sm">View Details <span className="cta-arrow">→</span></span>
+                
+                {(() => {
+                  const numPrice = parsePrice(service.price);
+                  const cartItem = items.find(i => i.id === `service-${service.slug}`);
+                  
+                  return cartItem ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--color-primary)', borderRadius: 'var(--radius-lg)', padding: '2px', background: 'rgba(14, 165, 233, 0.05)' }}>
+                        <button 
+                          type="button" 
+                          style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)', fontWeight: 'bold', cursor: 'pointer', background: 'none', border: 'none' }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (cartItem.quantity <= 1) {
+                              removeItem(cartItem.id);
+                            } else {
+                              updateQuantity(cartItem.id, -1);
+                            }
+                          }}
+                        >
+                          -
+                        </button>
+                        <span style={{ fontSize: 'var(--fs-sm)', fontWeight: 'bold', color: 'var(--color-text)', minWidth: '16px', textAlign: 'center' }}>{cartItem.quantity}</span>
+                        <button 
+                          type="button" 
+                          style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)', fontWeight: 'bold', cursor: 'pointer', background: 'none', border: 'none' }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            updateQuantity(cartItem.id, 1);
+                          }}
+                        >
+                          +
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn btn--primary btn--sm"
+                        style={{ padding: '6px 16px', fontSize: 'var(--fs-sm)' }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          addItem({
+                            id: `service-${service.slug}`,
+                            slug: service.slug,
+                            title: service.title,
+                            type: 'test',
+                            category: service.category || 'Diagnostic Service',
+                            price: numPrice,
+                            originalPrice: Math.round(numPrice * 1.3),
+                          });
+                        }}
+                      >
+                        + Add
+                      </button>
+                  );
+                })()}
               </div>
-            </Link>
+            </div>
           ))}
         </Grid>
+        
+        {data.length > 3 && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 'var(--sp-8)' }}>
+            <Button onClick={() => setShowAll(!showAll)} variant="outline">
+              {showAll ? 'View Less' : 'View All Services'}
+            </Button>
+          </div>
+        )}
       </Container>
     </Section>
   );

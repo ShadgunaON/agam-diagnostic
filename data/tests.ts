@@ -77,3 +77,41 @@ export const testsData = {
     }
   ] as TestItem[]
 };
+
+export interface TestDetailData {
+  slug: string;
+  category: string;
+  title: string;
+  description: string;
+  price: string;
+  tag: string;
+  whoShouldGet: string;
+  preparation: string;
+  turnaroundTime: string;
+  faqs: Array<{ question: string; answer: string }>;
+  relatedTests: Array<{ title: string; category: string; description: string; slug: string }>;
+}
+
+export const testDetailMock: TestDetailData = {
+  slug: "fbs",
+  category: "Blood Test",
+  title: "Fasting Blood Sugar (FBS)",
+  description: "Measures blood sugar levels to diagnose diabetes, prediabetes, and monitor treatment. One of the most important routine health tests.",
+  price: "150",
+  tag: "Blood Test",
+  whoShouldGet: "Anyone above 30 years for routine screening, individuals with a family history of diabetes, obesity, or symptoms like excessive thirst and frequent urination.",
+  preparation: "Strict fasting for 8-10 hours is required. Only water is permitted.",
+  turnaroundTime: "Same day within 6 hours",
+  faqs: [
+    { question: "Can I drink water before the FBS test?", answer: "Yes, plain water is allowed. Avoid tea, coffee, or any other beverages." },
+    { question: "What is the normal range?", answer: "Normal fasting blood sugar is between 70–100 mg/dL." }
+  ],
+  relatedTests: [
+    { title: "HbA1c", category: "Blood Test", description: "Average blood sugar control over 3 months.", slug: "hba1c" },
+    { title: "Lipid Profile", category: "Heart Health", description: "Complete cholesterol panel.", slug: "lipid-profile" }
+  ]
+};
+
+export const getTestBySlug = (slug: string): TestDetailData | null => {
+  return { ...testDetailMock, slug, title: slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') };
+};

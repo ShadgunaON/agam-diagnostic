@@ -3,26 +3,26 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { CTASection } from '@/components/common';
-import { PackageDetailContent } from '@/components/sections/packages';
-import { packageService } from '@/services';
+import { TestDetailContent } from '@/components/sections/tests';
+import { testCatalogService } from '@/services';
 import { siteConfig } from '@/config/site';
 
-interface PackageDetailPageProps {
+interface TestDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
 export async function generateStaticParams() {
-  const result = await packageService.getCatalog(1, 100);
+  const result = await testCatalogService.getCatalog(1, 100);
   if (result.isFailure) return [];
-  return result.value.data.map((pkg) => ({
-    slug: pkg.slug,
+  return result.value.data.map((test) => ({
+    slug: test.slug,
   }));
 }
 
-export async function generateMetadata({ params }: PackageDetailPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: TestDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const result = await packageService.getPackageBySlug(slug);
-  if (result.isFailure) return { title: 'Package Not Found' };
+  const result = await testCatalogService.getTestBySlug(slug);
+  if (result.isFailure) return { title: 'Test Not Found' };
 
   return {
     title: `${result.value.title} | ${siteConfig.name}`,
@@ -30,15 +30,15 @@ export async function generateMetadata({ params }: PackageDetailPageProps): Prom
   };
 }
 
-export default async function PackageDetailPage({ params }: PackageDetailPageProps) {
+export default async function TestDetailPage({ params }: TestDetailPageProps) {
   const { slug } = await params;
-  const result = await packageService.getPackageBySlug(slug);
+  const result = await testCatalogService.getTestBySlug(slug);
 
   if (result.isFailure) {
     notFound();
   }
 
-  const pkg = result.value;
+  const testData = result.value;
 
   return (
     <>
@@ -47,26 +47,26 @@ export default async function PackageDetailPage({ params }: PackageDetailPagePro
           <div className="breadcrumb">
             <Link href="/">Home</Link>
             <span className="breadcrumb__sep">›</span>
-            <Link href="/health-packages">Health Packages</Link>
+            <Link href="/tests">Lab Tests</Link>
             <span className="breadcrumb__sep">›</span>
-            <span className="breadcrumb__current">{pkg.title}</span>
+            <span className="breadcrumb__current">{testData.title}</span>
           </div>
         </div>
       </section>
 
-      <section className="section">
+      <section className="section" style={{ paddingTop: 'var(--sp-4)' }}>
         <div className="container">
           <div className="detail-layout" style={{ display: 'block', maxWidth: '900px', margin: '0 auto' }}>
-            <PackageDetailContent data={pkg} />
+            <TestDetailContent data={testData} />
           </div>
         </div>
       </section>
 
       <CTASection 
         className="section--alt"
-        title="Ready to book your health checkup?"
-        description="Walk-in or book online for free home collection."
-        primaryActionLabel="Book Now"
+        title="Need help interpreting your test?"
+        description="Book a free consultation with our health experts to understand your requirements."
+        primaryActionLabel="Contact Us"
       />
     </>
   );

@@ -13,6 +13,7 @@ interface KPICardProps {
     label?: string;
   };
   index?: number;
+  variant?: 'default' | 'glass' | 'solid' | 'gradient';
 }
 
 // Custom hook for smooth count-up animation
@@ -72,7 +73,8 @@ export function KPICard({
   value,
   icon,
   trend,
-  index
+  index,
+  variant = 'default'
 }: KPICardProps) {
   const animatedValue = useCountUp(value, 850);
   const [mounted, setMounted] = useState(false);
@@ -99,14 +101,32 @@ export function KPICard({
   if (icon === 'mapPin' || title.includes('Home')) theme = { color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0', text: '#059669' }; // Emerald
   if (icon === 'creditCard' || title.includes('Revenue')) theme = { color: '#8b5cf6', bg: '#f5f3ff', border: '#ddd6fe', text: '#7c3aed' }; // Violet
 
+  // Determine Card Backgrounds based on variant
+  let cardBg = '#ffffff';
+  let cardBorder = isHovered ? '#CBD5E1' : '#EAECEF';
+  let backdropFilter = 'none';
+
+  if (variant === 'glass') {
+    cardBg = 'rgba(255, 255, 255, 0.5)';
+    backdropFilter = 'blur(12px)';
+    cardBorder = 'rgba(255, 255, 255, 0.8)';
+  } else if (variant === 'solid') {
+    cardBg = theme.bg;
+    cardBorder = theme.border;
+  } else if (variant === 'gradient') {
+    cardBg = `linear-gradient(135deg, ${theme.bg} 0%, #ffffff 100%)`;
+  }
+
   return (
     <div
       style={{
         position: 'relative',
-        backgroundColor: '#ffffff',
+        background: cardBg,
+        backdropFilter: backdropFilter,
+        WebkitBackdropFilter: backdropFilter,
         display: 'flex',
         flexDirection: 'column',
-        border: `1px solid ${isHovered ? '#CBD5E1' : '#EAECEF'}`,
+        border: `1px solid ${cardBorder}`,
         borderRadius: '12px',
         boxShadow: isHovered ? '0 8px 24px rgba(0,0,0,0.06)' : '0 2px 10px rgba(0,0,0,0.02)',
         transform: isHovered ? 'translateY(-2px)' : (mounted ? 'translateY(0)' : 'translateY(12px)'),

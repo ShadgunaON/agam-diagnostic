@@ -1,10 +1,10 @@
 import { ITestsRepository } from '@/domains/tests/repository';
-import { TestItem, TestsHero, TestCategory } from '@/domains/tests/model';
+import { TestItem, TestsHero, TestCategory, TestDetailData } from '@/domains/tests/model';
 import { TestItemDto } from '@/domains/tests/dto';
 import { mapTestItemDtoToModel } from '@/domains/tests/mapper';
 import { Result, success } from '@/shared/result';
 import { PaginatedResponse } from '@/lib/api/types';
-import { testsData } from '@/data/tests';
+import { testsData, getTestBySlug } from '@/data/tests';
 
 export class MockTestRepository implements ITestsRepository {
   async getCatalog(page = 1, limit = 10): Promise<Result<PaginatedResponse<TestItem>>> {
@@ -33,5 +33,13 @@ export class MockTestRepository implements ITestsRepository {
 
   async getHeroData(): Promise<Result<TestsHero>> {
     return success(testsData.hero);
+  }
+
+  async getTestBySlug(slug: string): Promise<Result<TestDetailData>> {
+    const test = getTestBySlug(slug);
+    if (!test) {
+      return { isFailure: true, error: new Error('Test not found') };
+    }
+    return success(test);
   }
 }
