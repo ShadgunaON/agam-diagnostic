@@ -62,19 +62,26 @@ export function ProgressiveBookingFlow() {
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     {items.map(item => (
-                      <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: '0 2px 8px rgba(11,27,61,0.04)' }}>
+                      <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', padding: '20px', borderRadius: '16px', border: '1px solid rgba(14,165,233,0.15)', boxShadow: '0 4px 12px rgba(14,165,233,0.06)', transition: 'all 0.3s' }}>
                         <div>
-                          <div style={{ fontSize: '12px', color: 'var(--color-primary)', fontWeight: 600, marginBottom: '4px' }}>{item.category}</div>
+                          <div style={{ fontSize: '12px', color: 'var(--color-primary)', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{item.category}</div>
                           <h4 style={{ margin: 0, fontSize: '16px', color: 'var(--color-dark)' }}>{item.title}</h4>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--color-dark)' }}>₹{item.price}</div>
-                          <button onClick={() => removeItem(item.id)} style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '12px', cursor: 'pointer', padding: 0, marginTop: '4px' }}>Remove</button>
+                          <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--color-dark)' }}>₹{item.price}</div>
+                          <button onClick={() => removeItem(item.id)} style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '12px', cursor: 'pointer', padding: '4px 8px', marginTop: '4px', fontWeight: 600, borderRadius: '4px' }}>Remove</button>
                         </div>
                       </div>
                     ))}
-                    <button onClick={handleNext} style={{ background: 'var(--color-primary)', color: '#fff', padding: '16px', borderRadius: '8px', border: 'none', fontSize: '16px', fontWeight: 600, cursor: 'pointer', marginTop: '16px', width: '100%' }}>
-                      Proceed to Details
+                    <button 
+                      onClick={handleNext} 
+                      style={{ 
+                        width: '100%', background: 'var(--color-dark)', color: '#fff', padding: '16px', borderRadius: '100px', border: 'none', 
+                        fontSize: '15px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.3s',
+                        boxShadow: '0 4px 12px rgba(11,27,61,0.15)', marginTop: '8px'
+                      }}
+                    >
+                      Proceed to Details &nbsp;→
                     </button>
                   </div>
                 )}
@@ -202,75 +209,94 @@ export function ProgressiveBookingFlow() {
             {/* STEP 3: SCHEDULE */}
             {currentStep === 3 && (
               <div className="fade-in-up">
-                <h2 style={{ fontSize: '24px', color: 'var(--color-dark)', marginBottom: '24px' }}>Schedule Appointment</h2>
+                <h2 style={{ fontSize: '20px', color: 'var(--color-dark)', marginBottom: '20px', textAlign: 'center' }}>When should we expect you?</h2>
                 
-                <div style={{ background: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid var(--color-border)', marginBottom: '24px', boxShadow: '0 2px 8px rgba(11,27,61,0.04)' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: 'var(--color-dark)' }}>Select Date</label>
-                      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--color-border)', fontSize: '16px' }} />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: 'var(--color-dark)' }}>Select Time Slot</label>
-                      <select value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--color-border)', fontSize: '16px', background: '#fff' }}>
-                        <option value="">Choose a time...</option>
-                        <option value="06:30-08:00">06:30 AM - 08:00 AM</option>
-                        <option value="08:00-10:00">08:00 AM - 10:00 AM</option>
-                        <option value="10:00-12:00">10:00 AM - 12:00 PM</option>
-                        <option value="16:00-18:00">04:00 PM - 06:00 PM</option>
-                      </select>
+                <div style={{ maxWidth: '480px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div style={{ background: '#fff', padding: '24px', borderRadius: '16px', border: '1px solid rgba(14,165,233,0.2)', boxShadow: '0 4px 12px rgba(14,165,233,0.08)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '8px', color: 'var(--color-text-light)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Select Date</label>
+                        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '15px', outline: 'none', transition: 'all 0.2s', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }} onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'} onBlur={(e) => e.target.style.borderColor = 'rgba(14,165,233,0.2)'} />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '8px', color: 'var(--color-text-light)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Select Time Slot</label>
+                        <select value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)} style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '15px', background: '#fff', outline: 'none', transition: 'all 0.2s', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)', cursor: 'pointer' }} onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'} onBlur={(e) => e.target.style.borderColor = 'rgba(14,165,233,0.2)'}>
+                          <option value="">Choose a time...</option>
+                          <option value="06:30-08:00">06:30 AM - 08:00 AM</option>
+                          <option value="08:00-10:00">08:00 AM - 10:00 AM</option>
+                          <option value="10:00-12:00">10:00 AM - 12:00 PM</option>
+                          <option value="16:00-18:00">04:00 PM - 06:00 PM</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <button 
-                  onClick={handleNext} 
-                  disabled={!date || !timeSlot}
-                  style={{ width: '100%', background: 'var(--color-primary)', color: '#fff', padding: '16px', borderRadius: '8px', border: 'none', fontSize: '16px', fontWeight: 600, cursor: (!date || !timeSlot) ? 'not-allowed' : 'pointer', opacity: (!date || !timeSlot) ? 0.5 : 1 }}
-                >
-                  Review & Pay
-                </button>
+                  <button 
+                    onClick={handleNext} 
+                    disabled={!date || !timeSlot}
+                    style={{ 
+                      width: '100%', background: 'var(--color-dark)', color: '#fff', padding: '16px', borderRadius: '100px', border: 'none', 
+                      fontSize: '15px', fontWeight: 600, cursor: (!date || !timeSlot) ? 'not-allowed' : 'pointer', 
+                      opacity: (!date || !timeSlot) ? 0.5 : 1, transition: 'all 0.3s',
+                      boxShadow: (!date || !timeSlot) ? 'none' : '0 4px 12px rgba(11,27,61,0.15)'
+                    }}
+                  >
+                    Review & Pay &nbsp;→
+                  </button>
+                </div>
               </div>
             )}
 
             {/* STEP 4: PAYMENT */}
             {currentStep === 4 && (
               <div className="fade-in-up">
-                <h2 style={{ fontSize: '24px', color: 'var(--color-dark)', marginBottom: '24px' }}>Final Review</h2>
+                <h2 style={{ fontSize: '20px', color: 'var(--color-dark)', marginBottom: '20px', textAlign: 'center' }}>Final Review</h2>
                 
-                <div style={{ background: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid var(--color-border)', marginBottom: '24px', boxShadow: '0 2px 8px rgba(11,27,61,0.04)' }}>
-                  <h3 style={{ fontSize: '16px', marginBottom: '16px' }}>Appointment Details</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', color: 'var(--color-dark)' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '8px' }}>
-                      <span style={{ color: 'var(--color-text-light)' }}>Patient:</span>
-                      <span style={{ fontWeight: 500 }}>{patientType === 'myself' ? 'Self' : 'Family Member'}</span>
+                <div style={{ maxWidth: '480px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div style={{ background: '#fff', padding: '24px', borderRadius: '16px', border: '1px solid rgba(14,165,233,0.2)', boxShadow: '0 4px 12px rgba(14,165,233,0.08)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2" style={{ width: '18px' }}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                      <h3 style={{ fontSize: '15px', margin: 0, color: 'var(--color-dark)' }}>Appointment Details</h3>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '8px' }}>
-                      <span style={{ color: 'var(--color-text-light)' }}>Date & Time:</span>
-                      <span style={{ fontWeight: 500 }}>{date} | {timeSlot}</span>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '8px' }}>
-                      <span style={{ color: 'var(--color-text-light)' }}>Location:</span>
-                      <span style={{ fontWeight: 500 }}>{locationType === 'home' ? address : 'Visit Agam Diagnostics Centre'}</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '14px', color: 'var(--color-dark)' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '8px' }}>
+                        <span style={{ color: 'var(--color-text-light)', fontWeight: 500 }}>Patient:</span>
+                        <span style={{ fontWeight: 600 }}>{patientType === 'myself' ? 'Self' : 'Family Member'}</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '8px' }}>
+                        <span style={{ color: 'var(--color-text-light)', fontWeight: 500 }}>Date & Time:</span>
+                        <span style={{ fontWeight: 600 }}>{date} <span style={{ color: 'var(--color-text-light)', margin: '0 4px' }}>|</span> {timeSlot}</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '8px' }}>
+                        <span style={{ color: 'var(--color-text-light)', fontWeight: 500 }}>Location:</span>
+                        <span style={{ fontWeight: 600, lineHeight: 1.5 }}>{locationType === 'home' ? address : 'Visit Agam Diagnostics Centre'}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <button 
-                  onClick={() => alert('Booking Confirmed! (Payment Gateway Integration Pending)')} 
-                  style={{ width: '100%', background: '#10b981', color: '#fff', padding: '16px', borderRadius: '8px', border: 'none', fontSize: '16px', fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '20px' }}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  Pay ₹{finalTotal} securely
-                </button>
+                  <button 
+                    onClick={() => alert('Booking Confirmed! (Payment Gateway Integration Pending)')} 
+                    style={{ 
+                      width: '100%', background: '#10b981', color: '#fff', padding: '16px', borderRadius: '100px', border: 'none', 
+                      fontSize: '15px', fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
+                      boxShadow: '0 4px 12px rgba(16,185,129,0.2)', transition: 'all 0.3s'
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: '18px' }}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    Pay ₹{finalTotal} Securely
+                  </button>
+                </div>
               </div>
             )}
           </div>
 
           {/* RIGHT: ORDER SUMMARY (SHOW ON STEP 1 & 4) */}
           {(currentStep === 1 || currentStep === 4) && (
-            <div style={{ position: 'sticky', top: '100px', background: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: '0 4px 12px rgba(11,27,61,0.06)' }}>
-              <h4 style={{ margin: '0 0 20px 0', fontSize: '18px', color: 'var(--color-dark)' }}>Order Summary</h4>
+            <div style={{ position: 'sticky', top: '100px', background: '#fff', padding: '24px', borderRadius: '16px', border: '1px solid rgba(14,165,233,0.15)', boxShadow: '0 4px 12px rgba(14,165,233,0.06)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2" style={{ width: '18px' }}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <h4 style={{ margin: 0, fontSize: '16px', color: 'var(--color-dark)' }}>Order Summary</h4>
+              </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '14px', color: 'var(--color-text)' }}>
                 <span>{items.length} {items.length === 1 ? 'Item' : 'Items'}</span>
                 <span style={{ fontWeight: 600 }}>₹{totalAmount - collectionFee}</span>
