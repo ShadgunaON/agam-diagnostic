@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { CTASection } from '@/components/common';
 import { Section, Container, Grid } from '@/components/ui';
-import { ServiceDetailContent, ServiceDetailSidebar } from '@/components/sections/services';
+import { ServiceDetailContent } from '@/components/sections/services';
 import { serviceCatalogService } from '@/services';
 import { siteConfig } from '@/config/site';
 
@@ -43,30 +43,23 @@ export default async function ServiceDetailPage({ params }: ServiceDetailPagePro
 
   return (
     <>
-      <Section className="pb-0 pt-8">
-        <Container>
-          <div className="flex items-center gap-2 text-sm font-medium text-slate-500 mb-8">
-            <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-            <span className="mx-1">›</span>
-            <Link href="/services" className="hover:text-primary transition-colors">Services</Link>
-            <span className="mx-1">›</span>
-            <span className="text-primary font-bold">{service.title}</span>
-          </div>
-        </Container>
-      </Section>
+      <div className="container" style={{ paddingTop: 'var(--sp-6)', paddingBottom: 'var(--sp-2)' }}>
+        <div className="breadcrumb" style={{ margin: 0 }}>
+          <Link href="/">Home</Link>
+          <span className="breadcrumb__sep">›</span>
+          <Link href="/services">Services</Link>
+          <span className="breadcrumb__sep">›</span>
+          <span className="breadcrumb__current">{service.title}</span>
+        </div>
+      </div>
 
-      <Section>
-        <Container>
-          <Grid gap="12" className="grid-cols-1 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-              <ServiceDetailContent data={service} />
-            </div>
-            <div className="lg:col-span-1">
-              <ServiceDetailSidebar otherServices={service.otherServices} />
-            </div>
-          </Grid>
-        </Container>
-      </Section>
+      <section className="section" style={{ paddingTop: 'var(--sp-4)' }}>
+        <div className="container">
+          <div className="detail-layout" style={{ display: 'block', maxWidth: '900px', margin: '0 auto' }}>
+            <ServiceDetailContent data={service} />
+          </div>
+        </div>
+      </section>
 
       <CTASection 
         title="Ready to book your diagnostic test?"

@@ -9,59 +9,74 @@ export interface ServiceDetailSidebarProps {
 
 export function ServiceDetailSidebar({ otherServices, className = '' }: ServiceDetailSidebarProps) {
   return (
-    <aside className={`sticky top-24 ${className}`.trim()}>
-      <div className="bg-blue-50 border border-primary rounded-xl p-6 shadow-sm mb-6">
-        <h3 className="text-xl font-bold text-primary mb-3">Book Home Collection</h3>
-        <p className="text-sm text-slate-600 leading-relaxed mb-6">
+    <aside className={`detail-sidebar ${className}`.trim()}>
+      <div className="detail-sidebar__box" style={{ background: 'var(--color-primary-light)', borderColor: 'var(--color-primary)' }}>
+        <h4 style={{ color: 'var(--color-primary)' }}>Book Home Collection</h4>
+        <p style={{ fontSize: 'var(--fs-sm)', color: 'var(--color-text-light)', marginBottom: 'var(--sp-4)' }}>
           Get your tests done from the comfort of your home. Our phlebotomists are trained for safe and hygienic sample collection.
         </p>
-        <Button href="/book" variant="primary" className="w-full mb-3">
+        <Link href="/book" className="btn btn--primary btn--block" style={{ marginBottom: 'var(--sp-3)' }}>
           Book Appointment
-        </Button>
-        <Button href="tel:+918940894079" variant="outline" className="w-full">
+        </Link>
+        <Link href="tel:+918940894079" className="btn btn--outline btn--block">
           Call +91 89408 94079
-        </Button>
+        </Link>
       </div>
 
-      <div className="bg-white border border-border rounded-xl p-6 shadow-sm mb-6">
-        <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 text-primary"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <div className="detail-sidebar__box">
+        <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '20px', height: '20px', color: 'var(--color-primary)' }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           Why Choose AGAM?
-        </h3>
-        <ul className="flex flex-col gap-3 m-0 p-0 list-none">
-          <li className="flex items-start gap-3 text-sm text-slate-600 leading-relaxed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-4 h-4 text-green-500 mt-1 shrink-0"><polyline points="20 6 9 17 4 12"/></svg>NABL Accredited Lab</li>
-          <li className="flex items-start gap-3 text-sm text-slate-600 leading-relaxed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-4 h-4 text-green-500 mt-1 shrink-0"><polyline points="20 6 9 17 4 12"/></svg>Advanced Technology</li>
-          <li className="flex items-start gap-3 text-sm text-slate-600 leading-relaxed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-4 h-4 text-green-500 mt-1 shrink-0"><polyline points="20 6 9 17 4 12"/></svg>Expert Pathologists</li>
-          <li className="flex items-start gap-3 text-sm text-slate-600 leading-relaxed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-4 h-4 text-green-500 mt-1 shrink-0"><polyline points="20 6 9 17 4 12"/></svg>Same Day Reports</li>
-          <li className="flex items-start gap-3 text-sm text-slate-600 leading-relaxed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-4 h-4 text-green-500 mt-1 shrink-0"><polyline points="20 6 9 17 4 12"/></svg>Free Home Collection</li>
+        </h4>
+        <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <li style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', fontSize: 'var(--fs-sm)', color: 'var(--color-text-light)' }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ width: '16px', height: '16px', color: '#22c55e', marginTop: '4px', flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
+            NABL Accredited Lab
+          </li>
+          <li style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', fontSize: 'var(--fs-sm)', color: 'var(--color-text-light)' }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ width: '16px', height: '16px', color: '#22c55e', marginTop: '4px', flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
+            Advanced Technology
+          </li>
+          <li style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', fontSize: 'var(--fs-sm)', color: 'var(--color-text-light)' }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ width: '16px', height: '16px', color: '#22c55e', marginTop: '4px', flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
+            Expert Pathologists
+          </li>
+          <li style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', fontSize: 'var(--fs-sm)', color: 'var(--color-text-light)' }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ width: '16px', height: '16px', color: '#22c55e', marginTop: '4px', flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
+            Same Day Reports
+          </li>
+          <li style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', fontSize: 'var(--fs-sm)', color: 'var(--color-text-light)' }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ width: '16px', height: '16px', color: '#22c55e', marginTop: '4px', flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
+            Free Home Collection
+          </li>
         </ul>
       </div>
 
-      <div className="bg-white border border-border rounded-xl p-6 shadow-sm mb-6">
-        <h3 className="text-lg font-bold text-slate-900 mb-4">Other Services</h3>
-        <ul className="flex flex-col m-0 p-0 list-none">
+      <div className="detail-sidebar__box">
+        <h4>Other Services</h4>
+        <ul style={{ margin: 0 }}>
           {otherServices.map((service, idx) => (
             <li 
               key={idx} 
-              className={`py-3 ${idx === otherServices.length - 1 ? '' : 'border-b border-border'}`}
+              style={{ padding: 'var(--sp-2) 0', borderBottom: idx === otherServices.length - 1 ? 'none' : '1px solid var(--color-border)' }}
             >
               <Link 
                 href={`/services/${service.slug}`} 
-                className="flex justify-between items-center text-sm text-slate-600 hover:text-primary transition-colors group"
+                style={{ fontSize: 'var(--fs-sm)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--color-text)', textDecoration: 'none' }}
               >
-                {service.title} <span className="text-primary opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0">→</span>
+                {service.title} <span style={{ color: 'var(--color-primary)' }}>→</span>
               </Link>
             </li>
           ))}
         </ul>
       </div>
 
-      <div className="bg-slate-900 text-white border-none rounded-xl p-6 shadow-sm">
-        <h3 className="text-lg font-bold mb-3 text-white">Need Help?</h3>
-        <p className="text-sm text-slate-300 leading-relaxed mb-6 opacity-90">Our support team is available 24/7 to answer your queries.</p>
-        <Button href="https://wa.me/918940894079" variant="secondary" size="sm" className="w-full bg-white text-primary hover:bg-slate-50 border-white" target="_blank" rel="noopener noreferrer">
-          Chat on WhatsApp
-        </Button>
+      <div className="detail-sidebar__box" style={{ background: 'var(--color-dark)', color: '#fff', border: 'none' }}>
+        <h4 style={{ color: '#fff' }}>Need Help?</h4>
+        <p style={{ fontSize: 'var(--fs-sm)', color: 'rgba(255,255,255,0.7)', marginBottom: 'var(--sp-4)' }}>Our support team is available 24/7 to answer your queries.</p>
+        <Link href="https://wa.me/918940894079" className="btn btn--white btn--block btn--sm" target="_blank" rel="noopener noreferrer">
+          WhatsApp Us
+        </Link>
       </div>
     </aside>
   );
