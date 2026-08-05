@@ -1,0 +1,187 @@
+/* ============================================================
+   AGAM Diagnostics — Design Tokens
+   Single source of truth for the entire design system.
+   ============================================================
+   
+   Brand Identity:
+   Primary:    #E53935 (AGAM Red)
+   Secondary:  #0F1F4B (Deep Navy)
+   Background: #F8FAFC (Light Slate)
+   Surface:    #FFFFFF (White)
+   Border:     #E5E7EB (Gray 200)
+   Success:    #16A34A (Green 600)
+   
+   ============================================================ */
+
+:root {
+  /* ── Brand Colors ── */
+  /* Primary: Deep Navy (#0A1B39) */
+  --color-primary:             #0A1B39;
+  --color-primary-foreground:  #FFFFFF;
+  --color-primary-dark:        #051025;
+  --color-primary-light:       #E8EAF6;
+  --color-primary-rgb:         10, 27, 57;
+
+  /* Accent: Clinical Red (#E31E24) */
+  --color-accent:              #E31E24;
+  --color-accent-foreground:   #FFFFFF;
+  --color-accent-dark:         #C62828;
+  --color-accent-light:        #FFEBEE;
+  
+  /* Secondary is now just a softer shade or alternative if needed, but we rely on primary/accent */
+  --color-secondary:           #475569;
+  --color-secondary-foreground:#FFFFFF;
+
+  /* ── Surfaces ── */
+  --color-background:          #F8FAFC;
+  --color-foreground:          #0F172A;
+  --color-bg:                  #FFFFFF;
+  --color-bg-alt:              #F8F9FA;
+  --color-bg-subtle:           #F1F5F9;
+  --color-surface:             #FFFFFF;
+
+  /* ── Neutrals ── */
+  --color-dark:                #0F172A;
+  --color-text:                #475569;
+  --color-text-light:          #64748B;
+  --color-muted:               #F1F5F9;
+  --color-muted-foreground:    #64748B;
+
+  /* ── Borders ── */
+  --color-border:              #E5E7EB;
+  --color-input:               #E5E7EB;
+  --color-ring:                #E53935;
+
+  /* ── Semantic ── */
+  --color-success:             #16A34A;
+  --color-success-light:       #F0FDF4;
+  --color-warning:             #D97706;
+  --color-warning-light:       #FFFBEB;
+  --color-info:                #2563EB;
+  --color-info-light:          #EFF6FF;
+  --color-destructive:         #DC2626;
+  --color-destructive-foreground: #FFFFFF;
+
+  /* ── Typography ── */
+  --font-sans:  var(--font-inter), 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono:  var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-family: var(--font-sans);
+
+  /* Typographic Scale (5 heading sizes + 2 body sizes)
+     Used ONLY via Tailwind classes. Legacy --fs-* tokens are
+     maintained below for backward compatibility with components.css
+     but will be phased out. */
+  --fs-xs:    0.75rem;   /* 12px — captions, badges */
+  --fs-sm:    0.875rem;  /* 14px — body small, labels */
+  --fs-base:  1rem;      /* 16px — body default */
+  --fs-md:    1.125rem;  /* 18px — body large */
+  --fs-lg:    1.25rem;   /* 20px — H5 */
+  --fs-xl:    1.5rem;    /* 24px — H4 */
+  --fs-2xl:   1.875rem;  /* 30px — H3 */
+  --fs-3xl:   2.25rem;   /* 36px — H2 */
+  --fs-4xl:   3rem;      /* 48px — H1 */
+  --fs-5xl:   3.75rem;   /* 60px — Hero */
+
+  --lh-tight:   1.15;
+  --lh-snug:    1.35;
+  --lh-base:    1.6;
+  --lh-relaxed: 1.75;
+
+  --fw-regular:   400;
+  --fw-medium:    500;
+  --fw-semibold:  600;
+  --fw-bold:      700;
+  --fw-extrabold: 800;
+
+  /* ── Spacing (4px base, 8px grid) ── */
+  --sp-0:   0;
+  --sp-1:   0.25rem;   /*  4px */
+  --sp-2:   0.5rem;    /*  8px */
+  --sp-3:   0.75rem;   /* 12px */
+  --sp-4:   1rem;      /* 16px */
+  --sp-5:   1.25rem;   /* 20px */
+  --sp-6:   1.5rem;    /* 24px */
+  --sp-8:   2rem;      /* 32px */
+  --sp-10:  2.5rem;    /* 40px */
+  --sp-12:  3rem;      /* 48px */
+  --sp-16:  4rem;      /* 64px */
+  --sp-20:  5rem;      /* 80px */
+  --sp-24:  6rem;      /* 96px */
+
+  /* ── Radii ── */
+  --radius-sm:   0.375rem;  /*  6px */
+  --radius-md:   0.5rem;    /*  8px */
+  --radius-lg:   0.75rem;   /* 12px */
+  --radius-xl:   1rem;      /* 16px */
+  --radius-2xl:  1.25rem;   /* 20px */
+  --radius-full: 9999px;
+
+  /* ── Shadows (subtle, healthcare-appropriate) ── */
+  --shadow-xs:       0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --shadow-sm:       0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  --shadow-md:       0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+  --shadow-lg:       0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
+  --shadow-xl:       0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+  --shadow-card:     0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+
+  /* Legacy shadow tokens (backward compat — will be removed) */
+  --shadow-ambient:      var(--shadow-md);
+  --shadow-premium:      var(--shadow-lg);
+  --shadow-premium-hover: var(--shadow-xl);
+  --shadow-glow:         0 0 40px rgba(229, 57, 53, 0.15), 0 0 80px rgba(229, 57, 53, 0.08);
+
+  /* ── Glass (used sparingly) ── */
+  --bg-glass:         rgba(255, 255, 255, 0.8);
+  --bg-glass-dark:    rgba(15, 31, 75, 0.85);
+  --border-glass:     rgba(255, 255, 255, 0.2);
+  --border-glass-dark: rgba(255, 255, 255, 0.08);
+  --blur-glass:       blur(20px);
+  --shadow-glass:     0 4px 24px 0 rgba(15, 31, 75, 0.06);
+
+  /* ── Transitions ── */
+  --ease:         cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out:     cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out:  cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration:      200ms;
+  --duration-lg:   400ms;
+
+  /* ── Layout ── */
+  --max-width:       1320px;
+  --nav-height:      80px;
+  --nav-height-top:  36px;
+  --spacing-container: 1.5rem;
+  --spacing-section:   4rem;
+
+  /* ── Admin Portal Layout ── */
+  --admin-sidebar-width:      230px;
+  --admin-sidebar-collapsed:   80px;
+  --admin-topbar-height:       68px;
+  --admin-page-padding-x:      2rem;     /* 32px — matches px-8 */
+  --admin-content-radius:      1rem;     /* 16px — rounded-2xl on content panel */
+
+  /* ── Admin Typography (documenting existing component usage) ── */
+  --admin-font-body:           0.8125rem; /* 13px — table cells, buttons, inputs */
+  --admin-font-label:          0.75rem;   /* 12px — input labels, secondary text */
+  --admin-font-caption:        0.6875rem; /* 11px — badges, column headers, KPI labels */
+  --admin-font-metric:         1.25rem;   /* 20px — KPI primary numbers */
+
+  /* ============================================================
+     STITCH DESIGN SYSTEM (ENTERPRISE ADMIN TOKENS)
+     Foundation & Semantic Layer ONLY
+     ============================================================ */
+
+  /* ── Foundation Colors ── */
+  --color-deep-slate: #1A2234;
+  --color-brand-blue: #2563EB;
+
+  /* ── Semantic Colors ── */
+  --color-surface-inverted: var(--color-deep-slate);
+  --color-action-primary: var(--color-brand-blue);
+  
+  /* ── Semantic Typography ── */
+  --text-page-title: 2rem;       /* 32px */
+  --text-display-metric: 2.25rem; /* 36px */
+  --text-label-caps: 0.75rem;     /* 12px */
+}

@@ -1,26 +1,140 @@
 @import "tailwindcss";
+@import "../styles/design-tokens.css";
+@import "../styles/animations.css";
+@import "../styles/journey-tracker.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================================
+   Tailwind v4 Theme — AGAM Diagnostics
+   Maps design tokens into Tailwind's utility class system.
+   This is the ONLY place Tailwind theme values are defined.
+   ============================================================ */
+
+@theme {
+  /* Brand */
+  --color-primary: var(--color-primary);
+  --color-primary-foreground: var(--color-primary-foreground);
+  --color-primary-dark: var(--color-primary-dark);
+  --color-primary-light: var(--color-primary-light);
+
+  --color-secondary: var(--color-secondary);
+  --color-secondary-foreground: var(--color-secondary-foreground);
+
+  --color-accent: var(--color-accent);
+  --color-accent-foreground: var(--color-accent-foreground);
+  --color-accent-dark: var(--color-accent-dark);
+  --color-accent-light: var(--color-accent-light);
+
+  /* Surfaces */
+  --color-background: var(--color-background);
+  --color-foreground: var(--color-foreground);
+  --color-surface: var(--color-surface);
+  --color-bg-alt: var(--color-bg-alt);
+  --color-bg-subtle: var(--color-bg-subtle);
+
+  /* Footer */
+  --color-footer-bg: var(--color-primary);
+  --color-footer-text: #E2E8F0;
+
+  /* Admin Portal — derived from the shared token palette */
+  --admin-bg: var(--color-background);
+  --admin-surface: var(--color-surface);
+  --admin-border: var(--color-border);
+  --admin-border-hover: #CBD5E1;
+  --admin-text-main: var(--color-foreground);
+  --admin-text-muted: var(--color-muted-foreground);
+  --admin-primary: var(--color-foreground);
+  --admin-primary-hover: #1E293B;
+  --admin-accent: var(--color-accent);
+  --admin-hover-bg: var(--color-bg-subtle);
+
+  /* Stitch Semantic Theme Mappings */
+  --color-surface-inverted: var(--color-surface-inverted);
+  --color-action-primary: var(--color-action-primary);
+
+  /* Muted */
+  --color-muted: var(--color-muted);
+  --color-muted-foreground: var(--color-muted-foreground);
+
+  /* Semantic */
+  --color-success: var(--color-success);
+  --color-success-light: var(--color-success-light);
+  --color-warning: var(--color-warning);
+  --color-warning-light: var(--color-warning-light);
+  --color-info: var(--color-info);
+  --color-info-light: var(--color-info-light);
+  --color-destructive: var(--color-destructive);
+  --color-destructive-foreground: var(--color-destructive-foreground);
+
+  /* Borders & Inputs */
+  --color-border: var(--color-border);
+  --color-input: var(--color-input);
+  --color-ring: var(--color-ring);
+
+  /* Typography */
+  --font-sans: var(--font-inter), 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-mono);
+
+  /* Radii */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
+  --radius-full: var(--radius-full);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer components {
+  .container {
+    width: 100%;
+    max-width: var(--max-width);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--spacing-container);
+    padding-right: var(--spacing-container);
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  @media (min-width: 1024px) {
+    .container {
+      padding-left: 4rem;
+      padding-right: 4rem;
+    }
+  }
+  
+  @media (min-width: 1280px) {
+    .container {
+      padding-left: 5rem;
+      padding-right: 5rem;
+    }
   }
 }
 
+
+/* ============================================================
+   Base Styles
+   ============================================================ */
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus ring for accessibility */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Selection color */
+::selection {
+  background-color: rgba(229, 57, 53, 0.15);
+  color: var(--color-foreground);
 }

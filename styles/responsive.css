@@ -1,0 +1,791 @@
+/* ==========================================================================
+   AGAM Diagnostics - Responsive Architecture
+   This file acts as the single source of truth for responsive behavior.
+   Loaded LAST to override component-specific rigidity.
+   ========================================================================== */
+
+/* ==========================================================================
+   1. GLOBAL & CONTAINER ADJUSTMENTS (All Breakpoints)
+   ========================================================================== */
+
+/* Container layout is handled in globals.css using Tailwind @layer components */
+
+
+/* Ensure body doesn't overflow horizontally on any device */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* ==========================================================================
+   2. LAPTOP BREAKPOINT (992px - 1199px)
+   ========================================================================== */
+@media (max-width: 1199px) {
+  /* Prevent horizontal scrolling on smaller laptops */
+}
+
+/* ==========================================================================
+   3. TABLET BREAKPOINT (768px - 991px)
+   ========================================================================== */
+@media (max-width: 991px) {
+  /* Responsive spacing adjustments handled via --spacing-container in tokens */
+
+  /* Responsive Utilities - Tablet */
+  .hide-tablet {
+    display: none !important;
+  }
+  
+  .tablet-stack {
+    flex-direction: column !important;
+  }
+}
+
+/* ==========================================================================
+   4. MOBILE BREAKPOINT (576px - 767px)
+   ========================================================================== */
+@media (max-width: 767px) {
+  /* Mobile spacing handles via --spacing-container */
+
+  /* Responsive Utilities - Mobile */
+  .hide-mobile {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: block !important;
+  }
+
+  .stack-mobile {
+    flex-direction: column !important;
+  }
+
+  .row-desktop {
+    flex-direction: column !important;
+  }
+
+  .text-center-mobile {
+    text-align: center !important;
+  }
+
+  .mobile-center {
+    justify-content: center !important;
+    align-items: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  
+  .mobile-left {
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
+    text-align: left !important;
+  }
+}
+
+/* Default state for mobile-only utilities */
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+/* ==========================================================================
+   5. SMALL MOBILE BREAKPOINT (<= 575px)
+   ========================================================================== */
+@media (max-width: 575px) {
+  /* Small mobile spacing */
+}
+
+/* ==========================================================================
+   MILESTONE 2: TYPOGRAPHY, SPACING, AND GRID SYSTEM
+   ========================================================================== */
+
+/* --- TYPOGRAPHY (Selective Clamp for Headings) --- */
+/* The desktop typography is preserved. We use clamp for fluid scaling on smaller screens. */
+@media (max-width: 991px) {
+  h1, .hero-title, .section-header__title {
+    font-size: clamp(2rem, 5vw + 1rem, var(--fs-4xl, 3.5rem));
+  }
+
+  h2 {
+    font-size: clamp(1.75rem, 4vw + 0.75rem, var(--fs-3xl, 2.5rem));
+  }
+
+  h3 {
+    font-size: clamp(1.5rem, 3vw + 0.5rem, var(--fs-2xl, 1.875rem));
+  }
+
+  /* --- SPACING (Fluid Section Padding) --- */
+  .section {
+    padding-top: clamp(3rem, 6vw, var(--sp-12, 5rem));
+    padding-bottom: clamp(3rem, 6vw, var(--sp-12, 5rem));
+  }
+
+  .section--alt, .section--primary {
+    padding-top: clamp(3rem, 6vw, var(--sp-12, 5rem));
+    padding-bottom: clamp(3rem, 6vw, var(--sp-12, 5rem));
+  }
+
+  /* Ensure section headers have responsive spacing */
+  .section-header {
+    margin-bottom: clamp(2rem, 4vw, var(--sp-8, 3rem));
+  }
+}
+
+/* --- GRID EXPLICIT COLLAPSING (Instead of auto-fit to preserve structure) --- */
+
+/* Base flex-wrap fix for any rigid flex layouts */
+@media (max-width: 991px) {
+  .nav-links, .nav-top__left, .nav-top__right, .footer-bottom, .footer-links {
+    flex-wrap: wrap;
+  }
+}
+
+/* LAPTOP BREAKPOINT (992px - 1199px) */
+@media (max-width: 1199px) {
+  .grid--4, .grid--5 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .grid--6 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* TABLET BREAKPOINT (768px - 991px) */
+@media (max-width: 991px) {
+  /* Typography body scaling */
+  body {
+    font-size: calc(var(--fs-base) * 0.95);
+  }
+  
+  .grid--4, .grid--5, .grid--3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .grid--6 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .grid--2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* MOBILE BREAKPOINT (576px - 767px) */
+@media (max-width: 767px) {
+  /* Typography body scaling */
+  body {
+    font-size: calc(var(--fs-base) * 0.9);
+  }
+  
+  /* Collapse most grids to 1 column */
+  .grid--2, .grid--3, .grid--4, .grid--5 {
+    grid-template-columns: 1fr;
+  }
+  
+  .grid--6 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* SMALL MOBILE BREAKPOINT (<= 575px) */
+@media (max-width: 575px) {
+  .grid--6 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   MILESTONE 3: NAVIGATION, HERO, AND IMAGES
+   ========================================================================== */
+
+/* --- IMAGES (Universal Responsive Handling) --- */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* --- NAVIGATION (Top & Main) --- */
+
+/* LAPTOP & TABLET (991px and below) */
+@media (max-width: 991px) {
+  /* Hide Desktop Links */
+  .nav-links, .nav-cta {
+    display: none !important;
+  }
+  
+  /* Show Hamburger & Mobile Nav */
+  .nav-hamburger, .nav-mobile {
+    display: flex !important;
+  }
+  .nav-mobile {
+    display: block !important;
+  }
+  
+  /* Stack Top Nav Cleanly */
+  .nav-top .container {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sp-2, 8px);
+    text-align: center;
+  }
+  
+  .nav-top__left {
+    justify-content: center;
+  }
+}
+
+/* MOBILE (767px and below) */
+@media (max-width: 767px) {
+  /* Simplify Top Nav */
+  .nav-top__item.hide-mobile {
+    display: none !important;
+  }
+  
+  .nav-top__right {
+    display: none !important; /* Hide secondary actions like "Download Reports" */
+  }
+  
+  .nav-top .container {
+    justify-content: center;
+  }
+  
+  /* Ensure mobile drawer fills the screen appropriately */
+  .nav-mobile {
+    width: 100% !important;
+    max-width: 320px;
+  }
+}
+
+/* --- HERO SECTIONS --- */
+
+/* TABLET (991px and below) */
+@media (max-width: 991px) {
+  .hero-premium__inner,
+  .hero-split__inner {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: var(--sp-6, 2rem);
+  }
+  
+  .hero-premium__content,
+  .hero-split__content {
+    order: 1; /* Content above image on tablet/mobile */
+  }
+  
+  .hero-image-wrap {
+    order: 2;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    max-width: 600px;
+  }
+  
+  .hero-premium__pill {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .hero-search-box {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* MOBILE (767px and below) */
+@media (max-width: 767px) {
+  .hero-premium, .hero-split {
+    padding-top: var(--sp-8, 3rem);
+    padding-bottom: var(--sp-8, 3rem);
+  }
+  
+  /* Touch target size for Hero CTA buttons */
+  .hero-search-box button,
+  .hero-premium__content .btn {
+    min-height: 48px;
+    width: 100%; /* Full width for easy tapping */
+    margin-top: var(--sp-3, 0.75rem);
+    border-radius: var(--radius-full);
+  }
+  
+  .hero-search-box {
+    flex-direction: column !important;
+    border-radius: var(--radius-lg) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+  .hero-search-box input {
+    background: #fff !important;
+    border-radius: var(--radius-full) !important;
+    margin-bottom: var(--sp-3) !important;
+    padding: 14px 20px !important;
+    border: 1px solid rgba(226, 232, 240, 0.4) !important;
+  }
+  .hero-search-box button {
+    width: 100% !important;
+    border-radius: var(--radius-full) !important;
+    height: 48px !important;
+  }
+  
+  .hero-search__input {
+    width: 100%;
+    border-radius: var(--radius-full);
+    background: white;
+    margin-bottom: var(--sp-3);
+    min-height: 48px;
+  }
+}
+
+/* ==========================================================================
+   MILESTONE 4: CARDS, FORMS, TABLES, AND COMPONENTS
+   ========================================================================== */
+/* --- FORMS (Mobile Stacking) --- */
+@media (max-width: 767px) {
+  .hero-features {
+    flex-direction: column;
+    gap: var(--sp-4);
+  }
+  
+  .hero-search-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .hero-search-tabs::-webkit-scrollbar {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  /* Any grid/flex rows in forms should stack */
+  .form-row, .form-inline {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+  }
+  
+  /* Inputs fill the width */
+}
+
+/* --- TABLES (Horizontal Scrolling) --- */
+/* Target any table wrapper to allow smooth scrolling without breaking layout */
+.table-wrapper, .table-responsive, [class*="table-wrap"] {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: var(--sp-4);
+}
+
+/* --- INTERACTIVE COMPONENTS (Touch-First Sizes) --- */
+/* Ensure all tappable interactive elements meet the ~44px minimum */
+@media (max-width: 767px) {
+  .accordion__header,
+  .tab__btn,
+  .nav-tab,
+  .faq__btn,
+  .hero-search-tab,
+
+  .btn {
+    min-height: 48px;
+  }
+}
+
+/* ==========================================================================
+   MILESTONE 5: MOTION, ORIENTATION, AND ACCESSIBILITY
+   ========================================================================== */
+
+/* --- RESPONSIVE MOTION (Touch & Mobile Optimization) --- */
+@media (max-width: 767px) {
+  :root {
+    /* Reduce global animation durations on mobile for snappier feel */
+    --duration-lg: 0.3s;
+    --duration: 0.2s;
+  }
+
+  /* Disable heavy hover-based 3D transforms on touch devices */
+  .card:hover, 
+  .card--service:hover, 
+  .card--package:hover,
+  .card--highlight:hover {
+    transform: none !important;
+  }
+  
+  /* Reduce parallax intensity (assuming parallax variables exist) */
+  * {
+    --parallax: 0px !important;
+  }
+}
+
+/* --- LANDSCAPE ORIENTATION FIXES (Mobile Landscape) --- */
+@media (max-height: 500px) and (orientation: landscape) {
+  /* Free up vertical space on short screens */
+  .nav-main {
+    position: static !important;
+  }
+  
+  /* Ensure mobile menus can scroll if screen is very short */
+  .nav-mobile {
+    overflow-y: auto !important;
+    max-height: 100vh !important;
+  }
+  
+  /* Reduce excessive padding in hero sections */
+  .hero-premium, .hero-split, .page-hero {
+    padding-top: var(--sp-4, 1rem) !important;
+    padding-bottom: var(--sp-4, 1rem) !important;
+  }
+}
+
+/* --- ACCESSIBILITY (Focus States & Screen Readers) --- */
+/* Ensure focus rings are highly visible for keyboard navigation */
+:focus-visible {
+  outline: 3px solid var(--color-primary, #0B1B3D) !important;
+  outline-offset: 2px !important;
+}
+
+
+/* ==========================================================================
+   PRINCIPAL UX REDESIGN (MOBILE SPECIFIC)
+   ========================================================================== */
+@media (max-width: 767px) {
+  /* 1. NAVIGATION */
+  .nav-main {
+    min-height: 60px;
+  }
+  .nav-hamburger {
+    padding: 12px; /* 48px touch target approx */
+  }
+  .nav-mobile {
+    padding: 32px 24px !important;
+  }
+  .nav-mobile__link {
+    padding: 16px 0 !important;
+    border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+  }
+
+  /* 2. HERO SECTION */
+  .hero-premium__title {
+    margin-bottom: var(--sp-4) !important;
+  }
+  .hero-premium__desc {
+    margin-bottom: var(--sp-6) !important;
+  }
+  .hero-features {
+    margin-top: var(--sp-6) !important;
+  }
+  .hero-feature {
+    padding: var(--sp-3) 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+  }
+  .hero-feature:last-child {
+    border-bottom: none;
+  }
+
+  /* 3. STATS BANNER */
+  .stats-banner .grid--4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: var(--sp-3) !important;
+  }
+  .stat-item {
+    padding: var(--sp-4) var(--sp-2) !important;
+  }
+
+  /* 4. SERVICES GRID */
+  #services .grid--4 {
+    grid-template-columns: 1fr !important;
+    gap: var(--sp-6) !important;
+  }
+  .card--service {
+    padding: var(--sp-6) !important;
+  }
+
+  /* 5. HEALTH PACKAGES */
+  #packages .grid--3 {
+    grid-template-columns: 1fr !important;
+    gap: var(--sp-8) !important;
+  }
+  .card--package {
+    padding: var(--sp-6) !important;
+  }
+  .card--package__btn {
+    width: 100% !important;
+    text-align: center;
+  }
+
+  /* 6. TRUST / WHY CHOOSE AGAM */
+  #trust .grid--3 {
+    grid-template-columns: 1fr !important;
+    gap: var(--sp-8) !important;
+  }
+
+
+
+  /* 8. LATEST BLOGS */
+  .blog-grid, #blog .grid--3 {
+    grid-template-columns: 1fr !important;
+    gap: var(--sp-6) !important;
+  }
+  .blog-card {
+    display: flex;
+    flex-direction: column;
+  }
+  .blog-card img, .card__image img {
+    width: 100% !important;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+
+  /* 9. CTA BANNER */
+  .cta-banner {
+    padding: 64px 20px !important;
+    text-align: center;
+  }
+  .cta-banner .btn {
+    width: 100% !important;
+    margin-top: var(--sp-4);
+  }
+
+  /* 10. FOOTER */
+  .footer-grid, footer .grid--4 {
+    grid-template-columns: 1fr !important;
+    gap: var(--sp-8) !important;
+  }
+  .footer-col {
+    margin-bottom: var(--sp-4);
+  }
+  
+  /* OVERRIDES & TOUCH TARGETS */
+  .filter-tab, .btn-continue, .social-btn {
+    min-height: 48px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .section-header-split {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: var(--sp-4) !important;
+  }
+  .section-header-split .btn {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 767px) {
+
+
+
+}
+
+
+@media (max-width: 767px) {
+  
+  .hero-image-wrap.hide-mobile {
+    display: block !important;
+    margin-top: var(--sp-8);
+  }
+  .hero-premium .hero-image-wrap img {
+    opacity: 1 !important;
+    display: block !important;
+    width: 100%;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-premium);
+    object-fit: cover;
+    aspect-ratio: 4/3;
+    object-position: top center;
+  }
+  
+  
+  
+  
+  #testimonials .grid--3::-webkit-scrollbar {
+    display: none;
+  }
+  .review-card {
+    min-width: 85vw !important;
+    scroll-snap-align: center;
+    flex-shrink: 0;
+  }
+  
+  
+  .sticky-mobile-cta svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* ==========================================================================
+   ULTIMATE NATIVE MOBILE UX (Strictly <767px)
+   ========================================================================== */
+@media (max-width: 767px) {
+  /* 1. NAVIGATION & HEADER */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    height: 60px !important;
+  }
+  .nav-hamburger {
+    min-width: 48px;
+    min-height: 48px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 2. HERO DOM REORDERING (Native Stacking) */
+  .hero-premium {
+    background-image: none !important; /* Remove background crop completely */
+    padding-top: var(--sp-6) !important;
+    padding-bottom: var(--sp-8) !important;
+  }
+  .hero-premium__content {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  /* Hierarchy: Headline -> Subtitle -> Search -> Image -> Badges */
+  .hero-premium__title { order: 1; text-align: left; font-size: clamp(1.8rem, 8vw, 2.2rem) !important; }
+  .hero-premium__desc { order: 2; text-align: left; margin-bottom: var(--sp-6); }
+  .hero-search-tabs { order: 3; }
+  .hero-search-box-container { order: 4; }
+  
+  /* The Image Block */
+  .hero-image-wrap.hide-mobile {
+    display: block !important;
+    order: 5;
+    margin-top: var(--sp-6);
+    margin-bottom: var(--sp-6);
+  }
+  .hero-image-wrap img {
+    opacity: 1 !important;
+    display: block !important;
+    width: 100%;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-premium);
+    object-fit: cover;
+    aspect-ratio: 4/3;
+    object-position: top center; /* Focus on doctor's face */
+  }
+  
+  /* Trust Badges */
+  .hero-premium__pill { order: 6; align-self: flex-start; margin-left: 0; margin-bottom: var(--sp-4); }
+  .hero-features { order: 7; flex-direction: column !important; gap: var(--sp-3) !important; }
+
+  /* 3. HERO SEARCH MODULE (Native Stack) */
+  .hero-search-box {
+    flex-direction: column !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border: none !important;
+    max-width: 100% !important;
+  }
+  .hero-search-box input {
+    width: 100% !important;
+    background: #fff !important;
+    border-radius: var(--radius-full) !important;
+    padding: 16px 20px !important;
+    margin-bottom: var(--sp-3) !important;
+    border: 1px solid rgba(226, 232, 240, 0.4) !important;
+    min-height: 48px;
+  }
+  .hero-search-box button {
+    width: 100% !important;
+    border-radius: var(--radius-full) !important;
+    height: 48px !important;
+  }
+
+  /* 4. GRIDS TO 1-COLUMN */
+  #services .grid--3,
+  #health-packages .grid--4,
+  #why-choose .grid--4 {
+    grid-template-columns: 1fr !important;
+    gap: var(--sp-6) !important;
+  }
+
+  /* 4b. STATS TO 2x2 GRID */
+  .stats-banner .grid--4 {
+    grid-template-columns: 1fr 1fr !important;
+    gap: var(--sp-4) !important;
+  }
+
+  /* 5. TESTIMONIAL SNAP CAROUSEL */
+  #testimonials .grid--3 {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory;
+    gap: var(--sp-4) !important;
+    padding-bottom: var(--sp-4);
+    scrollbar-width: none;
+  }
+  #testimonials .grid--3::-webkit-scrollbar { display: none; }
+  .review-card {
+    min-width: 85vw !important;
+    scroll-snap-align: center;
+    flex-shrink: 0;
+  }
+
+  /* 6. THUMB ZONE CTA */
+  .sticky-mobile-cta {
+    position: fixed;
+    bottom: var(--sp-4, 1rem);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-primary);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 10px 25px rgba(11,27,61,0.3);
+    z-index: 899; /* Below back-to-top */
+    width: max-content !important;
+    white-space: nowrap;
+    text-decoration: none;
+    font-size: var(--fs-sm);
+  }
+  .sticky-mobile-cta svg { width: 18px; height: 18px; }
+
+  /* 7. FOOTER VERTICAL LIST */
+  .footer-grid, footer .grid--4 {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--sp-6) !important;
+  }
+
+  /* 8. PRODUCTION POLISH: TOUCH TARGETS & ERGONOMICS */
+  .footer-col a,
+  .card a:not(.btn),
+  .card-feature a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* 9. PRODUCTION POLISH: MACRO-RHYTHM SPACING */
+  .section {
+    padding-top: var(--sp-10) !important;
+    padding-bottom: var(--sp-10) !important;
+  }
+
+  /* 10. PRODUCTION POLISH: TACTILE FEEDBACK */
+  .btn:active, 
+  .sticky-mobile-cta:active,
+  .nav-mobile__link:active {
+    transform: scale(0.96) !important;
+    transition: transform 0.1s ease !important;
+  }
+
+  /* 11. PRODUCTION POLISH: FAB ACCESSIBILITY */
+  .sticky-mobile-cta {
+    backdrop-filter: blur(8px);
+    background: rgba(11,27,61,0.95) !important;
+  }
+}
