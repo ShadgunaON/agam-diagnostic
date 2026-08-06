@@ -14,6 +14,8 @@ interface KPICardProps {
   };
   index?: number;
   variant?: 'default' | 'glass' | 'solid' | 'gradient';
+  iconBgColor?: string;
+  iconColor?: string;
 }
 
 // Custom hook for smooth count-up animation
@@ -74,7 +76,9 @@ export function KPICard({
   icon,
   trend,
   index,
-  variant = 'default'
+  variant = 'default',
+  iconBgColor,
+  iconColor
 }: KPICardProps) {
   const animatedValue = useCountUp(value, 850);
   const [mounted, setMounted] = useState(false);
@@ -153,16 +157,18 @@ export function KPICard({
           {/* Icon Container */}
           {icon && (
             <div
+              className={iconBgColor || ''}
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 width: '36px', height: '36px', borderRadius: '10px',
-                backgroundColor: theme.bg, border: `1px solid ${theme.border}`,
-                color: theme.text,
+                backgroundColor: iconBgColor ? undefined : theme.bg, 
+                border: iconBgColor ? undefined : `1px solid ${theme.border}`,
+                color: iconColor ? undefined : theme.text,
                 transform: isHovered ? 'scale(1.05)' : 'scale(1)',
                 transition: 'transform 300ms ease-out'
               }}
             >
-              <AdminIcon name={icon} style={{ width: '16px', height: '16px' }} strokeWidth={2.5} />
+              <AdminIcon name={icon} className={iconColor || ''} style={{ width: '16px', height: '16px' }} strokeWidth={2.5} />
             </div>
           )}
         </div>

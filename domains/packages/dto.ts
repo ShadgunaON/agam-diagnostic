@@ -14,6 +14,7 @@ export interface PackageDetailDto {
   category_name: string;
   name: string;
   summary: string;
+  cost?: string;
   icon_name: string;
   included_tests: string[];
   target_demographic: string;

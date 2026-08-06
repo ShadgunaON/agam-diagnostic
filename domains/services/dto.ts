@@ -15,6 +15,7 @@ export interface ServiceDetailDto {
   category_name: string;
   name: string;
   description_short: string;
+  price_inr?: string;
   icon_name: string;
   value_propositions: Array<{ label: string; icon: string }>;
   about_html_content: string;

@@ -15,6 +15,8 @@ export interface ServiceDetailData {
   category: string;
   title: string;
   shortDescription: string;
+  price: number;
+  originalPrice?: number;
   icon: string;
   valueProps: Array<{ title: string; icon: string }>;
   aboutHtml: string;

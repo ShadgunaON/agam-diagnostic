@@ -99,6 +99,7 @@ export interface ConfigurableDataTableProps<T> {
   keyExtractor: (item: T) => string | number;
   onRowClick?: (item: T) => void;
   isLoading?: boolean;
+  className?: string;
   pagination?: {
     currentPage: number;
     totalPages: number;
@@ -118,7 +119,8 @@ export function ConfigurableDataTable<T>({
   keyExtractor,
   onRowClick,
   isLoading = false,
-  pagination
+  pagination,
+  className
 }: ConfigurableDataTableProps<T>) {
   const [focusedIndex, setFocusedIndex] = useState<number>(-1);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -200,7 +202,7 @@ export function ConfigurableDataTable<T>({
   return (
     <AdminCard
       padding="none"
-      className="overflow-hidden flex-1 flex flex-col min-h-0 focus:outline-none focus-within:ring-2 focus-within:ring-slate-200"
+      className={`overflow-hidden flex-1 flex flex-col min-h-0 focus:outline-none focus-within:ring-2 focus-within:ring-slate-200 ${className || ''}`}
       tabIndex={0}
       onKeyDown={handleKeyDown}
       ref={containerRef}

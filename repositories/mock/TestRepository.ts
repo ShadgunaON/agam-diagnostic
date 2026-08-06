@@ -2,7 +2,7 @@ import { ITestsRepository } from '@/domains/tests/repository';
 import { TestItem, TestsHero, TestCategory, TestDetailData } from '@/domains/tests/model';
 import { TestItemDto } from '@/domains/tests/dto';
 import { mapTestItemDtoToModel } from '@/domains/tests/mapper';
-import { Result, success } from '@/shared/result';
+import { Result, success, failure } from '@/shared/result';
 import { PaginatedResponse } from '@/lib/api/types';
 import { testsData, getTestBySlug } from '@/data/tests';
 
@@ -38,7 +38,7 @@ export class MockTestRepository implements ITestsRepository {
   async getTestBySlug(slug: string): Promise<Result<TestDetailData>> {
     const test = getTestBySlug(slug);
     if (!test) {
-      return { isFailure: true, error: new Error('Test not found') };
+      return failure(new Error('Test not found'));
     }
     return success(test);
   }

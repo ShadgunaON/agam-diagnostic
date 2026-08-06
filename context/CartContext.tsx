@@ -6,7 +6,7 @@ export interface CartItem {
   id: string;
   slug: string;
   title: string;
-  type: 'test' | 'package';
+  type: 'test' | 'package' | 'service';
   category: string;
   price: number;
   originalPrice?: number;

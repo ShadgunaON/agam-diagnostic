@@ -20,6 +20,7 @@ export function mapPackageDetailDtoToModel(dto: PackageDetailDto): PackageDetail
     title: dto.name,
     category: dto.category_name,
     description: dto.summary,
+    price: dto.cost || '0',
     icon: dto.icon_name,
     includes: dto.included_tests,
     whoShouldGet: dto.target_demographic,

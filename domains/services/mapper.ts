@@ -21,6 +21,7 @@ export function mapServiceDetailDtoToModel(dto: ServiceDetailDto): ServiceDetail
     title: dto.name,
     category: dto.category_name,
     shortDescription: dto.description_short,
+    price: parseInt(dto.price_inr?.replace(/[^0-9]/g, '') || '0', 10),
     icon: dto.icon_name,
     valueProps: dto.value_propositions.map(vp => ({ title: vp.label, icon: vp.icon })),
     aboutHtml: dto.about_html_content,
