@@ -40,8 +40,6 @@ const adminNavigation: NavigationGroup[] = [
     title: 'Management',
     items: [
       { title: 'Staff & Roles', href: '/admin/staff', icon: 'userCog', roles: ['ADMIN'] },
-      { title: 'Tests & Packages', href: '/admin/catalog', icon: 'testTube', roles: ['ADMIN', 'DOCTOR'] },
-      { title: 'Inventory', href: '/admin/inventory', icon: 'box', roles: ['ADMIN', 'STAFF'] },
     ]
   },
   {

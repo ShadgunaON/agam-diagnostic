@@ -29,8 +29,6 @@ const adminNavigation = [
     title: 'Management',
     items: [
       { title: 'Staff & Roles', href: '/admin/staff', icon: 'users' as const, roles: ['ADMIN'] },
-      { title: 'Tests & Packages', href: '/admin/catalog', icon: 'testTube' as const, roles: ['ADMIN', 'DOCTOR'] },
-      { title: 'Inventory', href: '/admin/inventory', icon: 'package' as const, roles: ['ADMIN', 'STAFF'] },
     ]
   },
   {
