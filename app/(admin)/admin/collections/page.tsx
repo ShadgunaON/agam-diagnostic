@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
-import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
+import { AdminIcon, AdminIconName } from '@/components/admin/navigation/AdminIcons';
 
 // Initial Mock Data
 const initialTasks = [

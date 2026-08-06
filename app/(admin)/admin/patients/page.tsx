@@ -82,23 +82,23 @@ export default function PatientsPage() {
           </div>
           
           {/* Custom Filter Dropdowns */}
-          <AdminButton variant="secondary" size="sm" className="gap-1.5 text-[11px]">
+          <AdminButton variant="secondary" size="sm" className="gap-1.5 text-[11px]" onClick={() => alert('Opening Gender Filter dropdown...')} style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0' }}>
             <span>Any Gender</span>
             <AdminIcon name="chevronDown" className="w-3 h-3 text-slate-400" strokeWidth={2} />
           </AdminButton>
 
-          <AdminButton variant="secondary" size="sm" className="gap-1.5 text-[11px]">
+          <AdminButton variant="secondary" size="sm" className="gap-1.5 text-[11px]" onClick={() => alert('Opening Status Filter dropdown...')} style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0' }}>
             <span>Any Status</span>
             <AdminIcon name="chevronDown" className="w-3 h-3 text-slate-400" strokeWidth={2} />
           </AdminButton>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <AdminButton variant="secondary" size="sm" className="gap-1.5 text-[11px]">
+          <AdminButton variant="secondary" size="sm" className="gap-1.5 text-[11px]" onClick={() => alert('Opening Advanced Filters pane...')} style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0' }}>
             <AdminIcon name="filter" className="w-3 h-3 text-slate-400" strokeWidth={2} />
             Filters
           </AdminButton>
-          <AdminButton variant="secondary" size="sm" className="gap-1.5 text-[11px]">
+          <AdminButton variant="secondary" size="sm" className="gap-1.5 text-[11px]" onClick={() => alert('Exporting patient list to CSV...')} style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0' }}>
             <AdminIcon name="download" className="w-3 h-3 text-slate-400" strokeWidth={2} />
             Export
           </AdminButton>
@@ -186,7 +186,7 @@ export default function PatientsPage() {
             data={paginatedData}
             columns={columns}
             keyExtractor={(row) => row.id}
-            onRowClick={(row) => console.log('Navigate to patient', row.id)}
+            onRowClick={(row) => alert(`Routing to detailed patient profile for: ${row.name}`)}
             pagination={{
               currentPage,
               totalPages: Math.ceil(filteredPatients.length / itemsPerPage),

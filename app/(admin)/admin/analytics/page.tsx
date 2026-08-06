@@ -35,7 +35,11 @@ export default function AnalyticsPage() {
           <AdminCard padding="none" className="overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] rounded-xl border border-slate-200 bg-white lg:col-span-2">
             <div className="flex justify-between items-center py-6 px-8 border-b border-slate-200">
               <div className="text-[14px] font-bold text-slate-800 uppercase tracking-wider">Revenue Growth (YTD)</div>
-              <button className="text-[13px] font-semibold text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg">
+              <button 
+                onClick={() => alert('Generating full YTD revenue report PDF...')}
+                className="text-[13px] font-semibold text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg"
+                style={{ backgroundColor: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer' }}
+              >
                 View Report
               </button>
             </div>

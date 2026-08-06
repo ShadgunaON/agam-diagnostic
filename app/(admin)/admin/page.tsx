@@ -192,8 +192,16 @@ export default function AdminDashboardPage() {
               <Link key={action.label} href={action.href} className="w-full group">
                 <div
                   className={`w-full flex items-center justify-center gap-2 px-4 h-[40px] rounded-lg bg-gradient-to-r text-white font-semibold text-[13px] shadow-sm transition-all duration-300 transform group-hover:-translate-y-1 group-hover:shadow-lg ${colorClass}`}
+                  style={{
+                    background: index === 0 ? 'linear-gradient(90deg, #3b82f6, #2563eb)' :
+                                index === 1 ? 'linear-gradient(90deg, #6366f1, #4f46e5)' :
+                                index === 2 ? 'linear-gradient(90deg, #10b981, #059669)' :
+                                'linear-gradient(90deg, #8b5cf6, #7c3aed)',
+                    borderRadius: '8px', padding: '0 16px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                    color: 'white', fontWeight: 600, fontSize: '13px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                  }}
                 >
-                  <AdminIcon name={action.icon} className="w-[16px] h-[16px] group-hover:scale-125 transition-transform duration-300 ease-out" strokeWidth={2.5} />
+                  <AdminIcon name={action.icon} className="w-[16px] h-[16px] group-hover:scale-125 transition-transform duration-300 ease-out" strokeWidth={2.5} style={{ width: '16px', height: '16px' }} />
                   <span className="tracking-wide">{action.label}</span>
                 </div>
               </Link>
@@ -224,7 +232,7 @@ export default function AdminDashboardPage() {
             columns={columns}
             keyExtractor={(row) => row.id}
             isLoading={isLoading}
-            onRowClick={(row) => console.log('Navigate to booking', row.id)}
+            onRowClick={(row) => window.location.href = '/admin/bookings'}
             className="border-none shadow-none rounded-none bg-transparent"
           />
         </AdminCard>
