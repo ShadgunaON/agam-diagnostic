@@ -21,7 +21,7 @@ export default function WomenHealthPage() {
   return (
     <>
       <section className="hero-premium section" style={{ padding: 0, background: 'var(--color-bg-alt)', overflow: 'hidden', position: 'relative' }}>
-        <div className="grid" style={{ gridTemplateColumns: '45% 55%', alignItems: 'stretch' }}>
+        <div className="flex flex-col md:grid md:grid-cols-[45%_55%] items-stretch">
           <div style={{ padding: 'var(--sp-2) var(--sp-6) var(--sp-10) max(var(--sp-6), calc((100vw - var(--max-width)) / 2 + var(--sp-6)))', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', zIndex: 10 }}>
             <div className="breadcrumb" style={{ marginBottom: 'var(--sp-3)' }}>
               <Link href="/">Home</Link><span className="breadcrumb__sep">›</span><Link href="/health-packages">Health Packages</Link><span className="breadcrumb__sep">›</span><span className="breadcrumb__current">Women&apos;s Health</span>
