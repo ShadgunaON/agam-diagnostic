@@ -215,7 +215,7 @@ function RolesView() {
   const activeRoleData = roles.find(r => r.id === activeRole)!;
   const currentModules = rolePermissions[activeRole];
 
-  const handleToggle = (moduleIndex: number, permIndex: number, field: keyof Permission) => {
+  const handleToggle = (moduleIndex: number, permIndex: number, field: 'view' | 'create' | 'edit' | 'del') => {
     setRolePermissions(prev => {
       const newMap = { ...prev };
       const newModules = [...newMap[activeRole]];
