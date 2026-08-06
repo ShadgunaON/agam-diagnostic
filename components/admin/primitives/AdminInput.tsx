@@ -22,7 +22,7 @@ export const AdminInput = React.forwardRef<HTMLInputElement, AdminInputProps>(
     };
 
     // Premium styling applied to the wrapper
-    const wrapperBase = "flex items-center w-full transition-all duration-200 border";
+    const wrapperBase = "flex items-center w-full min-h-[40px] transition-all duration-200 border";
     const wrapperDefault = "bg-slate-50 border-slate-200/80 shadow-[0_1px_2px_rgba(0,0,0,0.01)]";
     const wrapperHover = !disabled && !isFocused ? "hover:bg-slate-100/50 hover:border-slate-300/80" : "";
     const wrapperFocus = isFocused ? "bg-white border-slate-300 ring-4 ring-slate-900/5 shadow-sm" : "";
@@ -43,7 +43,7 @@ export const AdminInput = React.forwardRef<HTMLInputElement, AdminInputProps>(
           disabled={disabled}
           onFocus={handleFocus}
           onBlur={handleBlur}
-          className={`flex-1 bg-transparent border-none outline-none text-[13px] text-slate-900 placeholder:text-slate-400 py-2 min-w-0 ${icon ? 'pl-1' : 'pl-3.5'} ${rightElement ? 'pr-1' : 'pr-3.5'} ${className}`}
+          className={`flex-1 bg-transparent border-none outline-none text-[13px] text-slate-900 placeholder:text-slate-400 h-full py-2 min-w-0 ${icon ? 'pl-1' : 'pl-3.5'} ${rightElement ? 'pr-1' : 'pr-3.5'} ${className}`}
           // Reset global CSS that might override padding or bg
           style={{ boxShadow: 'none', background: 'transparent' }}
           {...props}

@@ -14,7 +14,7 @@ export const AdminButton = React.forwardRef<HTMLButtonElement, AdminButtonProps>
     
     // Semantic variants
     const variants = {
-      primary: "bg-slate-900 text-white hover:bg-slate-800 shadow-sm",
+      primary: "bg-blue-600 text-white hover:bg-blue-700 shadow-sm",
       secondary: "bg-white text-slate-700 border border-slate-200/80 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 shadow-[0_1px_2px_rgba(0,0,0,0.01)]",
       ghost: "bg-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-100",
       danger: "bg-white text-red-600 border border-red-200 hover:bg-red-50 hover:border-red-300 shadow-sm",
