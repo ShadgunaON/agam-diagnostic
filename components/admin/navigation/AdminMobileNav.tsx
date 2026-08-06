@@ -76,7 +76,7 @@ export function AdminMobileNav() {
           </Drawer.Close>
         </div>
         
-        <Drawer.Body className="p-4 bg-[#1A2234]">
+        <Drawer.Body className="p-4 bg-[#1A2234] flex-1 overflow-y-auto">
           {adminNavigation.map((group) => {
             const visibleItems = group.items.filter(item => hasPermission(userRole, item.roles));
             if (visibleItems.length === 0) return null;
@@ -117,6 +117,18 @@ export function AdminMobileNav() {
             );
           })}
         </Drawer.Body>
+        
+        {/* Public Site Navigation */}
+        <div className="px-6 py-4 border-t border-[#26314A] mt-auto shrink-0 bg-[#1A2234]">
+          <Link 
+            href="/" 
+            className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-[#26314A] transition-colors group w-full border border-[#26314A]"
+            onClick={closeMenu}
+          >
+            <span className="font-semibold text-[14px]">View Public Site</span>
+            <AdminIcon name="chevronRight" className="w-4 h-4 group-hover:translate-x-1 transition-transform" strokeWidth={2.5} />
+          </Link>
+        </div>
       </Drawer.Content>
     </Drawer>
   );
