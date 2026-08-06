@@ -38,15 +38,7 @@ export default function AdminLayout({
           <ToastProvider>
             <AdminAuthGuard>
               <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-[var(--admin-bg)]">
-                <div
-                  className="flex flex-row overflow-hidden bg-white"
-                  style={{
-                    transform: 'scale(0.8)',
-                    transformOrigin: 'top left',
-                    width: '125vw',
-                    height: '125vh'
-                  }}
-                >
+                <div className="flex flex-row overflow-hidden bg-white w-full h-full admin-desktop-scale">
                 <AdminSidebar />
                 <div className="flex-1 flex flex-col h-full min-w-0 bg-white relative shadow-[-4px_0_24px_rgba(0,0,0,0.02)]">
                   <AdminTopbar />

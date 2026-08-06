@@ -29,7 +29,7 @@ export function ContactPreviewSection({ data, className = '' }: ContactPreviewSe
               Main Laboratory
             </h3>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-6)', marginBottom: 'var(--sp-6)' }}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
                 <div style={{ fontSize: 'var(--fs-xs)', textTransform: 'uppercase', fontWeight: 700, color: 'var(--color-text-light)', marginBottom: '8px' }}>Address</div>
                 <div style={{ color: 'var(--color-text)', fontSize: 'var(--fs-sm)', lineHeight: '1.5' }}>

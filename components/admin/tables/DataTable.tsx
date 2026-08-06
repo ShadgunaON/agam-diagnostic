@@ -212,8 +212,8 @@ export function ConfigurableDataTable<T>({
               {columns.map((col, i) => (
                 <th
                   key={col.id || (col.accessorKey as string) || i}
-                  className={`px-6 text-[12px] font-semibold text-slate-500 uppercase tracking-[0.08em] align-middle ${col.className || ''}`}
-                  style={{ width: col.width, ...(i === 0 ? { paddingLeft: '40px' } : {}) }}
+                  className={`px-6 text-[12px] font-semibold text-slate-500 uppercase tracking-[0.08em] align-middle ${i === 0 ? '!pl-4 md:!pl-10' : ''} ${col.className || ''}`}
+                  style={{ width: col.width }}
                 >
                   {col.header}
                 </th>
@@ -237,8 +237,8 @@ export function ConfigurableDataTable<T>({
                     return (
                       <td
                         key={col.id || (col.accessorKey as string) || i}
-                        className={`px-6 py-4 align-middle ${col.cellClassName || ''}`}
-                        style={i === 0 ? { paddingLeft: '40px' } : {}}
+                        className={`px-6 py-4 align-middle ${i === 0 ? '!pl-4 md:!pl-10' : ''} ${col.cellClassName || ''}`}
+                        style={{}}
                       >
                         <div onClick={(e) => {
                           // Prevent row click if clicking an action menu

@@ -17,7 +17,7 @@ export interface PackagesHeroSectionProps {
 export function PackagesHeroSection({ data, className = '' }: PackagesHeroSectionProps) {
   return (
     <section className={`hero-premium section ${className}`.trim()} style={{ padding: 0, background: 'var(--color-bg-alt)', overflow: 'hidden', position: 'relative' }}>
-      <div className="grid" style={{ gridTemplateColumns: '45% 55%', alignItems: 'stretch' }}>
+      <div className="grid grid-cols-1 md:grid-cols-[45%_55%] items-stretch">
         
         <div style={{ padding: 'var(--sp-2) var(--sp-6) var(--sp-10) max(var(--sp-6), calc((100vw - var(--max-width)) / 2 + var(--sp-6)))', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', zIndex: 2 }}>
           <div className="breadcrumb" style={{ marginBottom: 'var(--sp-3)' }}>

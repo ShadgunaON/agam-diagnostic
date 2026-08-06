@@ -792,18 +792,18 @@
 .sticky-mobile-cta {
   display: none;
   position: fixed;
-  bottom: var(--sp-4);
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 0;
+  left: 0;
+  width: 100%;
   background: var(--color-accent);
   color: #fff;
-  padding: 14px 24px;
-  border-radius: var(--radius-full);
-  box-shadow: var(--shadow-xl), 0 0 20px rgba(229, 30, 62, 0.4);
+  padding: 16px 24px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   font-weight: var(--fw-bold);
   font-size: var(--fs-base);
   align-items: center;
+  justify-content: center;
   gap: var(--sp-2);
   white-space: nowrap;
 }
@@ -2583,6 +2583,12 @@ textarea.form-control {
   transition: all var(--duration) var(--ease);
   z-index: 900;
   cursor: pointer;
+}
+
+@media (max-width: 767px) {
+  .back-to-top {
+    bottom: 80px;
+  }
 }
 
 .back-to-top.is-visible {

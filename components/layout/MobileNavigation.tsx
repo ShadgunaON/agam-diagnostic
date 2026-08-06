@@ -10,6 +10,7 @@ export interface MobileNavigationProps {
 
 export function MobileNavigation({ className = '' }: MobileNavigationProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   // Close menu on resize
   useEffect(() => {
@@ -22,7 +23,15 @@ export function MobileNavigation({ className = '' }: MobileNavigationProps) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const closeMenu = () => setIsOpen(false);
+  const closeMenu = () => {
+    setIsOpen(false);
+    // Optional: reset accordion state on close
+    // setExpandedSection(null);
+  };
+
+  const toggleSection = (section: string) => {
+    setExpandedSection(prev => prev === section ? null : section);
+  };
 
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
@@ -45,25 +54,81 @@ export function MobileNavigation({ className = '' }: MobileNavigationProps) {
             <Link href="/about" className="hover:text-primary transition-colors" onClick={closeMenu}>About Us</Link>
             <Link href="/services" className="hover:text-primary transition-colors" onClick={closeMenu}>Diagnostic Services</Link>
             
-            <div className="flex flex-col gap-3">
-              <span className="text-muted-foreground text-sm font-bold uppercase tracking-wider">Packages</span>
-              <Link href="/health-packages" className="pl-4 hover:text-primary transition-colors" onClick={closeMenu}>All Packages</Link>
-              <Link href="/men-health" className="pl-4 hover:text-primary transition-colors" onClick={closeMenu}>Men Health</Link>
-              <Link href="/women-health" className="pl-4 hover:text-primary transition-colors" onClick={closeMenu}>Women Health</Link>
-              <Link href="/lifestyle-health" className="pl-4 hover:text-primary transition-colors" onClick={closeMenu}>Lifestyle Health</Link>
+            {/* Packages Accordion */}
+            <div className="flex flex-col border-b border-border/50 pb-2">
+              <button 
+                type="button" 
+                onClick={() => toggleSection('packages')}
+                className="flex items-center justify-between w-full text-left bg-transparent border-none p-0 cursor-pointer text-muted-foreground hover:text-foreground transition-colors group"
+              >
+                <span className="text-sm font-bold uppercase tracking-wider group-hover:text-primary transition-colors">Packages</span>
+                <svg 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  className={`w-4 h-4 transition-transform duration-200 ${expandedSection === 'packages' ? 'rotate-180 text-primary' : ''}`}
+                >
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+              
+              <div className={`flex flex-col gap-3 overflow-hidden transition-all duration-300 ${expandedSection === 'packages' ? 'max-h-48 mt-4 opacity-100' : 'max-h-0 opacity-0'}`}>
+                <Link href="/health-packages" className="pl-4 hover:text-primary transition-colors border-l-2 border-transparent hover:border-primary" onClick={closeMenu}>All Packages</Link>
+                <Link href="/men-health" className="pl-4 hover:text-primary transition-colors border-l-2 border-transparent hover:border-primary" onClick={closeMenu}>Men Health</Link>
+                <Link href="/women-health" className="pl-4 hover:text-primary transition-colors border-l-2 border-transparent hover:border-primary" onClick={closeMenu}>Women Health</Link>
+                <Link href="/lifestyle-health" className="pl-4 hover:text-primary transition-colors border-l-2 border-transparent hover:border-primary" onClick={closeMenu}>Lifestyle Health</Link>
+              </div>
             </div>
 
-            <div className="flex flex-col gap-3">
-              <span className="text-muted-foreground text-sm font-bold uppercase tracking-wider">Tests</span>
-              <Link href="/tests" className="pl-4 hover:text-primary transition-colors" onClick={closeMenu}>All Lab Tests</Link>
+            {/* Tests Accordion */}
+            <div className="flex flex-col border-b border-border/50 pb-2">
+              <button 
+                type="button" 
+                onClick={() => toggleSection('tests')}
+                className="flex items-center justify-between w-full text-left bg-transparent border-none p-0 cursor-pointer text-muted-foreground hover:text-foreground transition-colors group"
+              >
+                <span className="text-sm font-bold uppercase tracking-wider group-hover:text-primary transition-colors">Tests</span>
+                <svg 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  className={`w-4 h-4 transition-transform duration-200 ${expandedSection === 'tests' ? 'rotate-180 text-primary' : ''}`}
+                >
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+              
+              <div className={`flex flex-col gap-3 overflow-hidden transition-all duration-300 ${expandedSection === 'tests' ? 'max-h-24 mt-4 opacity-100' : 'max-h-0 opacity-0'}`}>
+                <Link href="/tests" className="pl-4 hover:text-primary transition-colors border-l-2 border-transparent hover:border-primary" onClick={closeMenu}>All Lab Tests</Link>
+              </div>
             </div>
 
             <Link href="/blog" className="hover:text-primary transition-colors" onClick={closeMenu}>Blog</Link>
             
-            <div className="flex flex-col gap-3">
-              <span className="text-muted-foreground text-sm font-bold uppercase tracking-wider">Contact</span>
-              <Link href="/contact" className="pl-4 hover:text-primary transition-colors" onClick={closeMenu}>Location & Help</Link>
-              <Link href="/faq" className="pl-4 hover:text-primary transition-colors" onClick={closeMenu}>FAQ</Link>
+            <div className="flex flex-col border-b border-border/50 pb-2">
+              <button 
+                type="button" 
+                onClick={() => toggleSection('contact')}
+                className="flex items-center justify-between w-full text-left bg-transparent border-none p-0 cursor-pointer text-muted-foreground hover:text-foreground transition-colors group"
+              >
+                <span className="text-sm font-bold uppercase tracking-wider group-hover:text-primary transition-colors">Contact</span>
+                <svg 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  className={`w-4 h-4 transition-transform duration-200 ${expandedSection === 'contact' ? 'rotate-180 text-primary' : ''}`}
+                >
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+              
+              <div className={`flex flex-col gap-3 overflow-hidden transition-all duration-300 ${expandedSection === 'contact' ? 'max-h-24 mt-4 opacity-100' : 'max-h-0 opacity-0'}`}>
+                <Link href="/contact" className="pl-4 hover:text-primary transition-colors border-l-2 border-transparent hover:border-primary" onClick={closeMenu}>Location & Help</Link>
+                <Link href="/faq" className="pl-4 hover:text-primary transition-colors border-l-2 border-transparent hover:border-primary" onClick={closeMenu}>FAQ</Link>
+              </div>
             </div>
           </nav>
         </Drawer.Body>

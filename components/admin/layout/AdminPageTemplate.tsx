@@ -24,19 +24,13 @@ export function AdminPageTemplate({
 
       {/* KPI Section */}
       {kpiSection && (
-        <div
-          className="pt-12 pb-8 shrink-0"
-          style={{ paddingLeft: '24px', paddingRight: '24px' }}
-        >
+        <div className="pt-6 md:pt-12 pb-6 md:pb-8 shrink-0 px-4 md:px-6">
           {kpiSection}
         </div>
       )}
 
       {/* Main Content Area */}
-      <div
-        className="flex-1 overflow-y-auto pt-0 pb-32 custom-scrollbar bg-transparent"
-        style={{ paddingLeft: '24px', paddingRight: '24px' }}
-      >
+      <div className="flex-1 overflow-y-auto pt-0 pb-32 custom-scrollbar bg-transparent px-4 md:px-6">
         <div className="max-w-[1600px] mx-auto w-full">
           {children}
         </div>

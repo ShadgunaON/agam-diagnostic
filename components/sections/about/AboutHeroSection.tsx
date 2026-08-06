@@ -16,7 +16,7 @@ export interface AboutHeroSectionProps {
 export function AboutHeroSection({ data, className = '' }: AboutHeroSectionProps) {
   return (
     <section className={`hero-premium section ${className}`} style={{ padding: 0, background: 'var(--color-bg-alt)', overflow: 'hidden', position: 'relative' }}>
-      <div className="grid" style={{ gridTemplateColumns: '45% 55%', alignItems: 'stretch' }}>
+      <div className="grid grid-cols-1 md:grid-cols-[45%_55%] items-stretch">
         
         {/* Content Left */}
         <div style={{ padding: 'var(--sp-12) var(--sp-6) var(--sp-12) max(var(--sp-6), calc((100vw - var(--max-width)) / 2 + var(--sp-6)))', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', zIndex: 2 }}>

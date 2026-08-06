@@ -107,32 +107,24 @@ export default function BookingsPage() {
         value="1,248" 
         icon="calendar"
         trend={{ value: 12.5, isPositive: true, label: 'vs last 30 days' }}
-        iconBgColor="bg-red-50"
-        iconColor="text-red-500"
       />
       <KPICard 
         title="Pending" 
         value="86" 
         icon="clock"
         trend={{ value: 8, isPositive: false, label: 'Needs attention' }}
-        iconBgColor="bg-amber-50"
-        iconColor="text-amber-500"
       />
       <KPICard 
         title="Home Collections" 
         value="712" 
         icon="mapPin"
         trend={{ value: 57, isPositive: true, label: 'of total' }}
-        iconBgColor="bg-blue-50"
-        iconColor="text-blue-500"
       />
       <KPICard 
         title="Revenue Today" 
         value="₹45,780" 
         icon="creditCard"
         trend={{ value: 8.2, isPositive: true, label: 'vs yesterday' }}
-        iconBgColor="bg-emerald-50"
-        iconColor="text-emerald-500"
       />
     </div>
   );

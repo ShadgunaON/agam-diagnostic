@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { AdminIcon } from '../navigation/AdminIcons';
 import { AdminButton } from '../primitives/AdminButton';
 import { AdminInput } from '../primitives/AdminInput';
+import { AdminMobileNav } from '../navigation/AdminMobileNav';
 
 export function AdminTopbar() {
   const pathname = usePathname();
@@ -16,7 +17,6 @@ export function AdminTopbar() {
     if (pathname?.includes('/reports')) return 'Reports';
     if (pathname?.includes('/staff')) return 'Staff & Roles';
     if (pathname?.includes('/tests')) return 'Tests & Packages';
-    if (pathname?.includes('/finances')) return 'Finances';
     if (pathname?.includes('/settings')) return 'Settings';
     return 'Dashboard';
   };
@@ -32,14 +32,17 @@ export function AdminTopbar() {
       style={{ padding: '12px 24px' }}
     >
 
-      {/* Left: Page Title + Subtitle */}
-      <div className="flex flex-col justify-center">
+      {/* Left: Mobile Nav + Page Title + Subtitle */}
+      <div className="flex items-center">
+        <AdminMobileNav />
+        <div className="flex flex-col justify-center">
         <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a', lineHeight: '1.2' }}>
           {getPageTitle()}
         </h1>
-        <p style={{ fontSize: '16px', fontWeight: 500, color: '#64748b' }}>
+        <p className="hidden sm:block" style={{ fontSize: '16px', fontWeight: 500, color: '#64748b' }}>
           {getPageSubtitle()}
         </p>
+        </div>
       </div>
 
       {/* Right: Actions & Profile */}

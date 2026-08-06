@@ -138,3 +138,11 @@ html {
   background-color: rgba(229, 57, 53, 0.15);
   color: var(--color-foreground);
 }
+@media (min-width: 1024px) {
+  .admin-desktop-scale {
+    transform: scale(0.8);
+    transform-origin: top left;
+    width: 125vw !important;
+    height: 125vh !important;
+  }
+}

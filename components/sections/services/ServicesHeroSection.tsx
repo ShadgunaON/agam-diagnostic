@@ -18,7 +18,7 @@ export function ServicesHeroSection({ data, className = '' }: ServicesHeroSectio
       className={`hero-premium section ${className}`.trim()}
       style={{ padding: 0, background: 'var(--color-bg-alt)', overflow: 'hidden', position: 'relative' }}
     >
-      <Grid style={{ gridTemplateColumns: '45% 55%', alignItems: 'stretch' }}>
+      <div className="grid grid-cols-1 md:grid-cols-[45%_55%] items-stretch">
         
         {/* Content Left */}
         <div style={{ padding: 'var(--sp-2) var(--sp-6) var(--sp-10) max(var(--sp-6), calc((100vw - var(--max-width)) / 2 + var(--sp-6)))', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', zIndex: 2 }}>
@@ -38,7 +38,7 @@ export function ServicesHeroSection({ data, className = '' }: ServicesHeroSectio
           <img src={data.image} alt="Diagnostic Services" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '20% center', borderRadius: 0 }} />
         </div>
         
-      </Grid>
+      </div>
     </Section>
   );
 }

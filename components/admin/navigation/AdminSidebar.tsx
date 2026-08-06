@@ -42,7 +42,6 @@ const adminNavigation: NavigationGroup[] = [
       { title: 'Staff & Roles', href: '/admin/staff', icon: 'userCog', roles: ['ADMIN'] },
       { title: 'Tests & Packages', href: '/admin/catalog', icon: 'testTube', roles: ['ADMIN', 'DOCTOR'] },
       { title: 'Inventory', href: '/admin/inventory', icon: 'box', roles: ['ADMIN', 'STAFF'] },
-      { title: 'Finances', href: '/admin/finances', icon: 'creditCard', roles: ['ADMIN'] },
     ]
   },
   {
@@ -53,7 +52,7 @@ const adminNavigation: NavigationGroup[] = [
   }
 ];
 
-export function AdminSidebar({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean, setIsCollapsed: (val: boolean) => void }) {
+export function AdminSidebar({ isCollapsed = false, setIsCollapsed = () => {} }: { isCollapsed?: boolean, setIsCollapsed?: (val: boolean) => void }) {
   const pathname = usePathname();
 
   // Mock role for now - replace with actual auth state later
@@ -66,7 +65,7 @@ export function AdminSidebar({ isCollapsed, setIsCollapsed }: { isCollapsed: boo
   return (
     <aside
       style={{ width: isCollapsed ? 80 : 210, flexShrink: 0, position: 'relative', display: 'flex' }}
-      className="bg-[#1A2234] border-r border-[#26314A] flex-col transition-all duration-400 ease-[cubic-bezier(0.2,0.8,0.2,1)] z-40"
+      className="hidden lg:flex bg-[#1A2234] border-r border-[#26314A] flex-col transition-all duration-400 ease-[cubic-bezier(0.2,0.8,0.2,1)] z-40"
     >
       <div
         className="flex items-center justify-between shrink-0"

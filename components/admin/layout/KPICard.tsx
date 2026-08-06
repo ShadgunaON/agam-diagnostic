@@ -168,7 +168,7 @@ export function KPICard({
         </div>
 
         {/* Large Metric */}
-        <div style={{ fontSize: '32px', fontWeight: 700, color: '#0f172a', lineHeight: '1', marginBottom: '12px' }}>
+        <div style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', lineHeight: '1', marginBottom: '12px' }}>
           {animatedValue}
         </div>
 

@@ -177,7 +177,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* 3. Quick Actions */}
-      <div style={{ marginTop: '16px', marginBottom: '24px', paddingLeft: '40px', paddingRight: '40px' }}>
+      <div className="mt-4 mb-6 px-4 md:px-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
           {quickActions.map((action, index) => {
             const colorClasses = [
@@ -206,8 +206,7 @@ export default function AdminDashboardPage() {
       <div style={{ marginBottom: '40px' }}>
         <AdminCard padding="none" className="overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] rounded-xl border border-slate-200 bg-white">
           <div
-            className="flex items-center justify-between py-6 pr-6 border-b border-slate-200"
-            style={{ paddingLeft: '40px' }}
+            className="flex items-center justify-between py-6 pr-6 pl-4 md:pl-10 border-b border-slate-200"
           >
             <div>
               <div className="text-[14px] font-bold text-slate-800 uppercase tracking-wider">Recent Bookings</div>
