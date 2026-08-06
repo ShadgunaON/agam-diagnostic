@@ -28,7 +28,8 @@ const adminNavigation = [
   {
     title: 'Management',
     items: [
-      { title: 'Staff & Roles', href: '/admin/staff', icon: 'users' as const, roles: ['ADMIN'] },
+      { title: 'Staff & Roles', href: '/admin/staff', icon: 'userCog' as const, roles: ['ADMIN'] },
+      { title: 'Content / Blogs', href: '/admin/blogs', icon: 'fileText' as const, roles: ['ADMIN'] },
     ]
   },
   {

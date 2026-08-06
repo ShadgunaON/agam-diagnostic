@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { AdminIcon } from '../navigation/AdminIcons';
 import { AdminButton } from '../primitives/AdminButton';
@@ -82,7 +83,7 @@ export function AdminTopbar() {
         <div className="bg-[#E5E7EB]" style={{ width: '1px', height: '24px' }}></div>
 
         {/* User Profile */}
-        <button className="flex items-center hover:bg-slate-50 transition-colors" style={{ borderRadius: '12px', padding: '6px' }}>
+        <Link href="/admin/profile" className="flex items-center hover:bg-slate-50 transition-colors" style={{ borderRadius: '12px', padding: '6px', textDecoration: 'none' }}>
           {/* Avatar */}
           <div className="bg-slate-800 flex items-center justify-center shrink-0 shadow-sm" style={{ width: '44px', height: '44px', borderRadius: '12px' }}>
             <span className="text-white text-[14px] font-bold tracking-wider leading-none">AS</span>
@@ -96,7 +97,7 @@ export function AdminTopbar() {
 
           {/* Dropdown Indicator */}
           <AdminIcon name="chevronDown" className="text-slate-400" style={{ width: '16px', height: '16px', marginRight: '4px' }} strokeWidth={2.5} />
-        </button>
+        </Link>
 
       </div>
     </header>

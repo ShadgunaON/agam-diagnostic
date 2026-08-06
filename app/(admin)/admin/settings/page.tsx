@@ -1,362 +1,307 @@
 'use client';
 
 import React, { useState } from 'react';
-import { AdminIcon, AdminIconName } from '@/components/admin/navigation/AdminIcons';
-import { AdminCard } from '@/components/admin/primitives/AdminCard';
-import { AdminInput } from '@/components/admin/primitives/AdminInput';
-import { Select } from '@/components/ui/Select';
-import { Textarea } from '@/components/ui/Textarea';
+import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
+import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
 
-/* ── Custom Toggle Switch ───────────────────────────────────── */
-function SettingsToggle({
-  checked,
-  onChange,
-}: {
-  checked?: boolean;
-  onChange?: (checked: boolean) => void;
-}) {
-  const [internalChecked, setInternalChecked] = useState(checked || false);
+const navItems = [
+  { id: 'profile', title: 'Lab Profile & Compliance', icon: 'building', desc: 'Accreditations & signatures' },
+  { id: 'equipment', title: 'Equipment & Integrations', icon: 'flask', desc: 'LIS & machine interfacing' },
+  { id: 'reports', title: 'Report Formatting', icon: 'fileText', desc: 'PDF layouts & branding' },
+  { id: 'comms', title: 'Patient Communications', icon: 'messageSquare', desc: 'SMS alerts & delivery rules' },
+];
 
-  const toggle = () => {
-    const newVal = !internalChecked;
-    setInternalChecked(newVal);
-    onChange?.(newVal);
-  };
+export default function DiagnosticsSettingsPage() {
+  const [activeTab, setActiveTab] = useState(navItems[0].id);
 
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={internalChecked}
-      onClick={toggle}
-      className={`relative inline-flex h-[28px] w-[48px] shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-180 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 ${internalChecked ? 'bg-slate-900' : 'bg-slate-200'
-        }`}
-    >
-      <span
-        aria-hidden="true"
-        className={`pointer-events-none inline-block h-[24px] w-[24px] transform rounded-full bg-white shadow-sm ring-0 transition duration-180 ease-in-out ${internalChecked ? 'translate-x-[20px]' : 'translate-x-0'
-          }`}
-      />
-    </button>
-  );
-}
-
-/* ── Reusable Settings Card ────────────────────────────────── */
-function SettingsCard({
-  title,
-  description,
-  children,
-  danger,
-  onSave,
-  onCancel,
-}: {
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-  danger?: boolean;
-  onSave?: () => void;
-  onCancel?: () => void;
-}) {
-  const [isSaving, setIsSaving] = useState(false);
-
-  const handleSave = () => {
-    setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
-      onSave?.();
-    }, 600);
-  };
-
-  return (
-    <div
-      style={{ padding: '40px' }}
-      className={`flex flex-col flex-1 bg-white rounded-2xl animate-in fade-in slide-in-from-bottom-2 duration-300 ${danger
-          ? 'border border-red-200 bg-red-50/10'
-          : 'border border-[#CBD5E1] shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05),0_1px_2px_-1px_rgba(0,0,0,0.03)]'
-        }`}
-    >
-      {/* Card Header */}
-      <div className="mb-[24px]">
-        <div className={`text-[22px] font-bold tracking-tight ${danger ? 'text-red-600' : 'text-slate-900'}`}>
-          {title}
-        </div>
-        {description && (
-          <p className={`text-[15px] mt-1 ${danger ? 'text-red-500/80' : 'text-slate-500'}`}>
-            {description}
-          </p>
-        )}
-      </div>
-
-      <div className="h-[1px] w-full bg-slate-200 mb-[32px]" />
-
-      {/* Card Body */}
-      <div className="flex flex-col gap-10 flex-1">
-        {children}
-      </div>
-
-      {/* Action Footer */}
-      {!danger && (
-        <>
-          <div className="h-[1px] w-full bg-slate-200 mt-[32px] mb-[24px]" />
-          <div className="flex items-center justify-end gap-[16px]">
-            <button
-              onClick={onCancel}
-              className="h-[52px] px-[24px] rounded-[8px] border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-medium text-[16px] transition-colors active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+    <AdminPageTemplate>
+      <div 
+        style={{ 
+          maxWidth: '1600px', 
+          width: '100%',
+          margin: '0 auto', 
+          padding: '32px 40px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '32px',
+          minHeight: '100%',
+          fontFamily: 'Inter, system-ui, sans-serif'
+        }}
+      >
+        {/* TOP HEADER */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ffffff', padding: '24px 32px', borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)' }}>
+          <div>
+            <h1 style={{ fontSize: '28px', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>Platform Configuration</h1>
+            <p style={{ fontSize: '15px', fontWeight: 500, color: '#64748b', margin: '4px 0 0 0' }}>Manage clinical standards, equipment integrations, and communication rules.</p>
+          </div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button 
+              style={{ 
+                height: '44px', padding: '0 24px', borderRadius: '12px', border: '1px solid #e2e8f0', 
+                backgroundColor: '#ffffff', color: '#475569', 
+                fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
             >
-              Cancel
+              Cancel Changes
             </button>
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="h-[52px] px-[24px] rounded-[8px] bg-slate-900 hover:bg-slate-800 text-white font-medium text-[16px] transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center gap-[8px] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+            <button 
+              style={{ 
+                height: '44px', padding: '0 24px', borderRadius: '12px', border: 'none', 
+                backgroundColor: '#0f172a', color: '#ffffff', 
+                fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)', transition: 'transform 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
             >
-              {isSaving ? (
-                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-              ) : 'Save Changes'}
+              <AdminIcon name="check" style={{ width: '18px', height: '18px' }} />
+              Save Configuration
             </button>
           </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-/* ── Reusable Section Row (Stacked Form Layout) ────────────── */
-function SettingsRow({
-  label,
-  description,
-  children,
-  controlRight,
-}: {
-  label: string;
-  description?: string;
-  children?: React.ReactNode;
-  controlRight?: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between gap-6">
-        <div className="flex flex-col gap-2 max-w-[640px]">
-          <label className="text-lg font-semibold text-slate-900 block">
-            {label}
-          </label>
-          {description && (
-            <p className="text-[15px] text-slate-500 leading-relaxed">
-              {description}
-            </p>
-          )}
         </div>
-        {controlRight && (
-          <div className="shrink-0 pt-[2px]">
-            {controlRight}
-          </div>
-        )}
-      </div>
-      {children && (
-        <div className="w-full max-w-[640px]">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-}
 
-/* ── Page ───────────────────────────────────────────────────── */
-export default function SettingsPage() {
-  const [activeNav, setActiveNav] = useState('Clinic Profile');
-
-  const navGroups = [
-    {
-      title: 'GENERAL',
-      items: [
-        { name: 'Clinic Profile', icon: 'settings' as AdminIconName, description: 'Basic organizational details' },
-        { name: 'Branding', icon: 'layoutDashboard' as AdminIconName, description: 'Logos, colors & assets' },
-      ],
-    },
-    {
-      title: 'COMMUNICATION',
-      items: [
-        { name: 'Notifications', icon: 'bell' as AdminIconName, description: 'Internal team alerts' },
-        { name: 'SMS', icon: 'messageSquare' as AdminIconName, description: 'Patient text messaging' },
-        { name: 'Email', icon: 'fileText' as AdminIconName, description: 'Invoice & report templates' },
-      ],
-    },
-    {
-      title: 'BUSINESS',
-      items: [
-        { name: 'Billing', icon: 'creditCard' as AdminIconName, description: 'Subscription & invoices' },
-        { name: 'Payments', icon: 'activity' as AdminIconName, description: 'Gateways & processing' },
-      ],
-    },
-    {
-      title: 'MANAGEMENT',
-      items: [
-        { name: 'Tests & Packages', icon: 'flask' as AdminIconName, description: 'Lab catalog pricing' },
-        { name: 'Inventory', icon: 'box' as AdminIconName, description: 'Reagents & supplies' },
-      ],
-    },
-  ];
-
-  return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#F8FAFC]">
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
-
-        {/* Main Content Constraint */}
-        <div className="max-w-[1440px] mx-auto w-full px-[40px] pt-[40px] pb-[80px] flex flex-col min-h-full">
-
-          {/* Layout Structure: Nav + Content */}
-          <div className="flex items-stretch gap-[32px] flex-1">
-
-            {/* Sidebar Navigation */}
-            <nav className="w-[320px] shrink-0 bg-white border border-[#E2E8F0] rounded-[12px] p-[20px] flex flex-col gap-[24px] shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
-              {navGroups.map((group) => (
-                <div key={group.title} className="flex flex-col gap-[12px]">
-                  <div className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-500 px-[16px]">
-                    {group.title}
+        {/* SPLIT DASHBOARD LAYOUT */}
+        <div style={{ display: 'flex', gap: '32px', flex: 1, minHeight: '700px' }}>
+          
+          {/* LEFT: SETTINGS NAVIGATION */}
+          <div style={{ width: '380px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {navItems.map(item => {
+              const isActive = activeTab === item.id;
+              
+              return (
+                <div 
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  style={{
+                    padding: '20px',
+                    backgroundColor: isActive ? '#ffffff' : 'transparent',
+                    borderRadius: '16px',
+                    border: `1px solid ${isActive ? '#bfdbfe' : 'transparent'}`,
+                    boxShadow: isActive ? '0 10px 25px -5px rgba(59, 130, 246, 0.1)' : 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px'
+                  }}
+                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = '#f8fafc' }}
+                  onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = 'transparent' }}
+                >
+                  {isActive && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', backgroundColor: '#3b82f6' }} />}
+                  
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: isActive ? '#eff6ff' : '#f1f5f9', color: isActive ? '#2563eb' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <AdminIcon name={item.icon as any} style={{ width: '20px', height: '20px' }} />
                   </div>
-                  <div className="flex flex-col gap-[4px]">
-                    {group.items.map((item) => {
-                      const isActive = activeNav === item.name;
-                      return (
-                        <button
-                          key={item.name}
-                          onClick={() => setActiveNav(item.name)}
-                          className={`flex items-center gap-[14px] h-[68px] px-[16px] rounded-[10px] transition-all duration-200 text-left relative overflow-hidden group ${isActive
-                              ? 'bg-blue-50/50'
-                              : 'hover:bg-slate-50 bg-transparent'
-                            }`}
-                        >
-                          {/* Active Left Indicator */}
-                          {isActive && (
-                            <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-blue-600 rounded-r-full" />
-                          )}
-
-                          {/* Icon Container */}
-                          <div className={`w-[40px] h-[40px] rounded-[10px] flex items-center justify-center shrink-0 transition-colors ${isActive ? 'bg-blue-100 text-blue-700' : 'bg-slate-50 text-slate-500 group-hover:bg-white group-hover:shadow-sm'
-                            }`}>
-                            <AdminIcon name={item.icon} className="w-[20px] h-[20px]" />
-                          </div>
-
-                          {/* Text Container */}
-                          <div className="flex flex-col justify-center">
-                            <span className={`text-[16px] ${isActive ? 'font-bold text-slate-900' : 'font-semibold text-slate-700'}`}>
-                              {item.name}
-                            </span>
-                            <span className="text-[13px] text-slate-500 font-normal">
-                              {item.description}
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
+                  
+                  <div>
+                    <div style={{ fontSize: '15px', fontWeight: 800, color: isActive ? '#0f172a' : '#475569', marginBottom: '2px' }}>{item.title}</div>
+                    <div style={{ fontSize: '13px', fontWeight: 500, color: '#94a3b8' }}>{item.desc}</div>
                   </div>
                 </div>
-              ))}
-            </nav>
+              );
+            })}
+          </div>
 
-            {/* Main Content Area */}
-            <main className="flex-1 flex flex-col gap-[24px] min-w-0 pb-[80px] max-w-[840px]">
+          {/* RIGHT: CONFIGURATION PANELS */}
+          <div style={{ flex: 1, backgroundColor: '#ffffff', borderRadius: '24px', border: '1px solid #e2e8f0', padding: '40px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', gap: '40px' }}>
+            
+            {activeTab === 'profile' && (
+              <>
+                <div>
+                  <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#0f172a', margin: '0 0 4px 0' }}>Lab Profile & Compliance</h2>
+                  <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>Manage organizational identity and clinical accreditations.</p>
+                </div>
 
-              {/* === CLINIC PROFILE === */}
-              {activeNav === 'Clinic Profile' && (
-                <>
-                  <SettingsCard
-                    title="Clinic Profile"
-                  >
-                    <SettingsRow
-                      label="Diagnostic Center Overview"
-                    >
-                      <AdminCard padding="none" className="bg-slate-50 border-slate-200 shadow-sm focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 focus-within:bg-white transition-all">
-                        <textarea
-                          style={{ padding: '24px' }}
-                          className="w-full min-h-[140px] bg-transparent text-base text-slate-900 resize-none focus-visible:outline-none"
-                          defaultValue="Agam Diagnostics is a state-of-the-art pathology and imaging center fully accredited by NABL. We specialize in advanced hematology, molecular diagnostics, and comprehensive preventative health checkups."
-                          placeholder="Describe your clinic's accreditations and specialties..."
-                        />
-                      </AdminCard>
-                    </SettingsRow>
-
-                    <SettingsRow
-                      label="Chief Pathologist Details"
-                    >
-                      <AdminCard padding="none" className="bg-slate-50 border-slate-200 shadow-sm focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 focus-within:bg-white transition-all">
-                        <textarea
-                          style={{ padding: '24px' }}
-                          className="w-full min-h-[88px] bg-transparent text-base text-slate-900 resize-none focus-visible:outline-none"
-                          defaultValue="Dr. S. Ramakrishnan, MD (Pathology)&#10;Reg No: 45892 (Tamil Nadu Medical Council)"
-                          placeholder="Pathologist Name & Registration Number"
-                        />
-                      </AdminCard>
-                    </SettingsRow>
-
-                    <SettingsRow
-                      label="Emergency Contact"
-                    >
-                      <input
-                        type="tel"
-                        className="w-full h-[52px] px-[16px] rounded-[8px] bg-slate-50 border border-slate-300 text-[16px] text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:border-blue-500 focus-visible:bg-white transition-all shadow-sm"
-                        defaultValue="+91 98765 43210 (24x7 Critical Line)"
-                        placeholder="Critical values contact number"
-                      />
-                    </SettingsRow>
-                  </SettingsCard>
-                </>
-              )}
-
-
-
-
-
-              {/* === NOTIFICATIONS === */}
-              {activeNav === 'Notifications' && (
-                <SettingsCard
-                  title="Notification Preferences"
-                  description="Choose how and when your team receives alerts and summaries."
-                >
-                  <SettingsRow
-                    label="Email Notifications"
-                    description="Receive order confirmations and report alerts via email."
-                    controlRight={<SettingsToggle checked={true} />}
-                  />
-                  <SettingsRow
-                    label="SMS Alerts"
-                    description="Get critical alerts via SMS to your registered phone number."
-                    controlRight={<SettingsToggle checked={false} />}
-                  />
-                  <SettingsRow
-                    label="In-App Notifications"
-                    description="Show notification badges inside the admin dashboard."
-                    controlRight={<SettingsToggle checked={true} />}
-                  />
-                  <SettingsRow
-                    label="Weekly Digest"
-                    description="Receive a weekly summary of activity, analytics, and revenue."
-                    controlRight={<SettingsToggle checked={false} />}
-                  />
-                </SettingsCard>
-              )}
-
-
-
-              {/* Placeholder for unimplemented tabs */}
-              {['Branding', 'SMS', 'Email', 'Billing', 'Payments', 'Tests & Packages', 'Inventory'].includes(activeNav) && (
-                <SettingsCard
-                  title={activeNav}
-                  description={`Settings for ${activeNav.toLowerCase()} are currently being migrated to the new interface.`}
-                >
-                  <div className="h-[200px] flex items-center justify-center border-2 border-dashed border-slate-200 rounded-[8px] bg-slate-50">
-                    <p className="text-[15px] text-slate-500 font-medium">Coming Soon</p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: 800, color: '#334155' }}>Facility Name</label>
+                    <input type="text" defaultValue="Agam Diagnostics Center" style={{ height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', fontWeight: 600, color: '#0f172a', outline: 'none' }} />
                   </div>
-                </SettingsCard>
-              )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: 800, color: '#334155' }}>NABL Accreditation Number</label>
+                    <input type="text" defaultValue="MC-2938475" style={{ height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', fontWeight: 600, color: '#0f172a', outline: 'none' }} />
+                  </div>
+                </div>
 
-            </main>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 800, color: '#334155' }}>Registered Address</label>
+                  <textarea defaultValue="124 Health Avenue, Medical District, Suite 400" style={{ height: '80px', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', fontWeight: 600, color: '#0f172a', outline: 'none', resize: 'none' }} />
+                </div>
+
+                <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '32px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: '0 0 16px 0' }}>Default Pathologist Signature</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '24px', padding: '24px', borderRadius: '16px', border: '2px dashed #cbd5e1', backgroundColor: '#f8fafc' }}>
+                    <div style={{ width: '120px', height: '60px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ fontFamily: 'cursive', color: '#1e3a8a', fontSize: '18px' }}>Dr. Smith</span>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>dr_smith_signature.png</div>
+                      <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>PNG, 2.4 MB</div>
+                      <button style={{ marginTop: '12px', padding: '6px 12px', fontSize: '12px', fontWeight: 700, color: '#2563eb', backgroundColor: '#eff6ff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Upload New Signature</button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {activeTab === 'equipment' && (
+              <>
+                <div>
+                  <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#0f172a', margin: '0 0 4px 0' }}>Equipment & Integrations</h2>
+                  <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>Configure LIS bridging and automated analyzer connections.</p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  <div style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <AdminIcon name="activity" style={{ width: '24px', height: '24px' }} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>Sysmex XN-1000 Hematology</div>
+                        <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>HL7 Bi-directional • COM Port 4</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
+                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#16a34a' }}></span>
+                          <span style={{ fontSize: '12px', fontWeight: 700, color: '#16a34a' }}>Connected & Listening</span>
+                        </div>
+                      </div>
+                    </div>
+                    <button style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 700, color: '#475569', backgroundColor: '#f1f5f9', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Configure</button>
+                  </div>
+
+                  <div style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: '#fef2f2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <AdminIcon name="flask" style={{ width: '24px', height: '24px' }} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>Roche Cobas 6000</div>
+                        <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>ASTM Protocol • TCP/IP 192.168.1.50</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
+                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#dc2626' }}></span>
+                          <span style={{ fontSize: '12px', fontWeight: 700, color: '#dc2626' }}>Connection Failed</span>
+                        </div>
+                      </div>
+                    </div>
+                    <button style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 700, color: '#475569', backgroundColor: '#f1f5f9', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Reconnect</button>
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '32px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: '0 0 16px 0' }}>Hospital Information System (HIS) Sync</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <label style={{ fontSize: '13px', fontWeight: 800, color: '#334155' }}>HIS Endpoint URL</label>
+                      <input type="text" defaultValue="https://api.agam-his.local/v1/sync" style={{ height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', fontWeight: 600, color: '#0f172a', outline: 'none' }} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <label style={{ fontSize: '13px', fontWeight: 800, color: '#334155' }}>Sync Frequency</label>
+                      <select style={{ height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', fontWeight: 600, color: '#0f172a', outline: 'none', backgroundColor: '#fff' }}>
+                        <option>Real-time (Webhooks)</option>
+                        <option>Every 15 Minutes</option>
+                        <option>Hourly Batch</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {activeTab === 'reports' && (
+              <>
+                <div>
+                  <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#0f172a', margin: '0 0 4px 0' }}>Report Formatting</h2>
+                  <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>Design how clinical reports are presented to patients and doctors.</p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>Highlight Abnormal Values</div>
+                      <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>Values outside reference ranges will be printed in bold red.</div>
+                    </div>
+                    <div style={{ width: '48px', height: '28px', backgroundColor: '#10b981', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
+                      <div style={{ width: '22px', height: '22px', backgroundColor: '#fff', borderRadius: '50%', position: 'absolute', top: '3px', left: '23px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}></div>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>Print Patient QR Code</div>
+                      <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>Add a scannable verification QR code to the footer of every report.</div>
+                    </div>
+                    <div style={{ width: '48px', height: '28px', backgroundColor: '#10b981', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
+                      <div style={{ width: '22px', height: '22px', backgroundColor: '#fff', borderRadius: '50%', position: 'absolute', top: '3px', left: '23px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}></div>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>Include Methodology Notes</div>
+                      <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>Append testing methodologies (e.g., CLIA, HPLC) below each parameter.</div>
+                    </div>
+                    <div style={{ width: '48px', height: '28px', backgroundColor: '#e2e8f0', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
+                      <div style={{ width: '22px', height: '22px', backgroundColor: '#fff', borderRadius: '50%', position: 'absolute', top: '3px', left: '3px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '32px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: '0 0 16px 0' }}>Report Header Margin (mm)</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <input type="number" defaultValue={45} style={{ width: '100px', height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', fontWeight: 800, color: '#0f172a', outline: 'none' }} />
+                    <span style={{ fontSize: '14px', color: '#64748b' }}>Leave space for pre-printed letterheads.</span>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {activeTab === 'comms' && (
+              <>
+                <div>
+                  <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#0f172a', margin: '0 0 4px 0' }}>Patient Communications</h2>
+                  <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>Automated triggers for SMS, WhatsApp, and Email alerts.</p>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
+                  <div style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                      <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>Pre-Test Fasting Reminders</div>
+                      <div style={{ width: '48px', height: '28px', backgroundColor: '#10b981', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
+                        <div style={{ width: '22px', height: '22px', backgroundColor: '#fff', borderRadius: '50%', position: 'absolute', top: '3px', left: '23px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}></div>
+                      </div>
+                    </div>
+                    <textarea 
+                      defaultValue="Dear {patient_name}, reminder for your test tomorrow. Please maintain {fasting_hours} hours fasting. - Agam Diagnostics" 
+                      style={{ width: '100%', height: '80px', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', color: '#475569', outline: 'none', resize: 'none' }} 
+                    />
+                  </div>
+
+                  <div style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                      <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>WhatsApp Report Delivery</div>
+                      <div style={{ width: '48px', height: '28px', backgroundColor: '#10b981', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
+                        <div style={{ width: '22px', height: '22px', backgroundColor: '#fff', borderRadius: '50%', position: 'absolute', top: '3px', left: '23px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}></div>
+                      </div>
+                    </div>
+                    <textarea 
+                      defaultValue="Hello {patient_name}, your clinical reports are ready. Click here to download securely: {report_link}" 
+                      style={{ width: '100%', height: '80px', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', color: '#475569', outline: 'none', resize: 'none' }} 
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
           </div>
         </div>
       </div>
-    </div>
+    </AdminPageTemplate>
   );
 }
