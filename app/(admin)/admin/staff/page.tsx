@@ -277,9 +277,9 @@ function RolesView() {
         </div>
       </div>
 
-      <div className="flex flex-row items-start w-full" style={{ gap: '24px' }}>
+      <div className="flex flex-col lg:flex-row items-start w-full gap-6">
         {/* Left Sidebar Roles List - SINGLE CARD CONTAINER */}
-        <div className="shrink-0 flex flex-col bg-white border border-slate-200 shadow-sm overflow-hidden" style={{ width: '420px', borderRadius: '16px' }}>
+        <div className="w-full lg:w-[420px] shrink-0 flex flex-col bg-white border border-slate-200 shadow-sm overflow-hidden rounded-2xl">
 
           {/* Search & Actions Header */}
           <div className="p-4 border-b border-slate-200 bg-slate-50/50">

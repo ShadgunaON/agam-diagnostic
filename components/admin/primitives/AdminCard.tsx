@@ -22,7 +22,6 @@ export const AdminCard = React.forwardRef<HTMLDivElement, AdminCardProps>(({
     <div
       ref={ref}
       className={`bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col ${paddingMap[padding]} ${className}`}
-      style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', display: 'flex', flexDirection: 'column' }}
       {...props}
     >
       {children}

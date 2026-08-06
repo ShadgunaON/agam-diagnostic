@@ -93,10 +93,10 @@ export default function ClinicalReportsWorkspace() {
     <AdminPageTemplate>
       <div style={{ paddingBottom: '40px' }}>
         {/* Workspace Layout */}
-        <div style={{ display: 'flex', gap: '24px', minHeight: 'calc(100vh - 200px)' }}>
+        <div className="flex flex-col lg:flex-row gap-6 min-h-[calc(100vh-200px)]">
           
           {/* LEFT PANE: Verification Queue */}
-          <div style={{ width: '380px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className="w-full lg:w-[380px] shrink-0 flex flex-col gap-4">
             
             {/* Queue Header */}
             <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
