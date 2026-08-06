@@ -63,7 +63,7 @@ export default function GlassProfilePage() {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 style={{
-                  height: '52px', padding: '0 20px', borderRadius: '16px', border: 'none', cursor: 'pointer',
+                  height: '52px', padding: '0 20px', borderRadius: '16px', cursor: 'pointer',
                   fontSize: '15px', fontWeight: 700, textAlign: 'left', transition: 'all 0.2s',
                   backgroundColor: activeTab === tab ? '#ffffff' : 'transparent',
                   color: activeTab === tab ? '#0f172a' : '#64748b',

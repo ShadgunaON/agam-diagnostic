@@ -43,7 +43,9 @@ export type AdminIconName =
   | 'layoutDashboard'
   | 'barChart'
   | 'userCog'
-  | 'box';
+  | 'box'
+  | 'send'
+  | 'flask';
 
 interface AdminIconProps extends React.SVGProps<SVGSVGElement> {
   name: AdminIconName;
@@ -382,6 +384,23 @@ export function AdminIcon({ name, className = '', ...props }: AdminIconProps) {
           <path d="M9 14h2"></path>
           <path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"></path>
           <path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"></path>
+        </svg>
+      );
+    case 'send':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={baseClass} {...props}>
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      );
+    case 'flask':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={baseClass} {...props}>
+          <path d="M10 2v7.31"></path>
+          <path d="M14 9.3V1.99"></path>
+          <path d="M8.5 2h7"></path>
+          <path d="M14 9.3a6.5 6.5 0 1 1-4 0"></path>
+          <path d="M5.52 16h12.96"></path>
         </svg>
       );
     default:
