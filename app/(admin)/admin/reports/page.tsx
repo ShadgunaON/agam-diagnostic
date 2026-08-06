@@ -136,7 +136,7 @@ export default function ClinicalReportsWorkspace() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '12px', fontWeight: 500, color: '#94a3b8' }}>{report.time}</span>
                     {report.status === 'Published' ? (
-                       <AdminIcon name="checkCircle" strokeWidth={2.5} style={{ width: '16px', height: '16px', color: '#10b981' }} />
+                       <AdminIcon name="check" strokeWidth={2.5} style={{ width: '16px', height: '16px', color: '#10b981' }} />
                     ) : (
                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#f59e0b', backgroundColor: '#fffbeb', padding: '4px 8px', borderRadius: '4px' }}>Needs Review</span>
                     )}
