@@ -62,7 +62,7 @@ export default function GlassAnalyticsPage() {
         </div>
 
         {/* GLASS KPI CARDS */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' }}>
+        <div className="admin-responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' }}>
           {[
             { label: "Total Revenue", value: '₹4.2M', icon: 'creditCard', trend: '+15.2%', color: '#3b82f6' },
             { label: "Tests Conducted", value: '12.4K', icon: 'testTube', trend: '+8.4%', color: '#10b981' },
@@ -101,7 +101,7 @@ export default function GlassAnalyticsPage() {
         </div>
 
         {/* BOTTOM SECTIONS */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+        <div className="admin-responsive-grid-2col" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
           
           {/* REVENUE CHART */}
           <div style={{ ...glassStyle, padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>

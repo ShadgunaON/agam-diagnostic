@@ -40,7 +40,7 @@ export function AdminTopbar() {
         <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a', lineHeight: '1.2' }}>
           {getPageTitle()}
         </h1>
-        <p className="hidden sm:block" style={{ fontSize: '16px', fontWeight: 500, color: '#64748b' }}>
+        <p className="admin-hide-mobile" style={{ fontSize: '16px', fontWeight: 500, color: '#64748b' }}>
           {getPageSubtitle()}
         </p>
         </div>
@@ -50,7 +50,7 @@ export function AdminTopbar() {
       <div className="flex items-center justify-end shrink-0" style={{ gap: '20px' }}>
 
         {/* Search */}
-        <div style={{ width: '480px', height: '52px' }} className="hidden sm:block relative">
+        <div style={{ width: '480px', height: '52px' }} className="admin-hide-mobile relative">
           <div
             className="flex items-center w-full h-full bg-white border border-[#E5E7EB] shadow-[0_1px_2px_rgba(0,0,0,0.02)] cursor-pointer hover:border-slate-300 transition-colors"
             style={{ borderRadius: '14px', padding: '0 16px' }}
@@ -90,7 +90,7 @@ export function AdminTopbar() {
           </div>
 
           {/* Details */}
-          <div className="flex flex-col items-start hidden sm:flex justify-center" style={{ marginLeft: '14px', marginRight: '8px' }}>
+          <div className="admin-hide-mobile flex-col items-start justify-center" style={{ display: 'flex', marginLeft: '14px', marginRight: '8px' }}>
             <span className="font-semibold text-slate-900 leading-none" style={{ fontSize: '16px', marginBottom: '4px' }}>Admin Staff</span>
             <span className="font-medium text-slate-500 leading-none" style={{ fontSize: '13px' }}>System Manager</span>
           </div>

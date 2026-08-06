@@ -55,7 +55,7 @@ export default function GlassProfilePage() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '32px' }}>
+        <div className="admin-responsive-grid-2col" style={{ display: 'flex', gap: '32px' }}>
           {/* LEFT: NAV */}
           <div style={{ width: '280px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {['Personal Details', 'Security & Password', 'Notifications'].map(tab => (
@@ -83,7 +83,7 @@ export default function GlassProfilePage() {
               <>
                 <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: 0, paddingBottom: '20px', borderBottom: '1px solid rgba(226, 232, 240, 0.8)' }}>Basic Information</h3>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                <div className="admin-responsive-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 800, color: '#334155' }}>First Name</label>
                     <input type="text" defaultValue="Admin" style={{ height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid rgba(226, 232, 240, 0.8)', backgroundColor: 'rgba(255,255,255,0.5)', fontSize: '14px', fontWeight: 600, color: '#0f172a', outline: 'none' }} />

@@ -71,7 +71,7 @@ export default function GlassDashboard() {
         </div>
 
         {/* GLASS KPI CARDS */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' }}>
+        <div className="admin-responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' }}>
           {[
             { label: "Today's Bookings", value: '24', icon: 'calendar', trend: '+12%', color: '#3b82f6' },
             { label: "Pending Tests", value: '6', icon: 'clock', trend: '-2%', color: '#f59e0b' },
@@ -110,7 +110,7 @@ export default function GlassDashboard() {
         </div>
 
         {/* QUICK ACTIONS (FLOATING PILLS) */}
-        <div style={{ display: 'flex', gap: '16px' }}>
+        <div className="admin-quick-actions" style={{ display: 'flex', gap: '16px' }}>
           {[
             { label: 'New Booking', icon: 'plus', bg: 'linear-gradient(135deg, #3b82f6, #2563eb)' },
             { label: 'Upload Report', icon: 'fileText', bg: 'linear-gradient(135deg, #10b981, #059669)' },
@@ -141,7 +141,7 @@ export default function GlassDashboard() {
         </div>
 
         {/* BOTTOM SECTIONS */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+        <div className="admin-responsive-grid-2col" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
           
           {/* RECENT BOOKINGS GLASS TABLE */}
           <div style={{ ...glassStyle, padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -152,12 +152,13 @@ export default function GlassDashboard() {
               </button>
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="admin-table-container" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {recentBookings.map((booking) => {
                 const statusTheme = getStatusColor(booking.status);
                 return (
                   <div 
                     key={booking.id}
+                    className="admin-table-row"
                     style={{ 
                       display: 'grid', gridTemplateColumns: '1fr 2fr 1fr 1fr 1fr', alignItems: 'center', 
                       backgroundColor: 'rgba(255,255,255,0.5)', padding: '16px 20px', borderRadius: '16px',

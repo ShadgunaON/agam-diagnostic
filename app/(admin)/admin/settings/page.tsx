@@ -65,7 +65,7 @@ export default function DiagnosticsSettingsPage() {
         </div>
 
         {/* SPLIT DASHBOARD LAYOUT */}
-        <div style={{ display: 'flex', gap: '32px', flex: 1, minHeight: '700px' }}>
+        <div className="admin-responsive-grid-2col" style={{ display: 'flex', gap: '32px', flex: 1, minHeight: '700px' }}>
           
           {/* LEFT: SETTINGS NAVIGATION */}
           <div style={{ width: '380px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -118,7 +118,7 @@ export default function DiagnosticsSettingsPage() {
                   <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>Manage organizational identity and clinical accreditations.</p>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+                <div className="admin-responsive-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 800, color: '#334155' }}>Facility Name</label>
                     <input type="text" defaultValue="Agam Diagnostics Center" style={{ height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', fontWeight: 600, color: '#0f172a', outline: 'none' }} />
@@ -195,7 +195,7 @@ export default function DiagnosticsSettingsPage() {
 
                 <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '32px' }}>
                   <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: '0 0 16px 0' }}>Hospital Information System (HIS) Sync</h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                  <div className="admin-responsive-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <label style={{ fontSize: '13px', fontWeight: 800, color: '#334155' }}>HIS Endpoint URL</label>
                       <input type="text" defaultValue="https://api.agam-his.local/v1/sync" style={{ height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', fontWeight: 600, color: '#0f172a', outline: 'none' }} />

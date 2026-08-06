@@ -57,7 +57,7 @@ export function AdminMobileNav() {
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
       <Drawer.Trigger asChild>
         <button 
-          className="lg:hidden p-2 mr-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors border-none bg-transparent flex items-center justify-center shrink-0"
+          className="admin-mobile-trigger p-2 mr-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors border-none bg-transparent flex items-center justify-center shrink-0"
           aria-label="Open Admin Menu"
         >
           <AdminIcon name="menu" className="w-6 h-6" />

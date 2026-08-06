@@ -2,6 +2,8 @@
 @import "../styles/design-tokens.css";
 @import "../styles/animations.css";
 @import "../styles/journey-tracker.css";
+@import "../styles/admin-responsive.css";
+@import "../styles/home.css";
 
 /* ============================================================
    Tailwind v4 Theme — AGAM Diagnostics

@@ -1,0 +1,56 @@
+/* ==========================================================================
+   Public Home Page Responsive Fixes
+   ========================================================================== */
+
+/* Hero Image Responsiveness to prevent squeezing */
+.hero-image-wrap {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 45%;
+  z-index: -1;
+  opacity: 0.9;
+}
+
+.hero-image-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: left center;
+}
+
+/* Add a fade to the left side of the hero image to blend into the text */
+.hero-image-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 150px;
+  height: 100%;
+  background: linear-gradient(to right, #F8FAFC, transparent);
+}
+
+@media (max-width: 1024px) {
+  .hero-image-wrap {
+    width: 100%;
+    opacity: 0.15; /* Make it a subtle background on mobile */
+  }
+  
+  .hero-image-wrap::after {
+    display: none;
+  }
+  
+  .hide-mobile {
+    display: none !important;
+  }
+  
+  .hero-premium__title {
+    font-size: 36px !important;
+  }
+  
+  .hero-features {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+}

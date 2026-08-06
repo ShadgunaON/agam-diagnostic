@@ -1,0 +1,70 @@
+/* ==========================================================================
+   Admin Portal Responsive Overrides
+   These utility classes ensure our pure-inline-styled Glassmorphism pages 
+   stack gracefully on mobile devices without relying on Tailwind.
+   ========================================================================== */
+
+/* 
+  1. Hide the fixed desktop sidebar on mobile screens.
+  (Mobile uses the absolute overlay Drawer instead)
+*/
+@media (max-width: 1024px) {
+  .admin-sidebar-desktop {
+    display: none !important;
+  }
+  
+  .admin-mobile-trigger {
+    display: flex !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  .admin-mobile-trigger {
+    display: none !important;
+  }
+}
+
+/* 
+  2. Responsive Grid for Glassmorphism Cards & Panels 
+  (Flattens multi-column layouts into single columns on mobile)
+*/
+@media (max-width: 1024px) {
+  .admin-responsive-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  
+  .admin-responsive-grid-2col {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Shrink enormous padding on mobile glass containers */
+  .admin-glass-panel {
+    padding: 20px !important;
+  }
+  
+  /* Make Data Tables scrollable horizontally on mobile */
+  .admin-table-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .admin-table-row {
+    min-width: 800px !important;
+  }
+  
+  /* Stack Quick Actions (pill buttons) on mobile */
+  .admin-quick-actions {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+  
+  .admin-quick-actions button {
+    width: 100% !important;
+  }
+  
+  /* Hide search bar in topbar on mobile to save space */
+  .admin-hide-mobile {
+    display: none !important;
+  }
+}

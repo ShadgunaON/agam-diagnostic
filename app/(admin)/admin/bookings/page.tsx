@@ -92,10 +92,10 @@ export default function GlassBookingsPage() {
         </div>
 
         {/* GLASS DATA TABLE */}
-        <div style={{ ...glassStyle, padding: '32px', flex: 1 }}>
+        <div className="admin-glass-panel admin-table-container" style={{ ...glassStyle, padding: '32px', flex: 1 }}>
           
           {/* Table Header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 2fr 1.5fr 1.5fr 1fr 1fr', padding: '0 24px 16px 24px', borderBottom: '1px solid rgba(226, 232, 240, 0.8)', marginBottom: '16px' }}>
+          <div className="admin-table-row" style={{ display: 'grid', gridTemplateColumns: '1.2fr 2fr 1.5fr 1.5fr 1fr 1fr', padding: '0 24px 16px 24px', borderBottom: '1px solid rgba(226, 232, 240, 0.8)', marginBottom: '16px' }}>
             <div style={{ fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Order ID</div>
             <div style={{ fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Patient Details</div>
             <div style={{ fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Schedule</div>
@@ -111,6 +111,7 @@ export default function GlassBookingsPage() {
               return (
                 <div 
                   key={booking.id}
+                  className="admin-table-row"
                   style={{ 
                     display: 'grid', gridTemplateColumns: '1.2fr 2fr 1.5fr 1.5fr 1fr 1fr', alignItems: 'center', 
                     backgroundColor: 'rgba(255,255,255,0.5)', padding: '16px 24px', borderRadius: '16px',
