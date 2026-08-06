@@ -144,6 +144,18 @@ export function AdminSidebar({ isCollapsed = false, setIsCollapsed = () => {} }:
         })}
       </div>
 
+      {/* Public Site Navigation */}
+      <div className="px-6 py-4 border-t border-slate-700/50">
+        <Link 
+          href="/" 
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/50 transition-colors group w-full border border-slate-700 hover:border-slate-600"
+          style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 12px', borderRadius: '8px', color: '#cbd5e1', border: '1px solid #334155', textDecoration: 'none', transition: 'all 0.2s', backgroundColor: 'rgba(51, 65, 85, 0.2)' }}
+        >
+          <AdminIcon name="chevronRight" className="w-5 h-5 group-hover:-translate-x-1 transition-transform rotate-180" strokeWidth={2} style={{ width: '20px', height: '20px', transform: 'rotate(180deg)' }} />
+          <span className="font-semibold text-[14px]">View Public Site</span>
+        </Link>
+      </div>
+
       {/* Profile Section (Bottom) */}
       <div className="shrink-0 mt-auto border-t border-white/5" style={{ padding: '16px' }}>
         <button className={`w-full flex items-center hover:bg-white/5 transition-colors group ${isCollapsed ? 'justify-center' : ''}`} style={{ padding: '8px', borderRadius: '12px', gap: '16px' }}>
