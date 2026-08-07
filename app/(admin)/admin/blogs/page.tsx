@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
+import { useToast } from '@/components/admin/feedback/Toast';
 import { Drawer } from '@/components/ui/Drawer';
 
 type Article = {
@@ -52,6 +53,7 @@ const initialArticles: Article[] = [
 export default function AdminBlogsPage() {
   const [articles, setArticles] = useState<Article[]>(initialArticles);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const { toast } = useToast();
 
   // Form State
   const [newTitle, setNewTitle] = useState('');
@@ -73,6 +75,7 @@ export default function AdminBlogsPage() {
     setArticles([newArticle, ...articles]);
     setIsEditorOpen(false);
     setNewTitle('');
+    toast({ title: 'Post Published', description: 'Your blog article is now live.', variant: 'success' });
   };
 
   return (

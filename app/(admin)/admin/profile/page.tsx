@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
+import { useToast } from '@/components/admin/feedback/Toast';
 
 // --- STYLES ---
 const glassStyle = {
@@ -17,6 +18,7 @@ const glassStyle = {
 export default function GlassProfilePage() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState('Personal Details');
+  const { toast } = useToast();
 
   useEffect(() => { setMounted(true); }, []);
   if (!mounted) return null;
@@ -49,8 +51,8 @@ export default function GlassProfilePage() {
             <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#0f172a', margin: '0 0 4px 0' }}>Admin Staff</h2>
             <p style={{ fontSize: '15px', color: '#64748b', fontWeight: 600, margin: '0 0 16px 0' }}>System Manager • Joined August 2024</p>
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button style={{ padding: '8px 20px', borderRadius: '10px', backgroundColor: '#0f172a', color: '#ffffff', fontSize: '13px', fontWeight: 700, border: 'none', cursor: 'pointer' }}>Upload New Photo</button>
-              <button style={{ padding: '8px 20px', borderRadius: '10px', backgroundColor: 'transparent', color: '#f43f5e', fontSize: '13px', fontWeight: 700, border: '1px solid rgba(244, 63, 94, 0.3)', cursor: 'pointer' }}>Remove</button>
+              <button onClick={() => toast({ title: 'Photo Upload', description: 'Select an image file.', variant: 'info' })} style={{ padding: '8px 20px', borderRadius: '10px', backgroundColor: '#0f172a', color: '#ffffff', fontSize: '13px', fontWeight: 700, border: 'none', cursor: 'pointer' }}>Upload New Photo</button>
+              <button onClick={() => toast({ title: 'Photo Removed', variant: 'success' })} style={{ padding: '8px 20px', borderRadius: '10px', backgroundColor: 'transparent', color: '#f43f5e', fontSize: '13px', fontWeight: 700, border: '1px solid rgba(244, 63, 94, 0.3)', cursor: 'pointer' }}>Remove</button>
             </div>
           </div>
         </div>
@@ -103,7 +105,7 @@ export default function GlassProfilePage() {
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '16px' }}>
-                  <button style={{ height: '48px', padding: '0 32px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', color: '#ffffff', fontSize: '14px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)' }}>Save Changes</button>
+                  <button onClick={() => toast({ title: 'Profile Updated', description: 'Your personal details have been saved.', variant: 'success' })} style={{ height: '48px', padding: '0 32px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', color: '#ffffff', fontSize: '14px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)' }}>Save Changes</button>
                 </div>
               </>
             )}
@@ -122,7 +124,7 @@ export default function GlassProfilePage() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '16px' }}>
-                  <button style={{ height: '48px', padding: '0 32px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #0f172a, #334155)', color: '#ffffff', fontSize: '14px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 15px rgba(15, 23, 42, 0.15)' }}>Update Password</button>
+                  <button onClick={() => toast({ title: 'Password Updated', description: 'Your security password has been changed.', variant: 'success' })} style={{ height: '48px', padding: '0 32px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #0f172a, #334155)', color: '#ffffff', fontSize: '14px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 15px rgba(15, 23, 42, 0.15)' }}>Update Password</button>
                 </div>
               </>
             )}
@@ -136,7 +138,7 @@ export default function GlassProfilePage() {
                       <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>Email Notifications</div>
                       <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>Receive daily summaries and critical alerts.</div>
                     </div>
-                    <div style={{ width: '48px', height: '28px', backgroundColor: '#10b981', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
+                    <div onClick={() => toast({ title: 'Preference Updated', variant: 'success' })} style={{ width: '48px', height: '28px', backgroundColor: '#10b981', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
                       <div style={{ width: '22px', height: '22px', backgroundColor: '#fff', borderRadius: '50%', position: 'absolute', top: '3px', left: '23px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}></div>
                     </div>
                   </div>
@@ -146,7 +148,7 @@ export default function GlassProfilePage() {
                       <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>SMS Alerts</div>
                       <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>Receive urgent SMS for critical path reports.</div>
                     </div>
-                    <div style={{ width: '48px', height: '28px', backgroundColor: 'rgba(226, 232, 240, 0.8)', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
+                    <div onClick={() => toast({ title: 'Preference Updated', variant: 'success' })} style={{ width: '48px', height: '28px', backgroundColor: 'rgba(226, 232, 240, 0.8)', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
                       <div style={{ width: '22px', height: '22px', backgroundColor: '#fff', borderRadius: '50%', position: 'absolute', top: '3px', left: '3px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}></div>
                     </div>
                   </div>

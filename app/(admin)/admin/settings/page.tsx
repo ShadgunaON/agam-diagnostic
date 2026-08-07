@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
+import { useToast } from '@/components/admin/feedback/Toast';
 
 const navItems = [
   { id: 'profile', title: 'Lab Profile & Compliance', icon: 'building', desc: 'Accreditations & signatures' },
@@ -13,6 +14,7 @@ const navItems = [
 
 export default function DiagnosticsSettingsPage() {
   const [activeTab, setActiveTab] = useState(navItems[0].id);
+  const { toast } = useToast();
 
   return (
     <AdminPageTemplate>
@@ -37,6 +39,7 @@ export default function DiagnosticsSettingsPage() {
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             <button 
+              onClick={() => toast({ title: 'Changes Discarded', variant: 'info' })}
               style={{ 
                 height: '44px', padding: '0 24px', borderRadius: '12px', border: '1px solid #e2e8f0', 
                 backgroundColor: '#ffffff', color: '#475569', 
@@ -49,6 +52,7 @@ export default function DiagnosticsSettingsPage() {
               Cancel Changes
             </button>
             <button 
+              onClick={() => toast({ title: 'Configuration Saved', description: 'Your platform settings have been updated.', variant: 'success' })}
               style={{ 
                 height: '44px', padding: '0 24px', borderRadius: '12px', border: 'none', 
                 backgroundColor: '#0f172a', color: '#ffffff', 
@@ -143,7 +147,7 @@ export default function DiagnosticsSettingsPage() {
                     <div>
                       <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>dr_smith_signature.png</div>
                       <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>PNG, 2.4 MB</div>
-                      <button style={{ marginTop: '12px', padding: '6px 12px', fontSize: '12px', fontWeight: 700, color: '#2563eb', backgroundColor: '#eff6ff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Upload New Signature</button>
+                      <button onClick={() => toast({ title: 'File Dialog Opened', description: 'Select a PNG file to upload.', variant: 'info' })} style={{ marginTop: '12px', padding: '6px 12px', fontSize: '12px', fontWeight: 700, color: '#2563eb', backgroundColor: '#eff6ff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Upload New Signature</button>
                     </div>
                   </div>
                 </div>
@@ -172,7 +176,7 @@ export default function DiagnosticsSettingsPage() {
                         </div>
                       </div>
                     </div>
-                    <button style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 700, color: '#475569', backgroundColor: '#f1f5f9', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Configure</button>
+                    <button onClick={() => toast({ title: 'Opening Configuration', variant: 'info' })} style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 700, color: '#475569', backgroundColor: '#f1f5f9', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Configure</button>
                   </div>
 
                   <div style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
@@ -189,7 +193,7 @@ export default function DiagnosticsSettingsPage() {
                         </div>
                       </div>
                     </div>
-                    <button style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 700, color: '#475569', backgroundColor: '#f1f5f9', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Reconnect</button>
+                    <button onClick={() => toast({ title: 'Connection Failed', description: 'Unable to reach Roche Cobas 6000 on 192.168.1.50', variant: 'danger' })} style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 700, color: '#475569', backgroundColor: '#f1f5f9', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Reconnect</button>
                   </div>
                 </div>
 
@@ -226,7 +230,7 @@ export default function DiagnosticsSettingsPage() {
                       <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>Highlight Abnormal Values</div>
                       <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>Values outside reference ranges will be printed in bold red.</div>
                     </div>
-                    <div style={{ width: '48px', height: '28px', backgroundColor: '#10b981', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
+                    <div onClick={() => toast({ title: 'Setting Updated', variant: 'success' })} style={{ width: '48px', height: '28px', backgroundColor: '#10b981', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
                       <div style={{ width: '22px', height: '22px', backgroundColor: '#fff', borderRadius: '50%', position: 'absolute', top: '3px', left: '23px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}></div>
                     </div>
                   </div>
@@ -236,7 +240,7 @@ export default function DiagnosticsSettingsPage() {
                       <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>Print Patient QR Code</div>
                       <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>Add a scannable verification QR code to the footer of every report.</div>
                     </div>
-                    <div style={{ width: '48px', height: '28px', backgroundColor: '#10b981', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
+                    <div onClick={() => toast({ title: 'Setting Updated', variant: 'success' })} style={{ width: '48px', height: '28px', backgroundColor: '#10b981', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
                       <div style={{ width: '22px', height: '22px', backgroundColor: '#fff', borderRadius: '50%', position: 'absolute', top: '3px', left: '23px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}></div>
                     </div>
                   </div>
@@ -246,7 +250,7 @@ export default function DiagnosticsSettingsPage() {
                       <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>Include Methodology Notes</div>
                       <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>Append testing methodologies (e.g., CLIA, HPLC) below each parameter.</div>
                     </div>
-                    <div style={{ width: '48px', height: '28px', backgroundColor: '#e2e8f0', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
+                    <div onClick={() => toast({ title: 'Setting Updated', variant: 'success' })} style={{ width: '48px', height: '28px', backgroundColor: '#e2e8f0', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
                       <div style={{ width: '22px', height: '22px', backgroundColor: '#fff', borderRadius: '50%', position: 'absolute', top: '3px', left: '3px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}></div>
                     </div>
                   </div>
@@ -273,7 +277,7 @@ export default function DiagnosticsSettingsPage() {
                   <div style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                       <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>Pre-Test Fasting Reminders</div>
-                      <div style={{ width: '48px', height: '28px', backgroundColor: '#10b981', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
+                      <div onClick={() => toast({ title: 'Setting Updated', variant: 'success' })} style={{ width: '48px', height: '28px', backgroundColor: '#10b981', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
                         <div style={{ width: '22px', height: '22px', backgroundColor: '#fff', borderRadius: '50%', position: 'absolute', top: '3px', left: '23px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}></div>
                       </div>
                     </div>
@@ -286,7 +290,7 @@ export default function DiagnosticsSettingsPage() {
                   <div style={{ padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                       <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>WhatsApp Report Delivery</div>
-                      <div style={{ width: '48px', height: '28px', backgroundColor: '#10b981', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
+                      <div onClick={() => toast({ title: 'Setting Updated', variant: 'success' })} style={{ width: '48px', height: '28px', backgroundColor: '#10b981', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
                         <div style={{ width: '22px', height: '22px', backgroundColor: '#fff', borderRadius: '50%', position: 'absolute', top: '3px', left: '23px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}></div>
                       </div>
                     </div>

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
 
@@ -43,6 +44,7 @@ const getStatusColor = (status: string) => {
 
 export default function GlassDashboard() {
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -112,13 +114,14 @@ export default function GlassDashboard() {
         {/* QUICK ACTIONS (FLOATING PILLS) */}
         <div className="admin-quick-actions" style={{ display: 'flex', gap: '16px' }}>
           {[
-            { label: 'New Booking', icon: 'plus', bg: 'linear-gradient(135deg, #3b82f6, #2563eb)' },
-            { label: 'Upload Report', icon: 'fileText', bg: 'linear-gradient(135deg, #10b981, #059669)' },
-            { label: 'Add Patient', icon: 'users', bg: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' },
-            { label: 'View Schedule', icon: 'calendar', bg: 'linear-gradient(135deg, #f59e0b, #d97706)' }
+            { label: 'New Booking', icon: 'plus', bg: 'linear-gradient(135deg, #3b82f6, #2563eb)', href: '/admin/bookings' },
+            { label: 'Upload Report', icon: 'fileText', bg: 'linear-gradient(135deg, #10b981, #059669)', href: '/admin/reports' },
+            { label: 'Add Patient', icon: 'users', bg: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', href: '/admin/patients' },
+            { label: 'View Schedule', icon: 'calendar', bg: 'linear-gradient(135deg, #f59e0b, #d97706)', href: '/admin/collections' }
           ].map((action, i) => (
             <button
               key={i}
+              onClick={() => router.push(action.href)}
               style={{
                 flex: 1, height: '48px', borderRadius: '16px', border: 'none', background: action.bg, color: '#ffffff',
                 fontSize: '14px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
@@ -147,7 +150,7 @@ export default function GlassDashboard() {
           <div style={{ ...glassStyle, padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Recent Bookings</h2>
-              <button style={{ background: 'none', border: 'none', color: '#3b82f6', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <button onClick={() => router.push('/admin/bookings')} style={{ background: 'none', border: 'none', color: '#3b82f6', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 View All <AdminIcon name="chevronRight" style={{ width: '14px', height: '14px' }} />
               </button>
             </div>

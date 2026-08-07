@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
+import { useToast } from '@/components/admin/feedback/Toast';
 
 // --- MOCK DATA ---
 const revenueByMonth = [
@@ -31,6 +32,7 @@ const glassStyle = {
 
 export default function GlassAnalyticsPage() {
   const [mounted, setMounted] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => { setMounted(true); }, []);
   if (!mounted) return null;
@@ -56,7 +58,10 @@ export default function GlassAnalyticsPage() {
             <h1 style={{ fontSize: '32px', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.03em' }}>Analytics & Reports</h1>
             <p style={{ fontSize: '15px', fontWeight: 500, color: '#64748b', margin: '4px 0 0 0' }}>Comprehensive clinical and financial insights.</p>
           </div>
-          <button style={{ height: '44px', padding: '0 24px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #0f172a, #334155)', color: '#ffffff', fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
+          <button 
+            onClick={() => toast({ title: 'Exporting PDF...', description: 'Your report will download shortly.', variant: 'info' })}
+            style={{ height: '44px', padding: '0 24px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #0f172a, #334155)', color: '#ffffff', fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}
+          >
             <AdminIcon name="download" style={{ width: '16px', height: '16px' }} /> Export PDF
           </button>
         </div>

@@ -64,27 +64,27 @@ export function AdminMobileNav() {
         </button>
       </Drawer.Trigger>
       
-      <Drawer.Content side="left" className="p-0 bg-[#1A2234] border-r border-[#26314A] w-[280px]">
-        <div className="flex items-center justify-between p-6 border-b border-[#26314A]">
-          <Link href="/admin" className="flex items-center text-white gap-3" onClick={closeMenu}>
+      <Drawer.Content side="left" className="p-0 bg-white border-r border-slate-200 w-[280px]">
+        <div className="flex items-center justify-between p-6 border-b border-slate-200">
+          <Link href="/admin" className="flex items-center text-slate-900 gap-3" onClick={closeMenu}>
             <div className="bg-gradient-to-br from-[#e31837] to-[#b9112a] flex items-center justify-center shrink-0 shadow-lg" style={{ width: '32px', height: '32px', borderRadius: '8px' }}>
               <AdminIcon name="microscope" className="text-white w-[18px] h-[18px]" />
             </div>
             <span className="font-bold tracking-tight text-[16px]">AGAM Admin</span>
           </Link>
-          <Drawer.Close className="text-slate-400 hover:text-white transition-colors bg-transparent border-none">
+          <Drawer.Close className="text-slate-400 hover:text-slate-800 transition-colors bg-transparent border-none">
             <AdminIcon name="x" className="w-5 h-5" />
           </Drawer.Close>
         </div>
         
-        <Drawer.Body className="p-4 bg-[#1A2234] flex-1 overflow-y-auto">
+        <Drawer.Body className="p-4 bg-white flex-1 overflow-y-auto">
           {adminNavigation.map((group) => {
             const visibleItems = group.items.filter(item => hasPermission(userRole, item.roles));
             if (visibleItems.length === 0) return null;
 
             return (
               <div key={group.title} className="mb-6">
-                <div className="font-bold text-slate-400 uppercase tracking-widest text-[11px] mb-3 px-3">
+                <div className="font-bold text-slate-500 uppercase tracking-widest text-[11px] mb-3 px-3">
                   {group.title}
                 </div>
                 <div className="flex flex-col gap-1">
@@ -97,12 +97,12 @@ export function AdminMobileNav() {
                         onClick={closeMenu}
                         className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                           isActive 
-                            ? 'bg-blue-500/20 text-blue-300 font-semibold relative' 
-                            : 'text-slate-300 hover:bg-white/10 hover:text-white font-medium'
+                            ? 'bg-blue-50 text-blue-600 font-semibold relative' 
+                            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium'
                         }`}
                       >
                         {isActive && (
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)] rounded-r-full" />
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.4)] rounded-r-full" />
                         )}
                         <AdminIcon 
                           name={item.icon} 
@@ -120,10 +120,10 @@ export function AdminMobileNav() {
         </Drawer.Body>
         
         {/* Public Site Navigation */}
-        <div className="px-6 py-4 border-t border-[#26314A] mt-auto shrink-0 bg-[#1A2234]">
+        <div className="px-6 py-4 border-t border-slate-200 mt-auto shrink-0 bg-slate-50">
           <Link 
             href="/" 
-            className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg text-slate-300 hover:text-white hover:bg-[#26314A] transition-colors group w-full border border-[#26314A]"
+            className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition-colors group w-full border border-slate-200"
             onClick={closeMenu}
           >
             <span className="font-semibold text-[14px]">View Public Site</span>

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
+import { useToast } from '@/components/admin/feedback/Toast';
 import { Drawer } from '@/components/ui/Drawer';
 
 // --- MOCK DATA TYPES ---
@@ -56,6 +57,7 @@ export default function HighlyVisualizedStaffRoles() {
   const [roles, setRoles] = useState<Role[]>(initialRoles);
   const [staff, setStaff] = useState<Staff[]>(initialStaff);
   const [rolePermissions, setRolePermissions] = useState(initialPermissionsMap);
+  const { toast } = useToast();
   
   const [activeRole, setActiveRole] = useState(roles[0].id);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
@@ -104,6 +106,7 @@ export default function HighlyVisualizedStaffRoles() {
     setStaff([...staff, newStaff]);
     setIsInviteOpen(false);
     setNewInviteEmail('');
+    toast({ title: 'Invitation Sent', description: `An email has been sent to ${newInviteEmail}.`, variant: 'success' });
   };
 
   const handleCreateRole = () => {
@@ -118,6 +121,7 @@ export default function HighlyVisualizedStaffRoles() {
     setIsNewRoleOpen(false);
     setNewRoleTitle('');
     setNewRoleInternal('');
+    toast({ title: 'Role Created', description: `The role "${newRoleTitle}" has been created.`, variant: 'success' });
   };
 
   return (

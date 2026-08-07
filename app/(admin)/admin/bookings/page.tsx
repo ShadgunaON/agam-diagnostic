@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
+import { useToast } from '@/components/admin/feedback/Toast';
 
 // --- MOCK DATA ---
 const mockBookings = [
@@ -34,6 +35,7 @@ const getStatusColor = (status: string) => {
 export default function GlassBookingsPage() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState('All');
+  const { toast } = useToast();
 
   useEffect(() => { setMounted(true); }, []);
   if (!mounted) return null;
@@ -57,7 +59,10 @@ export default function GlassBookingsPage() {
             <h1 style={{ fontSize: '32px', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.03em' }}>Order Management</h1>
             <p style={{ fontSize: '15px', fontWeight: 500, color: '#64748b', margin: '4px 0 0 0' }}>Track home collections, lab visits, and patient requests.</p>
           </div>
-          <button style={{ height: '44px', padding: '0 24px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', color: '#ffffff', fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)' }}>
+          <button 
+            onClick={() => toast({ title: 'New Booking Modal', description: 'This would open the booking creation form.', variant: 'info' })}
+            style={{ height: '44px', padding: '0 24px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', color: '#ffffff', fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)' }}
+          >
             <AdminIcon name="plus" style={{ width: '16px', height: '16px' }} /> Create Booking
           </button>
         </div>
