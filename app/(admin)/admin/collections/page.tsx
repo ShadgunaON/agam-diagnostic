@@ -67,6 +67,7 @@ export default function CollectionsPage() {
   return (
     <AdminPageTemplate>
       <div 
+        className="admin-page-container"
         style={{ 
           maxWidth: '1440px', 
           width: '100%',
@@ -76,7 +77,8 @@ export default function CollectionsPage() {
           flexDirection: 'column',
           gap: '32px',
           minHeight: '100%',
-          fontFamily: 'Inter, system-ui, sans-serif'
+          fontFamily: 'Inter, system-ui, sans-serif',
+          minWidth: 0
         }}
       >
         {/* HEADER SECTION */}
@@ -119,10 +121,10 @@ export default function CollectionsPage() {
         </div>
 
         {/* MAIN TWO-COLUMN DISPATCH VIEW */}
-        <div style={{ display: 'flex', gap: '24px', flex: 1, minHeight: '600px' }}>
+        <div className="admin-responsive-flex-col" style={{ display: 'flex', gap: '24px', flex: 1, minHeight: '600px', minWidth: 0 }}>
           
           {/* LEFT COLUMN: DISPATCH QUEUE */}
-          <div style={{ width: '420px', flexShrink: 0, backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', display: 'flex', flexDirection: 'column', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)', overflow: 'hidden', maxHeight: 'calc(100vh - 200px)' }}>
+          <div style={{ width: '100%', maxWidth: '420px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', display: 'flex', flexDirection: 'column', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)', overflow: 'hidden', maxHeight: 'calc(100vh - 200px)' }}>
             
             {/* Queue Header & Filters */}
             <div style={{ padding: '20px', borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
@@ -200,10 +202,10 @@ export default function CollectionsPage() {
           </div>
 
           {/* RIGHT COLUMN: LIVE MAP & DETAILS */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '24px', minWidth: 0 }}>
             
             {/* KPI STATS ROW */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+            <div className="admin-responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
               {[
                 { label: 'Total Today', val: totalTasks, icon: 'list' as AdminIconName, color: '#3b82f6', bg: '#eff6ff' },
                 { label: 'Completed', val: completedTasks, icon: 'check' as AdminIconName, color: '#10b981', bg: '#d1fae5' },

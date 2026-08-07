@@ -51,10 +51,10 @@ export default function GlassBookingsPage() {
         }}
       />
 
-      <div style={{ position: 'relative', zIndex: 1, padding: '40px', maxWidth: '1600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px', minHeight: '100%', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <div className="admin-page-container" style={{ position: 'relative', zIndex: 1, padding: '40px', maxWidth: '1600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px', minHeight: '100%', fontFamily: 'Inter, system-ui, sans-serif', minWidth: 0 }}>
         
-        {/* HEADER */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {/* TABS & SEARCH ROW */}
+        <div className="admin-responsive-flex-col" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '16px' }}>
           <div>
             <h1 style={{ fontSize: '32px', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.03em' }}>Order Management</h1>
             <p style={{ fontSize: '15px', fontWeight: 500, color: '#64748b', margin: '4px 0 0 0' }}>Track home collections, lab visits, and patient requests.</p>
@@ -68,8 +68,8 @@ export default function GlassBookingsPage() {
         </div>
 
         {/* GLASS FILTER BAR */}
-        <div style={{ ...glassStyle, padding: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '16px' }}>
-          <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ ...glassStyle, padding: '8px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', borderRadius: '16px', gap: '16px' }}>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {['All', 'Pending', 'Home Collection', 'Lab Visit'].map(tab => (
               <button
                 key={tab}
@@ -86,7 +86,8 @@ export default function GlassBookingsPage() {
               </button>
             ))}
           </div>
-          <div style={{ position: 'relative', width: '300px', marginRight: '8px' }}>
+          {/* Search */}
+          <div style={{ position: 'relative', width: '100%', maxWidth: '320px' }}>
             <AdminIcon name="search" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', width: '16px', height: '16px', color: '#94a3b8' }} />
             <input 
               type="text" 
@@ -97,10 +98,10 @@ export default function GlassBookingsPage() {
         </div>
 
         {/* GLASS DATA TABLE */}
-        <div className="admin-glass-panel admin-table-container" style={{ ...glassStyle, padding: '32px', flex: 1 }}>
+        <div className="admin-glass-panel admin-table-container" style={{ ...glassStyle, padding: '32px', flex: 1, minWidth: 0 }}>
           
           {/* Table Header */}
-          <div className="admin-table-row" style={{ display: 'grid', gridTemplateColumns: '1.2fr 2fr 1.5fr 1.5fr 1fr 1fr', padding: '0 24px 16px 24px', borderBottom: '1px solid rgba(226, 232, 240, 0.8)', marginBottom: '16px' }}>
+          <div className="admin-table-row admin-hide-table-header" style={{ display: 'grid', gridTemplateColumns: '1.2fr 2fr 1.5fr 1.5fr 1fr 1fr', padding: '0 24px 16px 24px', borderBottom: '1px solid rgba(226, 232, 240, 0.8)', marginBottom: '16px' }}>
             <div style={{ fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Order ID</div>
             <div style={{ fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Patient Details</div>
             <div style={{ fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Schedule</div>
@@ -116,7 +117,7 @@ export default function GlassBookingsPage() {
               return (
                 <div 
                   key={booking.id}
-                  className="admin-table-row"
+                  className="admin-table-row admin-mobile-grid-row"
                   style={{ 
                     display: 'grid', gridTemplateColumns: '1.2fr 2fr 1.5fr 1.5fr 1fr 1fr', alignItems: 'center', 
                     backgroundColor: 'rgba(255,255,255,0.5)', padding: '16px 24px', borderRadius: '16px',
@@ -125,35 +126,35 @@ export default function GlassBookingsPage() {
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.9)'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.5)'}
                 >
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div data-label="Order ID" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{booking.id}</div>
                     <div style={{ fontSize: '12px', fontWeight: 700, color: booking.type === 'Home Collection' ? '#3b82f6' : '#8b5cf6', backgroundColor: booking.type === 'Home Collection' ? '#eff6ff' : '#f3e8ff', display: 'inline-flex', padding: '2px 8px', borderRadius: '12px', alignSelf: 'flex-start' }}>{booking.type}</div>
                   </div>
                   
-                  <div>
+                  <div data-label="Patient Details">
                     <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>{booking.name}</div>
                     <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>{booking.phone}</div>
                   </div>
                   
-                  <div>
+                  <div data-label="Schedule">
                     <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>{booking.date}</div>
                     <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>{booking.time}</div>
                   </div>
 
-                  <div>
+                  <div data-label="Tests">
                     <div style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>
                       {booking.tests.map((t, i) => <div key={i}>{t}</div>)}
                     </div>
                   </div>
                   
-                  <div>
+                  <div data-label="Status">
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: statusTheme.bg, padding: '6px 12px', borderRadius: '20px' }}>
                       <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: statusTheme.dot }}></span>
                       <span style={{ fontSize: '12px', fontWeight: 800, color: statusTheme.text }}>{booking.status}</span>
                     </div>
                   </div>
                   
-                  <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a', textAlign: 'right' }}>₹{booking.amount}</div>
+                  <div data-label="Amount" style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a', textAlign: 'right' }}>₹{booking.amount}</div>
                 </div>
               );
             })}

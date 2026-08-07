@@ -64,7 +64,7 @@ export default function GlassDashboard() {
         }}
       />
 
-      <div style={{ position: 'relative', zIndex: 1, padding: '40px', maxWidth: '1600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px', minHeight: '100%', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <div className="admin-page-container" style={{ position: 'relative', zIndex: 1, padding: '40px', maxWidth: '1600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px', minHeight: '100%', fontFamily: 'Inter, system-ui, sans-serif', minWidth: 0 }}>
         
         {/* HEADER */}
         <div>
@@ -82,6 +82,7 @@ export default function GlassDashboard() {
           ].map((kpi, i) => (
             <div 
               key={i} 
+              className="admin-glass-panel"
               style={{
                 ...glassStyle, padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px',
                 transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1)', cursor: 'pointer'
@@ -147,7 +148,7 @@ export default function GlassDashboard() {
         <div className="admin-responsive-grid-2col" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
           
           {/* RECENT BOOKINGS GLASS TABLE */}
-          <div style={{ ...glassStyle, padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div className="admin-glass-panel" style={{ ...glassStyle, padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px', minWidth: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Recent Bookings</h2>
               <button onClick={() => router.push('/admin/bookings')} style={{ background: 'none', border: 'none', color: '#3b82f6', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -161,7 +162,7 @@ export default function GlassDashboard() {
                 return (
                   <div 
                     key={booking.id}
-                    className="admin-table-row"
+                    className="admin-table-row admin-mobile-grid-row"
                     style={{ 
                       display: 'grid', gridTemplateColumns: '1fr 2fr 1fr 1fr 1fr', alignItems: 'center', 
                       backgroundColor: 'rgba(255,255,255,0.5)', padding: '16px 20px', borderRadius: '16px',
@@ -170,19 +171,19 @@ export default function GlassDashboard() {
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.8)'}
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.5)'}
                   >
-                    <div style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a' }}>{booking.id}</div>
-                    <div>
+                    <div data-label="Order ID" style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a' }}>{booking.id}</div>
+                    <div data-label="Patient">
                       <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{booking.name}</div>
                       <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>{booking.type}</div>
                     </div>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>{booking.date}</div>
-                    <div>
+                    <div data-label="Date & Time" style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>{booking.date}</div>
+                    <div data-label="Status">
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: statusTheme.bg, padding: '4px 10px', borderRadius: '20px' }}>
                         <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: statusTheme.dot }}></span>
                         <span style={{ fontSize: '12px', fontWeight: 800, color: statusTheme.text }}>{booking.status}</span>
                       </div>
                     </div>
-                    <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a', textAlign: 'right' }}>₹{booking.amount}</div>
+                    <div data-label="Amount" style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a', textAlign: 'right' }}>₹{booking.amount}</div>
                   </div>
                 );
               })}
@@ -193,7 +194,7 @@ export default function GlassDashboard() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             
             {/* ALERTS */}
-            <div style={{ ...glassStyle, padding: '24px' }}>
+            <div className="admin-glass-panel" style={{ ...glassStyle, padding: '24px', minWidth: 0 }}>
               <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: '0 0 20px 0' }}>Operational Alerts</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {operationalAlerts.map(alert => (
@@ -211,7 +212,7 @@ export default function GlassDashboard() {
             </div>
 
             {/* ACTIVITY FEED */}
-            <div style={{ ...glassStyle, padding: '24px', flex: 1 }}>
+            <div className="admin-glass-panel" style={{ ...glassStyle, padding: '24px', flex: 1, minWidth: 0 }}>
               <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: '0 0 20px 0' }}>Activity Feed</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {activityFeed.map((activity, i) => (

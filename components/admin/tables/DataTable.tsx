@@ -208,7 +208,7 @@ export function ConfigurableDataTable<T>({
       ref={containerRef}
     >
       <div className="overflow-auto custom-scrollbar flex-1 relative">
-        <table className="w-full text-left border-collapse text-[13px] whitespace-nowrap">
+        <table className="admin-mobile-table w-full text-left border-collapse text-[13px] whitespace-nowrap">
           <thead className="bg-slate-50/80 backdrop-blur-sm sticky top-0 z-10 shadow-[0_1px_0_#E5E7EB]">
             <tr className="h-[48px]">
               {columns.map((col, i) => (
@@ -240,7 +240,7 @@ export function ConfigurableDataTable<T>({
                       <td
                         key={col.id || (col.accessorKey as string) || i}
                         className={`px-6 py-4 align-middle ${i === 0 ? '!pl-4 md:!pl-10' : ''} ${col.cellClassName || ''}`}
-                        style={{}}
+                        data-label={typeof col.header === 'string' ? col.header : (col.id || '')}
                       >
                         <div onClick={(e) => {
                           // Prevent row click if clicking an action menu

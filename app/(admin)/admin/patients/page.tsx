@@ -68,10 +68,10 @@ export default function PatientsPage() {
 
   const toolbar = (
     <div className="flex flex-col gap-4 w-full">
-      <div className="flex items-center justify-between gap-4 w-full">
-        <div className="flex items-center gap-3 w-full max-w-2xl">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 w-full">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full max-w-2xl">
           {/* Search */}
-          <div className="w-64 shrink-0 group">
+          <div className="w-full sm:w-64 shrink-0 group">
             <AdminInput
               type="text"
               placeholder="Search by ID, name, phone..."

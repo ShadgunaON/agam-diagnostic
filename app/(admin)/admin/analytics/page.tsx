@@ -50,7 +50,10 @@ export default function GlassAnalyticsPage() {
         }}
       />
 
-      <div style={{ position: 'relative', zIndex: 1, padding: '40px', maxWidth: '1600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px', minHeight: '100%', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <div 
+        className="admin-page-container"
+        style={{ position: 'relative', zIndex: 1, padding: '40px', maxWidth: '1600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px', minHeight: '100%', fontFamily: 'Inter, system-ui, sans-serif', minWidth: 0 }}
+      >
         
         {/* HEADER */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -145,7 +148,7 @@ export default function GlassAnalyticsPage() {
           </div>
 
           {/* TEST DISTRIBUTION DOUGHNUT */}
-          <div style={{ ...glassStyle, padding: '32px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          <div className="admin-glass-panel" style={{ ...glassStyle, padding: '32px', display: 'flex', flexDirection: 'column', gap: '32px', minWidth: 0 }}>
             <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Test Distribution</h2>
             
             <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

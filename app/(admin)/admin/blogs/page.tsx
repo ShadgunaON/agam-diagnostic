@@ -81,6 +81,7 @@ export default function AdminBlogsPage() {
   return (
     <AdminPageTemplate>
       <div 
+        className="admin-page-container"
         style={{ 
           maxWidth: '1600px', 
           width: '100%',

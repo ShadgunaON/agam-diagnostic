@@ -21,7 +21,7 @@ export const AdminCard = React.forwardRef<HTMLDivElement, AdminCardProps>(({
   return (
     <div
       ref={ref}
-      className={`bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col ${paddingMap[padding]} ${className}`}
+      className={`bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col w-full min-w-0 ${paddingMap[padding]} ${className}`}
       {...props}
     >
       {children}

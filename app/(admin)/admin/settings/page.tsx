@@ -19,6 +19,7 @@ export default function DiagnosticsSettingsPage() {
   return (
     <AdminPageTemplate>
       <div 
+        className="admin-page-container"
         style={{ 
           maxWidth: '1600px', 
           width: '100%',
@@ -69,7 +70,7 @@ export default function DiagnosticsSettingsPage() {
         </div>
 
         {/* SPLIT DASHBOARD LAYOUT */}
-        <div className="admin-responsive-grid-2col" style={{ display: 'flex', gap: '32px', flex: 1, minHeight: '700px' }}>
+        <div className="admin-responsive-flex-col" style={{ display: 'flex', gap: '32px', flex: 1, minHeight: '700px' }}>
           
           {/* LEFT: SETTINGS NAVIGATION */}
           <div style={{ width: '380px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>

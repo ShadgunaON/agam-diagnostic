@@ -34,7 +34,7 @@ export default function GlassProfilePage() {
         }}
       />
 
-      <div style={{ position: 'relative', zIndex: 1, padding: '40px', maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px', minHeight: '100%', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <div className="admin-page-container" style={{ position: 'relative', zIndex: 1, padding: '40px', maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px', minHeight: '100%', fontFamily: 'Inter, system-ui, sans-serif' }}>
         
         {/* HEADER */}
         <div>
@@ -57,7 +57,7 @@ export default function GlassProfilePage() {
           </div>
         </div>
 
-        <div className="admin-responsive-grid-2col" style={{ display: 'flex', gap: '32px' }}>
+        <div className="admin-responsive-flex-col" style={{ display: 'flex', gap: '32px' }}>
           {/* LEFT: NAV */}
           <div style={{ width: '280px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {['Personal Details', 'Security & Password', 'Notifications'].map(tab => (

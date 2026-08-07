@@ -127,6 +127,7 @@ export default function HighlyVisualizedStaffRoles() {
   return (
     <AdminPageTemplate>
       <div 
+        className="admin-page-container"
         style={{ 
           maxWidth: '1600px', width: '100%', margin: '0 auto', padding: '32px 40px',
           display: 'flex', flexDirection: 'column', gap: '32px', minHeight: '100%', fontFamily: 'Inter, system-ui, sans-serif'

@@ -22,17 +22,19 @@ export function AdminPageTemplate({
       {/* Background decoration for glassmorphism */}
       <div className="absolute top-0 left-0 right-0 h-[300px] bg-gradient-to-b from-blue-50/40 to-transparent pointer-events-none" />
 
-      {/* KPI Section */}
-      {kpiSection && (
-        <div className="pt-6 md:pt-12 pb-6 md:pb-8 shrink-0 px-4 md:px-6 mx-auto w-full max-w-[1440px]">
-          {kpiSection}
-        </div>
-      )}
-
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto pt-0 pb-32 custom-scrollbar bg-transparent px-4 md:px-6 mx-auto w-full max-w-[1440px]">
-        <div className="w-full">
-          {children}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar bg-transparent w-full">
+        <div className="mx-auto w-full max-w-[1440px]">
+          {/* KPI Section */}
+          {kpiSection && (
+            <div className="pt-6 md:pt-12 pb-6 md:pb-8 shrink-0 px-4 md:px-6">
+              {kpiSection}
+            </div>
+          )}
+
+          <div className="pt-0 pb-32 px-4 md:px-6">
+            {children}
+          </div>
         </div>
       </div>
     </div>
