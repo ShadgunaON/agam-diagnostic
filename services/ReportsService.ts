@@ -6,4 +6,8 @@ export class ReportsService {
   async getById(id: string) {
     return this.repository.getById(id);
   }
+
+  async getAllTasks() {
+    return this.repository.getAllTasks();
+  }
 }

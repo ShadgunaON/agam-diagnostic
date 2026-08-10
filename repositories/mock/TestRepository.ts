@@ -42,4 +42,21 @@ export class MockTestRepository implements ITestsRepository {
     }
     return success(test);
   }
+
+  async searchTests(query: string): Promise<Result<TestItem[]>> {
+    const rawData = testsData.catalog;
+    const lowerQuery = query.toLowerCase();
+    
+    const results = rawData.filter(t => t.title.toLowerCase().includes(lowerQuery));
+    const dtos: TestItemDto[] = results.map((raw, index) => ({
+      id: `test-${index}`,
+      url_slug: raw.slug,
+      name: raw.title,
+      category_id: raw.category,
+      tag_name: raw.tag,
+      summary: raw.description,
+    }));
+    
+    return success(dtos.map(mapTestItemDtoToModel));
+  }
 }

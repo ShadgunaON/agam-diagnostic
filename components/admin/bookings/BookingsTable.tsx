@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { ConfigurableDataTable, ColumnDef, ConfigurableDataTableProps } from '../tables/DataTable';
-import { Booking } from '@/data/admin/mockBookings';
+import { Booking, BookingStatus } from '@/data/bookings';
 import { StatusBadge } from '../feedback/StatusBadge';
 import { AdminDropdown } from '../overlays/AdminDropdown';
 import { AdminIcon } from '../navigation/AdminIcons';

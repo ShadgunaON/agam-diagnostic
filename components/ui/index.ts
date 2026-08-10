@@ -6,6 +6,7 @@ export * from './Select';
 export * from './Checkbox';
 export * from './Radio';
 export * from './Switch';
+export * from './FormField';
 
 // Layout
 export * from './Container';

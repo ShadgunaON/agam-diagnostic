@@ -4,11 +4,9 @@ import React from 'react';
 import { useCart } from '@/context/CartContext';
 import { Button, Drawer } from '@/components/ui';
 
-export function CartDrawer() {
+export function CartDrawer({ isOpen, onClose }: { isOpen: boolean, onClose: (open: boolean) => void }) {
   const { 
     items, 
-    isCartOpen, 
-    setIsCartOpen, 
     removeItem, 
     updateQuantity, 
     subtotal, 
@@ -24,7 +22,7 @@ export function CartDrawer() {
   // No need for the legacy useEffect logic here.
 
   return (
-    <Drawer open={isCartOpen} onOpenChange={setIsCartOpen}>
+    <Drawer open={isOpen} onOpenChange={onClose}>
       <Drawer.Content side="right" className="p-0 border-none max-w-[420px]">
         {/* Header */}
         <Drawer.Header className="bg-primary text-white p-4 flex flex-row items-center justify-between sm:text-left text-left">
@@ -97,14 +95,14 @@ export function CartDrawer() {
               <div className="flex flex-col w-full gap-2 mt-4">
                 <Button 
                   href="/tests" 
-                  onClick={() => setIsCartOpen(false)}
+                  onClick={() => onClose(false)}
                 >
                   Browse Lab Tests
                 </Button>
                 <Button 
                   href="/health-packages" 
                   variant="outline"
-                  onClick={() => setIsCartOpen(false)}
+                  onClick={() => onClose(false)}
                 >
                   Explore Packages
                 </Button>
@@ -201,16 +199,16 @@ export function CartDrawer() {
 
             <div className="grid grid-cols-2 gap-3 w-full">
               <Button 
-                href="/cart" 
+                href="/book" 
                 variant="outline"
-                onClick={() => setIsCartOpen(false)}
+                onClick={() => onClose(false)}
                 className="w-full"
               >
                 View Full Cart
               </Button>
               <Button 
                 href="/book" 
-                onClick={() => setIsCartOpen(false)}
+                onClick={() => onClose(false)}
                 className="w-full"
               >
                 Checkout →

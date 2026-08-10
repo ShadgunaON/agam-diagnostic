@@ -5,26 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
-
-// --- MOCK DATA ---
-const recentBookings = [
-  { id: 'B-1029', name: 'Rahul Sharma', date: 'Oct 12, 2026', type: 'Home Collection', status: 'Pending', amount: 1299 },
-  { id: 'B-1028', name: 'Priya Patel', date: 'Oct 12, 2026', type: 'Lab Visit', status: 'Completed', amount: 499 },
-  { id: 'B-1027', name: 'Anil Kumar', date: 'Oct 11, 2026', type: 'Home Collection', status: 'Processing', amount: 2450 },
-  { id: 'B-1026', name: 'Meera Reddy', date: 'Oct 11, 2026', type: 'Lab Visit', status: 'Confirmed', amount: 899 },
-];
-
-const operationalAlerts = [
-  { id: '1', message: '3 reports overdue by more than 24 hours', severity: 'danger', time: '2h ago' },
-  { id: '2', message: '5 home collections unassigned for tomorrow', severity: 'warning', time: '1h ago' },
-  { id: '3', message: '2 payments pending verification', severity: 'info', time: '45m ago' },
-];
-
-const activityFeed = [
-  { id: '1', user: 'System', action: 'New home collection (B-1030)', time: 'Just now' },
-  { id: '2', user: 'Dr. Sarah', action: 'Uploaded pathology report', time: '10 mins ago' },
-  { id: '3', user: 'Admin Staff', action: 'Assigned Phlebotomist', time: '1 hour ago' },
-];
+import { bookingService, alertService, activityService, analyticsService } from '@/services';
+import { BookingModel } from '@/domains/booking/model';
+import { ActivityRecordModel } from '@/domains/activity/model';
 
 // --- STYLES ---
 const glassStyle = {
@@ -46,8 +29,29 @@ export default function GlassDashboard() {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
+  const [recentBookings, setRecentBookings] = useState<BookingModel[]>([]);
+  const [operationalAlerts, setOperationalAlerts] = useState<any[]>([]);
+  const [activityFeed, setActivityFeed] = useState<ActivityRecordModel[]>([]);
+  const [kpis, setKpis] = useState({ bookingsToday: 0, pendingBookings: 0, homeCollections: 0, revenueToday: 0 });
+
   useEffect(() => {
     setMounted(true);
+    
+    const loadDashboardData = async () => {
+      const [bookingsRes, alertsRes, activityRes, kpisRes] = await Promise.all([
+        bookingService.getRecent(4),
+        alertService.getOperationalAlerts(),
+        activityService.getAll(),
+        analyticsService.getDashboardKPIs()
+      ]);
+
+      if (bookingsRes.isSuccess) setRecentBookings(bookingsRes.value);
+      setOperationalAlerts(alertsRes); // alertsRes is array directly
+      if (activityRes.isSuccess) setActivityFeed(activityRes.value);
+      setKpis(kpisRes);
+    };
+
+    loadDashboardData();
   }, []);
 
   if (!mounted) return null;
@@ -55,7 +59,7 @@ export default function GlassDashboard() {
   return (
     <AdminPageTemplate>
       {/* MESH GRADIENT BACKGROUND */}
-      <div 
+      <div
         style={{
           position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0,
           background: 'radial-gradient(circle at 15% 50%, rgba(224, 242, 254, 0.5), transparent 25%), radial-gradient(circle at 85% 30%, rgba(233, 213, 255, 0.5), transparent 25%)',
@@ -65,7 +69,7 @@ export default function GlassDashboard() {
       />
 
       <div className="admin-page-container" style={{ position: 'relative', zIndex: 1, padding: '40px', maxWidth: '1600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px', minHeight: '100%', fontFamily: 'Inter, system-ui, sans-serif', minWidth: 0 }}>
-        
+
         {/* HEADER */}
         <div>
           <h1 style={{ fontSize: '32px', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.03em' }}>Good Morning, Admin</h1>
@@ -75,13 +79,13 @@ export default function GlassDashboard() {
         {/* GLASS KPI CARDS */}
         <div className="admin-responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' }}>
           {[
-            { label: "Today's Bookings", value: '24', icon: 'calendar', trend: '+12%', color: '#3b82f6' },
-            { label: "Pending Tests", value: '6', icon: 'clock', trend: '-2%', color: '#f59e0b' },
-            { label: "Home Collections", value: '12', icon: 'mapPin', trend: '+4%', color: '#10b981' },
-            { label: "Revenue Today", value: '₹18,450', icon: 'creditCard', trend: '+8%', color: '#8b5cf6' }
+            { label: "Today's Bookings", value: kpis.bookingsToday.toString(), icon: 'calendar', trend: '+12%', color: '#3b82f6' },
+            { label: "Pending Tests", value: kpis.pendingBookings.toString(), icon: 'clock', trend: '-2%', color: '#f59e0b' },
+            { label: "Home Collections", value: kpis.homeCollections.toString(), icon: 'mapPin', trend: '+4%', color: '#10b981' },
+            { label: "Revenue Today", value: `₹${kpis.revenueToday.toLocaleString()}`, icon: 'creditCard', trend: '+8%', color: '#8b5cf6' }
           ].map((kpi, i) => (
-            <div 
-              key={i} 
+            <div
+              key={i}
               className="admin-glass-panel"
               style={{
                 ...glassStyle, padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px',
@@ -146,7 +150,7 @@ export default function GlassDashboard() {
 
         {/* BOTTOM SECTIONS */}
         <div className="admin-responsive-grid-2col" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
-          
+
           {/* RECENT BOOKINGS GLASS TABLE */}
           <div className="admin-glass-panel" style={{ ...glassStyle, padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px', minWidth: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -155,16 +159,16 @@ export default function GlassDashboard() {
                 View All <AdminIcon name="chevronRight" style={{ width: '14px', height: '14px' }} />
               </button>
             </div>
-            
+
             <div className="admin-table-container" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {recentBookings.map((booking) => {
                 const statusTheme = getStatusColor(booking.status);
                 return (
-                  <div 
+                  <div
                     key={booking.id}
                     className="admin-table-row admin-mobile-grid-row"
-                    style={{ 
-                      display: 'grid', gridTemplateColumns: '1fr 2fr 1fr 1fr 1fr', alignItems: 'center', 
+                    style={{
+                      display: 'grid', gridTemplateColumns: '1fr 2fr 1fr 1fr 1fr', alignItems: 'center',
                       backgroundColor: 'rgba(255,255,255,0.5)', padding: '16px 20px', borderRadius: '16px',
                       border: '1px solid rgba(255,255,255,0.8)', transition: 'background-color 0.2s', cursor: 'pointer'
                     }}
@@ -173,17 +177,17 @@ export default function GlassDashboard() {
                   >
                     <div data-label="Order ID" style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a' }}>{booking.id}</div>
                     <div data-label="Patient">
-                      <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{booking.name}</div>
-                      <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>{booking.type}</div>
+                      <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{booking.patient.name}</div>
+                      <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>{booking.collection.type}</div>
                     </div>
-                    <div data-label="Date & Time" style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>{booking.date}</div>
+                    <div data-label="Date & Time" style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>{booking.collection.date}</div>
                     <div data-label="Status">
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: statusTheme.bg, padding: '4px 10px', borderRadius: '20px' }}>
                         <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: statusTheme.dot }}></span>
                         <span style={{ fontSize: '12px', fontWeight: 800, color: statusTheme.text }}>{booking.status}</span>
                       </div>
                     </div>
-                    <div data-label="Amount" style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a', textAlign: 'right' }}>₹{booking.amount}</div>
+                    <div data-label="Amount" style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a', textAlign: 'right' }}>₹{booking.payment.total}</div>
                   </div>
                 );
               })}
@@ -192,7 +196,7 @@ export default function GlassDashboard() {
 
           {/* RIGHT PANELS: ALERTS & ACTIVITY */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            
+
             {/* ALERTS */}
             <div className="admin-glass-panel" style={{ ...glassStyle, padding: '24px', minWidth: 0 }}>
               <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: '0 0 20px 0' }}>Operational Alerts</h2>

@@ -4,19 +4,18 @@ import React, { useState } from 'react';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
 import { AdminIcon, AdminIconName } from '@/components/admin/navigation/AdminIcons';
 
-// Initial Mock Data
-const initialTasks = [
-  { id: 'HC-1042', time: '08:30 AM', patient: 'Sarah Jenkins', address: '4231 Elm Street, Apt 4B, Springfield', tests: ['Complete Blood Count', 'HbA1c', 'Lipid Panel'], assignedTo: 'Michael R.', status: 'Completed', lat: 34.0522, lng: -118.2437 },
-  { id: 'HC-1043', time: '10:00 AM', patient: 'Robert Chen', address: '984 Westheimer Rd, Suite 200, Springfield', tests: ['Thyroid Profile (T3, T4, TSH)'], assignedTo: 'Michael R.', status: 'En Route', lat: 34.0550, lng: -118.2500 },
-  { id: 'HC-1044', time: '11:15 AM', patient: 'Amanda Gomez', address: '1720 Oak Drive, Springfield', tests: ['Vitamin D (25-OH)', 'Vitamin B12'], assignedTo: 'Sarah L.', status: 'Pending', lat: 34.0480, lng: -118.2400 },
-  { id: 'HC-1045', time: '01:30 PM', patient: 'James Wilson', address: '5501 River Road, Springfield', tests: ['Liver Function Test (LFT)'], assignedTo: 'Unassigned', status: 'Unassigned', lat: 34.0600, lng: -118.2600 },
-  { id: 'HC-1046', time: '03:45 PM', patient: 'Elena Rossi', address: '8833 Sunset Blvd, Springfield', tests: ['Comprehensive Metabolic Panel'], assignedTo: 'Unassigned', status: 'Unassigned', lat: 34.0650, lng: -118.2700 },
-];
+import { collectionService } from '@/services';
+import { CollectionTaskModel } from '@/domains/collections/model';
+import { useAsyncAction } from '@/hooks/useAsyncAction';
 
 export default function CollectionsPage() {
   // STATE
-  const [tasks, setTasks] = useState(initialTasks);
-  const [activeTaskId, setActiveTaskId] = useState(initialTasks[1].id);
+  const [tasks, setTasks] = useState<CollectionTaskModel[]>([]);
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  
+  const { isLoading, execute: loadTasks } = useAsyncAction();
+  const { isLoading: isCreating, execute: executeCreate } = useAsyncAction();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Interactive Button States
@@ -28,6 +27,18 @@ export default function CollectionsPage() {
   const [newPatient, setNewPatient] = useState('');
   const [newAddress, setNewAddress] = useState('');
   const [newTime, setNewTime] = useState('');
+
+  React.useEffect(() => {
+    loadTasks(async () => {
+      const result = await collectionService.getAll();
+      if (result.isSuccess && result.value.length > 0) {
+        setTasks(result.value);
+        if (!activeTaskId) {
+          setActiveTaskId(result.value[1]?.id || result.value[0]?.id);
+        }
+      }
+    });
+  }, [activeTaskId, loadTasks]);
 
   const activeTask = tasks.find(t => t.id === activeTaskId) || tasks[0];
 
@@ -41,27 +52,31 @@ export default function CollectionsPage() {
     e.preventDefault();
     if (!newPatient || !newAddress || !newTime) return;
 
-    const newTask = {
+    const newTask: CollectionTaskModel = {
       id: `HC-${1000 + Math.floor(Math.random() * 900)}`,
       time: newTime,
       patient: newPatient,
       address: newAddress,
       tests: ['General Checkup Profile'],
       assignedTo: 'Unassigned',
-      status: 'Unassigned',
+      status: 'Unassigned' as const,
       // Generate slight random offset around central Springfield map area
       lat: 34.05 + (Math.random() * 0.02 - 0.01),
       lng: -118.25 + (Math.random() * 0.02 - 0.01)
     };
 
-    setTasks([newTask, ...tasks]);
-    setActiveTaskId(newTask.id);
-    setIsModalOpen(false);
-    
-    // Reset Form
-    setNewPatient('');
-    setNewAddress('');
-    setNewTime('');
+    executeCreate(async () => {
+      const res = await collectionService.create(newTask);
+      if (res.isSuccess) {
+        setTasks(prev => [res.value, ...prev]);
+        setActiveTaskId(res.value.id);
+      }
+    }).then(() => {
+      setIsModalOpen(false);
+      setNewPatient('');
+      setNewAddress('');
+      setNewTime('');
+    });
   };
 
   return (
@@ -146,8 +161,13 @@ export default function CollectionsPage() {
 
             {/* Scrollable Queue List */}
             <div style={{ flex: 1, overflowY: 'auto' }}>
-              {tasks.map((task, index) => {
-                const isActive = activeTaskId === task.id;
+              {isLoading ? (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>Loading tasks...</div>
+              ) : tasks.length === 0 ? (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>No tasks found.</div>
+              ) : (
+                tasks.map((task, index) => {
+                  const isActive = activeTaskId === task.id;
                 
                 let statusColor = '#64748b'; // Default Grey
                 let statusBg = '#f1f5f9';
@@ -197,7 +217,7 @@ export default function CollectionsPage() {
                     </div>
                   </div>
                 );
-              })}
+              }))}
             </div>
           </div>
 
@@ -375,8 +395,8 @@ export default function CollectionsPage() {
                 <button type="button" onClick={() => setIsModalOpen(false)} style={{ flex: 1, height: '44px', borderRadius: '10px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', color: '#334155', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>
                   Cancel
                 </button>
-                <button type="submit" style={{ flex: 1, height: '44px', borderRadius: '10px', border: 'none', backgroundColor: '#2563eb', color: '#ffffff', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>
-                  Create Order
+                <button type="submit" disabled={isCreating} style={{ flex: 1, height: '44px', borderRadius: '10px', border: 'none', backgroundColor: '#2563eb', color: '#ffffff', fontSize: '14px', fontWeight: 700, cursor: isCreating ? 'not-allowed' : 'pointer', opacity: isCreating ? 0.7 : 1 }}>
+                  {isCreating ? 'Creating...' : 'Create Order'}
                 </button>
               </div>
             </form>

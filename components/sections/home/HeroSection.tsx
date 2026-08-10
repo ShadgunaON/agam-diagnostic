@@ -1,22 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { HeroData } from '@/data/home';
 import { Container } from '@/components/ui';
 
-const mockTests = [
-  { name: "Complete Blood Count (CBC)", price: "₹350" },
-  { name: "Thyroid Profile (T3, T4, TSH)", price: "₹450" },
-  { name: "Liver Function Test (LFT)", price: "₹650" },
-  { name: "Lipid Profile", price: "₹550" },
-  { name: "Kidney Function Test (KFT)", price: "₹650" },
-  { name: "HbA1c (Glycosylated Hemoglobin)", price: "₹400" },
-  { name: "Master Health Checkup", price: "₹1999" },
-  { name: "Vitamin D (25-OH)", price: "₹1200" },
-  { name: "Vitamin B12", price: "₹800" },
-  { name: "Fasting Blood Sugar (FBS)", price: "₹150" }
-];
+import { testCatalogService } from '@/services';
+import { TestItem } from '@/domains/tests/model';
 
 export interface HeroSectionProps {
   data: HeroData;
@@ -40,10 +30,24 @@ export function HeroSection({ data, className = '' }: HeroSectionProps) {
   const [activeTab, setActiveTab] = useState<'tests' | 'packages'>('tests');
   const [searchQuery, setSearchQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const [filteredTests, setFilteredTests] = useState<TestItem[]>([]);
 
-  const filteredTests = searchQuery.trim()
-    ? mockTests.filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : [];
+  useEffect(() => {
+    const fetchSearch = async () => {
+      if (searchQuery.trim() && activeTab === 'tests') {
+        const res = await testCatalogService.searchTests(searchQuery.trim());
+        if (res.isSuccess) {
+          setFilteredTests(res.value.slice(0, 5)); // Limit to 5 suggestions
+        }
+      } else {
+        setFilteredTests([]);
+      }
+    };
+    
+    // Simple debounce
+    const timeout = setTimeout(fetchSearch, 200);
+    return () => clearTimeout(timeout);
+  }, [searchQuery, activeTab]);
 
   const showSuggestions = isFocused && searchQuery.trim().length > 0;
 
@@ -102,10 +106,10 @@ export function HeroSection({ data, className = '' }: HeroSectionProps) {
               {showSuggestions && (
                 <div id="search-suggest" className="search-suggest" style={{ display: 'block', maxWidth: '80%' }}>
                   {filteredTests.length > 0 ? (
-                    filteredTests.map((test, idx) => (
-                      <Link key={idx} href="/tests" style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', textDecoration: 'none', color: 'inherit', borderBottom: '1px solid #eee' }}>
-                        <span style={{ fontWeight: 500, fontSize: '14px' }}>{test.name}</span>
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-primary)', background: 'rgba(11,27,61,0.05)', padding: '2px 8px', borderRadius: '4px' }}>{test.price}</span>
+                    filteredTests.map((test) => (
+                      <Link key={test.id} href={`/tests/${test.slug}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', textDecoration: 'none', color: 'inherit', borderBottom: '1px solid #eee' }}>
+                        <span style={{ fontWeight: 500, fontSize: '14px' }}>{test.title}</span>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-primary)', background: 'rgba(11,27,61,0.05)', padding: '2px 8px', borderRadius: '4px' }}>₹{test.price}</span>
                       </Link>
                     ))
                   ) : (

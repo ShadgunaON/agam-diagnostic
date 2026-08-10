@@ -18,4 +18,8 @@ export class TestCatalogService {
   async getTestBySlug(slug: string) {
     return this.repository.getTestBySlug(slug);
   }
+
+  async searchTests(query: string) {
+    return this.repository.searchTests(query);
+  }
 }

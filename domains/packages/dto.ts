@@ -6,6 +6,7 @@ export interface PackageItemDto {
   summary: string;
   cost: string;
   icon_name: string;
+  included_tests_slugs?: string[];
 }
 
 export interface PackageDetailDto {
@@ -21,4 +22,5 @@ export interface PackageDetailDto {
   prep_instructions: string;
   related_packs: Array<{ name: string; category: string; desc: string; url_slug: string }>;
   key_highlights: string[];
+  included_tests_slugs?: string[];
 }

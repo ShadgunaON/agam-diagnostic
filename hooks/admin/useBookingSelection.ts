@@ -1,14 +1,12 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Booking, mockBookings } from '../../data/admin/mockBookings';
+import { Booking, BookingStatus } from '../../data/bookings';
 
 export function useBookingSelection() {
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
 
-  const selectedBooking = selectedBookingId 
-    ? mockBookings.find(b => b.id === selectedBookingId) || null
-    : null;
+  const selectedBooking = null; // Removed mockBookings query; should be fetched from service if needed
 
   const openDrawer = useCallback((bookingId: string) => {
     setSelectedBookingId(bookingId);

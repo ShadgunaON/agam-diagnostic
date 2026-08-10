@@ -1,67 +1,45 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
 import { useToast } from '@/components/admin/feedback/Toast';
 import { Drawer } from '@/components/ui/Drawer';
 
-// --- MOCK DATA TYPES ---
-type Role = { id: string; title: string; internal: string; users: number; desc: string; color: string };
-type Staff = { id: string; name: string; roleId: string; email: string; status: 'Active' | 'Pending' | 'Suspended'; avatar: string };
-type Permission = { name: string; description: string; view: boolean; create: boolean; edit: boolean; del: boolean };
-type ModuleData = { id: string; title: string; description: string; permissions: Permission[] };
-
-// --- INITIAL STATE DATA ---
-const initialRoles: Role[] = [
-  { id: 'admin', title: 'System Administrator', internal: 'ADMIN', users: 3, desc: 'Unrestricted system access.', color: '#3b82f6' },
-  { id: 'op', title: 'Operation Manager', internal: 'OPERATION_MANAGER', users: 12, desc: 'Manages day-to-day operations.', color: '#10b981' },
-  { id: 'path', title: 'Lead Pathologist', internal: 'PATHOLOGIST', users: 5, desc: 'Oversees lab results & reports.', color: '#8b5cf6' },
-  { id: 'phleb', title: 'Phlebotomist', internal: 'FIELD_AGENT', users: 24, desc: 'Home collection field agents.', color: '#f59e0b' },
-];
-
-const initialStaff: Staff[] = [
-  { id: '1', name: 'Sarah Jenkins', roleId: 'admin', email: 'sarah@agam.com', status: 'Active', avatar: 'SJ' },
-  { id: '2', name: 'Michael Chen', roleId: 'op', email: 'mchen@agam.com', status: 'Active', avatar: 'MC' },
-  { id: '3', name: 'Dr. Robert Wilson', roleId: 'path', email: 'rwilson@agam.com', status: 'Active', avatar: 'RW' },
-  { id: '4', name: 'Amanda Gomez', roleId: 'phleb', email: 'agomez@agam.com', status: 'Pending', avatar: 'AG' },
-  { id: '5', name: 'David Lee', roleId: 'op', email: 'dlee@agam.com', status: 'Active', avatar: 'DL' },
-];
-
-const baseModules: ModuleData[] = [
-  { id: 'patients', title: 'Patient Records', description: 'Access and modify patient medical data.', permissions: [{ name: 'records', description: '', view: false, create: false, edit: false, del: false }] },
-  { id: 'orders', title: 'Service Orders', description: 'Manage home collections and lab orders.', permissions: [{ name: 'orders', description: '', view: false, create: false, edit: false, del: false }] },
-  { id: 'reports', title: 'Financial Reports', description: 'View revenue and billing metrics.', permissions: [{ name: 'finance', description: '', view: false, create: false, edit: false, del: false }] },
-  { id: 'catalog', title: 'Test Catalog', description: 'Manage available tests and pricing.', permissions: [{ name: 'catalog', description: '', view: false, create: false, edit: false, del: false }] },
-];
-
-const createRolePerms = (grants: Record<string, Partial<Permission>>): ModuleData[] => {
-  return baseModules.map(m => {
-    const grant = grants[m.id] || {};
-    return {
-      ...m,
-      permissions: m.permissions.map(p => ({ ...p, ...grant }))
-    };
-  });
-};
-
-const initialPermissionsMap: Record<string, ModuleData[]> = {
-  admin: createRolePerms({ patients: { view: true, create: true, edit: true, del: true }, orders: { view: true, create: true, edit: true, del: true }, reports: { view: true, create: true, edit: true, del: true }, catalog: { view: true, create: true, edit: true, del: true } }),
-  op: createRolePerms({ patients: { view: true, create: true, edit: true }, orders: { view: true, create: true, edit: true }, catalog: { view: true, create: true, edit: true } }),
-  path: createRolePerms({ patients: { view: true, edit: true }, orders: { view: true } }),
-  phleb: createRolePerms({ patients: { view: true }, orders: { view: true, edit: true } }),
-};
+import { staffService } from '@/services';
+import { StaffModel, RoleModel, ModuleDataModel } from '@/domains/staff/model';
 
 export default function HighlyVisualizedStaffRoles() {
-  // STATE
-  const [roles, setRoles] = useState<Role[]>(initialRoles);
-  const [staff, setStaff] = useState<Staff[]>(initialStaff);
-  const [rolePermissions, setRolePermissions] = useState(initialPermissionsMap);
+  const [mounted, setMounted] = useState(false);
+  const [roles, setRoles] = useState<RoleModel[]>([]);
+  const [staff, setStaff] = useState<StaffModel[]>([]);
+  const [rolePermissions, setRolePermissions] = useState<Record<string, ModuleDataModel[]>>({});
   const { toast } = useToast();
   
-  const [activeRole, setActiveRole] = useState(roles[0].id);
+  const [activeRole, setActiveRole] = useState<string | null>(null);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isNewRoleOpen, setIsNewRoleOpen] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const loadData = async () => {
+      const [staffRes, rolesRes, permsRes] = await Promise.all([
+        staffService.getAllStaff(),
+        staffService.getAllRoles(),
+        staffService.getAllPermissionsMap()
+      ]);
+
+      if (rolesRes.isSuccess) {
+        setRoles(rolesRes.value);
+        if (rolesRes.value.length > 0) {
+          setActiveRole(rolesRes.value[0].id);
+        }
+      }
+      if (staffRes.isSuccess) setStaff(staffRes.value);
+      if (permsRes.isSuccess) setRolePermissions(permsRes.value);
+    };
+    loadData();
+  }, []);
   
   const [hoverRole, setHoverRole] = useState<string | null>(null);
 
@@ -69,13 +47,15 @@ export default function HighlyVisualizedStaffRoles() {
   const [newRoleTitle, setNewRoleTitle] = useState('');
   const [newRoleInternal, setNewRoleInternal] = useState('');
 
-  const activeRoleInfo = roles.find(r => r.id === activeRole)!;
-  const activeStaff = staff.filter(s => s.roleId === activeRole);
-  const currentModules = rolePermissions[activeRole] || createRolePerms({});
+  const activeRoleInfo = activeRole ? roles.find(r => r.id === activeRole) : null;
+  const activeStaff = activeRole ? staff.filter(s => s.role === activeRole) : [];
+  const currentModules = activeRole && rolePermissions[activeRole] ? rolePermissions[activeRole] : [];
 
   // ACTIONS
-  const handleTogglePermission = (moduleId: string, field: 'view' | 'create' | 'edit' | 'del') => {
-    if (activeRole === 'admin') return; 
+  const handleTogglePermission = async (moduleId: string, field: 'view' | 'create' | 'edit' | 'del') => {
+    if (activeRole === 'admin' || !activeRole) return; 
+    
+    // Optimistic UI Update
     setRolePermissions(prev => {
       const newMap = { ...prev };
       const modules = [...newMap[activeRole]];
@@ -91,38 +71,57 @@ export default function HighlyVisualizedStaffRoles() {
       newMap[activeRole] = modules;
       return newMap;
     });
+
+    // Update backend (Service)
+    const currentValue = rolePermissions[activeRole]?.find(m => m.id === moduleId)?.permissions[0][field];
+    await staffService.updateRolePermissions(activeRole, moduleId, field, !currentValue);
   };
 
-  const handleSendInvite = () => {
+  const handleSendInvite = async () => {
     if (!newInviteEmail) return;
-    const newStaff: Staff = {
-      id: Math.random().toString(),
+    const res = await staffService.createStaff({
       name: newInviteEmail.split('@')[0], 
       email: newInviteEmail,
-      roleId: roles[0].id,
-      status: 'Pending',
-      avatar: newInviteEmail.substring(0, 2).toUpperCase()
-    };
-    setStaff([...staff, newStaff]);
-    setIsInviteOpen(false);
-    setNewInviteEmail('');
-    toast({ title: 'Invitation Sent', description: `An email has been sent to ${newInviteEmail}.`, variant: 'success' });
+      role: activeRole || (roles.length > 0 ? roles[0].id : 'admin'),
+      status: 'On Leave', // Closest to pending/inactive in current model
+      department: 'General',
+      shift: 'Morning',
+      phone: '0000000000',
+      joinDate: new Date().toLocaleDateString()
+    });
+    
+    if (res.isSuccess) {
+      setStaff([...staff, res.value]);
+      setIsInviteOpen(false);
+      setNewInviteEmail('');
+      toast({ title: 'Invitation Sent', description: `An email has been sent to ${newInviteEmail}.`, variant: 'success' });
+    }
   };
 
-  const handleCreateRole = () => {
+  const handleCreateRole = async () => {
     if (!newRoleTitle || !newRoleInternal) return;
     const newId = newRoleInternal.toLowerCase();
-    const newRole: Role = {
+    
+    const res = await staffService.createRole({
       id: newId, title: newRoleTitle, internal: newRoleInternal, users: 0, desc: 'Custom created role.', color: '#0ea5e9'
-    };
-    setRoles([...roles, newRole]);
-    setRolePermissions({ ...rolePermissions, [newId]: createRolePerms({}) });
-    setActiveRole(newId);
-    setIsNewRoleOpen(false);
-    setNewRoleTitle('');
-    setNewRoleInternal('');
-    toast({ title: 'Role Created', description: `The role "${newRoleTitle}" has been created.`, variant: 'success' });
+    });
+
+    if (res.isSuccess) {
+      setRoles([...roles, res.value]);
+      // The service mock will initialize empty permissions
+      const permsRes = await staffService.getAllPermissionsMap();
+      if (permsRes.isSuccess) {
+        setRolePermissions(permsRes.value);
+      }
+      setActiveRole(newId);
+      setIsNewRoleOpen(false);
+      setNewRoleTitle('');
+      setNewRoleInternal('');
+      toast({ title: 'Role Created', description: `The role "${newRoleTitle}" has been created.`, variant: 'success' });
+    }
   };
+
+  if (!mounted) return null;
 
   return (
     <AdminPageTemplate>
@@ -230,8 +229,8 @@ export default function HighlyVisualizedStaffRoles() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
                 <div>
                   <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: activeRoleInfo.color }}></div>
-                    Staff Assigned to {activeRoleInfo.title}
+                    {activeRoleInfo && <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: activeRoleInfo.color }}></div>}
+                    Staff Assigned to {activeRoleInfo?.title}
                   </h3>
                   <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0 0' }}>These members inherit the permissions defined in the matrix below.</p>
                 </div>
@@ -246,13 +245,13 @@ export default function HighlyVisualizedStaffRoles() {
                 {activeStaff.map(staff => (
                   <div key={staff.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', borderRadius: '16px', border: '1px solid #f1f5f9', backgroundColor: '#f8fafc', transition: 'background-color 0.2s', cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}>
                     <div style={{ width: '48px', height: '48px', borderRadius: '14px', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 800, color: '#475569', flexShrink: 0 }}>
-                      {staff.avatar}
+                      {staff.name.substring(0, 2).toUpperCase()}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
                         <span style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{staff.name}</span>
-                        {staff.status === 'Pending' && <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#f59e0b', flexShrink: 0 }}></span>}
-                        {staff.status === 'Active' && <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', flexShrink: 0 }}></span>}
+                        {staff.status === 'On Leave' && <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#f59e0b', flexShrink: 0 }}></span>}
+                        {staff.status === 'On Duty' && <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', flexShrink: 0 }}></span>}
                       </div>
                       <div style={{ fontSize: '13px', fontWeight: 500, color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{staff.email}</div>
                     </div>
@@ -272,7 +271,7 @@ export default function HighlyVisualizedStaffRoles() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
                 <div>
                   <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: 0 }}>CRUD Operations Matrix</h3>
-                  <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0 0' }}>Configure granular access controls for {activeRoleInfo.title}.</p>
+                  <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0 0' }}>Configure granular access controls for {activeRoleInfo?.title}.</p>
                 </div>
                 {activeRole === 'admin' && (
                   <div style={{ padding: '8px 16px', backgroundColor: '#eff6ff', color: '#2563eb', borderRadius: '10px', fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -302,7 +301,7 @@ export default function HighlyVisualizedStaffRoles() {
                     </div>
                     
                     {['view', 'create', 'edit', 'del'].map((op) => {
-                      const isChecked = activeRole === 'admin' ? true : mod.permissions[0][op as keyof typeof mod.permissions[0]] as boolean;
+                      const isChecked = activeRole === 'admin' ? true : (mod.permissions && mod.permissions.length > 0 ? mod.permissions[0][op as keyof typeof mod.permissions[0]] as boolean : false);
                       return (
                         <div key={op} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                           <button 
@@ -311,8 +310,8 @@ export default function HighlyVisualizedStaffRoles() {
                             disabled={activeRole === 'admin'}
                             style={{ 
                               width: '24px', height: '24px', borderRadius: '6px', 
-                              border: `2px solid ${isChecked ? activeRoleInfo.color : '#cbd5e1'}`, 
-                              backgroundColor: isChecked ? activeRoleInfo.color : '#ffffff',
+                              border: `2px solid ${isChecked ? (activeRoleInfo?.color || '#3b82f6') : '#cbd5e1'}`, 
+                              backgroundColor: isChecked ? (activeRoleInfo?.color || '#3b82f6') : '#ffffff',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                               opacity: activeRole === 'admin' ? 0.5 : 1,
                               cursor: activeRole === 'admin' ? 'not-allowed' : 'pointer'

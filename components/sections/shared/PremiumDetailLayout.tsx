@@ -26,6 +26,7 @@ export interface PremiumDetailLayoutProps {
     category: string;
     price: number;
     originalPrice: number;
+    includedTests?: string[];
   };
   sections: AccordionSection[];
   defaultOpenSection?: string;

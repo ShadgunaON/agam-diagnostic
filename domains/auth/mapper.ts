@@ -1,6 +1,7 @@
 import { AuthDto } from './dto';
-import { AuthModel } from './model';
+import { UserProfile } from './model';
 
-export function mapAuthDtoToModel(dto: AuthDto): AuthModel {
-  return { id: dto.id };
+export function mapAuthDtoToModel(dto: AuthDto): UserProfile {
+  void dto;
+  return {} as UserProfile;
 }

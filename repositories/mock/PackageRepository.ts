@@ -19,6 +19,7 @@ export class MockPackageRepository implements IPackagesRepository {
       summary: raw.description,
       cost: raw.price,
       icon_name: raw.icon,
+      included_tests_slugs: raw.includedTests,
     }));
 
     const models = dtos.map(mapPackageItemDtoToModel);
@@ -45,6 +46,7 @@ export class MockPackageRepository implements IPackagesRepository {
       prep_instructions: raw.preparation,
       related_packs: raw.relatedPackages.map(rp => ({ name: rp.title, category: rp.category, desc: rp.description, url_slug: rp.slug })),
       key_highlights: raw.highlights,
+      included_tests_slugs: raw.includedTests,
     };
 
     return success(mapPackageDetailDtoToModel(dto));

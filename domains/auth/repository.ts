@@ -1,6 +1,7 @@
 import { Result } from '../../shared/result';
-import { AuthModel } from './model';
+import { UserProfile } from './model';
 
 export interface IAuthRepository {
-  getById(id: string): Promise<Result<AuthModel>>;
+  verifyOtp(mobile: string, otp: string, registrationData?: Partial<UserProfile>): Promise<Result<{ success: boolean; isNewUser?: boolean; user?: UserProfile }>>;
+  sendOtp(mobile: string): Promise<Result<boolean>>;
 }

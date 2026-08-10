@@ -3,13 +3,16 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import { bookingService } from '@/services';
 
 type BookingStep = 1 | 2 | 3 | 4;
 type LocationType = 'home' | 'lab';
 type PatientType = 'myself' | 'family';
 
 export function ProgressiveBookingFlow() {
-  const { items, totalAmount, collectionFee, removeItem } = useCart();
+  const { items, totalAmount, collectionFee, removeItem, duplicateWarnings, removeDuplicateTest, clearCart } = useCart();
   const [currentStep, setCurrentStep] = useState<BookingStep>(1);
   
   // Booking State
@@ -18,6 +21,54 @@ export function ProgressiveBookingFlow() {
   const [address, setAddress] = useState('');
   const [date, setDate] = useState('');
   const [timeSlot, setTimeSlot] = useState('');
+  
+  const { user } = useAuth();
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handlePayment = async () => {
+    setIsSubmitting(true);
+    setError(null);
+
+    const bookingPayload = {
+      patient: {
+        name: patientType === 'myself' ? (user?.fullName || 'Guest Patient') : 'Family Member',
+        phone: user?.mobile || '0000000000',
+        email: user?.email || 'guest@example.com',
+        age: parseInt(user?.dobOrAge || '30', 10) || 30,
+        gender: user?.gender || 'Not Specified'
+      },
+      collection: {
+        type: locationType === 'home' ? 'Home Collection' as const : 'Lab Visit' as const,
+        date: date || 'Not specified',
+        timeSlot: timeSlot || 'Not specified',
+        address: locationType === 'home' ? address : 'Agam Diagnostics Centre'
+      },
+      items: items.map(item => ({
+        name: item.title,
+        type: item.type === 'package' ? 'Package' as const : 'Test' as const,
+        price: item.price
+      })),
+      payment: {
+        total: locationType === 'home' ? totalAmount : totalAmount - collectionFee,
+        status: 'Pending' as const,
+        method: 'Online Secure'
+      },
+      timeline: []
+    };
+
+    const result = await bookingService.createBooking(bookingPayload);
+    setIsSubmitting(false);
+
+    if (result.isSuccess && result.value) {
+      clearCart();
+      router.push(`/book/success/${result.value.id}`);
+    } else {
+      const errorMsg = !result.isSuccess ? result.error?.message : "Failed to create booking.";
+      setError(errorMsg || "Failed to create booking. Please try again.");
+    }
+  };
 
   const handleNext = () => setCurrentStep(prev => Math.min(prev + 1, 4) as BookingStep);
   const handleBack = () => setCurrentStep(prev => Math.max(prev - 1, 1) as BookingStep);
@@ -54,6 +105,35 @@ export function ProgressiveBookingFlow() {
             {currentStep === 1 && (
               <div className="fade-in-up">
                 <h2 style={{ fontSize: '24px', color: 'var(--color-dark)', marginBottom: '24px' }}>Review your cart</h2>
+                
+                {duplicateWarnings.length > 0 && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6 shadow-sm">
+                    <div className="flex items-center gap-2 text-orange-800 font-bold mb-3">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                      </svg>
+                      <span>Smart Cart Intelligence Alert</span>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                      {duplicateWarnings.map((warning, idx) => (
+                        <div key={idx} className="bg-white border border-orange-100 p-3 rounded-md text-sm flex justify-between items-center">
+                          <div className="text-gray-700">
+                            <p className="m-0">&quot;<strong>{warning.testTitle}</strong>&quot; is already included in the &quot;<strong>{warning.packageTitle}</strong>&quot; package.</p>
+                          </div>
+                          <button
+                            type="button"
+                            className="bg-orange-100 hover:bg-orange-200 text-orange-800 font-semibold py-1.5 px-4 rounded transition-colors text-sm whitespace-nowrap"
+                            onClick={() => removeDuplicateTest(warning.testSlug)}
+                          >
+                            Remove & Save ₹{warning.savingsAmount}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {isCartEmpty ? (
                   <div style={{ textAlign: 'center', padding: '48px', background: '#fff', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: '0 2px 8px rgba(11,27,61,0.04)' }}>
                     <p style={{ color: 'var(--color-text-light)', marginBottom: '16px' }}>Your cart is empty.</p>
@@ -289,17 +369,31 @@ export function ProgressiveBookingFlow() {
                       </div>
                     </div>
                   </div>
+                  
+                  {error && (
+                    <div style={{ padding: '12px', background: '#fef2f2', border: '1px solid #fecaca', color: '#ef4444', borderRadius: '8px', fontSize: '14px', textAlign: 'center' }}>
+                      {error}
+                    </div>
+                  )}
 
                   <button 
-                    onClick={() => alert('Booking Confirmed! (Payment Gateway Integration Pending)')} 
+                    type="button"
+                    onClick={handlePayment} 
+                    disabled={isSubmitting}
                     style={{ 
                       width: '100%', background: '#10b981', color: '#fff', padding: '16px', borderRadius: '100px', border: 'none', 
-                      fontSize: '15px', fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
-                      boxShadow: '0 4px 12px rgba(16,185,129,0.2)', transition: 'all 0.3s'
+                      fontSize: '15px', fontWeight: 600, cursor: isSubmitting ? 'not-allowed' : 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
+                      boxShadow: '0 4px 12px rgba(16,185,129,0.2)', transition: 'all 0.3s', opacity: isSubmitting ? 0.7 : 1
                     }}
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: '18px' }}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    Pay ₹{finalTotal} Securely
+                    {isSubmitting ? (
+                      <span>Processing...</span>
+                    ) : (
+                      <>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: '18px' }}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        Pay ₹{finalTotal} Securely
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

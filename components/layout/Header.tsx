@@ -9,6 +9,7 @@ import { Container } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { GlobalSearch } from '@/components/common/GlobalSearch';
+import { CartDrawer } from '@/components/cart/CartDrawer';
 
 export interface HeaderProps {
   className?: string;
@@ -16,9 +17,10 @@ export interface HeaderProps {
 
 export function Header({ className = '' }: HeaderProps) {
   const { user, isAuthenticated, logout } = useAuth();
-  const { itemCount, setIsCartOpen } = useCart();
+  const { itemCount } = useCart();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   return (
     <>
@@ -70,17 +72,18 @@ export function Header({ className = '' }: HeaderProps) {
             </button>
 
             {/* Cart Icon Trigger */}
-            <Link 
-              href="/book" 
-              className="btn btn--outline btn--sm" 
-              style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px', borderColor: 'var(--color-primary)', color: 'var(--color-primary)', textDecoration: 'none' }}
+            <button 
+              type="button"
+              className="btn btn--outline btn--sm cursor-pointer" 
+              style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px', borderColor: 'var(--color-primary)', color: 'var(--color-primary)', background: 'transparent' }}
               title="View Booking Cart"
+              onClick={() => setIsCartOpen(true)}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
               <span style={{ background: 'var(--color-accent)', color: '#fff', borderRadius: '50%', width: '20px', height: '20px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 'bold' }}>
                 {itemCount}
               </span>
-            </Link>
+            </button>
 
             {/* Auth Menu / User Greeting */}
             {isAuthenticated && user ? (
@@ -155,6 +158,7 @@ export function Header({ className = '' }: HeaderProps) {
       </nav>
 
       <GlobalSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      <CartDrawer isOpen={isCartOpen} onClose={setIsCartOpen} />
     </>
   );
 }

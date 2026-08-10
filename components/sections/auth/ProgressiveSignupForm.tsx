@@ -1,11 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
+import { FormField } from '@/components/ui/FormField';
 
 type SignupStep = 'mobile' | 'otp' | 'profile';
+
+import { useAsyncAction } from '@/hooks/useAsyncAction';
 
 export function ProgressiveSignupForm() {
   const router = useRouter();
@@ -15,75 +18,87 @@ export function ProgressiveSignupForm() {
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
   const [fullName, setFullName] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  
+  const { isLoading, error, setError, execute } = useAsyncAction();
 
   // Optional profile fields
   const [gender, setGender] = useState<'Male' | 'Female' | 'Other' | ''>('');
   const [age, setAge] = useState('');
 
+  const searchParams = useSearchParams();
+
+  const navigateToDestination = () => {
+    const returnUrl = searchParams.get('returnUrl');
+    if (returnUrl) {
+      // Create a new URLSearchParams to filter out returnUrl from the rest of the query params
+      const newParams = new URLSearchParams(searchParams.toString());
+      newParams.delete('returnUrl');
+      const queryString = newParams.toString();
+      
+      const destination = queryString ? `${returnUrl}?${queryString}` : returnUrl;
+      router.push(destination);
+    } else {
+      router.push('/bookings'); // Default to bookings dashboard
+    }
+  };
+
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     if (mobile.length !== 10) {
       setError('Please enter a valid 10-digit mobile number.');
       return;
     }
-    setIsLoading(true);
-    try {
+    
+    await execute(async () => {
       const success = await sendOtp(mobile);
       if (success) {
         setStep('otp');
       } else {
-        setError('Failed to send OTP. Please try again.');
+        throw new Error('Failed to send OTP. Please try again.');
       }
-    } catch (err) {
-      setError('An unexpected error occurred.');
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     if (otp.length !== 4) {
       setError('OTP must be 4 digits. (Try 1234)');
       return;
     }
-    setIsLoading(true);
-    try {
-      const { success, isNewUser } = await verifyOtp(mobile, otp, { fullName });
+    
+    await execute(async () => {
+      const { success, isNewUser } = await verifyOtp(mobile, otp);
       if (success) {
-        if (isNewUser || (user && !user.isProfileComplete)) {
+        if (isNewUser) {
           setStep('profile');
         } else {
-          router.push('/');
+          navigateToDestination();
         }
       } else {
-        setError('Invalid OTP. Please try again.');
+        throw new Error('Invalid OTP. Please try again.');
       }
-    } catch (err) {
-      setError('An unexpected error occurred.');
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    updateProfile({
-      gender: gender || undefined,
-      dobOrAge: age || undefined
+    if (!fullName) {
+      setError('Full Name is required.');
+      return;
+    }
+    
+    await execute(async () => {
+      updateProfile({
+        fullName,
+        gender: gender || undefined,
+        dobOrAge: age || undefined,
+        isProfileComplete: true,
+        savedPatients: [
+          { id: `pat_${Date.now()}`, name: fullName, relation: 'Myself', age: age || '30', gender: gender || 'Male' }
+        ]
+      });
+      navigateToDestination();
     });
-    setIsLoading(false);
-    router.push('/');
-  };
-
-  const handleSkip = () => {
-    skipProfile();
-    router.push('/');
   };
 
   return (
@@ -104,17 +119,19 @@ export function ProgressiveSignupForm() {
             {error && <div style={{ background: '#fef2f2', color: '#ef4444', padding: '12px 16px', borderRadius: '12px', marginBottom: '20px', fontSize: '14px', fontWeight: 500 }}>{error}</div>}
 
             <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-dark)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Mobile Number</label>
-              <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-light)', fontWeight: 600 }}>+91</span>
-                <input 
-                  type="tel" 
-                  value={mobile}
-                  onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                  placeholder="98765 43210"
-                  style={{ width: '100%', padding: '16px 16px 16px 56px', borderRadius: '16px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '16px', outline: 'none' }} 
-                />
-              </div>
+              <FormField label="Mobile Number" htmlFor="signup-mobile">
+                <div style={{ position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-light)', fontWeight: 600 }}>+91</span>
+                  <input 
+                    id="signup-mobile"
+                    type="tel" 
+                    value={mobile}
+                    onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    placeholder="98765 43210"
+                    style={{ width: '100%', padding: '16px 16px 16px 56px', borderRadius: '16px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '16px', outline: 'none' }} 
+                  />
+                </div>
+              </FormField>
             </div>
 
             <button 
@@ -127,7 +144,7 @@ export function ProgressiveSignupForm() {
           </form>
         )}
 
-        {/* Step 2: OTP & Basic Info */}
+        {/* Step 2: OTP */}
         {step === 'otp' && (
           <form onSubmit={handleVerifyOtp}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
@@ -137,53 +154,59 @@ export function ProgressiveSignupForm() {
 
             {error && <div style={{ background: '#fef2f2', color: '#ef4444', padding: '12px 16px', borderRadius: '12px', marginBottom: '20px', fontSize: '14px', fontWeight: 500 }}>{error}</div>}
 
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-dark)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Enter OTP</label>
-              <input 
-                type="text" 
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                placeholder="1234"
-                style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '24px', letterSpacing: '8px', textAlign: 'center', outline: 'none' }} 
-              />
-            </div>
-
             <div style={{ marginBottom: '32px' }}>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-dark)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Full Name <span style={{ color: '#ef4444' }}>*</span></label>
-              <input 
-                type="text" 
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="e.g. John Doe"
-                style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '15px', outline: 'none' }} 
-                required
-              />
+              <FormField label="Enter OTP" htmlFor="signup-otp">
+                <input 
+                  id="signup-otp"
+                  type="text" 
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  placeholder="1234"
+                  style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '24px', letterSpacing: '8px', textAlign: 'center', outline: 'none' }} 
+                />
+              </FormField>
             </div>
 
             <button 
               type="submit" 
-              disabled={isLoading || otp.length !== 4 || !fullName}
-              style={{ width: '100%', background: 'var(--color-primary)', color: '#fff', padding: '18px', borderRadius: '100px', border: 'none', fontSize: '16px', fontWeight: 600, cursor: (isLoading || otp.length !== 4 || !fullName) ? 'not-allowed' : 'pointer', opacity: (isLoading || otp.length !== 4 || !fullName) ? 0.5 : 1 }}
+              disabled={isLoading || otp.length !== 4}
+              style={{ width: '100%', background: 'var(--color-primary)', color: '#fff', padding: '18px', borderRadius: '100px', border: 'none', fontSize: '16px', fontWeight: 600, cursor: (isLoading || otp.length !== 4) ? 'not-allowed' : 'pointer', opacity: (isLoading || otp.length !== 4) ? 0.5 : 1 }}
             >
               {isLoading ? 'Verifying...' : 'Verify & Continue'}
             </button>
           </form>
         )}
 
-        {/* Step 3: Optional Demographic Info */}
+        {/* Step 3: Complete Profile (New Users) */}
         {step === 'profile' && (
           <form onSubmit={handleSaveProfile}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '64px', height: '64px', borderRadius: '32px', background: '#dcfce7', color: '#10b981', marginBottom: '16px' }}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ width: '32px' }}><polyline points="20 6 9 17 4 12"/></svg>
               </div>
-              <h2 style={{ fontSize: '24px', color: 'var(--color-dark)', margin: '0 0 8px 0', fontWeight: 700 }}>Almost Done!</h2>
+              <h2 style={{ fontSize: '24px', color: 'var(--color-dark)', margin: '0 0 8px 0', fontWeight: 700 }}>Welcome!</h2>
               <p style={{ color: 'var(--color-text-light)', margin: 0, fontSize: '15px' }}>Help us personalize your healthcare experience.</p>
             </div>
+
+            {error && <div style={{ background: '#fef2f2', color: '#ef4444', padding: '12px 16px', borderRadius: '12px', marginBottom: '20px', fontSize: '14px', fontWeight: 500 }}>{error}</div>}
 
             <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '20px', marginBottom: '32px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 
+                <div>
+                  <FormField label="Full Name" htmlFor="signup-name" required>
+                    <input 
+                      id="signup-name"
+                      type="text" 
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="e.g. John Doe"
+                      style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '15px', outline: 'none' }} 
+                      required
+                    />
+                  </FormField>
+                </div>
+
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-dark)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Gender <span style={{ color: 'var(--color-text-light)', textTransform: 'none', fontWeight: 400 }}>(Optional)</span></label>
                   <div style={{ display: 'flex', gap: '8px' }}>
@@ -214,21 +237,13 @@ export function ProgressiveSignupForm() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <button 
-                type="submit" 
-                style={{ width: '100%', background: 'var(--color-dark)', color: '#fff', padding: '18px', borderRadius: '100px', border: 'none', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}
-              >
-                Save Details & Finish
-              </button>
-              <button 
-                type="button" 
-                onClick={handleSkip}
-                style={{ width: '100%', background: 'transparent', color: 'var(--color-text-light)', padding: '16px', borderRadius: '100px', border: 'none', fontSize: '15px', fontWeight: 600, cursor: 'pointer' }}
-              >
-                Skip for now
-              </button>
-            </div>
+            <button 
+              type="submit" 
+              disabled={isLoading || !fullName}
+              style={{ width: '100%', background: 'var(--color-dark)', color: '#fff', padding: '18px', borderRadius: '100px', border: 'none', fontSize: '16px', fontWeight: 600, cursor: (isLoading || !fullName) ? 'not-allowed' : 'pointer', opacity: (isLoading || !fullName) ? 0.5 : 1 }}
+            >
+              {isLoading ? 'Saving...' : 'Save Details & Finish'}
+            </button>
           </form>
         )}
 

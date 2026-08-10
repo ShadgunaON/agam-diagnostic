@@ -4,6 +4,22 @@ export interface BlogCategory {
   count: number;
 }
 
+export type AdminBlogArticle = {
+  id: string;
+  title: string;
+  category: string;
+  status: 'Published' | 'Draft';
+  author: string;
+  date: string;
+  views: number;
+  image: string;
+};
+
+export const mockAdminArticles: AdminBlogArticle[] = [
+  { id: '1', title: 'Understanding Your Complete Blood Count (CBC) Results', category: 'Patient Education', status: 'Published', author: 'Dr. Sarah Jenkins', date: 'Aug 1, 2026', views: 1240, image: 'https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=600&q=80' },
+  { id: '2', title: 'The Future of Molecular Diagnostics in Preventive Care', category: 'Medical Research', status: 'Published', author: 'Dr. Robert Wilson', date: 'Jul 28, 2026', views: 890, image: 'https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&w=600&q=80' }
+];
+
 export interface BlogArticle {
   slug: string;
   category: string;

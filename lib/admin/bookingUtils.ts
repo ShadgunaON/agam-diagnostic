@@ -1,4 +1,4 @@
-import { BookingStatus } from '../../data/admin/mockBookings';
+import { BookingStatus } from '../../data/bookings';
 import { BadgeStatus } from '../../components/admin/feedback/StatusBadge';
 
 /**

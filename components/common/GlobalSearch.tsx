@@ -15,8 +15,8 @@ const SEARCHABLE_ITEMS = [
   { id: 'test-tsh', slug: 'thyroid-stimulating-hormone', title: 'Thyroid Profile (T3, T4, TSH)', category: 'Endocrine', price: 599, type: 'test' as const },
   { id: 'test-lft', slug: 'liver-function-test', title: 'Liver Function Test (LFT)', category: 'Organ Profiles', price: 799, type: 'test' as const },
   { id: 'test-lipid', slug: 'lipid-profile-test', title: 'Lipid Profile Test', category: 'Cardiology', price: 550, type: 'test' as const },
-  { id: 'pkg-m1', slug: 'comprehensive-mens-health', title: 'Comprehensive Men\'s Health', category: 'Packages', price: 2999, type: 'package' as const },
-  { id: 'pkg-w1', slug: 'comprehensive-womens-health', title: 'Comprehensive Women\'s Health', category: 'Packages', price: 3199, type: 'package' as const },
+  { id: 'pkg-m1', slug: 'comprehensive-mens-health', title: 'Comprehensive Men\'s Health', category: 'Packages', price: 2999, type: 'package' as const, includedTests: ['cbc-complete-blood-count', 'lipid-profile-test', 'liver-function-test', 'fasting-blood-sugar'] },
+  { id: 'pkg-w1', slug: 'comprehensive-womens-health', title: 'Comprehensive Women\'s Health', category: 'Packages', price: 3199, type: 'package' as const, includedTests: ['cbc-complete-blood-count', 'thyroid-stimulating-hormone', 'fasting-blood-sugar', 'vitamin-d-total'] },
 ];
 
 export function GlobalSearch({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {

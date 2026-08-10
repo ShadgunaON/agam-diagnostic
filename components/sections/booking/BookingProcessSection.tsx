@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 
@@ -24,7 +24,8 @@ export interface BookingProcessSectionProps {
 export function BookingProcessSection({ className = '' }: BookingProcessSectionProps) {
   const router = useRouter();
   const { items, clearCart, totalAmount } = useCart();
-  const { user, isAuthenticated, updateProfile, addPatient, addAddress, setReturnIntent, returnIntent } = useAuth();
+  const { user, isAuthenticated, updateProfile, addPatient, addAddress } = useAuth();
+  const searchParams = useSearchParams();
 
   // Core Booking State
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -57,19 +58,24 @@ export function BookingProcessSection({ className = '' }: BookingProcessSectionP
     totalPayable: number;
   } | null>(null);
 
-  // Load return intent if available
+  // Hydrate from URL intent (after login redirect)
   useEffect(() => {
-    if (returnIntent) {
+    if (searchParams) {
       queueMicrotask(() => {
-        if (returnIntent.selectedCollectionType) setCollectionType(returnIntent.selectedCollectionType);
-        if (returnIntent.selectedDate) setSelectedDate(returnIntent.selectedDate);
-        if (returnIntent.selectedSlotId) setSelectedSlot(returnIntent.selectedSlotId);
-        if (returnIntent.selectedPatientId) setSelectedPatientId(returnIntent.selectedPatientId);
-        if (returnIntent.selectedPaymentMethod) setPaymentMethod(returnIntent.selectedPaymentMethod);
-        setReturnIntent(null);
+        const type = searchParams.get('collectionType');
+        const date = searchParams.get('date');
+        const slot = searchParams.get('slot');
+        const patient = searchParams.get('patient');
+        const payment = searchParams.get('payment');
+
+        if (type) setCollectionType(type as 'home' | 'lab');
+        if (date) setSelectedDate(date);
+        if (slot) setSelectedSlot(slot);
+        if (patient) setSelectedPatientId(patient);
+        if (payment) setPaymentMethod(payment as 'cash' | 'upi' | 'card');
       });
     }
-  }, [returnIntent, setReturnIntent]);
+  }, [searchParams]);
 
   // Sync inline address when user profile loads
   useEffect(() => {
@@ -85,15 +91,15 @@ export function BookingProcessSection({ className = '' }: BookingProcessSectionP
     e.preventDefault();
 
     if (!isAuthenticated || !user) {
-      setReturnIntent({
-        previousUrl: '/book',
-        selectedCollectionType: collectionType,
-        selectedDate,
-        selectedSlotId: selectedSlot,
-        selectedPatientId,
-        selectedPaymentMethod: paymentMethod,
-      });
-      router.push('/login?returnUrl=/book');
+      const params = new URLSearchParams();
+      params.set('returnUrl', '/book');
+      if (collectionType) params.set('collectionType', collectionType);
+      if (selectedDate) params.set('date', selectedDate);
+      if (selectedSlot) params.set('slot', selectedSlot);
+      if (selectedPatientId) params.set('patient', selectedPatientId);
+      if (paymentMethod) params.set('payment', paymentMethod);
+      
+      router.push(`/login?${params.toString()}`);
       return;
     }
 

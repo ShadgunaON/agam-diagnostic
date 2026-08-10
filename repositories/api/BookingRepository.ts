@@ -11,4 +11,24 @@ export class ApiBookingRepository implements IBookingRepository {
     void _id;
     return failure(new ServerError('Booking API not implemented'));
   }
+
+  async getAll(): Promise<Result<BookingModel[]>> {
+    return failure(new ServerError('Booking API not implemented'));
+  }
+
+  async getRecent(limit?: number): Promise<Result<BookingModel[]>> {
+    void limit;
+    return failure(new ServerError('Booking API not implemented'));
+  }
+
+  async create(bookingParams: Omit<BookingModel, 'id' | 'createdAt' | 'status'>): Promise<Result<BookingModel>> {
+    void bookingParams;
+    return failure(new ServerError('Booking API not implemented'));
+  }
+
+  async updateStatus(id: string, status: BookingModel['status']): Promise<Result<BookingModel>> {
+    void id;
+    void status;
+    return failure(new ServerError('Booking API not implemented'));
+  }
 }

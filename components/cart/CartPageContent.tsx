@@ -44,12 +44,7 @@ function CartItemCard({ item, updateQuantity, removeItem }: any) {
 
 export function CartPageContent() {
   const router = useRouter();
-  const { items, updateQuantity, removeItem, subtotal, totalSavings, collectionFee, totalAmount, setIsCartOpen } = useCart();
-
-  // Ensure side drawer is closed if they visit the full page
-  React.useEffect(() => {
-    setIsCartOpen(false);
-  }, [setIsCartOpen]);
+  const { items, updateQuantity, removeItem, subtotal, totalSavings, collectionFee, totalAmount, duplicateWarnings, removeDuplicateTest } = useCart();
 
   if (items.length === 0) {
     return (
@@ -79,6 +74,35 @@ export function CartPageContent() {
         <h1 className="section-header__title" style={{ fontSize: 'var(--fs-3xl)', marginBottom: '4px' }}>Your Cart</h1>
         <p className="section-header__desc" style={{ fontSize: 'var(--fs-sm)', marginBottom: 0 }}>Review your selected tests and packages before proceeding to checkout.</p>
       </div>
+
+      {duplicateWarnings.length > 0 && (
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6 shadow-sm">
+          <div className="flex items-center gap-2 text-orange-800 font-bold mb-3">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span>Smart Cart Intelligence Alert</span>
+          </div>
+          <div className="flex flex-col gap-3">
+            {duplicateWarnings.map((warning, idx) => (
+              <div key={idx} className="bg-white border border-orange-100 p-3 rounded-md text-sm flex justify-between items-center">
+                <div className="text-gray-700">
+                  <p className="m-0">&quot;<strong>{warning.testTitle}</strong>&quot; is already included in the &quot;<strong>{warning.packageTitle}</strong>&quot; package.</p>
+                </div>
+                <button
+                  type="button"
+                  className="bg-orange-100 hover:bg-orange-200 text-orange-800 font-semibold py-1.5 px-4 rounded transition-colors text-sm whitespace-nowrap"
+                  onClick={() => removeDuplicateTest(warning.testSlug)}
+                >
+                  Remove & Save ₹{warning.savingsAmount}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="detail-layout">
         <div className="flex flex-col gap-3" style={{ flex: 1 }}>

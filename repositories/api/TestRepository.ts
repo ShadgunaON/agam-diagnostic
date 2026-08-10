@@ -26,4 +26,9 @@ export class ApiTestRepository implements ITestsRepository {
     void slug;
     return failure(new ServerError('Not implemented'));
   }
+
+  async searchTests(query: string): Promise<Result<TestItem[]>> {
+    void query;
+    return failure(new ServerError('Not implemented'));
+  }
 }

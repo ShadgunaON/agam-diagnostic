@@ -133,6 +133,7 @@ export function PackagesFeaturedSection({
                       badgeColor: pkg.badgeColor,
                       badgeText: pkg.badgeText,
                       highlightText: pkg.highlightText,
+                      includedTests: pkg.includedTests,
                     });
                   }}
                   actionButton={

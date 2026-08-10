@@ -5,6 +5,7 @@ export interface PackageItem {
   description: string;
   price: string;
   icon: string;
+  includedTests?: string[];
 }
 
 export interface FeaturedPackage {
@@ -17,6 +18,7 @@ export interface FeaturedPackage {
   highlightText: string;
   price: string;
   ageGroups?: string[];
+  includedTests?: string[];
 }
 
 export interface PackageDetailData {
@@ -31,6 +33,7 @@ export interface PackageDetailData {
   preparation: string;
   relatedPackages: Array<{ title: string; category: string; description: string; slug: string }>;
   highlights: string[];
+  includedTests?: string[];
 }
 
 export const packagesData = {
@@ -62,7 +65,8 @@ export const packagesData = {
       highlightIcon: "activity",
       highlightText: "No. of Tests - 45+",
       price: "999",
-      ageGroups: ["20-30", "30-50"]
+      ageGroups: ["20-30", "30-50"],
+      includedTests: ["cbc", "fbs", "lipid-profile", "lft", "kft"]
     },
     {
       slug: "safe-master-health-checkup-package",
@@ -73,7 +77,8 @@ export const packagesData = {
       highlightIcon: "activity",
       highlightText: "No. of Tests - 85+",
       price: "2,499",
-      ageGroups: ["30-50", "50+"]
+      ageGroups: ["30-50", "50+"],
+      includedTests: ["cbc", "fbs", "hba1c", "lipid-profile", "tft", "lft", "kft", "urine-complete"]
     },
     {
       slug: "safe-executive-health-package",
@@ -84,7 +89,8 @@ export const packagesData = {
       highlightIcon: "male",
       highlightText: "No. of Tests - 95+",
       price: "3,999",
-      ageGroups: ["30-50", "50+"]
+      ageGroups: ["30-50", "50+"],
+      includedTests: ["cbc", "fbs", "hba1c", "lipid-profile", "tft", "lft", "kft", "urine-complete"]
     },
     {
       slug: "safe-women-wellness-package",
@@ -95,7 +101,8 @@ export const packagesData = {
       highlightIcon: "female",
       highlightText: "No. of Tests - 95+",
       price: "2,999",
-      ageGroups: ["20-30", "30-50", "50+"]
+      ageGroups: ["20-30", "30-50", "50+"],
+      includedTests: ["tft"]
     },
     {
       slug: "safe-senior-citizen-health-package",
@@ -106,7 +113,8 @@ export const packagesData = {
       highlightIcon: "activity",
       highlightText: "No. of Tests - 90+",
       price: "3,499",
-      ageGroups: ["50+"]
+      ageGroups: ["50+"],
+      includedTests: ["cbc", "fbs", "lipid-profile", "lft", "kft", "urine-complete"]
     },
     {
       slug: "safe-diabetic-health-package",
@@ -117,7 +125,8 @@ export const packagesData = {
       highlightIcon: "activity",
       highlightText: "No. of Tests - 65+",
       price: "1,999",
-      ageGroups: ["30-50", "50+"]
+      ageGroups: ["30-50", "50+"],
+      includedTests: ["fbs", "hba1c", "lipid-profile", "kft"]
     },
     {
       slug: "safe-advanced-cardiac-package",
@@ -128,7 +137,8 @@ export const packagesData = {
       highlightIcon: "heart",
       highlightText: "No. of Tests - 70+",
       price: "2,799",
-      ageGroups: ["30-50", "50+"]
+      ageGroups: ["30-50", "50+"],
+      includedTests: ["lipid-profile"]
     }
   ] as FeaturedPackage[],
   catalog: [
@@ -138,7 +148,8 @@ export const packagesData = {
       category: "Health Package",
       description: "Key Parameters: CBC, Blood Sugar, Lipid Profile, Liver & Kidney Function",
       price: "999",
-      icon: "activity"
+      icon: "activity",
+      includedTests: ["cbc", "fbs", "lipid-profile", "lft", "kft"]
     },
     {
       slug: "safe-master-health-checkup-package",
@@ -146,7 +157,8 @@ export const packagesData = {
       category: "Health Package",
       description: "Key Parameters: CBC, Diabetes, Lipid, Thyroid, Liver, Kidney, Vitamins, Urine Complete",
       price: "2,499",
-      icon: "activity"
+      icon: "activity",
+      includedTests: ["cbc", "fbs", "hba1c", "lipid-profile", "tft", "lft", "kft", "urine-complete"]
     },
     {
       slug: "safe-women-wellness-package",
@@ -154,7 +166,8 @@ export const packagesData = {
       category: "Women's Health",
       description: "Key Parameters: Hormone Profile, PCOS Screening, Thyroid, Bone Health, Cancer Markers",
       price: "2,999",
-      icon: "female"
+      icon: "female",
+      includedTests: ["tft"]
     }
   ] as PackageItem[]
 };
@@ -186,9 +199,20 @@ export const packageDetailMock: PackageDetailData = {
     "Reports in 12-24 hrs",
     "Free Home Collection",
     "NABL Accredited"
-  ]
+  ],
+  includedTests: []
 };
 
 export const getPackageBySlug = (slug: string): PackageDetailData | null => {
-  return { ...packageDetailMock, slug, title: slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') };
+  const catalogPkg = packagesData.catalog.find(p => p.slug === slug);
+  const featuredPkg = packagesData.featured.find(p => p.slug === slug);
+  
+  const realTests = catalogPkg?.includedTests || featuredPkg?.includedTests || [];
+  
+  return { 
+    ...packageDetailMock, 
+    slug, 
+    title: slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+    includedTests: realTests
+  };
 };

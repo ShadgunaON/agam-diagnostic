@@ -10,6 +10,7 @@ export function mapPackageItemDtoToModel(dto: PackageItemDto): PackageItem {
     description: dto.summary,
     price: dto.cost,
     icon: dto.icon_name,
+    includedTests: dto.included_tests_slugs,
   };
 }
 
@@ -27,5 +28,6 @@ export function mapPackageDetailDtoToModel(dto: PackageDetailDto): PackageDetail
     preparation: dto.prep_instructions,
     relatedPackages: dto.related_packs.map(rp => ({ title: rp.name, category: rp.category, description: rp.desc, slug: rp.url_slug })),
     highlights: dto.key_highlights,
+    includedTests: dto.included_tests_slugs,
   };
 }

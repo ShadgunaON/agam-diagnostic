@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { AdminDrawer } from '../overlays/AdminDrawer';
-import { Booking, BookingStatus } from '@/data/admin/mockBookings';
+import { Booking, BookingStatus } from '@/data/bookings';
 import { StatusBadge } from '../feedback/StatusBadge';
 import { Timeline } from '../feedback/Timeline';
 import { AdminIcon } from '../navigation/AdminIcons';
@@ -158,7 +158,7 @@ export function BookingDetailsDrawer({ booking, isOpen, onClose, onCancelBooking
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Requested Tests</h4>
                 </div>
                 <ul className="divide-y divide-slate-100">
-                  {booking.items.map((item, idx) => (
+                  {booking.items.map((item: any, idx: number) => (
                     <li key={idx} className="p-4 flex items-center justify-between">
                       <div className="flex items-start gap-3">
                         <div className="mt-0.5">

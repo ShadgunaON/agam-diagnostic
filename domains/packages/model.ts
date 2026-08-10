@@ -6,6 +6,7 @@ export interface PackageItem {
   description: string;
   price: string;
   icon: string;
+  includedTests?: string[];
 }
 
 export interface PackageDetailData {
@@ -21,6 +22,7 @@ export interface PackageDetailData {
   preparation: string;
   relatedPackages: Array<{ title: string; category: string; description: string; slug: string }>;
   highlights: string[];
+  includedTests?: string[];
 }
 
 export interface PackagesHero {
@@ -51,4 +53,5 @@ export interface FeaturedPackage {
   highlightText: string;
   price: string;
   ageGroups?: string[];
+  includedTests?: string[];
 }

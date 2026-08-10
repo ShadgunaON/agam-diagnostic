@@ -1,6 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { CartService } from '@/services/CartService';
+import { LocalStorageAdapter } from '@/lib/storage/LocalStorageAdapter';
 
 export interface CartItem {
   id: string;
@@ -15,6 +17,7 @@ export interface CartItem {
   quantity: number;
   icon?: string;
   highlightText?: string;
+  includedTests?: string[];
 }
 
 export interface DuplicateWarning {
@@ -25,23 +28,12 @@ export interface DuplicateWarning {
   savingsAmount: number;
 }
 
-// Known package test inclusions mapping for Cart Intelligence
-const PACKAGE_TEST_INCLUSIONS: Record<string, string[]> = {
-  'well-woman-basic': ['cbc-complete-blood-count', 'thyroid-stimulating-hormone', 'fasting-blood-sugar'],
-  'well-woman-advanced': ['cbc-complete-blood-count', 'thyroid-stimulating-hormone', 'fasting-blood-sugar', 'lipid-profile-test', 'vitamin-d-total'],
-  'executive-health-profile': ['cbc-complete-blood-count', 'lipid-profile-test', 'liver-function-test', 'thyroid-stimulating-hormone', 'vitamin-d-total'],
-  'diabetic-profile': ['fasting-blood-sugar', 'hba1c-glycated-hemoglobin'],
-  'cardiac-risk-assessment': ['lipid-profile-test', 'fasting-blood-sugar', 'hba1c-glycated-hemoglobin'],
-};
-
 interface CartContextType {
   items: CartItem[];
   addItem: (item: Omit<CartItem, 'quantity'>) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, delta: number) => void;
   clearCart: () => void;
-  isCartOpen: boolean;
-  setIsCartOpen: (open: boolean) => void;
   itemCount: number;
   subtotal: number;
   totalSavings: number;
@@ -57,36 +49,36 @@ const INITIAL_SAMPLE_CART: CartItem[] = [];
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const storageAdapter = useMemo(() => new LocalStorageAdapter<CartItem[]>('agam_cart_items'), []);
 
   useEffect(() => {
     queueMicrotask(() => {
       try {
-        const savedCart = localStorage.getItem('agam_cart_items');
-        if (savedCart) {
-          setItems(JSON.parse(savedCart));
+        const savedCart = storageAdapter.load();
+        if (savedCart && Array.isArray(savedCart)) {
+          setItems(savedCart);
         } else {
           setItems(INITIAL_SAMPLE_CART);
         }
       } catch (e) {
-        console.error('Failed to load cart from localStorage', e);
+        console.error('Failed to load cart from storage adapter', e);
         setItems(INITIAL_SAMPLE_CART);
       } finally {
         setIsInitialized(true);
       }
     });
-  }, []);
+  }, [storageAdapter]);
 
   useEffect(() => {
     if (isInitialized) {
       try {
-        localStorage.setItem('agam_cart_items', JSON.stringify(items));
+        storageAdapter.save(items);
       } catch (e) {
-        console.error('Failed to save cart to localStorage', e);
+        console.error('Failed to save cart to storage adapter', e);
       }
     }
-  }, [items, isInitialized]);
+  }, [items, isInitialized, storageAdapter]);
 
   const addItem = (item: Omit<CartItem, 'quantity'>) => {
     setItems((prevItems) => {
@@ -122,42 +114,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setItems([]);
   };
 
-  // Cart Intelligence: Detect individual tests already included inside an added package
-  const duplicateWarnings: DuplicateWarning[] = [];
-  const packageItems = items.filter((i) => i.type === 'package');
-  const testItems = items.filter((i) => i.type === 'test');
-
-  packageItems.forEach((pkg) => {
-    const includedSlugs = PACKAGE_TEST_INCLUSIONS[pkg.slug] || [];
-    testItems.forEach((test) => {
-      if (includedSlugs.includes(test.slug)) {
-        duplicateWarnings.push({
-          testId: test.id,
-          testSlug: test.slug,
-          testTitle: test.title,
-          packageTitle: pkg.title,
-          savingsAmount: test.price * test.quantity,
-        });
-      }
-    });
-  });
+  // Cart Intelligence
+  const duplicateWarnings = useMemo(() => CartService.getDuplicateWarnings(items), [items]);
 
   const removeDuplicateTest = (testSlug: string) => {
     removeItem(testSlug);
   };
 
-  const itemCount = items.reduce((acc, item) => acc + item.quantity, 0);
-  const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-
-  const totalSavings = items.reduce((acc, item) => {
-    if (item.originalPrice && item.originalPrice > item.price) {
-      return acc + (item.originalPrice - item.price) * item.quantity;
-    }
-    return acc;
-  }, 0);
-
-  const collectionFee = subtotal >= 500 || subtotal === 0 ? 0 : 150;
-  const totalAmount = subtotal + collectionFee;
+  const { itemCount, subtotal, totalSavings, collectionFee, totalAmount } = useMemo(() => CartService.calculateTotals(items), [items]);
 
   return (
     <CartContext.Provider
@@ -167,8 +131,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         removeItem,
         updateQuantity,
         clearCart,
-        isCartOpen,
-        setIsCartOpen,
         itemCount,
         subtotal,
         totalSavings,

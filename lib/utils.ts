@@ -8,3 +8,10 @@ import { twMerge } from "tailwind-merge"
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+export const parsePrice = (priceStr?: string | number): number => {
+  if (typeof priceStr === 'number') return priceStr;
+  if (!priceStr) return 0;
+  const num = parseInt(priceStr.replace(/[^0-9]/g, ''), 10);
+  return isNaN(num) ? 0 : num;
+};

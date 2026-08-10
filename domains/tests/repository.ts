@@ -7,4 +7,5 @@ export interface ITestsRepository {
   getCategories(): Promise<Result<TestCategory[]>>;
   getHeroData(): Promise<Result<TestsHero>>;
   getTestBySlug(slug: string): Promise<Result<TestDetailData>>;
+  searchTests(query: string): Promise<Result<TestItem[]>>;
 }

@@ -36,6 +36,15 @@ import { ITestsRepository } from '@/domains/tests/repository';
 import { MockTestRepository } from './mock/TestRepository';
 import { ApiTestRepository } from './api/TestRepository';
 
+// Collections, Staff, Activity
+import { ICollectionRepository } from '@/domains/collections/repository';
+import { MockCollectionRepository } from './mock/CollectionRepository';
+import { IStaffRepository } from '@/domains/staff/repository';
+import { MockStaffRepository } from './mock/StaffRepository';
+import { IActivityRepository } from '@/domains/activity/repository';
+import { MockActivityRepository } from './mock/ActivityRepository';
+
+
 const apiClient = new ApiClient();
 
 export const blogRepository: IBlogRepository = env.useMockData 
@@ -65,3 +74,7 @@ export const reportsRepository: IReportsRepository = env.useMockData
 export const testRepository: ITestsRepository = env.useMockData
   ? new MockTestRepository()
   : new ApiTestRepository(apiClient);
+
+export const collectionRepository: ICollectionRepository = new MockCollectionRepository();
+export const staffRepository: IStaffRepository = new MockStaffRepository();
+export const activityRepository: IActivityRepository = new MockActivityRepository();

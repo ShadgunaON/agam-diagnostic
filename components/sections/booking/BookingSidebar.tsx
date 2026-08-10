@@ -30,7 +30,7 @@ export function BookingSidebar({
 
       <div className="space-y-2.5 pt-4 border-t border-white/15">
         <div className="text-xs font-bold text-white/90 uppercase tracking-wider mb-2">AGAM Trust Guarantees</div>
-        {data.trustFeatures.map((feature, idx) => (
+        {data.trustFeatures?.map((feature, idx) => (
           <div key={idx} className="flex items-center gap-2.5 text-xs text-white/90 font-semibold bg-white/10 p-2.5 rounded-xl border border-white/10 backdrop-blur-xs">
             <svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3" className="w-4 h-4 shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
             {feature.title}

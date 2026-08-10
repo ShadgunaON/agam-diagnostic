@@ -8,7 +8,7 @@ import { AdminButton } from '@/components/admin/primitives/AdminButton';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { KPICard } from '@/components/admin/layout/KPICard';
 import { ConfigurableDataTable, ColumnDef } from '@/components/admin/tables/DataTable';
-import { mockPatients, Patient } from '@/data/admin/mockPatients';
+import { mockPatients, Patient } from '@/data/patients';
 
 export default function PatientsPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,7 +17,7 @@ export default function PatientsPage() {
 
   const filteredPatients = useMemo(() => {
     if (!searchQuery) return mockPatients;
-    return mockPatients.filter(p => 
+    return mockPatients.filter((p: Patient) => 
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.phone.includes(searchQuery)
