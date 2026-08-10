@@ -82,27 +82,16 @@ export default function CollectionsPage() {
   return (
     <AdminPageTemplate>
       <div 
-        className="admin-page-container"
-        style={{ 
-          maxWidth: '1440px', 
-          width: '100%',
-          margin: '0 auto', 
-          padding: '32px 40px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '32px',
-          minHeight: '100%',
-          fontFamily: 'Inter, system-ui, sans-serif',
-          minWidth: 0
-        }}
+        className="admin-page-container w-full max-w-[1440px] mx-auto p-4 lg:p-8 xl:p-10 flex flex-col gap-4 lg:gap-8 min-h-full min-w-0"
+        style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
       >
         {/* HEADER SECTION */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0">
           <div>
             <h1 style={{ fontSize: '28px', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>Home Collections</h1>
             <p style={{ fontSize: '15px', fontWeight: 500, color: '#64748b', margin: '4px 0 0 0' }}>Manage dispatch, route phlebotomists, and track live sample collections.</p>
           </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div className="flex flex-wrap gap-3 w-full md:w-auto">
             <button 
               onMouseEnter={() => setHoverCalendar(true)}
               onMouseLeave={() => setHoverCalendar(false)}
@@ -136,14 +125,14 @@ export default function CollectionsPage() {
         </div>
 
         {/* MAIN TWO-COLUMN DISPATCH VIEW */}
-        <div className="admin-responsive-flex-col" style={{ display: 'flex', gap: '24px', flex: 1, minHeight: '600px', minWidth: 0 }}>
+        <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-[600px] min-w-0">
           
           {/* LEFT COLUMN: DISPATCH QUEUE */}
-          <div style={{ width: '100%', maxWidth: '420px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', display: 'flex', flexDirection: 'column', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)', overflow: 'hidden', maxHeight: 'calc(100vh - 200px)' }}>
+          <div className="w-full lg:max-w-[420px] bg-white border border-slate-200 rounded-2xl flex flex-col shadow-sm overflow-hidden" style={{ maxHeight: 'calc(100vh - 200px)' }}>
             
             {/* Queue Header & Filters */}
-            <div style={{ padding: '20px', borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <div className="p-5 border-b border-slate-200 bg-slate-50">
+              <div className="flex items-center justify-between mb-4">
                 <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Dispatch Queue</h2>
                 <span style={{ fontSize: '12px', fontWeight: 700, color: '#3b82f6', backgroundColor: '#eff6ff', padding: '4px 10px', borderRadius: '9999px', border: '1px solid #bfdbfe' }}>
                   {totalTasks} Tasks
@@ -160,7 +149,7 @@ export default function CollectionsPage() {
             </div>
 
             {/* Scrollable Queue List */}
-            <div style={{ flex: 1, overflowY: 'auto' }}>
+            <div className="flex-1 overflow-y-auto">
               {isLoading ? (
                 <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>Loading tasks...</div>
               ) : tasks.length === 0 ? (
@@ -189,18 +178,18 @@ export default function CollectionsPage() {
                       transition: 'all 0.2s ease'
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                    <div className="flex justify-between items-start mb-2">
                       <span style={{ fontSize: '14px', fontWeight: 800, color: isActive ? '#1d4ed8' : '#0f172a' }}>{task.time}</span>
                       <span style={{ fontSize: '11px', fontWeight: 700, color: statusColor, backgroundColor: statusBg, padding: '2px 8px', borderRadius: '6px' }}>
                         {task.status}
                       </span>
                     </div>
                     <div style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>{task.patient}</div>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', marginBottom: '12px' }}>
+                    <div className="flex items-start gap-1.5 mb-3">
                       <AdminIcon name="mapPin" style={{ width: '14px', height: '14px', color: '#94a3b8', marginTop: '2px', flexShrink: 0 }} />
                       <span style={{ fontSize: '13px', fontWeight: 500, color: '#64748b', lineHeight: 1.4 }}>{task.address}</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '12px', borderTop: `1px solid ${isActive ? '#bfdbfe' : '#f1f5f9'}` }}>
+                    <div className="flex items-center justify-between pt-3" style={{ borderTop: `1px solid ${isActive ? '#bfdbfe' : '#f1f5f9'}` }}>
                       <span style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8' }}>{task.id}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         {task.assignedTo === 'Unassigned' ? (
@@ -222,17 +211,17 @@ export default function CollectionsPage() {
           </div>
 
           {/* RIGHT COLUMN: LIVE MAP & DETAILS */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '24px', minWidth: 0 }}>
+          <div className="flex-1 flex flex-col gap-6 min-w-0">
             
             {/* KPI STATS ROW */}
-            <div className="admin-responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { label: 'Total Today', val: totalTasks, icon: 'list' as AdminIconName, color: '#3b82f6', bg: '#eff6ff' },
                 { label: 'Completed', val: completedTasks, icon: 'check' as AdminIconName, color: '#10b981', bg: '#d1fae5' },
                 { label: 'En Route', val: enRouteTasks, icon: 'activity' as AdminIconName, color: '#f59e0b', bg: '#fef3c7' },
                 { label: 'Unassigned', val: unassignedTasks, icon: 'alertCircle' as AdminIconName, color: '#ef4444', bg: '#fee2e2' },
               ].map((kpi, i) => (
-                <div key={i} style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div key={i} className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col gap-3">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: kpi.bg, color: kpi.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <AdminIcon name={kpi.icon} style={{ width: '16px', height: '16px' }} strokeWidth={2.5} />
@@ -247,7 +236,7 @@ export default function CollectionsPage() {
             {activeTask ? (
               <>
                 {/* THE LIVE DISPATCH MAP (OpenStreetMap iFrame Integration) */}
-                <div style={{ flex: 1, backgroundColor: '#e2e8f0', border: '1px solid #e2e8f0', borderRadius: '16px', position: 'relative', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                <div className="flex-1 min-h-[300px] bg-slate-200 border border-slate-200 rounded-2xl relative overflow-hidden shadow-sm">
                   
                   {/* Map UI Overlay Elements */}
                   <div style={{ position: 'absolute', top: '24px', left: '24px', backgroundColor: '#ffffff', padding: '12px 16px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', border: '1px solid #e2e8f0', zIndex: 10 }}>
@@ -273,8 +262,8 @@ export default function CollectionsPage() {
                 </div>
 
                 {/* ACTIVE TASK DETAILS PANEL */}
-                <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                <div className="bg-white border border-slate-200 rounded-2xl p-4 lg:p-6 shadow-sm">
+                  <div className="flex flex-col sm:flex-row justify-between items-start mb-6 gap-4 sm:gap-0">
                     <div>
                       <div style={{ fontSize: '13px', fontWeight: 700, color: '#64748b', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Task Details</div>
                       <h3 style={{ fontSize: '22px', fontWeight: 900, color: '#0f172a', margin: 0 }}>{activeTask.patient}</h3>
@@ -311,7 +300,7 @@ export default function CollectionsPage() {
                     )}
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <div style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Location & Time</div>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
@@ -353,19 +342,13 @@ export default function CollectionsPage() {
 
       {/* CREATE COLLECTION MODAL (Inline Styles to Bypass Tailwind Bug) */}
       {isModalOpen && (
-        <div style={{ 
-          position: 'fixed', inset: 0, zIndex: 100, 
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          backgroundColor: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)'
-        }}>
-          <div style={{ 
-            backgroundColor: '#ffffff', width: '500px', borderRadius: '20px', 
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-            overflow: 'hidden', display: 'flex', flexDirection: 'column',
-            fontFamily: 'Inter, system-ui, sans-serif', animation: 'scaleIn 0.2s ease-out'
-          }}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div 
+            className="bg-white w-full max-w-[500px] rounded-[20px] shadow-xl overflow-hidden flex flex-col"
+            style={{ fontFamily: 'Inter, system-ui, sans-serif', animation: 'scaleIn 0.2s ease-out' }}
+          >
             {/* Modal Header */}
-            <div style={{ padding: '24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="p-6 border-b border-slate-200 flex justify-between items-center">
               <div>
                 <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Create Dispatch Order</h2>
                 <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>Add a new home collection to the active queue.</p>
@@ -376,7 +359,7 @@ export default function CollectionsPage() {
             </div>
 
             {/* Modal Body / Form */}
-            <form onSubmit={handleCreateTask} style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <form onSubmit={handleCreateTask} className="p-6 flex flex-col gap-5">
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>Patient Name *</label>
                 <input 
@@ -402,7 +385,7 @@ export default function CollectionsPage() {
               </div>
               
               {/* Modal Footer Actions */}
-              <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+              <div className="flex flex-col sm:flex-row gap-3 mt-3">
                 <button type="button" onClick={() => setIsModalOpen(false)} style={{ flex: 1, height: '44px', borderRadius: '10px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', color: '#334155', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>
                   Cancel
                 </button>

@@ -34,7 +34,7 @@ export default function GlassProfilePage() {
         }}
       />
 
-      <div className="admin-page-container" style={{ position: 'relative', zIndex: 1, padding: '40px', maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px', minHeight: '100%', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <div className="admin-page-container relative z-10 p-4 lg:p-10 w-full max-w-[1200px] mx-auto flex flex-col gap-4 lg:gap-8 min-h-full" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
         
         {/* HEADER */}
         <div>
@@ -43,23 +43,23 @@ export default function GlassProfilePage() {
         </div>
 
         {/* PROFILE HERO CARD */}
-        <div style={{ ...glassStyle, padding: '40px', display: 'flex', alignItems: 'center', gap: '32px' }}>
-          <div style={{ width: '100px', height: '100px', borderRadius: '24px', backgroundColor: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontSize: '32px', fontWeight: 900, boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
+        <div className="p-6 lg:p-10 flex flex-col sm:flex-row items-center sm:items-start lg:items-center gap-6 lg:gap-8" style={glassStyle}>
+          <div className="w-[100px] h-[100px] rounded-3xl bg-slate-800 flex items-center justify-center text-white text-[32px] font-black shrink-0" style={{ boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
             AS
           </div>
-          <div style={{ flex: 1 }}>
+          <div className="flex-1 text-center sm:text-left">
             <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#0f172a', margin: '0 0 4px 0' }}>Admin Staff</h2>
             <p style={{ fontSize: '15px', color: '#64748b', fontWeight: 600, margin: '0 0 16px 0' }}>System Manager • Joined August 2024</p>
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div className="flex flex-wrap justify-center sm:justify-start gap-3">
               <button onClick={() => toast({ title: 'Photo Upload', description: 'Select an image file.', variant: 'info' })} style={{ padding: '8px 20px', borderRadius: '10px', backgroundColor: '#0f172a', color: '#ffffff', fontSize: '13px', fontWeight: 700, border: 'none', cursor: 'pointer' }}>Upload New Photo</button>
               <button onClick={() => toast({ title: 'Photo Removed', variant: 'success' })} style={{ padding: '8px 20px', borderRadius: '10px', backgroundColor: 'transparent', color: '#f43f5e', fontSize: '13px', fontWeight: 700, border: '1px solid rgba(244, 63, 94, 0.3)', cursor: 'pointer' }}>Remove</button>
             </div>
           </div>
         </div>
 
-        <div className="admin-responsive-flex-col" style={{ display: 'flex', gap: '32px' }}>
+        <div className="flex flex-col lg:flex-row gap-8">
           {/* LEFT: NAV */}
-          <div style={{ width: '280px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="w-full lg:w-[280px] shrink-0 flex flex-col gap-3">
             {['Personal Details', 'Security & Password', 'Notifications'].map(tab => (
               <button
                 key={tab}
@@ -79,13 +79,13 @@ export default function GlassProfilePage() {
           </div>
 
           {/* RIGHT: CONTENT */}
-          <div style={{ ...glassStyle, padding: '40px', flex: 1, display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          <div className="flex-1 p-6 lg:p-10 flex flex-col gap-6 lg:gap-8" style={glassStyle}>
             
             {activeTab === 'Personal Details' && (
               <>
                 <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: 0, paddingBottom: '20px', borderBottom: '1px solid rgba(226, 232, 240, 0.8)' }}>Basic Information</h3>
                 
-                <div className="admin-responsive-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 800, color: '#334155' }}>First Name</label>
                     <input type="text" defaultValue="Admin" style={{ height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid rgba(226, 232, 240, 0.8)', backgroundColor: 'rgba(255,255,255,0.5)', fontSize: '14px', fontWeight: 600, color: '#0f172a', outline: 'none' }} />
@@ -104,8 +104,8 @@ export default function GlassProfilePage() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '16px' }}>
-                  <button onClick={() => toast({ title: 'Profile Updated', description: 'Your personal details have been saved.', variant: 'success' })} style={{ height: '48px', padding: '0 32px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', color: '#ffffff', fontSize: '14px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)' }}>Save Changes</button>
+                <div className="flex justify-start sm:justify-end pt-4">
+                  <button onClick={() => toast({ title: 'Profile Updated', description: 'Your personal details have been saved.', variant: 'success' })} className="w-full sm:w-auto h-12 px-8 rounded-xl text-white text-[14px] font-bold cursor-pointer" style={{ border: 'none', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)' }}>Save Changes</button>
                 </div>
               </>
             )}
@@ -123,8 +123,8 @@ export default function GlassProfilePage() {
                     <input type="password" style={{ height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid rgba(226, 232, 240, 0.8)', backgroundColor: 'rgba(255,255,255,0.5)', fontSize: '14px', outline: 'none' }} />
                   </div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '16px' }}>
-                  <button onClick={() => toast({ title: 'Password Updated', description: 'Your security password has been changed.', variant: 'success' })} style={{ height: '48px', padding: '0 32px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #0f172a, #334155)', color: '#ffffff', fontSize: '14px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 15px rgba(15, 23, 42, 0.15)' }}>Update Password</button>
+                <div className="flex justify-start sm:justify-end pt-4">
+                  <button onClick={() => toast({ title: 'Password Updated', description: 'Your security password has been changed.', variant: 'success' })} className="w-full sm:w-auto h-12 px-8 rounded-xl text-white text-[14px] font-bold cursor-pointer" style={{ border: 'none', background: 'linear-gradient(135deg, #0f172a, #334155)', boxShadow: '0 4px 15px rgba(15, 23, 42, 0.15)' }}>Update Password</button>
                 </div>
               </>
             )}

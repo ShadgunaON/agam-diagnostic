@@ -51,12 +51,12 @@ export default function GlassAnalyticsPage() {
       />
 
       <div 
-        className="admin-page-container"
-        style={{ position: 'relative', zIndex: 1, padding: '40px', maxWidth: '1600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px', minHeight: '100%', fontFamily: 'Inter, system-ui, sans-serif', minWidth: 0 }}
+        className="admin-page-container relative z-10 p-4 lg:p-10 max-w-[1600px] mx-auto flex flex-col gap-4 lg:gap-8 min-h-full min-w-0"
+        style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
       >
         
         {/* HEADER */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-0">
           <div>
             <h1 style={{ fontSize: '32px', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.03em' }}>Analytics & Reports</h1>
             <p style={{ fontSize: '15px', fontWeight: 500, color: '#64748b', margin: '4px 0 0 0' }}>Comprehensive clinical and financial insights.</p>
@@ -70,17 +70,18 @@ export default function GlassAnalyticsPage() {
         </div>
 
         {/* GLASS KPI CARDS */}
-        <div className="admin-responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' }}>
+        <div className="admin-responsive-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             { label: "Total Revenue", value: '₹4.2M', icon: 'creditCard', trend: '+15.2%', color: '#3b82f6' },
             { label: "Tests Conducted", value: '12.4K', icon: 'testTube', trend: '+8.4%', color: '#10b981' },
             { label: "Active Patients", value: '8.2K', icon: 'users', trend: '+12.1%', color: '#8b5cf6' },
             { label: "Home Visits", value: '3.1K', icon: 'mapPin', trend: '+22.5%', color: '#f59e0b' }
           ].map((kpi, i) => (
-            <div 
+              <div 
               key={i} 
+              className="p-4 lg:p-6 flex flex-col gap-4"
               style={{
-                ...glassStyle, padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px',
+                ...glassStyle,
                 transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1)', cursor: 'pointer'
               }}
               onMouseEnter={(e) => {
@@ -92,7 +93,7 @@ export default function GlassAnalyticsPage() {
                 e.currentTarget.style.boxShadow = glassStyle.boxShadow;
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="flex justify-between items-center">
                 <div style={{ width: '44px', height: '44px', borderRadius: '14px', backgroundColor: `rgba(255,255,255, 0.8)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: kpi.color, boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                   <AdminIcon name={kpi.icon as any} style={{ width: '22px', height: '22px' }} />
                 </div>
@@ -109,14 +110,14 @@ export default function GlassAnalyticsPage() {
         </div>
 
         {/* BOTTOM SECTIONS */}
-        <div className="admin-responsive-grid-2col" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+        <div className="admin-responsive-grid-2col grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
           
           {/* REVENUE CHART */}
-          <div style={{ ...glassStyle, padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div className="p-4 lg:p-8 flex flex-col gap-6" style={glassStyle}>
             <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Revenue Growth (YTD)</h2>
-            <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px', paddingTop: '40px', position: 'relative' }}>
+            <div className="flex-1 flex items-end justify-between gap-4 pt-10 relative">
               {/* Horizontal Grid Lines */}
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', pointerEvents: 'none', zIndex: 0 }}>
+              <div className="absolute top-0 inset-x-0 bottom-6 flex flex-col justify-between pointer-events-none z-0">
                 {[1,2,3,4].map(i => <div key={i} style={{ borderTop: '1px dashed rgba(148, 163, 184, 0.3)', width: '100%' }} />)}
               </div>
               
@@ -124,7 +125,7 @@ export default function GlassAnalyticsPage() {
               {revenueByMonth.map((item, i) => {
                 const heightPercentage = (item.revenue / maxRevenue) * 100;
                 return (
-                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', flex: 1, height: '100%', justifyContent: 'flex-end', zIndex: 1, cursor: 'pointer', position: 'relative' }}>
+                  <div key={i} className="flex flex-col items-center gap-3 flex-1 h-full justify-end z-10 cursor-pointer relative">
                     <div 
                       style={{ 
                         width: '100%', maxWidth: '40px', height: `${heightPercentage}%`, 
@@ -148,10 +149,10 @@ export default function GlassAnalyticsPage() {
           </div>
 
           {/* TEST DISTRIBUTION DOUGHNUT */}
-          <div className="admin-glass-panel" style={{ ...glassStyle, padding: '32px', display: 'flex', flexDirection: 'column', gap: '32px', minWidth: 0 }}>
+          <div className="admin-glass-panel p-4 lg:p-8 flex flex-col gap-8 min-w-0" style={glassStyle}>
             <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Test Distribution</h2>
             
-            <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="relative w-full max-w-[200px] h-[200px] mx-auto flex items-center justify-center">
               <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
                 <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="16" />
                 <circle cx="50" cy="50" r="40" fill="none" stroke="#3b82f6" strokeWidth="16" strokeDasharray="113 251" />
@@ -159,16 +160,16 @@ export default function GlassAnalyticsPage() {
                 <circle cx="50" cy="50" r="40" fill="none" stroke="#8b5cf6" strokeWidth="16" strokeDasharray="37 251" strokeDashoffset="-188" />
                 <circle cx="50" cy="50" r="40" fill="none" stroke="#f59e0b" strokeWidth="16" strokeDasharray="26 251" strokeDashoffset="-225" />
               </svg>
-              <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div className="absolute flex flex-col items-center">
                 <span style={{ fontSize: '28px', fontWeight: 900, color: '#0f172a' }}>1,248</span>
                 <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Total Tests</span>
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div className="flex flex-col gap-4">
               {testDistribution.map((item, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div key={i} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
                     <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: item.color }} />
                     <span style={{ fontSize: '14px', fontWeight: 700, color: '#475569' }}>{item.name}</span>
                   </div>

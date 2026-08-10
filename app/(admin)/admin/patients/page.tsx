@@ -177,9 +177,9 @@ export default function PatientsPage() {
     <AdminPageTemplate
       kpiSection={kpiSection}
     >
-      <div style={{ marginBottom: '40px' }}>
+      <div className="mb-10">
         <AdminCard padding="none" className="overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] rounded-xl border border-slate-200 bg-white">
-          <div className="border-b border-slate-200" style={{ padding: '24px' }}>
+          <div className="border-b border-slate-200 p-4 sm:p-6">
             {toolbar}
           </div>
           <ConfigurableDataTable

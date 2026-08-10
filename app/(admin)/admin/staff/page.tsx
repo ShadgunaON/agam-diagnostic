@@ -126,19 +126,16 @@ export default function HighlyVisualizedStaffRoles() {
   return (
     <AdminPageTemplate>
       <div 
-        className="admin-page-container"
-        style={{ 
-          maxWidth: '1600px', width: '100%', margin: '0 auto', padding: '32px 40px',
-          display: 'flex', flexDirection: 'column', gap: '32px', minHeight: '100%', fontFamily: 'Inter, system-ui, sans-serif'
-        }}
+        className="admin-page-container w-full max-w-[1600px] mx-auto p-4 lg:p-8 xl:p-10 flex flex-col gap-4 lg:gap-8 min-h-full"
+        style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
       >
         {/* TOP HEADER */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ffffff', padding: '24px 32px', borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)' }}>
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between bg-white p-4 lg:p-6 xl:p-8 rounded-[20px] border border-slate-200 shadow-sm gap-4 md:gap-0">
           <div>
             <h1 style={{ fontSize: '28px', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>Organization & Access</h1>
             <p style={{ fontSize: '15px', fontWeight: 500, color: '#64748b', margin: '4px 0 0 0' }}>Manage your entire workforce, roles, and granular permissions from one command center.</p>
           </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div className="flex flex-wrap gap-3 w-full md:w-auto">
             <button 
               onClick={() => setIsInviteOpen(true)}
               style={{ 
@@ -157,11 +154,11 @@ export default function HighlyVisualizedStaffRoles() {
         </div>
 
         {/* SPLIT DASHBOARD LAYOUT */}
-        <div style={{ display: 'flex', gap: '32px', flex: 1, minHeight: '700px' }}>
+        <div className="flex flex-col lg:flex-row gap-8 flex-1 min-h-[700px]">
           
           {/* LEFT: ROLES NAVIGATION */}
-          <div style={{ width: '380px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="w-full lg:w-[380px] shrink-0 flex flex-col gap-5">
+            <div className="flex items-center justify-between">
               <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Security Roles</h2>
               <button 
                 onClick={() => setIsNewRoleOpen(true)}
@@ -171,7 +168,7 @@ export default function HighlyVisualizedStaffRoles() {
               </button>
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="flex flex-col gap-3">
               {roles.map(role => {
                 const isActive = activeRole === role.id;
                 const isHovered = hoverRole === role.id;
@@ -182,24 +179,19 @@ export default function HighlyVisualizedStaffRoles() {
                     onClick={() => setActiveRole(role.id)}
                     onMouseEnter={() => setHoverRole(role.id)}
                     onMouseLeave={() => setHoverRole(null)}
+                    className="p-5 rounded-2xl cursor-pointer relative overflow-hidden transition-all duration-200"
                     style={{
-                      padding: '20px',
                       backgroundColor: isActive ? '#ffffff' : (isHovered ? '#f8fafc' : '#ffffff'),
-                      borderRadius: '16px',
                       border: `1px solid ${isActive ? '#bfdbfe' : '#e2e8f0'}`,
                       boxShadow: isActive ? '0 10px 25px -5px rgba(59, 130, 246, 0.1)' : '0 1px 3px rgba(0,0,0,0.02)',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                       transform: isHovered && !isActive ? 'translateY(-2px)' : 'none',
-                      position: 'relative',
-                      overflow: 'hidden'
                     }}
                   >
-                    {isActive && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', backgroundColor: role.color }} />}
+                    {isActive && <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: role.color }} />}
                     
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: `${role.color}15`, color: role.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${role.color}15`, color: role.color }}>
                           <AdminIcon name="userCog" style={{ width: '18px', height: '18px' }} />
                         </div>
                         <div>
@@ -222,11 +214,11 @@ export default function HighlyVisualizedStaffRoles() {
           </div>
 
           {/* RIGHT: DYNAMIC ROLE DASHBOARD */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          <div className="flex-1 flex flex-col gap-8">
             
             {/* TOP: STAFF IN ROLE */}
-            <div style={{ backgroundColor: '#ffffff', borderRadius: '24px', border: '1px solid #e2e8f0', padding: '32px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+            <div className="bg-white rounded-3xl border border-slate-200 p-4 lg:p-8 shadow-sm">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 sm:gap-0">
                 <div>
                   <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
                     {activeRoleInfo && <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: activeRoleInfo.color }}></div>}
@@ -234,26 +226,26 @@ export default function HighlyVisualizedStaffRoles() {
                   </h3>
                   <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0 0' }}>These members inherit the permissions defined in the matrix below.</p>
                 </div>
-                <div style={{ position: 'relative' }}>
-                  <AdminIcon name="search" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', width: '16px', height: '16px', color: '#94a3b8' }} />
-                  <input type="text" placeholder="Find member..." style={{ padding: '10px 16px 10px 36px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '14px', outline: 'none', width: '220px', backgroundColor: '#f8fafc' }} />
+                <div className="relative w-full sm:w-auto">
+                  <AdminIcon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input type="text" placeholder="Find member..." className="py-2.5 pr-4 pl-9 rounded-xl border border-slate-200 text-sm outline-none w-full sm:w-[220px] bg-slate-50" />
                 </div>
               </div>
 
               {/* Minimalist Staff Cards Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
                 {activeStaff.map(staff => (
-                  <div key={staff.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', borderRadius: '16px', border: '1px solid #f1f5f9', backgroundColor: '#f8fafc', transition: 'background-color 0.2s', cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 800, color: '#475569', flexShrink: 0 }}>
+                  <div key={staff.id} className="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 bg-slate-50 transition-colors duration-200 cursor-pointer" onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}>
+                    <div className="w-12 h-12 rounded-xl bg-slate-200 flex items-center justify-center text-base font-extrabold text-slate-600 shrink-0">
                       {staff.name.substring(0, 2).toUpperCase()}
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
-                        <span style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{staff.name}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="text-[15px] font-extrabold text-slate-900 truncate">{staff.name}</span>
                         {staff.status === 'On Leave' && <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#f59e0b', flexShrink: 0 }}></span>}
                         {staff.status === 'On Duty' && <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', flexShrink: 0 }}></span>}
                       </div>
-                      <div style={{ fontSize: '13px', fontWeight: 500, color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{staff.email}</div>
+                      <div className="text-[13px] font-medium text-slate-500 truncate">{staff.email}</div>
                     </div>
                   </div>
                 ))}
@@ -267,8 +259,8 @@ export default function HighlyVisualizedStaffRoles() {
             </div>
 
             {/* BOTTOM: CRUD PERMISSIONS MATRIX */}
-            <div style={{ backgroundColor: '#ffffff', borderRadius: '24px', border: '1px solid #e2e8f0', padding: '32px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)', flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+            <div className="bg-white rounded-3xl border border-slate-200 p-4 lg:p-8 shadow-sm flex-1 overflow-hidden">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 sm:gap-0">
                 <div>
                   <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: 0 }}>CRUD Operations Matrix</h3>
                   <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0 0' }}>Configure granular access controls for {activeRoleInfo?.title}.</p>
@@ -282,21 +274,22 @@ export default function HighlyVisualizedStaffRoles() {
               </div>
 
               {/* Clean Enterprise Matrix */}
-              <div style={{ border: '1px solid #e2e8f0', borderRadius: '16px', overflow: 'hidden' }}>
-                {/* Header */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 90px 90px', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '16px 24px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Resource Module</div>
-                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>Read</div>
-                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>Create</div>
-                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>Update</div>
-                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>Delete</div>
-                </div>
+              <div className="border border-slate-200 rounded-2xl overflow-x-auto">
+                <div className="min-w-[600px]">
+                  {/* Header */}
+                  <div className="grid grid-cols-[1fr_90px_90px_90px_90px] bg-slate-50 border-b border-slate-200 px-6 py-4">
+                    <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Resource Module</div>
+                    <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>Read</div>
+                    <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>Create</div>
+                    <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>Update</div>
+                    <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>Delete</div>
+                  </div>
 
-                {/* Rows */}
-                {currentModules.map((mod, i) => (
-                  <div key={mod.id} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 90px 90px', padding: '20px 24px', borderBottom: i !== currentModules.length - 1 ? '1px solid #f1f5f9' : 'none', backgroundColor: '#ffffff' }}>
-                    <div style={{ paddingRight: '24px' }}>
-                      <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>{mod.title}</div>
+                  {/* Rows */}
+                  {currentModules.map((mod, i) => (
+                    <div key={mod.id} className={`grid grid-cols-[1fr_90px_90px_90px_90px] px-6 py-5 bg-white ${i !== currentModules.length - 1 ? 'border-b border-slate-100' : ''}`}>
+                      <div className="pr-6">
+                        <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>{mod.title}</div>
                       <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>{mod.description}</div>
                     </div>
                     
@@ -324,6 +317,7 @@ export default function HighlyVisualizedStaffRoles() {
                     })}
                   </div>
                 ))}
+                </div>
               </div>
 
             </div>
@@ -334,7 +328,7 @@ export default function HighlyVisualizedStaffRoles() {
       {/* MODALS */}
       <Drawer open={isInviteOpen} onOpenChange={setIsInviteOpen}>
         <Drawer.Content side="right" className="p-0 bg-white sm:w-[500px] w-full flex flex-col">
-          <div style={{ padding: '24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="p-6 border-b border-slate-200 flex justify-between items-center">
             <div>
               <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Invite Member</h2>
               <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0 0' }}>Send a secure portal invitation.</p>
@@ -343,7 +337,7 @@ export default function HighlyVisualizedStaffRoles() {
               <AdminIcon name="x" style={{ width: '24px', height: '24px' }} />
             </button>
           </div>
-          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div className="p-6 flex flex-col gap-6">
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: '#334155', marginBottom: '8px' }}>Email Address</label>
               <input 
@@ -360,7 +354,7 @@ export default function HighlyVisualizedStaffRoles() {
                 {roles.map(r => <option key={r.id}>{r.title}</option>)}
               </select>
             </div>
-            <button onClick={handleSendInvite} style={{ height: '48px', borderRadius: '12px', backgroundColor: '#0f172a', color: '#ffffff', fontSize: '15px', fontWeight: 800, border: 'none', cursor: 'pointer', marginTop: '12px' }}>
+            <button onClick={handleSendInvite} className="h-12 rounded-xl bg-slate-900 text-white text-[15px] font-extrabold mt-3 hover:bg-slate-800 transition-colors">
               Send Invitation Link
             </button>
           </div>
@@ -369,7 +363,7 @@ export default function HighlyVisualizedStaffRoles() {
 
       <Drawer open={isNewRoleOpen} onOpenChange={setIsNewRoleOpen}>
         <Drawer.Content side="right" className="p-0 bg-white sm:w-[500px] w-full flex flex-col">
-          <div style={{ padding: '24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="p-6 border-b border-slate-200 flex justify-between items-center">
             <div>
               <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Create Role</h2>
               <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0 0' }}>Define a new security profile.</p>
@@ -378,7 +372,7 @@ export default function HighlyVisualizedStaffRoles() {
               <AdminIcon name="x" style={{ width: '24px', height: '24px' }} />
             </button>
           </div>
-          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div className="p-6 flex flex-col gap-6">
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: '#334155', marginBottom: '8px' }}>Role Title</label>
               <input 
@@ -399,7 +393,7 @@ export default function HighlyVisualizedStaffRoles() {
                 style={{ width: '100%', height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} 
               />
             </div>
-            <button onClick={handleCreateRole} style={{ height: '48px', borderRadius: '12px', backgroundColor: '#0f172a', color: '#ffffff', fontSize: '15px', fontWeight: 800, border: 'none', cursor: 'pointer', marginTop: '12px' }}>
+            <button onClick={handleCreateRole} className="h-12 rounded-xl bg-slate-900 text-white text-[15px] font-extrabold mt-3 hover:bg-slate-800 transition-colors">
               Create Custom Role
             </button>
           </div>

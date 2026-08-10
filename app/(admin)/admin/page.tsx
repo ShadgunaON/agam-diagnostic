@@ -68,7 +68,7 @@ export default function GlassDashboard() {
         }}
       />
 
-      <div className="admin-page-container" style={{ position: 'relative', zIndex: 1, padding: '40px', maxWidth: '1600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px', minHeight: '100%', fontFamily: 'Inter, system-ui, sans-serif', minWidth: 0 }}>
+      <div className="admin-page-container relative z-10 p-4 lg:p-10 w-full max-w-[1600px] mx-auto flex flex-col gap-4 lg:gap-8 min-h-full min-w-0" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
 
         {/* HEADER */}
         <div>
@@ -77,7 +77,7 @@ export default function GlassDashboard() {
         </div>
 
         {/* GLASS KPI CARDS */}
-        <div className="admin-responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' }}>
+        <div className="admin-responsive-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           {[
             { label: "Today's Bookings", value: kpis.bookingsToday.toString(), icon: 'calendar', trend: '+12%', color: '#3b82f6' },
             { label: "Pending Tests", value: kpis.pendingBookings.toString(), icon: 'clock', trend: '-2%', color: '#f59e0b' },
@@ -117,7 +117,7 @@ export default function GlassDashboard() {
         </div>
 
         {/* QUICK ACTIONS (FLOATING PILLS) */}
-        <div className="admin-quick-actions" style={{ display: 'flex', gap: '16px' }}>
+        <div className="admin-quick-actions flex flex-col sm:flex-row flex-wrap gap-3 lg:gap-4">
           {[
             { label: 'New Booking', icon: 'plus', bg: 'linear-gradient(135deg, #3b82f6, #2563eb)', href: '/admin/bookings' },
             { label: 'Upload Report', icon: 'fileText', bg: 'linear-gradient(135deg, #10b981, #059669)', href: '/admin/reports' },
@@ -128,8 +128,8 @@ export default function GlassDashboard() {
               key={i}
               onClick={() => router.push(action.href)}
               style={{
-                flex: 1, height: '48px', borderRadius: '16px', border: 'none', background: action.bg, color: '#ffffff',
-                fontSize: '14px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                flex: 1, minWidth: '200px', height: '48px', borderRadius: '16px', border: 'none', background: action.bg, color: '#ffffff',
+                fontSize: '14px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', gap: '10px',
                 cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', transition: 'all 0.2s', position: 'relative', overflow: 'hidden'
               }}
               onMouseEnter={(e) => {
@@ -149,28 +149,27 @@ export default function GlassDashboard() {
         </div>
 
         {/* BOTTOM SECTIONS */}
-        <div className="admin-responsive-grid-2col" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+        <div className="admin-responsive-grid-2col grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
 
           {/* RECENT BOOKINGS GLASS TABLE */}
-          <div className="admin-glass-panel" style={{ ...glassStyle, padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px', minWidth: 0 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="admin-glass-panel p-4 lg:p-8 flex flex-col gap-4 lg:gap-6 min-w-0" style={glassStyle}>
+            <div className="flex justify-between items-center">
               <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Recent Bookings</h2>
               <button onClick={() => router.push('/admin/bookings')} style={{ background: 'none', border: 'none', color: '#3b82f6', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 View All <AdminIcon name="chevronRight" style={{ width: '14px', height: '14px' }} />
               </button>
             </div>
 
-            <div className="admin-table-container" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="admin-table-container flex flex-col gap-3">
               {recentBookings.map((booking) => {
                 const statusTheme = getStatusColor(booking.status);
                 return (
                   <div
                     key={booking.id}
-                    className="admin-table-row admin-mobile-grid-row"
+                    className="admin-table-row admin-mobile-grid-row grid lg:grid-cols-[1fr_2fr_1fr_1fr_1fr] items-center p-4 lg:px-5 lg:py-4 rounded-2xl cursor-pointer"
                     style={{
-                      display: 'grid', gridTemplateColumns: '1fr 2fr 1fr 1fr 1fr', alignItems: 'center',
-                      backgroundColor: 'rgba(255,255,255,0.5)', padding: '16px 20px', borderRadius: '16px',
-                      border: '1px solid rgba(255,255,255,0.8)', transition: 'background-color 0.2s', cursor: 'pointer'
+                      backgroundColor: 'rgba(255,255,255,0.5)',
+                      border: '1px solid rgba(255,255,255,0.8)', transition: 'background-color 0.2s'
                     }}
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.8)'}
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.5)'}
@@ -195,12 +194,12 @@ export default function GlassDashboard() {
           </div>
 
           {/* RIGHT PANELS: ALERTS & ACTIVITY */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div className="flex flex-col gap-6 min-w-0">
 
             {/* ALERTS */}
-            <div className="admin-glass-panel" style={{ ...glassStyle, padding: '24px', minWidth: 0 }}>
+            <div className="admin-glass-panel p-4 lg:p-6 min-w-0" style={glassStyle}>
               <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: '0 0 20px 0' }}>Operational Alerts</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="flex flex-col gap-4">
                 {operationalAlerts.map(alert => (
                   <div key={alert.id} style={{ display: 'flex', gap: '16px' }}>
                     <div style={{ width: '40px', height: '40px', borderRadius: '12px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: alert.severity === 'danger' ? 'rgba(244,63,94,0.1)' : alert.severity === 'warning' ? 'rgba(245,158,11,0.1)' : 'rgba(59,130,246,0.1)', color: alert.severity === 'danger' ? '#f43f5e' : alert.severity === 'warning' ? '#f59e0b' : '#3b82f6' }}>
@@ -216,9 +215,9 @@ export default function GlassDashboard() {
             </div>
 
             {/* ACTIVITY FEED */}
-            <div className="admin-glass-panel" style={{ ...glassStyle, padding: '24px', flex: 1, minWidth: 0 }}>
+            <div className="admin-glass-panel p-4 lg:p-6 flex-1 min-w-0" style={glassStyle}>
               <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: '0 0 20px 0' }}>Activity Feed</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div className="flex flex-col gap-5">
                 {activityFeed.map((activity, i) => (
                   <div key={activity.id} style={{ display: 'flex', gap: '16px', position: 'relative' }}>
                     {i !== activityFeed.length - 1 && <div style={{ position: 'absolute', top: '32px', left: '15px', bottom: '-20px', width: '2px', backgroundColor: 'rgba(226,232,240,0.5)' }} />}

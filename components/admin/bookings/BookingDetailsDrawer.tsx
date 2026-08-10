@@ -48,26 +48,26 @@ export function BookingDetailsDrawer({ booking, isOpen, onClose, onCancelBooking
       <div className="bg-slate-50/50 flex flex-col min-h-full">
 
         {/* Header Profile Section */}
-        <div className="p-8 bg-white border-b border-slate-200/80 shrink-0">
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex items-center gap-5">
+        <div className="p-4 sm:p-6 lg:p-8 bg-white border-b border-slate-200/80 shrink-0">
+          <div className="flex flex-col sm:flex-row items-start sm:justify-between mb-6 gap-4 sm:gap-0">
+            <div className="flex items-center gap-4 sm:gap-5 w-full sm:w-auto">
               <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                 <span className="text-xl font-bold text-slate-500">{booking.patient.name.charAt(0)}</span>
               </div>
               <div>
                 <h3 className="text-[22px] font-bold text-slate-900 tracking-tight">{booking.patient.name}</h3>
-                <div className="flex items-center gap-3 text-[13px] text-slate-500 mt-1 font-medium">
-                  <span>{booking.patient.gender}, {booking.patient.age} yrs</span>
-                  <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                  <span>{booking.patient.phone}</span>
-                </div>
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[13px] text-slate-500 mt-1 font-medium">
+                    <span>{booking.patient.gender}, {booking.patient.age} yrs</span>
+                    <span className="hidden sm:block w-1 h-1 rounded-full bg-slate-300"></span>
+                    <span>{booking.patient.phone}</span>
+                  </div>
               </div>
             </div>
             <StatusBadge type={getStatusBadgeType(booking.status)} status={booking.status} />
           </div>
 
           {/* Quick Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <AdminButton
               variant="primary"
               onClick={() => setShowStatusDialog(true)}
@@ -98,8 +98,8 @@ export function BookingDetailsDrawer({ booking, isOpen, onClose, onCancelBooking
         </div>
 
         {/* Navigation Tabs */}
-        <div className="px-8 border-b border-slate-200/80 bg-white shrink-0">
-          <nav className="flex space-x-8 -mb-px">
+        <div className="px-4 sm:px-6 lg:px-8 border-b border-slate-200/80 bg-white shrink-0 overflow-x-auto">
+          <nav className="flex space-x-6 sm:space-x-8 -mb-px min-w-max">
             {(['overview', 'timeline', 'payment'] as const).map((tab) => (
               <button
                 key={tab}
@@ -116,13 +116,13 @@ export function BookingDetailsDrawer({ booking, isOpen, onClose, onCancelBooking
         </div>
 
         {/* Tab Content */}
-        <div className="p-8 flex-1">
+        <div className="p-4 sm:p-6 lg:p-8 flex-1">
           {activeTab === 'overview' && (
             <div className="space-y-6">
               {/* Collection Details */}
-              <div className="bg-white rounded-lg border border-slate-200/80 p-5 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+              <div className="bg-white rounded-lg border border-slate-200/80 p-4 sm:p-5 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
                 <h4 className="text-xs font-bold text-slate-400 mb-4 uppercase tracking-wider">Collection Details</h4>
-                <div className="grid grid-cols-2 gap-y-5 gap-x-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-8">
                   <div>
                     <p className="text-[12px] text-slate-500 mb-1 font-medium">Type</p>
                     <p className="text-[13px] font-semibold text-slate-900 flex items-center gap-2">
@@ -135,13 +135,13 @@ export function BookingDetailsDrawer({ booking, isOpen, onClose, onCancelBooking
                     <p className="text-[13px] font-semibold text-slate-900">{booking.collection.date}, {booking.collection.timeSlot}</p>
                   </div>
                   {booking.collection.address && (
-                    <div className="col-span-2 pt-4 border-t border-slate-100">
+                    <div className="sm:col-span-2 pt-4 border-t border-slate-100">
                       <p className="text-[12px] text-slate-500 mb-1 font-medium">Collection Address</p>
                       <p className="text-[13px] font-medium text-slate-900 leading-relaxed">{booking.collection.address}</p>
                     </div>
                   )}
                   {booking.collection.assignedPhlebotomist && (
-                    <div className="col-span-2 pt-4 border-t border-slate-100 flex items-center justify-between">
+                    <div className="sm:col-span-2 pt-4 border-t border-slate-100 flex items-center justify-between">
                       <div>
                         <p className="text-[12px] text-slate-500 mb-1 font-medium">Assigned To</p>
                         <p className="text-[13px] font-semibold text-slate-900">{booking.collection.assignedPhlebotomist}</p>
@@ -178,15 +178,15 @@ export function BookingDetailsDrawer({ booking, isOpen, onClose, onCancelBooking
           )}
 
           {activeTab === 'timeline' && (
-            <div className="bg-white rounded-lg border border-slate-200/80 p-6 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+            <div className="bg-white rounded-lg border border-slate-200/80 p-4 sm:p-6 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
               <h4 className="text-xs font-bold text-slate-400 mb-6 uppercase tracking-wider">Workflow Activity</h4>
               <Timeline events={booking.timeline} />
             </div>
           )}
 
           {activeTab === 'payment' && (
-            <div className="bg-white rounded-lg border border-slate-200/80 p-6 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
-              <div className="flex items-center justify-between mb-6">
+            <div className="bg-white rounded-lg border border-slate-200/80 p-4 sm:p-6 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3 sm:gap-0">
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Payment Summary</h4>
                 <StatusBadge
                   type={booking.payment.status === 'Paid' ? 'success' : booking.payment.status === 'Failed' ? 'danger' : 'warning'}

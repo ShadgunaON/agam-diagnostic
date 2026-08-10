@@ -81,74 +81,57 @@ export default function AdminBlogsPage() {
   return (
     <AdminPageTemplate>
       <div 
-        className="admin-page-container"
-        style={{ 
-          maxWidth: '1600px', 
-          width: '100%',
-          margin: '0 auto', 
-          padding: '32px 40px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '32px',
-          minHeight: '100%',
-          fontFamily: 'Inter, system-ui, sans-serif'
-        }}
+        className="admin-page-container w-full max-w-[1600px] mx-auto p-4 lg:p-10 lg:py-8 flex flex-col gap-4 lg:gap-8 min-h-full"
+        style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
       >
         {/* TOP HEADER */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ffffff', padding: '24px 32px', borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)' }}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-4 lg:px-8 lg:py-6 rounded-2xl border border-slate-200 shadow-sm gap-4">
           <div>
-            <h1 style={{ fontSize: '28px', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>Content & Articles</h1>
-            <p style={{ fontSize: '15px', fontWeight: 500, color: '#64748b', margin: '4px 0 0 0' }}>Create, publish, and manage health insights for the public portal.</p>
+            <h1 className="text-2xl sm:text-[28px] font-extrabold text-slate-900 m-0 tracking-tight">Content & Articles</h1>
+            <p className="text-[14px] sm:text-[15px] font-medium text-slate-500 mt-1">Create, publish, and manage health insights for the public portal.</p>
           </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div className="flex gap-3 w-full sm:w-auto">
             <button 
               onClick={() => setIsEditorOpen(true)}
-              style={{ 
-                height: '44px', padding: '0 24px', borderRadius: '12px', border: 'none', 
-                backgroundColor: '#0f172a', color: '#ffffff', 
-                fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)', transition: 'transform 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
+              className="w-full sm:w-auto h-[44px] px-6 rounded-xl border-none bg-slate-900 text-white text-[14px] font-bold flex items-center justify-center sm:justify-start gap-2 cursor-pointer shadow-[0_4px_12px_rgba(15,23,42,0.15)] transition-transform hover:-translate-y-0.5"
             >
-              <AdminIcon name="plus" style={{ width: '18px', height: '18px' }} />
+              <AdminIcon name="plus" className="w-[18px] h-[18px]" />
               Write New Article
             </button>
           </div>
         </div>
 
         {/* DASHBOARD STATS */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
           {[
             { label: 'Published Articles', value: articles.filter(a => a.status === 'Published').length.toString(), icon: 'fileText', color: '#3b82f6' },
             { label: 'Drafts in Progress', value: articles.filter(a => a.status === 'Draft').length.toString(), icon: 'edit', color: '#f59e0b' },
             { label: 'Total Views (30d)', value: '12.4K', icon: 'eye', color: '#10b981' },
             { label: 'Avg Read Time', value: '3m 12s', icon: 'clock', color: '#8b5cf6' },
           ].map((stat, i) => (
-            <div key={i} style={{ backgroundColor: '#ffffff', borderRadius: '20px', border: '1px solid #e2e8f0', padding: '24px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '14px', backgroundColor: `${stat.color}15`, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <AdminIcon name={stat.icon as any} style={{ width: '24px', height: '24px' }} />
+            <div key={i} className="bg-white rounded-2xl border border-slate-200 p-4 lg:p-6 flex items-center gap-4 shadow-sm">
+              <div className="w-[48px] h-[48px] rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${stat.color}15`, color: stat.color }}>
+                <AdminIcon name={stat.icon as any} className="w-6 h-6" />
               </div>
               <div>
-                <div style={{ fontSize: '24px', fontWeight: 900, color: '#0f172a', lineHeight: 1.1 }}>{stat.value}</div>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: '#64748b', marginTop: '4px' }}>{stat.label}</div>
+                <div className="text-2xl font-extrabold text-slate-900 leading-tight">{stat.value}</div>
+                <div className="text-[13px] font-semibold text-slate-500 mt-1">{stat.label}</div>
               </div>
             </div>
           ))}
         </div>
 
         {/* ARTICLES GRID */}
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '24px', border: '1px solid #e2e8f0', padding: '32px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)', flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-            <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Article Library</h3>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <select style={{ height: '36px', padding: '0 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13px', fontWeight: 600, color: '#475569', outline: 'none', backgroundColor: '#f8fafc' }}>
+        <div className="bg-white rounded-[24px] border border-slate-200 p-4 lg:p-8 shadow-sm flex-1">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 lg:mb-6 gap-4">
+            <h3 className="text-xl font-extrabold text-slate-900 m-0">Article Library</h3>
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <select className="h-9 px-3 rounded-lg border border-slate-200 text-[13px] font-semibold text-slate-600 outline-none bg-slate-50 w-full sm:w-auto">
                 <option>All Categories</option>
                 <option>Patient Education</option>
                 <option>Medical Research</option>
               </select>
-              <select style={{ height: '36px', padding: '0 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13px', fontWeight: 600, color: '#475569', outline: 'none', backgroundColor: '#f8fafc' }}>
+              <select className="h-9 px-3 rounded-lg border border-slate-200 text-[13px] font-semibold text-slate-600 outline-none bg-slate-50 w-full sm:w-auto">
                 <option>All Statuses</option>
                 <option>Published</option>
                 <option>Draft</option>
@@ -156,38 +139,33 @@ export default function AdminBlogsPage() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '24px' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
             {articles.map(article => (
               <div 
                 key={article.id} 
-                style={{ 
-                  borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', backgroundColor: '#ffffff',
-                  transition: 'box-shadow 0.2s', cursor: 'pointer'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 10px 25px -5px rgba(0,0,0,0.1)'}
-                onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
+                className="rounded-2xl border border-slate-200 overflow-hidden bg-white transition-shadow duration-200 cursor-pointer hover:shadow-lg hover:shadow-slate-200/50"
               >
-                <div style={{ height: '180px', width: '100%', backgroundImage: `url(${article.image})`, backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative' }}>
-                  <div style={{ position: 'absolute', top: '12px', left: '12px', backgroundColor: article.status === 'Published' ? '#10b981' : '#f59e0b', color: '#fff', fontSize: '11px', fontWeight: 800, padding: '4px 10px', borderRadius: '20px', textTransform: 'uppercase' }}>
+                <div className="h-[180px] w-full relative bg-cover bg-center" style={{ backgroundImage: `url(${article.image})` }}>
+                  <div className={`absolute top-3 left-3 text-white text-[11px] font-extrabold px-2.5 py-1 rounded-full uppercase ${article.status === 'Published' ? 'bg-emerald-500' : 'bg-amber-500'}`}>
                     {article.status}
                   </div>
                 </div>
-                <div style={{ padding: '20px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                <div className="p-4 lg:p-5">
+                  <div className="text-[12px] font-bold text-blue-500 uppercase tracking-wider mb-2">
                     {article.category}
                   </div>
-                  <h4 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: '0 0 12px 0', lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  <h4 className="text-lg font-extrabold text-slate-900 m-0 mb-3 leading-snug line-clamp-2">
                     {article.title}
                   </h4>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#f1f5f9', fontSize: '10px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569' }}>
+                  <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-slate-100 text-[10px] font-extrabold flex items-center justify-center text-slate-600">
                         {article.author.split(' ').map(n => n[0]).join('')}
                       </div>
-                      <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>{article.date}</span>
+                      <span className="text-[13px] font-semibold text-slate-500">{article.date}</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, color: '#94a3b8' }}>
-                      <AdminIcon name="eye" style={{ width: '14px', height: '14px' }} />
+                    <div className="flex items-center gap-1 text-[13px] font-semibold text-slate-400">
+                      <AdminIcon name="eye" className="w-3.5 h-3.5" />
                       {article.views}
                     </div>
                   </div>
@@ -200,35 +178,35 @@ export default function AdminBlogsPage() {
 
       {/* ARTICLE EDITOR DRAWER */}
       <Drawer open={isEditorOpen} onOpenChange={setIsEditorOpen}>
-        <Drawer.Content side="right" className="p-0 bg-white sm:w-[600px] w-full flex flex-col">
-          <div style={{ padding: '24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Drawer.Content side="right" className="p-0 bg-white sm:w-[600px] w-full flex flex-col h-full max-h-[100dvh]">
+          <div className="p-4 lg:p-6 border-b border-slate-200 flex justify-between items-start sm:items-center gap-4 shrink-0">
             <div>
-              <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Write New Article</h2>
-              <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0 0' }}>Publish health insights to the public portal.</p>
+              <h2 className="text-xl font-extrabold text-slate-900 m-0">Write New Article</h2>
+              <p className="text-sm text-slate-500 mt-1">Publish health insights to the public portal.</p>
             </div>
-            <button onClick={() => setIsEditorOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}>
-              <AdminIcon name="x" style={{ width: '24px', height: '24px' }} />
+            <button onClick={() => setIsEditorOpen(false)} className="bg-transparent border-none cursor-pointer text-slate-400 hover:text-slate-600">
+              <AdminIcon name="x" className="w-6 h-6" />
             </button>
           </div>
-          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', flex: 1, overflowY: 'auto' }}>
+          <div className="p-4 lg:p-6 flex flex-col gap-4 lg:gap-6 flex-1 overflow-y-auto">
             
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: '#334155', marginBottom: '8px' }}>Article Title</label>
+              <label className="block text-[13px] font-extrabold text-slate-700 mb-2">Article Title</label>
               <input 
                 type="text" 
                 value={newTitle}
                 onChange={e => setNewTitle(e.target.value)}
                 placeholder="e.g. Importance of Vitamin D Testing" 
-                style={{ width: '100%', height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', fontWeight: 600 }} 
+                className="w-full h-12 px-4 rounded-xl border border-slate-300 text-sm outline-none font-semibold focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
               />
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: '#334155', marginBottom: '8px' }}>Category</label>
+              <label className="block text-[13px] font-extrabold text-slate-700 mb-2">Category</label>
               <select 
                 value={newCategory}
                 onChange={e => setNewCategory(e.target.value)}
-                style={{ width: '100%', height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', backgroundColor: '#ffffff', fontWeight: 600 }}
+                className="w-full h-12 px-4 rounded-xl border border-slate-300 text-sm outline-none bg-white font-semibold focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               >
                 <option>Patient Education</option>
                 <option>Medical Research</option>
@@ -238,42 +216,42 @@ export default function AdminBlogsPage() {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: '#334155', marginBottom: '8px' }}>Cover Image URL</label>
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <label className="block text-[13px] font-extrabold text-slate-700 mb-2">Cover Image URL</label>
+              <div className="flex flex-col sm:flex-row gap-3">
                 <input 
                   type="text" 
                   disabled
                   defaultValue="https://images.unsplash.com/auto=format&fit=crop" 
-                  style={{ flex: 1, height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px dashed #cbd5e1', fontSize: '13px', outline: 'none', backgroundColor: '#f8fafc', color: '#94a3b8' }} 
+                  className="flex-1 h-12 px-4 rounded-xl border border-dashed border-slate-300 text-[13px] outline-none bg-slate-50 text-slate-400 w-full" 
                 />
-                <button style={{ padding: '0 20px', height: '48px', borderRadius: '12px', backgroundColor: '#f1f5f9', border: 'none', fontSize: '13px', fontWeight: 700, color: '#475569' }}>Browse</button>
+                <button className="px-5 h-12 rounded-xl bg-slate-100 border-none text-[13px] font-bold text-slate-600 hover:bg-slate-200 cursor-pointer shrink-0 w-full sm:w-auto">Browse</button>
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: '#334155', marginBottom: '8px' }}>Article Content</label>
-              <div style={{ border: '1px solid #cbd5e1', borderRadius: '12px', overflow: 'hidden', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                <div style={{ padding: '8px 12px', backgroundColor: '#f8fafc', borderBottom: '1px solid #cbd5e1', display: 'flex', gap: '8px' }}>
-                  <button style={{ width: '28px', height: '28px', border: 'none', background: 'none', fontWeight: 800, cursor: 'pointer' }}>B</button>
-                  <button style={{ width: '28px', height: '28px', border: 'none', background: 'none', fontStyle: 'italic', cursor: 'pointer' }}>I</button>
-                  <button style={{ width: '28px', height: '28px', border: 'none', background: 'none', textDecoration: 'underline', cursor: 'pointer' }}>U</button>
-                  <div style={{ width: '1px', height: '100%', backgroundColor: '#cbd5e1', margin: '0 4px' }} />
-                  <button style={{ width: '28px', height: '28px', border: 'none', background: 'none', cursor: 'pointer' }}>🔗</button>
+            <div className="flex flex-col flex-1 min-h-[300px]">
+              <label className="block text-[13px] font-extrabold text-slate-700 mb-2">Article Content</label>
+              <div className="border border-slate-300 rounded-xl overflow-hidden flex flex-col flex-1">
+                <div className="p-2 px-3 bg-slate-50 border-b border-slate-300 flex flex-wrap gap-2">
+                  <button className="w-7 h-7 border-none bg-transparent font-extrabold cursor-pointer hover:bg-slate-200 rounded">B</button>
+                  <button className="w-7 h-7 border-none bg-transparent italic cursor-pointer hover:bg-slate-200 rounded">I</button>
+                  <button className="w-7 h-7 border-none bg-transparent underline cursor-pointer hover:bg-slate-200 rounded">U</button>
+                  <div className="w-px h-full bg-slate-300 mx-1" />
+                  <button className="w-7 h-7 border-none bg-transparent cursor-pointer hover:bg-slate-200 rounded">🔗</button>
                 </div>
                 <textarea 
                   placeholder="Start writing..." 
-                  style={{ width: '100%', flex: 1, padding: '16px', border: 'none', fontSize: '14px', outline: 'none', resize: 'none', minHeight: '200px', lineHeight: 1.6 }} 
+                  className="w-full flex-1 p-4 border-none text-sm outline-none resize-none min-h-[200px] leading-relaxed" 
                 />
               </div>
             </div>
             
           </div>
-          <div style={{ padding: '24px', borderTop: '1px solid #e2e8f0', backgroundColor: '#f8fafc', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-             <button onClick={() => setIsEditorOpen(false)} style={{ height: '48px', padding: '0 24px', borderRadius: '12px', backgroundColor: '#ffffff', color: '#475569', fontSize: '14px', fontWeight: 800, border: '1px solid #cbd5e1', cursor: 'pointer' }}>
+          <div className="p-4 lg:p-6 border-t border-slate-200 bg-slate-50 flex flex-col-reverse sm:flex-row gap-3 justify-end shrink-0">
+             <button onClick={() => setIsEditorOpen(false)} className="h-12 px-6 rounded-xl bg-white text-slate-600 text-sm font-extrabold border border-slate-300 cursor-pointer hover:bg-slate-50 w-full sm:w-auto">
               Save as Draft
             </button>
-            <button onClick={handlePublish} style={{ height: '48px', padding: '0 24px', borderRadius: '12px', backgroundColor: '#0f172a', color: '#ffffff', fontSize: '14px', fontWeight: 800, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <AdminIcon name="send" style={{ width: '16px', height: '16px' }} />
+            <button onClick={handlePublish} className="h-12 px-6 rounded-xl bg-slate-900 text-white text-sm font-extrabold border-none cursor-pointer flex items-center justify-center sm:justify-start gap-2 hover:bg-slate-800 w-full sm:w-auto">
+              <AdminIcon name="send" className="w-4 h-4" />
               Publish Article
             </button>
           </div>

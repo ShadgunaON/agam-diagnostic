@@ -228,7 +228,7 @@ export function ConfigurableDataTable<T>({
               return (
                 <tr
                   key={keyExtractor(row)}
-                  className={`h-[72px] border-b border-slate-100 last:border-0 group transition-colors duration-150 ease-out ${onRowClick ? 'cursor-pointer hover:bg-slate-50 relative z-0' : ''} ${isFocused ? 'bg-slate-50 ring-inset ring-2 ring-slate-200/50' : ''}`}
+                  className={`h-auto lg:h-[72px] border-b border-slate-100 last:border-0 group transition-colors duration-150 ease-out ${onRowClick ? 'cursor-pointer hover:bg-slate-50 relative z-0' : ''} ${isFocused ? 'bg-slate-50 ring-inset ring-2 ring-slate-200/50' : ''}`}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                 >
                   {columns.map((col, i) => {

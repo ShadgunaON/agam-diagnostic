@@ -99,9 +99,9 @@ export default function ClinicalReportsWorkspace() {
           <div className="w-full lg:w-[380px] shrink-0 flex flex-col gap-4">
             
             {/* Queue Header */}
-            <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-              <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: '0 0 8px 0' }}>Verification Queue</h2>
-              <div style={{ display: 'flex', gap: '8px' }}>
+            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+              <h2 className="text-[16px] font-extrabold text-slate-900 mb-2">Verification Queue</h2>
+              <div className="flex flex-wrap gap-2">
                 <span style={{ fontSize: '12px', fontWeight: 700, color: '#2563eb', backgroundColor: '#eff6ff', padding: '4px 12px', borderRadius: '99px' }}>
                   {pendingCount} Awaiting
                 </span>
@@ -112,29 +112,28 @@ export default function ClinicalReportsWorkspace() {
             </div>
 
             {/* Queue List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto', flex: 1, paddingRight: '4px' }}>
+            <div className="flex flex-col gap-3 overflow-y-auto flex-1 pr-1">
               {reports.map((report) => (
                 <div 
                   key={report.id}
                   onClick={() => setActiveReportId(report.id)}
-                  style={{ 
-                    backgroundColor: activeReportId === report.id ? '#f8fafc' : '#ffffff', 
-                    border: activeReportId === report.id ? '2px solid #3b82f6' : '1px solid #e2e8f0', 
-                    borderRadius: '12px', padding: '16px', cursor: 'pointer', transition: 'all 0.2s',
-                    boxShadow: activeReportId === report.id ? '0 4px 12px rgba(59, 130, 246, 0.1)' : '0 1px 2px rgba(0,0,0,0.05)'
-                  }}
+                  className={`p-4 rounded-xl cursor-pointer transition-all duration-200 ${
+                    activeReportId === report.id 
+                      ? 'bg-slate-50 border-2 border-blue-500 shadow-[0_4px_12px_rgba(59,130,246,0.1)]' 
+                      : 'bg-white border border-slate-200 shadow-sm'
+                  }`}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                  <div className="flex justify-between items-start mb-2">
                     <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', fontFamily: 'monospace' }}>{report.id}</span>
                     {report.priority === 'STAT' && (
                       <span style={{ fontSize: '10px', fontWeight: 800, color: '#ef4444', backgroundColor: '#fef2f2', padding: '2px 6px', borderRadius: '4px' }}>STAT</span>
                     )}
                   </div>
-                  <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px 0' }}>{report.patient.name}</h3>
-                  <p style={{ fontSize: '13px', fontWeight: 500, color: '#475569', margin: '0 0 12px 0' }}>{report.testType}</p>
+                  <h3 className="text-[14px] font-bold text-slate-900 mb-1">{report.patient.name}</h3>
+                  <p className="text-[13px] font-medium text-slate-600 mb-3">{report.testType}</p>
                   
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#94a3b8' }}>{report.time}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[12px] font-medium text-slate-400">{report.time}</span>
                     {report.status === 'Published' ? (
                        <AdminIcon name="check" strokeWidth={2.5} style={{ width: '16px', height: '16px', color: '#10b981' }} />
                     ) : (
@@ -147,70 +146,72 @@ export default function ClinicalReportsWorkspace() {
           </div>
 
           {/* RIGHT PANE: Clinical Verification Workspace */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div className="flex-1 flex flex-col min-w-0">
             {activeReport ? (
-              <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <div className="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col h-full overflow-hidden">
                 
                 {/* Header Context */}
-                <div style={{ padding: '32px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div className="p-4 lg:p-8 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
-                    <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a', margin: '0 0 8px 0' }}>{activeReport.patient.name}</h1>
-                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                    <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 mb-2">{activeReport.patient.name}</h1>
+                    <div className="flex flex-wrap gap-2 sm:gap-4 items-center">
                       <span style={{ fontSize: '14px', fontWeight: 500, color: '#475569' }}>{activeReport.patient.id}</span>
                       <span style={{ width: '4px', height: '4px', backgroundColor: '#cbd5e1', borderRadius: '50%' }} />
                       <span style={{ fontSize: '14px', fontWeight: 500, color: '#475569' }}>{activeReport.patient.age} yrs, {activeReport.patient.gender}</span>
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#1e293b', margin: '0 0 4px 0' }}>{activeReport.testType}</h2>
-                    <span style={{ fontSize: '13px', fontWeight: 500, color: '#64748b' }}>Collected: {activeReport.time}</span>
+                  <div className="text-left sm:text-right">
+                    <h2 className="text-[16px] font-bold text-slate-800 mb-1">{activeReport.testType}</h2>
+                    <span className="text-[13px] font-medium text-slate-500">Collected: {activeReport.time}</span>
                   </div>
                 </div>
 
                 {/* Data Grid */}
-                <div style={{ padding: '32px', flex: 1, overflowY: 'auto' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '16px', paddingBottom: '16px', borderBottom: '2px solid #f1f5f9', marginBottom: '16px' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Parameter</span>
-                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Result</span>
-                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Unit</span>
-                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Reference Range</span>
-                  </div>
+                <div className="flex-1 overflow-x-auto">
+                  <div className="min-w-[600px] p-4 lg:p-8">
+                    <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 pb-4 border-b-2 border-slate-100 mb-4">
+                      <span className="text-[12px] font-bold text-slate-500 uppercase tracking-wider">Parameter</span>
+                      <span className="text-[12px] font-bold text-slate-500 uppercase tracking-wider">Result</span>
+                      <span className="text-[12px] font-bold text-slate-500 uppercase tracking-wider">Unit</span>
+                      <span className="text-[12px] font-bold text-slate-500 uppercase tracking-wider">Reference Range</span>
+                    </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {activeReport.results.map((result, idx) => (
-                      <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '16px', padding: '16px', backgroundColor: result.isAbnormal ? '#fef2f2' : '#ffffff', borderRadius: '8px', border: result.isAbnormal ? '1px solid #fecaca' : '1px solid #f1f5f9', alignItems: 'center' }}>
-                        <span style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>{result.parameter}</span>
-                        <span style={{ fontSize: '16px', fontWeight: 800, color: result.isAbnormal ? '#ef4444' : '#0f172a' }}>{result.value}</span>
-                        <span style={{ fontSize: '13px', fontWeight: 500, color: '#64748b' }}>{result.unit}</span>
-                        <span style={{ fontSize: '13px', fontWeight: 500, color: '#94a3b8' }}>{result.reference}</span>
-                      </div>
-                    ))}
+                    <div className="flex flex-col gap-2">
+                      {activeReport.results.map((result, idx) => (
+                        <div key={idx} className={`grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 p-4 rounded-lg border items-center ${result.isAbnormal ? 'bg-red-50 border-red-200' : 'bg-white border-slate-100'}`}>
+                          <span className="text-[14px] font-semibold text-slate-800">{result.parameter}</span>
+                          <span className={`text-[16px] font-extrabold ${result.isAbnormal ? 'text-red-500' : 'text-slate-900'}`}>{result.value}</span>
+                          <span className="text-[13px] font-medium text-slate-500">{result.unit}</span>
+                          <span className="text-[13px] font-medium text-slate-400">{result.reference}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
                 {/* Action Footer */}
-                <div style={{ padding: '24px 32px', borderTop: '1px solid #e2e8f0', backgroundColor: '#f8fafc', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <AdminIcon name="fileText" style={{ width: '24px', height: '24px', color: '#64748b' }} strokeWidth={2} />
+                <div className="p-4 lg:p-6 lg:px-8 border-t border-slate-200 bg-slate-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div className="flex gap-3 items-center">
+                    <AdminIcon name="fileText" className="w-6 h-6 text-slate-500 shrink-0" strokeWidth={2} />
                     <div>
                       <div style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>Digital Signature Ready</div>
                       <div style={{ fontSize: '12px', fontWeight: 500, color: '#64748b' }}>Assigned to: Dr. Sarah Jenkins (Pathologist)</div>
                     </div>
                   </div>
                   
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <button style={{ padding: '12px 24px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', fontWeight: 700, color: '#475569', cursor: 'pointer' }}>
+                  <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <button className="px-6 py-3 bg-white border border-slate-300 rounded-lg text-[14px] font-bold text-slate-600 hover:bg-slate-50 transition-colors">
                       Preview PDF
                     </button>
                     {activeReport.status !== 'Published' ? (
                       <button 
                         onClick={() => handlePublish(activeReport.id)}
-                        style={{ padding: '12px 24px', backgroundColor: '#10b981', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 700, color: '#ffffff', cursor: 'pointer', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}
+                        className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 border-none rounded-lg text-[14px] font-bold text-white transition-colors shadow-[0_4px_12px_rgba(16,185,129,0.2)]"
                       >
                         Digitally Sign & Publish
                       </button>
                     ) : (
-                      <button disabled style={{ padding: '12px 24px', backgroundColor: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', fontWeight: 700, color: '#94a3b8', cursor: 'not-allowed' }}>
+                      <button disabled className="px-6 py-3 bg-slate-100 border border-slate-200 rounded-lg text-[14px] font-bold text-slate-400 cursor-not-allowed">
                         Published
                       </button>
                     )}
@@ -218,8 +219,8 @@ export default function ClinicalReportsWorkspace() {
                 </div>
               </div>
             ) : (
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px' }}>
-                <p style={{ color: '#94a3b8', fontWeight: 600 }}>Select a report from the queue to review.</p>
+              <div className="flex-1 flex items-center justify-center bg-white border border-slate-200 rounded-2xl">
+                <p className="text-slate-400 font-semibold">Select a report from the queue to review.</p>
               </div>
             )}
           </div>
