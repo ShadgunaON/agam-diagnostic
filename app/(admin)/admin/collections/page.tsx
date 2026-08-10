@@ -244,97 +244,108 @@ export default function CollectionsPage() {
               ))}
             </div>
 
-            {/* THE LIVE DISPATCH MAP (OpenStreetMap iFrame Integration) */}
-            <div style={{ flex: 1, backgroundColor: '#e2e8f0', border: '1px solid #e2e8f0', borderRadius: '16px', position: 'relative', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-              
-              {/* Map UI Overlay Elements */}
-              <div style={{ position: 'absolute', top: '24px', left: '24px', backgroundColor: '#ffffff', padding: '12px 16px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', border: '1px solid #e2e8f0', zIndex: 10 }}>
-                <div style={{ fontSize: '12px', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>LIVE GPS TRACKING</div>
-                <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', animation: 'pulse 2s infinite' }}></div>
-                  Tracking patient location coordinates
-                </div>
-              </div>
-
-              {/* Dynamic Map iFrame */}
-              <iframe 
-                width="100%" 
-                height="100%" 
-                frameBorder="0" 
-                scrolling="no" 
-                marginHeight={0} 
-                marginWidth={0} 
-                src={`https://www.openstreetmap.org/export/embed.html?bbox=${activeTask.lng - 0.03}%2C${activeTask.lat - 0.03}%2C${activeTask.lng + 0.03}%2C${activeTask.lat + 0.03}&layer=mapnik&marker=${activeTask.lat}%2C${activeTask.lng}`}
-                style={{ border: 'none' }}
-              ></iframe>
-
-            </div>
-
-            {/* ACTIVE TASK DETAILS PANEL */}
-            <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
-                <div>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#64748b', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Task Details</div>
-                  <h3 style={{ fontSize: '22px', fontWeight: 900, color: '#0f172a', margin: 0 }}>{activeTask.patient}</h3>
-                </div>
-                {activeTask.assignedTo === 'Unassigned' ? (
-                  <button 
-                    onMouseEnter={() => setHoverAction(true)}
-                    onMouseLeave={() => setHoverAction(false)}
-                    style={{ 
-                      backgroundColor: hoverAction ? '#1d4ed8' : '#2563eb', 
-                      color: 'white', border: 'none', padding: '10px 20px', 
-                      borderRadius: '10px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', 
-                      boxShadow: '0 2px 4px rgba(37,99,235,0.2)',
-                      transition: 'all 0.2s', transform: hoverAction ? 'translateY(-1px)' : 'none'
-                    }}
-                  >
-                    Assign Phlebotomist
-                  </button>
-                ) : (
-                  <button 
-                    onMouseEnter={() => setHoverAction(true)}
-                    onMouseLeave={() => setHoverAction(false)}
-                    style={{ 
-                      backgroundColor: hoverAction ? '#f8fafc' : '#ffffff', 
-                      color: '#334155', border: '1px solid #cbd5e1', padding: '10px 20px', 
-                      borderRadius: '10px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', 
-                      display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                      transition: 'all 0.2s', transform: hoverAction ? 'translateY(-1px)' : 'none'
-                    }}
-                  >
-                    <AdminIcon name="messageSquare" style={{ width: '16px', height: '16px' }} />
-                    Message {activeTask.assignedTo.split(' ')[0]}
-                  </button>
-                )}
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-                <div>
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Location & Time</div>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
-                    <AdminIcon name="mapPin" style={{ width: '18px', height: '18px', color: '#3b82f6', flexShrink: 0, marginTop: '2px' }} strokeWidth={2.5} />
-                    <span style={{ fontSize: '15px', fontWeight: 600, color: '#334155' }}>{activeTask.address}</span>
+            {activeTask ? (
+              <>
+                {/* THE LIVE DISPATCH MAP (OpenStreetMap iFrame Integration) */}
+                <div style={{ flex: 1, backgroundColor: '#e2e8f0', border: '1px solid #e2e8f0', borderRadius: '16px', position: 'relative', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                  
+                  {/* Map UI Overlay Elements */}
+                  <div style={{ position: 'absolute', top: '24px', left: '24px', backgroundColor: '#ffffff', padding: '12px 16px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', border: '1px solid #e2e8f0', zIndex: 10 }}>
+                    <div style={{ fontSize: '12px', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>LIVE GPS TRACKING</div>
+                    <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', animation: 'pulse 2s infinite' }}></div>
+                      Tracking patient location coordinates
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <AdminIcon name="clock" style={{ width: '18px', height: '18px', color: '#3b82f6', flexShrink: 0 }} strokeWidth={2.5} />
-                    <span style={{ fontSize: '15px', fontWeight: 600, color: '#334155' }}>Scheduled for {activeTask.time}</span>
-                  </div>
+
+                  {/* Dynamic Map iFrame */}
+                  <iframe 
+                    width="100%" 
+                    height="100%" 
+                    frameBorder="0" 
+                    scrolling="no" 
+                    marginHeight={0} 
+                    marginWidth={0} 
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${activeTask.lng - 0.03}%2C${activeTask.lat - 0.03}%2C${activeTask.lng + 0.03}%2C${activeTask.lat + 0.03}&layer=mapnik&marker=${activeTask.lat}%2C${activeTask.lng}`}
+                    style={{ border: 'none' }}
+                  ></iframe>
+
                 </div>
 
-                <div>
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tests to Collect ({activeTask.tests.length})</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {activeTask.tests.map((test, idx) => (
-                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                        <AdminIcon name="testTube" style={{ width: '14px', height: '14px', color: '#64748b' }} strokeWidth={2.5} />
-                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>{test}</span>
+                {/* ACTIVE TASK DETAILS PANEL */}
+                <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#64748b', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Task Details</div>
+                      <h3 style={{ fontSize: '22px', fontWeight: 900, color: '#0f172a', margin: 0 }}>{activeTask.patient}</h3>
+                    </div>
+                    {activeTask.assignedTo === 'Unassigned' ? (
+                      <button 
+                        onMouseEnter={() => setHoverAction(true)}
+                        onMouseLeave={() => setHoverAction(false)}
+                        style={{ 
+                          backgroundColor: hoverAction ? '#1d4ed8' : '#2563eb', 
+                          color: 'white', border: 'none', padding: '10px 20px', 
+                          borderRadius: '10px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', 
+                          boxShadow: '0 2px 4px rgba(37,99,235,0.2)',
+                          transition: 'all 0.2s', transform: hoverAction ? 'translateY(-1px)' : 'none'
+                        }}
+                      >
+                        Assign Phlebotomist
+                      </button>
+                    ) : (
+                      <button 
+                        onMouseEnter={() => setHoverAction(true)}
+                        onMouseLeave={() => setHoverAction(false)}
+                        style={{ 
+                          backgroundColor: hoverAction ? '#f8fafc' : '#ffffff', 
+                          color: '#334155', border: '1px solid #cbd5e1', padding: '10px 20px', 
+                          borderRadius: '10px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', 
+                          display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                          transition: 'all 0.2s', transform: hoverAction ? 'translateY(-1px)' : 'none'
+                        }}
+                      >
+                        <AdminIcon name="messageSquare" style={{ width: '16px', height: '16px' }} />
+                        Message {activeTask.assignedTo.split(' ')[0]}
+                      </button>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Location & Time</div>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
+                        <AdminIcon name="mapPin" style={{ width: '18px', height: '18px', color: '#3b82f6', flexShrink: 0, marginTop: '2px' }} strokeWidth={2.5} />
+                        <span style={{ fontSize: '15px', fontWeight: 600, color: '#334155' }}>{activeTask.address}</span>
                       </div>
-                    ))}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <AdminIcon name="clock" style={{ width: '18px', height: '18px', color: '#3b82f6', flexShrink: 0 }} strokeWidth={2.5} />
+                        <span style={{ fontSize: '15px', fontWeight: 600, color: '#334155' }}>Scheduled for {activeTask.time}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tests to Collect ({activeTask.tests.length})</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {activeTask.tests.map((test, idx) => (
+                          <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                            <AdminIcon name="testTube" style={{ width: '14px', height: '14px', color: '#64748b' }} strokeWidth={2.5} />
+                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>{test}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
+              </>
+            ) : (
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc', border: '2px dashed #e2e8f0', borderRadius: '16px', minHeight: '400px' }}>
+                <div style={{ textAlign: 'center', color: '#64748b' }}>
+                  <AdminIcon name="mapPin" style={{ width: '32px', height: '32px', margin: '0 auto 12px auto', opacity: 0.5 }} />
+                  <p style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>{isLoading ? 'Loading active task...' : 'No tasks available.'}</p>
+                </div>
               </div>
-            </div>
+            )}
 
           </div>
         </div>
