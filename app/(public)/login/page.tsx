@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Metadata } from 'next';
 import { siteConfig } from '@/config/site';
 import { ProgressiveSignupForm } from '@/components/sections/auth/ProgressiveSignupForm';
@@ -10,6 +10,8 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <ProgressiveSignupForm />
+    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>}>
+      <ProgressiveSignupForm />
+    </Suspense>
   );
 }
