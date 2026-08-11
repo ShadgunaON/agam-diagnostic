@@ -83,7 +83,8 @@ export function TechnologyInfrastructureSection({ data, className = '' }: Techno
               <img 
                 src="/images/tech_lab_equipment.png" 
                 alt="Advanced diagnostic equipment" 
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                className="object-cover block"
+                style={{ width: '100%', height: '100%' }}
               />
             </div>
           </div>

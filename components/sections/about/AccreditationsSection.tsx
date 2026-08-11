@@ -27,7 +27,7 @@ export function AccreditationsSection({ data, className = '' }: AccreditationsSe
   return (
     <section className={`section ${className}`}>
       <div className="container">
-        <div className="grid grid--2 items-center gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-10">
           <div>
             <div className="section-header__overline">{data.overline}</div>
             <h2 className="section-header__title">{data.title}</h2>

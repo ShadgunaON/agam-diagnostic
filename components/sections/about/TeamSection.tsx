@@ -22,7 +22,7 @@ export function TeamSection({ data, className = '' }: TeamSectionProps) {
           <h2 className="section-header__title">Meet Our Experts</h2>
         </div>
 
-        <div className="grid grid--3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {data.map((member, idx) => (
             <div key={idx} style={{ background: '#fff', borderRadius: 'var(--radius-xl)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)', textAlign: 'center' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}

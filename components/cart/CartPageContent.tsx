@@ -104,8 +104,8 @@ export function CartPageContent() {
         </div>
       )}
 
-      <div className="detail-layout">
-        <div className="flex flex-col gap-3" style={{ flex: 1 }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-8 items-start">
+        <div className="flex flex-col gap-3" style={{ flex: 1, minWidth: 0 }}>
           {items.map((item) => (
             <CartItemCard 
               key={item.id} 

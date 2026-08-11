@@ -54,7 +54,8 @@ export function AboutHeroSection({ data, className = '' }: AboutHeroSectionProps
           <img 
             src={data.image} 
             alt="AGAM Diagnostics Team" 
-            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', borderRadius: 0 }}
+            className="object-cover object-center"
+            style={{ width: '100%', height: '100%', borderRadius: 0 }}
           />
         </div>
         

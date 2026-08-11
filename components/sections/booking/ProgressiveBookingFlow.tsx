@@ -92,7 +92,7 @@ export function ProgressiveBookingFlow() {
         </div>
 
         {/* MAIN CONTENT AREA */}
-        <div style={{ display: 'grid', gridTemplateColumns: (currentStep === 1 || currentStep === 4) ? '1fr 320px' : 'minmax(0, 700px)', gap: '32px', alignItems: 'start', justifyContent: 'center' }}>
+        <div className={`grid ${currentStep === 1 || currentStep === 4 ? 'grid-cols-1 lg:grid-cols-[1fr_320px]' : 'grid-cols-1 lg:max-w-[700px] lg:mx-auto'} gap-8 items-start justify-center`}>
           
           {/* LEFT: STEP CONTENT */}
           <div style={{ minWidth: 0 }}>
@@ -211,7 +211,7 @@ export function ProgressiveBookingFlow() {
                   </div>
 
                   {/* LOCATION SELECTION - Compact Square Bento Cards */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <label style={{ 
                       position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
                       padding: '20px 16px', borderRadius: '16px', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -355,15 +355,15 @@ export function ProgressiveBookingFlow() {
                       <h3 style={{ fontSize: '15px', margin: 0, color: 'var(--color-dark)' }}>Appointment Details</h3>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '14px', color: 'var(--color-dark)' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '8px' }}>
+                      <div className="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-1 sm:gap-2">
                         <span style={{ color: 'var(--color-text-light)', fontWeight: 500 }}>Patient:</span>
                         <span style={{ fontWeight: 600 }}>{patientType === 'myself' ? 'Self' : 'Family Member'}</span>
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '8px' }}>
+                      <div className="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-1 sm:gap-2">
                         <span style={{ color: 'var(--color-text-light)', fontWeight: 500 }}>Date & Time:</span>
                         <span style={{ fontWeight: 600 }}>{date} <span style={{ color: 'var(--color-text-light)', margin: '0 4px' }}>|</span> {timeSlot}</span>
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '8px' }}>
+                      <div className="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-1 sm:gap-2">
                         <span style={{ color: 'var(--color-text-light)', fontWeight: 500 }}>Location:</span>
                         <span style={{ fontWeight: 600, lineHeight: 1.5 }}>{locationType === 'home' ? address : 'Visit Agam Diagnostics Centre'}</span>
                       </div>

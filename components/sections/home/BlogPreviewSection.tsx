@@ -18,7 +18,7 @@ export function BlogPreviewSection({ data, className = '' }: BlogPreviewSectionP
           <h2 className="section-header__title">Health Insights &amp; Articles</h2>
           <p className="section-header__desc">Stay informed with the latest updates in healthcare and wellness.</p>
         </div>
-        <div className="grid grid--4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {data.map((blog, idx) => (
             <BlogCard
               key={idx}

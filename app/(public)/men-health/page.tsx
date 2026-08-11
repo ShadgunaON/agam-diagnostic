@@ -21,9 +21,9 @@ export default function MenHealthPage() {
 
   return (
     <>
-      <section className="hero-premium section" style={{ padding: 0, background: 'var(--color-bg-alt)', overflow: 'hidden', position: 'relative' }}>
-        <div className="flex flex-col md:grid md:grid-cols-[45%_55%] items-stretch">
-          <div style={{ padding: 'var(--sp-2) var(--sp-6) var(--sp-10) max(var(--sp-6), calc((100vw - var(--max-width)) / 2 + var(--sp-6)))', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', zIndex: 10 }}>
+      <section className="hero-premium section !p-0 overflow-hidden relative" style={{ background: 'var(--color-bg-alt)' }}>
+        <div className="flex flex-col lg:grid lg:grid-cols-[45%_55%] items-stretch">
+          <div className="flex flex-col justify-center relative z-10 px-6 py-12 lg:py-20 lg:pl-[max(1.5rem,calc((100vw-var(--max-width))/2+1.5rem))] lg:pr-8">
             <div className="breadcrumb" style={{ marginBottom: 'var(--sp-3)' }}>
               <Link href="/">Home</Link><span className="breadcrumb__sep">›</span><Link href="/health-packages">Health Packages</Link><span className="breadcrumb__sep">›</span><span className="breadcrumb__current">Men&apos;s Health</span>
             </div>
@@ -36,9 +36,9 @@ export default function MenHealthPage() {
               </Button>
             </div>
           </div>
-          <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, var(--color-bg-alt) 0%, var(--color-bg-alt) 2%, transparent 15%)', zIndex: 1 }}></div>
-            <img src="/images/mens_health_hero.png" alt="Men's Health Screening" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '20% center', borderRadius: 0 }} />
+          <div className="relative w-full aspect-[4/3] sm:aspect-video lg:aspect-auto lg:h-full lg:min-h-[500px] flex items-center justify-center overflow-hidden">
+            <div className="hidden lg:block absolute inset-0 z-10" style={{ background: 'linear-gradient(to right, var(--color-bg-alt) 0%, transparent 15%)' }}></div>
+            <img src="/images/mens_health_hero.png" alt="Men's Health Screening" className="w-full h-full object-cover object-top md:object-[20%_center] lg:object-center rounded-2xl lg:rounded-none" />
           </div>
         </div>
       </section>
@@ -50,7 +50,7 @@ export default function MenHealthPage() {
           <div className="section-header section-header--center" style={{ marginBottom: 'var(--sp-6)' }}>
             <h2 className="section-header__title" style={{ fontSize: 'var(--fs-2xl)' }}>Explore Other Categories</h2>
           </div>
-          <div className="grid grid--2 reveal">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 reveal">
             <Link href="/women-health" className="card--service" style={{ textDecoration: 'none', padding: 'var(--sp-5)', display: 'flex', alignItems: 'center', gap: 'var(--sp-5)' }}>
               <div className="card__icon" style={{ background: '#FCE7F3', flexShrink: 0 }}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="#DB2777" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>

@@ -17,7 +17,7 @@ export function Navbar({ className = '' }: NavbarProps) {
   };
 
   return (
-    <div className={`nav-links ${className}`.trim()} aria-label="Main Navigation">
+    <div className={`nav-links hidden lg:flex ${className}`.trim()} aria-label="Main Navigation">
       <style dangerouslySetInnerHTML={{ __html: `
         .nav-link { position: relative; padding-bottom: 4px; }
         .nav-link.is-active::after {

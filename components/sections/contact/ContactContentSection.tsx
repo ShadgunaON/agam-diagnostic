@@ -32,7 +32,7 @@ export function ContactContentSection({ data, className = '' }: ContactContentSe
   return (
     <section className={`section ${className}`.trim()}>
       <div className="container">
-        <div className="grid grid--2" style={{ gap: 'var(--sp-10)' }}>
+        <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 'var(--sp-10)' }}>
           
           <div>
             <h2 style={{ marginBottom: 'var(--sp-6)' }}>Send us a message</h2>
@@ -44,7 +44,7 @@ export function ContactContentSection({ data, className = '' }: ContactContentSe
           <div>
             <h2 style={{ marginBottom: 'var(--sp-6)' }}>Visit Our Laboratory</h2>
             
-            <div className="grid grid--2" style={{ marginBottom: 'var(--sp-6)', gap: 'var(--sp-4)' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2" style={{ marginBottom: 'var(--sp-6)', gap: 'var(--sp-4)' }}>
               {data.infoCards.map((card, idx: number) => (
                 <div 
                   key={idx} 

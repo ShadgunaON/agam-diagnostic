@@ -16,7 +16,7 @@ export function PackagesCategorySection() {
           <h2 className="section-header__title">Find the Right Package for You</h2>
           <p className="section-header__desc">Our health packages are organized into three categories based on gender-specific needs and modern lifestyle risks. Choose yours below.</p>
         </div>
-        <div className="grid grid--3 reveal">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 reveal">
           
           {/* Women's Health Category */}
           <Link href="/women-health" className="card--service" style={{ textDecoration: 'none', padding: 'var(--sp-6)' }}>

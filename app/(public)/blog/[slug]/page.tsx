@@ -67,7 +67,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
 
       <section className="section">
         <div className="container">
-          <div className="detail-layout">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-8">
             <BlogDetailContent article={article} relatedArticles={relatedArticles} />
             <BlogSidebar categories={categories} popularReads={popularReads} />
           </div>

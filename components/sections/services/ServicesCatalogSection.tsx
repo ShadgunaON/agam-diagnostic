@@ -73,7 +73,7 @@ export function ServicesCatalogSection({ data, className = '' }: ServicesCatalog
   return (
     <Section id="services-grid" className={`section ${className}`.trim()} ref={containerRef}>
       <Container>
-        <Grid className="grid--3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {visibleData.map((service, idx) => (
             <div 
               key={idx} 
@@ -163,7 +163,7 @@ export function ServicesCatalogSection({ data, className = '' }: ServicesCatalog
               </div>
             </div>
           ))}
-        </Grid>
+        </div>
         
         {data.length > 3 && (
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: 'var(--sp-8)' }}>

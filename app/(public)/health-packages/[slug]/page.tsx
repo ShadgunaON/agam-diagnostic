@@ -56,7 +56,7 @@ export default async function PackageDetailPage({ params }: PackageDetailPagePro
 
       <section className="section">
         <div className="container">
-          <div className="detail-layout" style={{ display: 'block', maxWidth: '900px', margin: '0 auto' }}>
+          <div className="max-w-[900px] mx-auto w-full">
             <PackageDetailContent data={pkg} />
           </div>
         </div>

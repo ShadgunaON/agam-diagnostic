@@ -83,29 +83,29 @@ export default function BookingSuccessPage() {
             <h3 style={{ fontSize: '18px', color: 'var(--color-dark)', marginTop: 0, marginBottom: '20px' }}>Appointment Summary</h3>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '12px' }}>
+              <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-3">
                 <span style={{ color: 'var(--color-text-light)', fontWeight: 500 }}>Patient:</span>
                 <span style={{ color: 'var(--color-dark)', fontWeight: 600 }}>{booking.patient.name} ({booking.patient.age}y, {booking.patient.gender})</span>
               </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '12px' }}>
+              <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-3">
                 <span style={{ color: 'var(--color-text-light)', fontWeight: 500 }}>Date & Time:</span>
                 <span style={{ color: 'var(--color-dark)', fontWeight: 600 }}>{booking.collection.date} | {booking.collection.timeSlot}</span>
               </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '12px' }}>
+              <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-3">
                 <span style={{ color: 'var(--color-text-light)', fontWeight: 500 }}>Location:</span>
                 <span style={{ color: 'var(--color-dark)', fontWeight: 600 }}>{booking.collection.type} - {booking.collection.address}</span>
               </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '12px' }}>
+              <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-3">
                 <span style={{ color: 'var(--color-text-light)', fontWeight: 500 }}>Tests/Packages:</span>
                 <span style={{ color: 'var(--color-dark)', fontWeight: 600 }}>{booking.items.map(i => i.name).join(', ')}</span>
               </div>
             </div>
           </div>
           
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link 
               href="/bookings"
               style={{ display: 'inline-block', padding: '16px 32px', background: 'var(--color-dark)', color: '#fff', borderRadius: '100px', fontWeight: 600, textDecoration: 'none', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(11,27,61,0.1)' }}

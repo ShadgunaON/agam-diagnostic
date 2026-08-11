@@ -41,14 +41,13 @@ export function PackagesHeroSection({ data, className = '' }: PackagesHeroSectio
           </div>
         </div>
         
-        <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, var(--color-bg-alt) 0%, var(--color-bg-alt) 2%, transparent 15%)', zIndex: 1 }}></div>
+        <div className="relative w-full aspect-[4/3] sm:aspect-video md:aspect-auto md:h-full md:min-h-[400px] flex items-center justify-center overflow-hidden">
+          <div className="hidden md:block absolute inset-0 z-10" style={{ background: 'linear-gradient(to right, var(--color-bg-alt) 0%, transparent 15%)' }}></div>
           <Image 
             src={data.image} 
             alt={data.title} 
             fill
-            className="object-cover"
-            style={{ objectPosition: '20% center', borderRadius: 0 }}
+            className="w-full h-full object-cover object-top md:object-[20%_center] lg:object-center rounded-2xl md:rounded-none"
             unoptimized
           />
         </div>

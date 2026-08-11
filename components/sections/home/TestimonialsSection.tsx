@@ -19,7 +19,7 @@ export function TestimonialsSection({ data, className = '' }: TestimonialsSectio
           <p className="section-header__desc">Don&apos;t just take our word for it. Here is what people across Madurai think about our services.</p>
         </div>
 
-        <div className="grid grid--3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {data.map((review, idx) => (
             <TestimonialCard
               key={idx}

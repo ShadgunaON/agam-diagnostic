@@ -15,7 +15,7 @@ export function PackagesAdvantageSection() {
           <h2 className="section-header__title">Why Choose AGAM Packages</h2>
           <p className="section-header__desc">Every package at AGAM Diagnostics is designed with clinical precision, affordable pricing, and patient convenience at its core.</p>
         </div>
-        <div className="grid grid--4 reveal">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 reveal">
           <div className="award-card award-card--premium">
             <div className="award-card__icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>

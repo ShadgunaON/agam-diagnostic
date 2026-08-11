@@ -19,7 +19,7 @@ export function WhyChooseUsSection({ data, className = '' }: WhyChooseUsSectionP
           <p className="section-header__desc">Committed to providing the highest standards in diagnostic testing.</p>
         </div>
 
-        <div className="grid grid--3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {data.map((feature, idx) => (
             <FeatureCard
               key={idx}

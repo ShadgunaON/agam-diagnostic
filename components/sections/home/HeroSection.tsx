@@ -52,18 +52,33 @@ export function HeroSection({ data, className = '' }: HeroSectionProps) {
   const showSuggestions = isFocused && searchQuery.trim().length > 0;
 
   return (
-    <section className={`hero-premium section ${className}`}>
-      <Container>
-        <div className="hero-premium__inner">
-          <div className="hero-premium__content">
+    <section className={`hero-premium section !p-0 overflow-hidden relative ${className}`.trim()} style={{ background: '#ffffff' }}>
+      <div className="flex flex-col lg:grid lg:grid-cols-[55%_45%] items-stretch">
+        {/* Left Column (Desktop) */}
+        <div className="flex flex-col justify-center relative z-10 lg:py-20 lg:pl-[max(1.5rem,calc((100vw-var(--max-width))/2+1.5rem))] lg:pr-8 text-center lg:text-left">
+          
+          {/* Title Section */}
+          <div className="hero-premium__content px-6 pt-12 pb-6 lg:p-0">
             <div className="hero-premium__pill">NABL Accredited / Trusted Diagnostics</div>
             <h1 className="hero-premium__title">
               Advanced Diagnostics<br />You Can <span>Trust</span>
             </h1>
-            <p className="hero-premium__desc">
+            <p className="hero-premium__desc mx-auto lg:mx-0">
               Agam Diagnostics is Madurai&apos;s most trusted NABL accredited and ICMR approved fully automated pathology laboratory.
             </p>
+          </div>
 
+          {/* Mobile Image (Placed between Title and Search) */}
+          <div className="lg:hidden relative w-full aspect-[4/3] sm:aspect-video flex items-center justify-center overflow-hidden">
+            <img 
+              src="/images/hero_lab_visual.png" 
+              alt="Advanced Diagnostics at Agam Diagnostics Madurai" 
+              className="w-full h-full object-cover object-top"
+            />
+          </div>
+
+          {/* Search & Features Section */}
+          <div className="hero-premium__content px-6 pb-12 pt-8 lg:p-0 lg:mt-8">
             <div className="hero-search-tabs">
               <div
                 className={`hero-search-tab ${activeTab === 'tests' ? 'is-active' : ''}`}
@@ -152,12 +167,18 @@ export function HeroSection({ data, className = '' }: HeroSectionProps) {
               </div>
             </div>
           </div>
-
-          <div className="hero-image-wrap hide-mobile">
-            <img src="/images/hero_lab_visual.png" alt="Advanced Diagnostics at Agam Diagnostics Madurai" />
-          </div>
         </div>
-      </Container>
+
+        {/* Right Column Image (Desktop Only) */}
+        <div className="hidden lg:flex relative w-full h-full min-h-[600px] items-center justify-center overflow-hidden">
+          <div className="absolute inset-0 z-10" style={{ background: 'linear-gradient(to right, #ffffff 0%, transparent 15%)' }}></div>
+          <img 
+            src="/images/hero_lab_visual.png" 
+            alt="Advanced Diagnostics at Agam Diagnostics Madurai" 
+            className="w-full h-full object-cover lg:object-[left_center]"
+          />
+        </div>
+      </div>
     </section>
   );
 }

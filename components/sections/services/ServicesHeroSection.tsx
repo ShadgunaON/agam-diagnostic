@@ -32,10 +32,10 @@ export function ServicesHeroSection({ data, className = '' }: ServicesHeroSectio
         </div>
 
         {/* Image Right */}
-        <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-          {/* Organic white gradient overlay to blend left and right */}
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, var(--color-bg-alt) 0%, var(--color-bg-alt) 2%, transparent 15%)', zIndex: 1 }}></div>
-          <img src={data.image} alt="Diagnostic Services" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '20% center', borderRadius: 0 }} />
+        <div className="relative w-full aspect-[4/3] sm:aspect-video md:aspect-auto md:h-full md:min-h-[400px] flex items-center justify-center overflow-hidden">
+          {/* Organic white gradient overlay to blend left and right (hidden on mobile) */}
+          <div className="hidden md:block absolute inset-0 z-10" style={{ background: 'linear-gradient(to right, var(--color-bg-alt) 0%, transparent 15%)' }}></div>
+          <img src={data.image} alt="Diagnostic Services" className="w-full h-full object-cover object-top md:object-[20%_center] lg:object-center rounded-2xl md:rounded-none" />
         </div>
         
       </div>

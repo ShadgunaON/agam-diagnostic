@@ -12,7 +12,7 @@ export function StatisticsSection({ data, className = '' }: StatisticsSectionPro
   return (
     <div className={`stats-banner bg-light-gray ${className}`} style={{ padding: 'var(--sp-6) 0' }}>
       <Container>
-        <div className="grid grid--4" style={{ gap: 'var(--sp-4)' }}>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {data.map((stat, idx) => (
             <StatisticCard 
               key={idx}

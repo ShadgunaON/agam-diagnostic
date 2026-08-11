@@ -55,7 +55,7 @@ export default async function ServiceDetailPage({ params }: ServiceDetailPagePro
 
       <section className="section" style={{ paddingTop: 'var(--sp-4)' }}>
         <div className="container">
-          <div className="detail-layout" style={{ display: 'block', maxWidth: '900px', margin: '0 auto' }}>
+          <div className="max-w-[900px] mx-auto w-full">
             <ServiceDetailContent data={service} />
           </div>
         </div>

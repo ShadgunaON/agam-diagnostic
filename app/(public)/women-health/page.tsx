@@ -20,9 +20,9 @@ export default function WomenHealthPage() {
 
   return (
     <>
-      <section className="hero-premium section" style={{ padding: 0, background: 'var(--color-bg-alt)', overflow: 'hidden', position: 'relative' }}>
-        <div className="flex flex-col md:grid md:grid-cols-[45%_55%] items-stretch">
-          <div style={{ padding: 'var(--sp-2) var(--sp-6) var(--sp-10) max(var(--sp-6), calc((100vw - var(--max-width)) / 2 + var(--sp-6)))', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', zIndex: 10 }}>
+      <section className="hero-premium section !p-0 overflow-hidden relative" style={{ background: 'var(--color-bg-alt)' }}>
+        <div className="flex flex-col lg:grid lg:grid-cols-[45%_55%] items-stretch">
+          <div className="flex flex-col justify-center relative z-10 px-6 py-12 lg:py-20 lg:pl-[max(1.5rem,calc((100vw-var(--max-width))/2+1.5rem))] lg:pr-8">
             <div className="breadcrumb" style={{ marginBottom: 'var(--sp-3)' }}>
               <Link href="/">Home</Link><span className="breadcrumb__sep">›</span><Link href="/health-packages">Health Packages</Link><span className="breadcrumb__sep">›</span><span className="breadcrumb__current">Women&apos;s Health</span>
             </div>
@@ -35,9 +35,9 @@ export default function WomenHealthPage() {
               </Button>
             </div>
           </div>
-          <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, var(--color-bg-alt) 0%, var(--color-bg-alt) 2%, transparent 15%)', zIndex: 1 }}></div>
-            <img src="/images/modern_lab_interior.png" alt="Women's Health Screening" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '20% center', borderRadius: 0 }} />
+          <div className="relative w-full aspect-[4/3] sm:aspect-video lg:aspect-auto lg:h-full lg:min-h-[500px] flex items-center justify-center overflow-hidden">
+            <div className="hidden lg:block absolute inset-0 z-10" style={{ background: 'linear-gradient(to right, var(--color-bg-alt) 0%, transparent 15%)' }}></div>
+            <img src="/images/modern_lab_interior.png" alt="Women's Health Screening" className="w-full h-full object-cover object-top md:object-[20%_center] lg:object-center rounded-2xl lg:rounded-none" />
           </div>
         </div>
       </section>
@@ -52,7 +52,7 @@ export default function WomenHealthPage() {
             <h2 className="section-header__title">Who Should Consider Women&apos;s Health Packages?</h2>
             <p className="section-header__desc">Our women&apos;s health packages are designed for proactive care at every life stage — whether you&apos;re planning a family, managing a condition, or simply staying ahead of health risks.</p>
           </div>
-          <div className="grid grid--3 reveal" style={{ gap: 'var(--sp-4)' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 reveal" style={{ gap: 'var(--sp-4)' }}>
             <div className="feature-item" style={{ flexDirection: 'column', textAlign: 'center', padding: 'var(--sp-5)' }}>
               <div className="feature-item__icon" style={{ margin: '0 auto var(--sp-3) auto' }}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -106,7 +106,7 @@ export default function WomenHealthPage() {
           <div className="section-header section-header--center" style={{ marginBottom: 'var(--sp-6)' }}>
             <h2 className="section-header__title" style={{ fontSize: 'var(--fs-2xl)' }}>Explore Other Categories</h2>
           </div>
-          <div className="grid grid--2 reveal">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 reveal">
             <Link href="/men-health" className="card--service" style={{ textDecoration: 'none', padding: 'var(--sp-5)', display: 'flex', alignItems: 'center', gap: 'var(--sp-5)' }}>
               <div className="card__icon" style={{ background: '#DBEAFE', flexShrink: 0 }}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>

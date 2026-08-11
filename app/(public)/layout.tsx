@@ -4,7 +4,7 @@ import "../globals.css";
 import "@/styles/base.css";
 import "@/styles/components.css";
 import "@/styles/booking.css";
-import "@/styles/responsive.css";
+
 // Layout Components
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";

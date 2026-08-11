@@ -19,7 +19,7 @@ export function ServicesSection({ data, className = '' }: ServicesSectionProps) 
           <p className="section-header__desc">Advanced technology, expert pathologists, and a patient-first approach.</p>
         </div>
 
-        <div className="grid grid--4" style={{ gap: 'var(--sp-6)' }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {data.map((service, idx) => (
             <ServiceCard
               key={idx}

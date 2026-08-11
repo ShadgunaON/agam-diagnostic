@@ -96,7 +96,7 @@ export function PackagesFeaturedSection({
         )}
 
         {filteredPackages.length > 0 ? (
-          <div className="grid grid--3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPackages.map((pkg, idx) => {
               const numPrice = parsePrice(pkg.price);
               return (

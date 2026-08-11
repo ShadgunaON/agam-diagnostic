@@ -3443,6 +3443,16 @@ textarea.form-control {
   position: relative;
 }
 
+.section-header {
+  margin-bottom: var(--sp-12);
+  position: relative;
+}
+@media (max-width: 991px) {
+  .section-header {
+    margin-bottom: clamp(2rem, 4vw, var(--sp-8, 3rem));
+  }
+}
+
 .search-bar--premium {
   margin: 0 auto;
   z-index: 50;

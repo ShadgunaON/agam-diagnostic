@@ -65,7 +65,7 @@ export function TestsCatalogSection({ categories, catalog, className = '' }: Tes
         </div>
 
         {filteredTests.length > 0 ? (
-          <div className="grid grid--3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredTests.map((test, idx) => {
               const numPrice = parsePrice(test.price);
               const cartItem = items.find(i => i.id === `test-${test.slug}` || i.slug === test.slug);
