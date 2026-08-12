@@ -1,6 +1,6 @@
 import { ICollectionRepository } from '@/domains/collections/repository';
 import { CollectionTaskModel } from '@/domains/collections/model';
-import { Result, success } from '@/shared/result';
+import { Result, success, failure } from '@/shared/result';
 import { mockCollections } from '@/data/collections';
 import { LocalStorageAdapter } from '@/lib/storage/LocalStorageAdapter';
 
@@ -35,5 +35,17 @@ export class MockCollectionRepository implements ICollectionRepository {
     const updated = [task, ...current];
     this.saveData(updated);
     return success(task);
+  }
+
+  async update(id: string, data: Partial<CollectionTaskModel>): Promise<Result<CollectionTaskModel>> {
+    const current = this.getData();
+    const index = current.findIndex(t => t.id === id);
+    if (index === -1) {
+      return failure(new Error('Task not found'));
+    }
+    const updatedTask = { ...current[index], ...data };
+    current[index] = updatedTask;
+    this.saveData(current);
+    return success(updatedTask);
   }
 }

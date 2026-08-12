@@ -9,4 +9,7 @@ export interface IBlogRepository {
   getFeaturedArticle(): Promise<Result<BlogArticle>>;
   getPopularReads(): Promise<Result<PopularRead[]>>;
   getHeroData(): Promise<Result<BlogHero>>;
+  
+  createArticle(article: Omit<BlogArticle, 'id'>): Promise<Result<BlogArticle>>;
+  updateArticle(id: string, updates: Partial<BlogArticle>): Promise<Result<BlogArticle>>;
 }

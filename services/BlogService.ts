@@ -1,4 +1,5 @@
 import { IBlogRepository } from '@/domains/blog/repository';
+import { BlogArticle } from '@/domains/blog/model';
 
 export class BlogService {
   constructor(private readonly repository: IBlogRepository) {}
@@ -25,5 +26,13 @@ export class BlogService {
 
   async getHeroData() {
     return this.repository.getHeroData();
+  }
+
+  async createArticle(article: Omit<BlogArticle, 'id'>) {
+    return this.repository.createArticle(article);
+  }
+
+  async updateArticle(id: string, updates: Partial<BlogArticle>) {
+    return this.repository.updateArticle(id, updates);
   }
 }

@@ -32,6 +32,17 @@ export class ApiBlogRepository implements IBlogRepository {
   }
 
   async getHeroData(): Promise<Result<BlogHero>> {
-    return failure(new ServerError('Not implemented'));
+    // Stub implementation
+    return failure(new Error('Method not implemented.'));
+  }
+
+  async createArticle(article: Omit<BlogArticle, 'id'>): Promise<Result<BlogArticle>> {
+    // Stub implementation
+    return failure(new Error('Method not implemented.'));
+  }
+
+  async updateArticle(id: string, updates: Partial<BlogArticle>): Promise<Result<BlogArticle>> {
+    // Stub implementation
+    return failure(new Error('Method not implemented.'));
   }
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
 import { useToast } from '@/components/admin/feedback/Toast';
@@ -235,19 +236,22 @@ export default function HighlyVisualizedStaffRoles() {
               {/* Minimalist Staff Cards Grid */}
               <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
                 {activeStaff.map(staff => (
-                  <div key={staff.id} className="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 bg-slate-50 transition-colors duration-200 cursor-pointer" onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}>
-                    <div className="w-12 h-12 rounded-xl bg-slate-200 flex items-center justify-center text-base font-extrabold text-slate-600 shrink-0">
-                      {staff.name.substring(0, 2).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <span className="text-[15px] font-extrabold text-slate-900 truncate">{staff.name}</span>
-                        {staff.status === 'On Leave' && <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#f59e0b', flexShrink: 0 }}></span>}
-                        {staff.status === 'On Duty' && <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', flexShrink: 0 }}></span>}
+                  <Link href={`/admin/staff/${staff.id}`} key={staff.id} style={{ textDecoration: 'none' }}>
+                    <div className="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 bg-slate-50 transition-colors duration-200 cursor-pointer h-full" onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}>
+                      <div className="w-12 h-12 rounded-xl bg-slate-200 flex items-center justify-center text-base font-extrabold text-slate-600 shrink-0">
+                        {staff.name.substring(0, 2).toUpperCase()}
                       </div>
-                      <div className="text-[13px] font-medium text-slate-500 truncate">{staff.email}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="text-[15px] font-extrabold text-slate-900 truncate">{staff.name}</span>
+                          {staff.status === 'On Leave' && <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#f59e0b', flexShrink: 0 }}></span>}
+                          {staff.status === 'On Duty' && <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', flexShrink: 0 }}></span>}
+                          {staff.status === 'Off Duty' && <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ef4444', flexShrink: 0 }}></span>}
+                        </div>
+                        <div className="text-[13px] font-medium text-slate-500 truncate">{staff.email}</div>
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
                 
                 {activeStaff.length === 0 && (

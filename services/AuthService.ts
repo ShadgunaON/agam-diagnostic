@@ -11,4 +11,8 @@ export class AuthService {
   async verifyOtp(mobile: string, otp: string, registrationData?: Partial<UserProfile>) {
     return this.repository.verifyOtp(mobile, otp, registrationData);
   }
+
+  async updateProfile(userId: string, data: Partial<UserProfile>) {
+    return this.repository.updateProfile(userId, data);
+  }
 }

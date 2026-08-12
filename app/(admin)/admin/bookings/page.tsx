@@ -64,7 +64,7 @@ export default function GlassBookingsPage() {
             <p style={{ fontSize: '15px', fontWeight: 500, color: '#64748b', margin: '4px 0 0 0' }}>Track home collections, lab visits, and patient requests.</p>
           </div>
           <button 
-            onClick={() => toast({ title: 'New Booking Modal', description: 'This would open the booking creation form.', variant: 'info' })}
+            onClick={() => window.location.href = '/admin/bookings/create'}
             className="flex items-center gap-2 px-6 h-11 rounded-xl border-none text-white text-sm font-bold cursor-pointer w-full lg:w-auto justify-center lg:justify-start"
             style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)', boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)' }}
           >

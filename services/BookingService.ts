@@ -1,7 +1,12 @@
 import { IBookingRepository } from '@/domains/booking/repository';
 
+import { InvoiceService } from './InvoiceService';
+
 export class BookingService {
-  constructor(private readonly repository: IBookingRepository) {}
+  constructor(
+    private readonly repository: IBookingRepository,
+    private readonly invoiceService?: InvoiceService
+  ) {}
 
   async getById(id: string) {
     return this.repository.getById(id);
@@ -16,7 +21,11 @@ export class BookingService {
   }
 
   async createBooking(booking: Omit<import('@/domains/booking/model').BookingModel, 'id' | 'createdAt' | 'status'>) {
-    return this.repository.create(booking);
+    const res = await this.repository.create(booking);
+    if (res.isSuccess && this.invoiceService) {
+      await this.invoiceService.generateFromBooking(res.value);
+    }
+    return res;
   }
 
   async updateBookingStatus(id: string, status: import('@/domains/booking/model').BookingModel['status']) {

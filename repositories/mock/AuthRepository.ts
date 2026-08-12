@@ -67,4 +67,18 @@ export class MockAuthRepository implements IAuthRepository {
 
     return success({ success: true, isNewUser: true, user: newUser });
   }
+
+  async updateProfile(userId: string, data: Partial<UserProfile>): Promise<Result<UserProfile>> {
+    // In a real app this would query the DB. We just mock by returning the data merged (mock implementation).
+    // Usually the context handles merging for mock. We'll simulate success.
+    if (userId === PRESEEDED_EXISTING_USER.id) {
+      Object.assign(PRESEEDED_EXISTING_USER, data);
+      return success(PRESEEDED_EXISTING_USER);
+    }
+    
+    // For newly created users not strictly in the PRESEEDED object:
+    // we just return what was passed to us as a success, since the Context maintains local state.
+    const mockUpdatedUser = { id: userId, role: 'patient', ...data } as UserProfile;
+    return success(mockUpdatedUser);
+  }
 }

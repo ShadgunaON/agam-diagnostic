@@ -7,6 +7,10 @@ export class StaffService {
     return this.repository.getAllStaff();
   }
 
+  async getStaffById(id: string) {
+    return this.repository.getStaffById(id);
+  }
+
   async getAllRoles() {
     return this.repository.getAllRoles();
   }
@@ -21,6 +25,10 @@ export class StaffService {
 
   async createStaff(staff: Omit<import('@/domains/staff/model').StaffModel, 'id'>) {
     return this.repository.createStaff(staff);
+  }
+
+  async updateStaff(id: string, updates: Partial<import('@/domains/staff/model').StaffModel>) {
+    return this.repository.updateStaff(id, updates);
   }
 
   async createRole(role: import('@/domains/staff/model').RoleModel) {

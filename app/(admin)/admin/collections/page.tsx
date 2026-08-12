@@ -4,17 +4,25 @@ import React, { useState } from 'react';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
 import { AdminIcon, AdminIconName } from '@/components/admin/navigation/AdminIcons';
 
-import { collectionService } from '@/services';
+import { collectionService, staffService, invoiceService } from '@/services';
 import { CollectionTaskModel } from '@/domains/collections/model';
+import { InvoiceModel } from '@/domains/invoice/model';
+import { StaffMember } from '@/data/staff';
 import { useAsyncAction } from '@/hooks/useAsyncAction';
+import { useToast } from '@/components/admin/feedback/Toast';
 
 export default function CollectionsPage() {
   // STATE
   const [tasks, setTasks] = useState<CollectionTaskModel[]>([]);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const [activeInvoice, setActiveInvoice] = useState<InvoiceModel | null>(null);
+  const [phlebotomists, setPhlebotomists] = useState<StaffMember[]>([]);
+  
+  const { toast } = useToast();
   
   const { isLoading, execute: loadTasks } = useAsyncAction();
   const { isLoading: isCreating, execute: executeCreate } = useAsyncAction();
+  const { isLoading: isAssigning, execute: executeAssign } = useAsyncAction();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   
@@ -38,9 +46,34 @@ export default function CollectionsPage() {
         }
       }
     });
-  }, [activeTaskId, loadTasks]);
+
+    const loadStaff = async () => {
+      const result = await staffService.getAllStaff();
+      if (result.isSuccess && result.value) {
+        setPhlebotomists(result.value.filter((s: import('@/domains/staff/model').StaffModel) => s.role.toLowerCase().includes('phlebotomist')));
+      }
+    };
+    loadStaff();
+  }, [loadTasks]);
 
   const activeTask = tasks.find(t => t.id === activeTaskId) || tasks[0];
+
+  React.useEffect(() => {
+    const fetchInvoice = async () => {
+      if (activeTask?.bookingId) {
+        const res = await invoiceService.getAll();
+        if (res.isSuccess) {
+          const inv = res.value.find(i => i.bookingId === activeTask.bookingId);
+          setActiveInvoice(inv || null);
+        } else {
+          setActiveInvoice(null);
+        }
+      } else {
+        setActiveInvoice(null);
+      }
+    };
+    fetchInvoice();
+  }, [activeTask?.bookingId]);
 
   // Derived KPIs
   const totalTasks = tasks.length;
@@ -68,8 +101,12 @@ export default function CollectionsPage() {
     executeCreate(async () => {
       const res = await collectionService.create(newTask);
       if (res.isSuccess) {
-        setTasks(prev => [res.value, ...prev]);
-        setActiveTaskId(res.value.id);
+        // Re-fetch all tasks from service
+        const updateRes = await collectionService.getAll();
+        if (updateRes.isSuccess) {
+          setTasks(updateRes.value);
+          setActiveTaskId(res.value.id);
+        }
       }
     }).then(() => {
       setIsModalOpen(false);
@@ -77,6 +114,42 @@ export default function CollectionsPage() {
       setNewAddress('');
       setNewTime('');
     });
+  };
+
+  const handleAssign = (staffId: string) => {
+    if (!activeTaskId || !staffId) return;
+    const staff = phlebotomists.find(p => p.id === staffId);
+    if (!staff) return;
+
+    executeAssign(async () => {
+      const res = await collectionService.updateTask(activeTaskId, {
+        assignedTo: staff.name,
+        phlebotomistId: staff.id,
+        status: 'Pending' // Use existing valid status
+      });
+      if (res.isSuccess) {
+        const updateRes = await collectionService.getAll();
+        if (updateRes.isSuccess) {
+          setTasks(updateRes.value);
+        }
+      }
+    });
+  };
+
+  const handleRecordPayment = async () => {
+    if (!activeInvoice || !activeTask?.phlebotomistId) {
+      toast({ title: 'Error', description: 'Cannot record payment. Missing invoice or phlebotomist assignment.', variant: 'danger' });
+      return;
+    }
+    
+    // In a real app, authorize the phlebotomist ID matches logged-in user
+    const res = await invoiceService.recordPayment(activeInvoice.id, 'Cash (Home Collection)', activeTask.phlebotomistId);
+    if (res.isSuccess) {
+      setActiveInvoice(res.value);
+      toast({ title: 'Payment Recorded', description: `Payment collected by ${activeTask.assignedTo}.`, variant: 'success' });
+    } else {
+      toast({ title: 'Payment Failed', description: res.error?.message || 'Failed to record payment', variant: 'danger' });
+    }
   };
 
   return (
@@ -269,34 +342,60 @@ export default function CollectionsPage() {
                       <h3 style={{ fontSize: '22px', fontWeight: 900, color: '#0f172a', margin: 0 }}>{activeTask.patient}</h3>
                     </div>
                     {activeTask.assignedTo === 'Unassigned' ? (
-                      <button 
-                        onMouseEnter={() => setHoverAction(true)}
-                        onMouseLeave={() => setHoverAction(false)}
+                      <select
+                        disabled={isAssigning}
+                        onChange={(e) => handleAssign(e.target.value)}
                         style={{ 
-                          backgroundColor: hoverAction ? '#1d4ed8' : '#2563eb', 
+                          backgroundColor: '#2563eb', 
                           color: 'white', border: 'none', padding: '10px 20px', 
                           borderRadius: '10px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', 
                           boxShadow: '0 2px 4px rgba(37,99,235,0.2)',
-                          transition: 'all 0.2s', transform: hoverAction ? 'translateY(-1px)' : 'none'
+                          outline: 'none',
+                          appearance: 'none'
                         }}
                       >
-                        Assign Phlebotomist
-                      </button>
+                        <option value="">Assign Phlebotomist</option>
+                        {phlebotomists.map(p => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                      </select>
                     ) : (
-                      <button 
-                        onMouseEnter={() => setHoverAction(true)}
-                        onMouseLeave={() => setHoverAction(false)}
-                        style={{ 
-                          backgroundColor: hoverAction ? '#f8fafc' : '#ffffff', 
-                          color: '#334155', border: '1px solid #cbd5e1', padding: '10px 20px', 
-                          borderRadius: '10px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', 
-                          display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                          transition: 'all 0.2s', transform: hoverAction ? 'translateY(-1px)' : 'none'
-                        }}
-                      >
-                        <AdminIcon name="messageSquare" style={{ width: '16px', height: '16px' }} />
-                        Message {activeTask.assignedTo.split(' ')[0]}
-                      </button>
+                      <div className="flex gap-2">
+                        {activeTask.status === 'Completed' && activeInvoice && activeInvoice.paymentStatus !== 'Paid' && (
+                          <button 
+                            onClick={handleRecordPayment}
+                            style={{ 
+                              backgroundColor: '#10b981', 
+                              color: '#ffffff', border: 'none', padding: '10px 20px', 
+                              borderRadius: '10px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', 
+                              display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 2px 4px rgba(16,185,129,0.2)'
+                            }}
+                          >
+                            <AdminIcon name="check" style={{ width: '16px', height: '16px' }} />
+                            Record Payment
+                          </button>
+                        )}
+                        {activeTask.status === 'Completed' && activeInvoice?.paymentStatus === 'Paid' && (
+                          <div style={{ backgroundColor: '#d1fae5', color: '#059669', padding: '10px 20px', borderRadius: '10px', fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid #a7f3d0' }}>
+                            <AdminIcon name="check" style={{ width: '16px', height: '16px' }} />
+                            Payment Received
+                          </div>
+                        )}
+                        <button 
+                          onMouseEnter={() => setHoverAction(true)}
+                          onMouseLeave={() => setHoverAction(false)}
+                          style={{ 
+                            backgroundColor: hoverAction ? '#f8fafc' : '#ffffff', 
+                            color: '#334155', border: '1px solid #cbd5e1', padding: '10px 20px', 
+                            borderRadius: '10px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', 
+                            display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                            transition: 'all 0.2s', transform: hoverAction ? 'translateY(-1px)' : 'none'
+                          }}
+                        >
+                          <AdminIcon name="messageSquare" style={{ width: '16px', height: '16px' }} />
+                          Message {activeTask.assignedTo.split(' ')[0]}
+                        </button>
+                      </div>
                     )}
                   </div>
 

@@ -11,6 +11,12 @@ export interface BlogArticle {
   colorPrimary: string;
   colorSecondary: string;
   imageUrl?: string;
+  
+  // Added for admin functionality
+  status?: 'Published' | 'Draft';
+  views?: number;
+  author?: string;
+  image?: string; // used by admin UI
 }
 
 export interface BlogCategory {

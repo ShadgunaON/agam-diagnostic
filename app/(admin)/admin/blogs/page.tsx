@@ -1,81 +1,66 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
 import { useToast } from '@/components/admin/feedback/Toast';
 import { Drawer } from '@/components/ui/Drawer';
-
-type Article = {
-  id: string;
-  title: string;
-  category: string;
-  status: 'Published' | 'Draft';
-  author: string;
-  date: string;
-  views: number;
-  image: string;
-};
-
-const initialArticles: Article[] = [
-  {
-    id: '1',
-    title: 'Understanding Your Complete Blood Count (CBC) Results',
-    category: 'Patient Education',
-    status: 'Published',
-    author: 'Dr. Sarah Jenkins',
-    date: 'Aug 1, 2026',
-    views: 1240,
-    image: 'https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    id: '2',
-    title: 'The Future of Molecular Diagnostics in Preventive Care',
-    category: 'Medical Research',
-    status: 'Published',
-    author: 'Dr. Robert Wilson',
-    date: 'Jul 28, 2026',
-    views: 890,
-    image: 'https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    id: '3',
-    title: 'Preparing for Your Fasting Lipid Profile: What to Know',
-    category: 'Guidelines',
-    status: 'Draft',
-    author: 'Editorial Team',
-    date: 'Aug 5, 2026',
-    views: 0,
-    image: 'https://images.unsplash.com/photo-1494390248081-4e521a5940db?auto=format&fit=crop&w=600&q=80'
-  }
-];
+import { blogService } from '@/services';
+import { BlogArticle } from '@/domains/blog/model';
 
 export default function AdminBlogsPage() {
-  const [articles, setArticles] = useState<Article[]>(initialArticles);
+  const [mounted, setMounted] = useState(false);
+  const [articles, setArticles] = useState<BlogArticle[]>([]);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const { toast } = useToast();
+  const { toast, error } = useToast();
 
   // Form State
   const [newTitle, setNewTitle] = useState('');
   const [newCategory, setNewCategory] = useState('Patient Education');
 
-  const handlePublish = () => {
+  useEffect(() => {
+    setMounted(true);
+    const loadArticles = async () => {
+      const result = await blogService.getArticles(1, 100);
+      if (result.isSuccess && result.value) {
+        setArticles(result.value.data);
+      }
+    };
+    loadArticles();
+  }, []);
+
+  if (!mounted) return null;
+
+  const handlePublish = async () => {
     if (!newTitle) return;
-    const newArticle: Article = {
-      id: Math.random().toString(),
+    
+    const newArticleData: Omit<BlogArticle, 'id'> = {
       title: newTitle,
       category: newCategory,
+      slug: newTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
+      description: '',
+      content: '',
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      authorId: 'admin',
+      icon: 'fileText',
+      colorPrimary: '#3b82f6',
+      colorSecondary: '#bfdbfe',
       status: 'Published',
       author: 'Admin User',
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       views: 0,
       image: 'https://images.unsplash.com/photo-1581093458791-9f3c3900df4b?auto=format&fit=crop&w=600&q=80'
     };
     
-    setArticles([newArticle, ...articles]);
-    setIsEditorOpen(false);
-    setNewTitle('');
-    toast({ title: 'Post Published', description: 'Your blog article is now live.', variant: 'success' });
+    const result = await blogService.createArticle(newArticleData);
+    
+    if (result.isSuccess && result.value) {
+      setArticles([result.value, ...articles]);
+      setIsEditorOpen(false);
+      setNewTitle('');
+      toast({ title: 'Post Published', description: 'Your blog article is now live.', variant: 'success' });
+    } else {
+      error('Publishing Failed', 'Could not create the article at this time.');
+    }
   };
 
   return (
@@ -160,7 +145,7 @@ export default function AdminBlogsPage() {
                   <div className="flex items-center justify-between border-t border-slate-100 pt-4">
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 rounded-full bg-slate-100 text-[10px] font-extrabold flex items-center justify-center text-slate-600">
-                        {article.author.split(' ').map(n => n[0]).join('')}
+                        {(article.author || 'A').split(' ').map(n => n[0]).join('')}
                       </div>
                       <span className="text-[13px] font-semibold text-slate-500">{article.date}</span>
                     </div>

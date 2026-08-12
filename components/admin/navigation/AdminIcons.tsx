@@ -15,6 +15,7 @@ export type AdminIconName =
   | 'bell'
   | 'chevronDown'
   | 'chevronRight'
+  | 'chevronLeft'
   | 'moreVertical'
   | 'filter'
   | 'arrowUp'
@@ -261,6 +262,12 @@ export function AdminIcon({ name, className = '', ...props }: AdminIconProps) {
       return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={baseClass} {...props}>
           <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      );
+    case 'chevronLeft':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={baseClass} {...props}>
+          <polyline points="15 18 9 12 15 6"></polyline>
         </svg>
       );
     case 'moreVertical':

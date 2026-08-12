@@ -108,18 +108,25 @@ export function Header({ className = '' }: HeaderProps) {
                       <p className="user-menu-dropdown__phone">+91 {user.mobile}</p>
                     </div>
                     <Link
-                      href="/book"
+                      href="/profile"
                       className="user-menu-dropdown__link"
                       onClick={() => setShowUserMenu(false)}
                     >
-                      My Bookings / Checkout
+                      My Profile
                     </Link>
                     <Link
-                      href="/admin"
-                      className="user-menu-dropdown__link !text-primary !font-bold"
+                      href="/bookings"
+                      className="user-menu-dropdown__link"
                       onClick={() => setShowUserMenu(false)}
                     >
-                      Admin Portal
+                      My Bookings
+                    </Link>
+                    <Link
+                      href="/reports"
+                      className="user-menu-dropdown__link"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      My Reports
                     </Link>
                     <button
                       type="button"

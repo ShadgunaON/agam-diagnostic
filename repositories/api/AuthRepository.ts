@@ -13,9 +13,12 @@ export class ApiAuthRepository implements IAuthRepository {
   }
 
   async verifyOtp(_mobile: string, _otp: string, _registrationData?: Partial<UserProfile>): Promise<Result<{ success: boolean; isNewUser?: boolean; user?: UserProfile }>> {
-    void _mobile;
-    void _otp;
-    void _registrationData;
-    return failure(new ServerError('Auth API not implemented'));
+    // For now, always return failure as this is not implemented in the API layer yet.
+    return failure(new Error('API Auth verification not implemented'));
+  }
+
+  async updateProfile(userId: string, data: Partial<UserProfile>): Promise<Result<UserProfile>> {
+    // For now, always return failure as this is not implemented in the API layer yet.
+    return failure(new Error('API Auth profile update not implemented'));
   }
 }

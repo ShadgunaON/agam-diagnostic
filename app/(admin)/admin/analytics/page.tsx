@@ -4,21 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
 import { useToast } from '@/components/admin/feedback/Toast';
-
-// --- MOCK DATA ---
-const revenueByMonth = [
-  { month: 'Jan', revenue: 45000 }, { month: 'Feb', revenue: 52000 },
-  { month: 'Mar', revenue: 48000 }, { month: 'Apr', revenue: 61000 },
-  { month: 'May', revenue: 59000 }, { month: 'Jun', revenue: 75000 },
-  { month: 'Jul', revenue: 82000 }, { month: 'Aug', revenue: 89000 }
-];
-
-const testDistribution = [
-  { name: 'Hematology', value: 45, color: '#3b82f6' },
-  { name: 'Biochemistry', value: 30, color: '#10b981' },
-  { name: 'Molecular', value: 15, color: '#8b5cf6' },
-  { name: 'Microbiology', value: 10, color: '#f59e0b' }
-];
+import { analyticsService } from '@/services';
 
 // --- STYLES ---
 const glassStyle = {
@@ -30,14 +16,63 @@ const glassStyle = {
   borderRadius: '24px',
 };
 
+const formatCurrency = (value: number): string => {
+  if (value >= 100000) return `₹${(value / 100000).toFixed(1)}L`;
+  if (value >= 1000) return `₹${(value / 1000).toFixed(1)}K`;
+  return `₹${value.toLocaleString()}`;
+};
+
 export default function GlassAnalyticsPage() {
   const [mounted, setMounted] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => { setMounted(true); }, []);
+  // --- LIVE DATA STATE ---
+  const [kpis, setKpis] = useState({ bookingsToday: 0, pendingBookings: 0, homeCollections: 0, revenueToday: 0 });
+  const [revenueByMonth, setRevenueByMonth] = useState<Array<{ month: string; revenue: number }>>([]);
+  const [testDistribution, setTestDistribution] = useState<Array<{ name: string; value: number; color: string }>>([]);
+
+  useEffect(() => {
+    setMounted(true);
+    const loadAnalytics = async () => {
+      const [kpisData, revenueData, distData] = await Promise.all([
+        analyticsService.getDashboardKPIs(),
+        analyticsService.getRevenueByMonth(),
+        analyticsService.getTestDistribution(),
+      ]);
+      setKpis(kpisData);
+      setRevenueByMonth(revenueData.filter(d => d.revenue > 0));
+      setTestDistribution(distData);
+    };
+    loadAnalytics();
+  }, []);
+
   if (!mounted) return null;
 
-  const maxRevenue = Math.max(...revenueByMonth.map(d => d.revenue));
+  const maxRevenue = revenueByMonth.length > 0 ? Math.max(...revenueByMonth.map(d => d.revenue)) : 1;
+  const totalTestItems = testDistribution.reduce((sum, d) => sum + d.value, 0);
+
+  // Compute doughnut arcs from distribution data
+  const circumference = 2 * Math.PI * 40; // ~251.3
+  const doughnutArcs: Array<{ color: string; dasharray: string; offset: number }> = [];
+  let cumulativeOffset = 0;
+  testDistribution.forEach(d => {
+    const arcLen = (d.value / 100) * circumference;
+    doughnutArcs.push({ color: d.color, dasharray: `${arcLen.toFixed(1)} ${circumference.toFixed(1)}`, offset: -cumulativeOffset });
+    cumulativeOffset += arcLen;
+  });
+
+  // Derive unique patients from bookings
+  const uniquePatients = new Set<string>();
+  // We'll count total test items across all bookings for "Tests Conducted"
+  let totalItemsCount = 0;
+  // These are already computed inside AnalyticsService, but for KPI display we use the kpis object
+
+  const kpiCards = [
+    { label: "Total Revenue", value: formatCurrency(kpis.revenueToday), icon: 'creditCard', color: '#3b82f6' },
+    { label: "Total Bookings", value: kpis.bookingsToday.toString(), icon: 'testTube', color: '#10b981' },
+    { label: "Pending Tests", value: kpis.pendingBookings.toString(), icon: 'users', color: '#8b5cf6' },
+    { label: "Home Collections", value: kpis.homeCollections.toString(), icon: 'mapPin', color: '#f59e0b' }
+  ];
 
   return (
     <AdminPageTemplate>
@@ -62,7 +97,7 @@ export default function GlassAnalyticsPage() {
             <p style={{ fontSize: '15px', fontWeight: 500, color: '#64748b', margin: '4px 0 0 0' }}>Comprehensive clinical and financial insights.</p>
           </div>
           <button 
-            onClick={() => toast({ title: 'Exporting PDF...', description: 'Your report will download shortly.', variant: 'info' })}
+            onClick={() => toast({ title: 'Export not available', description: 'PDF export requires backend integration.', variant: 'info' })}
             style={{ height: '44px', padding: '0 24px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #0f172a, #334155)', color: '#ffffff', fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}
           >
             <AdminIcon name="download" style={{ width: '16px', height: '16px' }} /> Export PDF
@@ -71,12 +106,7 @@ export default function GlassAnalyticsPage() {
 
         {/* GLASS KPI CARDS */}
         <div className="admin-responsive-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            { label: "Total Revenue", value: '₹4.2M', icon: 'creditCard', trend: '+15.2%', color: '#3b82f6' },
-            { label: "Tests Conducted", value: '12.4K', icon: 'testTube', trend: '+8.4%', color: '#10b981' },
-            { label: "Active Patients", value: '8.2K', icon: 'users', trend: '+12.1%', color: '#8b5cf6' },
-            { label: "Home Visits", value: '3.1K', icon: 'mapPin', trend: '+22.5%', color: '#f59e0b' }
-          ].map((kpi, i) => (
+          {kpiCards.map((kpi, i) => (
               <div 
               key={i} 
               className="p-4 lg:p-6 flex flex-col gap-4"
@@ -97,9 +127,6 @@ export default function GlassAnalyticsPage() {
                 <div style={{ width: '44px', height: '44px', borderRadius: '14px', backgroundColor: `rgba(255,255,255, 0.8)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: kpi.color, boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                   <AdminIcon name={kpi.icon as any} style={{ width: '22px', height: '22px' }} />
                 </div>
-                <div style={{ fontSize: '13px', fontWeight: 800, color: '#10b981', backgroundColor: 'rgba(255,255,255,0.7)', padding: '4px 10px', borderRadius: '20px' }}>
-                  {kpi.trend}
-                </div>
               </div>
               <div>
                 <div style={{ fontSize: '32px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em', lineHeight: 1.1 }}>{kpi.value}</div>
@@ -114,8 +141,8 @@ export default function GlassAnalyticsPage() {
           
           {/* REVENUE CHART */}
           <div className="p-4 lg:p-8 flex flex-col gap-6" style={glassStyle}>
-            <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Revenue Growth (YTD)</h2>
-            <div className="flex-1 flex items-end justify-between gap-4 pt-10 relative">
+            <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Revenue by Month</h2>
+            <div className="flex-1 flex items-end justify-between gap-4 pt-10 relative" style={{ minHeight: '220px' }}>
               {/* Horizontal Grid Lines */}
               <div className="absolute top-0 inset-x-0 bottom-6 flex flex-col justify-between pointer-events-none z-0">
                 {[1,2,3,4].map(i => <div key={i} style={{ borderTop: '1px dashed rgba(148, 163, 184, 0.3)', width: '100%' }} />)}
@@ -123,9 +150,9 @@ export default function GlassAnalyticsPage() {
               
               {/* Bars */}
               {revenueByMonth.map((item, i) => {
-                const heightPercentage = (item.revenue / maxRevenue) * 100;
+                const heightPercentage = maxRevenue > 0 ? (item.revenue / maxRevenue) * 100 : 0;
                 return (
-                  <div key={i} className="flex flex-col items-center gap-3 flex-1 h-full justify-end z-10 cursor-pointer relative">
+                  <div key={i} className="flex flex-col items-center gap-3 flex-1 h-full justify-end z-10 cursor-pointer relative" title={`₹${item.revenue.toLocaleString()}`}>
                     <div 
                       style={{ 
                         width: '100%', maxWidth: '40px', height: `${heightPercentage}%`, 
@@ -145,6 +172,9 @@ export default function GlassAnalyticsPage() {
                   </div>
                 );
               })}
+              {revenueByMonth.length === 0 && (
+                <div className="flex-1 flex items-center justify-center" style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 600 }}>No revenue data yet</div>
+              )}
             </div>
           </div>
 
@@ -155,14 +185,13 @@ export default function GlassAnalyticsPage() {
             <div className="relative w-full max-w-[200px] h-[200px] mx-auto flex items-center justify-center">
               <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
                 <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="16" />
-                <circle cx="50" cy="50" r="40" fill="none" stroke="#3b82f6" strokeWidth="16" strokeDasharray="113 251" />
-                <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" strokeWidth="16" strokeDasharray="75 251" strokeDashoffset="-113" />
-                <circle cx="50" cy="50" r="40" fill="none" stroke="#8b5cf6" strokeWidth="16" strokeDasharray="37 251" strokeDashoffset="-188" />
-                <circle cx="50" cy="50" r="40" fill="none" stroke="#f59e0b" strokeWidth="16" strokeDasharray="26 251" strokeDashoffset="-225" />
+                {doughnutArcs.map((arc, i) => (
+                  <circle key={i} cx="50" cy="50" r="40" fill="none" stroke={arc.color} strokeWidth="16" strokeDasharray={arc.dasharray} strokeDashoffset={arc.offset} />
+                ))}
               </svg>
               <div className="absolute flex flex-col items-center">
-                <span style={{ fontSize: '28px', fontWeight: 900, color: '#0f172a' }}>1,248</span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Total Tests</span>
+                <span style={{ fontSize: '28px', fontWeight: 900, color: '#0f172a' }}>{kpis.bookingsToday}</span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Bookings</span>
               </div>
             </div>
 
@@ -176,6 +205,9 @@ export default function GlassAnalyticsPage() {
                   <span style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{item.value}%</span>
                 </div>
               ))}
+              {testDistribution.length === 0 && (
+                <div style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 600, textAlign: 'center' }}>No test data yet</div>
+              )}
             </div>
 
           </div>

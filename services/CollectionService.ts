@@ -10,4 +10,8 @@ export class CollectionService {
   async create(task: import('@/domains/collections/model').CollectionTaskModel) {
     return this.repository.create(task);
   }
+
+  async updateTask(id: string, data: Partial<import('@/domains/collections/model').CollectionTaskModel>) {
+    return this.repository.update(id, data);
+  }
 }

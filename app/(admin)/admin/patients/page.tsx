@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
 import { AdminCard } from '@/components/admin/primitives/AdminCard';
 import { AdminInput } from '@/components/admin/primitives/AdminInput';
@@ -8,32 +9,59 @@ import { AdminButton } from '@/components/admin/primitives/AdminButton';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { KPICard } from '@/components/admin/layout/KPICard';
 import { ConfigurableDataTable, ColumnDef } from '@/components/admin/tables/DataTable';
-import { mockPatients, Patient } from '@/data/patients';
+import { patientService, analyticsService } from '@/services';
+import { PatientModel } from '@/domains/patient/model';
+import { useToast } from '@/components/admin/feedback/Toast';
 
 export default function PatientsPage() {
+  const router = useRouter();
+  const { toast } = useToast();
+  
+  const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [kpis, setKpis] = useState({ totalPatients: 0, newThisMonth: 0, activeBookings: 0, retentionRate: 0 });
+  
+  const [patients, setPatients] = useState<PatientModel[]>([]);
 
-  const filteredPatients = useMemo(() => {
-    if (!searchQuery) return mockPatients;
-    return mockPatients.filter((p: Patient) => 
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.phone.includes(searchQuery)
+  useEffect(() => {
+    setMounted(true);
+    analyticsService.getPatientKPIs().then(setKpis);
+  }, []);
+
+  useEffect(() => {
+    const loadPatients = async () => {
+      const result = await patientService.getAll(1, 1000); // load all for client-side search in mock
+      if (result.isSuccess && result.value) {
+        setPatients(result.value.data);
+      }
+    };
+    loadPatients();
+  }, []);
+
+  const filteredPatients = React.useMemo(() => {
+    if (!searchQuery) return patients;
+    const query = searchQuery.toLowerCase();
+    return patients.filter(p => 
+      p.name.toLowerCase().includes(query) ||
+      p.id.toLowerCase().includes(query) ||
+      p.phone.includes(query) ||
+      p.email.toLowerCase().includes(query)
     );
-  }, [searchQuery]);
+  }, [patients, searchQuery]);
 
-  const paginatedData = useMemo(() => {
+  const paginatedData = React.useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredPatients.slice(start, start + itemsPerPage);
   }, [filteredPatients, currentPage, itemsPerPage]);
+
 
   const kpiSection = (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
       <KPICard 
         title="Total Patients" 
-        value="12,458" 
+        value={kpis.totalPatients.toLocaleString()} 
         icon="users"
         trend={{ value: 4.2, isPositive: true, label: 'vs last month' }}
         iconBgColor="bg-blue-50"
@@ -41,7 +69,7 @@ export default function PatientsPage() {
       />
       <KPICard 
         title="New This Month" 
-        value="342" 
+        value={kpis.newThisMonth.toLocaleString()} 
         icon="userPlus"
         trend={{ value: 12, isPositive: true, label: 'vs last month' }}
         iconBgColor="bg-emerald-50"
@@ -49,7 +77,7 @@ export default function PatientsPage() {
       />
       <KPICard 
         title="Active Bookings" 
-        value="128" 
+        value={kpis.activeBookings.toLocaleString()} 
         icon="calendar"
         trend={{ value: 2, isPositive: false, label: 'needs attention' }}
         iconBgColor="bg-amber-50"
@@ -57,11 +85,11 @@ export default function PatientsPage() {
       />
       <KPICard 
         title="Retention Rate" 
-        value="84%" 
+        value={`${kpis.retentionRate}%`} 
         icon="activity"
         trend={{ value: 1.5, isPositive: true, label: 'vs last year' }}
-        iconBgColor="bg-indigo-50"
-        iconColor="text-indigo-500"
+        iconBgColor="bg-rose-50"
+        iconColor="text-rose-500"
       />
     </div>
   );
@@ -107,7 +135,7 @@ export default function PatientsPage() {
     </div>
   );
 
-  const columns = useMemo<ColumnDef<Patient>[]>(() => [
+  const columns = React.useMemo<ColumnDef<PatientModel>[]>(() => [
     {
       id: 'id',
       header: 'Patient ID',
@@ -137,14 +165,8 @@ export default function PatientsPage() {
     {
       id: 'lastVisit',
       header: 'Last Visit',
-      accessorKey: 'lastVisit',
+      accessorKey: 'updatedAt',
       cellClassName: 'text-[13px] text-slate-700 font-medium',
-    },
-    {
-      id: 'totalBookings',
-      header: 'Total Bookings',
-      cellClassName: 'text-[13px] text-slate-700 tabular-nums',
-      cell: ({ row }) => <span>{row.totalBookings} visits</span>
     },
     {
       id: 'status',
@@ -173,6 +195,8 @@ export default function PatientsPage() {
     },
   ], []);
 
+  if (!mounted) return null;
+
   return (
     <AdminPageTemplate
       kpiSection={kpiSection}
@@ -186,7 +210,7 @@ export default function PatientsPage() {
             data={paginatedData}
             columns={columns}
             keyExtractor={(row) => row.id}
-            onRowClick={(row) => alert(`Routing to detailed patient profile for: ${row.name}`)}
+            onRowClick={(row) => router.push(`/admin/patients/${row.id}`)}
             pagination={{
               currentPage,
               totalPages: Math.ceil(filteredPatients.length / itemsPerPage),

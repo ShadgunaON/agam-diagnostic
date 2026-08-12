@@ -22,6 +22,7 @@ const adminNavigation = [
       { title: 'Bookings', href: '/admin/bookings', icon: 'calendar' as const, roles: ['ADMIN', 'STAFF', 'PHLEBOTOMIST'] },
       { title: 'Home Collections', href: '/admin/collections', icon: 'mapPin' as const, roles: ['ADMIN', 'STAFF', 'PHLEBOTOMIST'] },
       { title: 'Patients', href: '/admin/patients', icon: 'users' as const, roles: ['ADMIN', 'DOCTOR', 'STAFF'] },
+      { title: 'Ledger & Invoices', href: '/admin/invoices', icon: 'fileText' as const, roles: ['ADMIN', 'STAFF'] },
       { title: 'Reports', href: '/admin/reports', icon: 'file' as const, roles: ['ADMIN', 'DOCTOR', 'STAFF'] },
     ]
   },

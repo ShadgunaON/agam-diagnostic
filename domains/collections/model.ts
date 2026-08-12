@@ -1,5 +1,8 @@
 export interface CollectionTaskModel {
   id: string;
+  patientId?: string;
+  bookingId?: string;
+  phlebotomistId?: string;
   time: string;
   patient: string;
   address: string;

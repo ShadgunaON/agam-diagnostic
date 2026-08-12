@@ -1,92 +1,57 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
-import { AdminCard } from '@/components/admin/primitives/AdminCard';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { useToast } from '@/components/admin/feedback/Toast';
-
-// ─── Types & Mock Data ───
-
-interface TestResult {
-  parameter: string;
-  value: number | string;
-  unit: string;
-  reference: string;
-  isAbnormal: boolean;
-}
-
-interface ReportTask {
-  id: string;
-  patient: { name: string; age: number; gender: string; id: string };
-  testType: string;
-  status: 'Awaiting Verification' | 'Pending Upload' | 'Published';
-  priority: 'Routine' | 'STAT';
-  time: string;
-  results: TestResult[];
-}
-
-const mockReports: ReportTask[] = [
-  {
-    id: 'REP-1045',
-    patient: { name: 'Vikram Singh', age: 42, gender: 'M', id: 'PT-8892' },
-    testType: 'Complete Blood Count (CBC)',
-    status: 'Awaiting Verification',
-    priority: 'Routine',
-    time: '11:15 AM Today',
-    results: [
-      { parameter: 'Hemoglobin', value: 11.2, unit: 'g/dL', reference: '13.8 - 17.2', isAbnormal: true },
-      { parameter: 'WBC Count', value: 7500, unit: 'cells/mcL', reference: '4,500 - 11,000', isAbnormal: false },
-      { parameter: 'Platelets', value: 210000, unit: 'cells/mcL', reference: '150,000 - 450,000', isAbnormal: false },
-      { parameter: 'RBC Count', value: 4.1, unit: 'million/mcL', reference: '4.7 - 6.1', isAbnormal: true },
-    ]
-  },
-  {
-    id: 'REP-1046',
-    patient: { name: 'Anita Desai', age: 35, gender: 'F', id: 'PT-8893' },
-    testType: 'Lipid Profile',
-    status: 'Awaiting Verification',
-    priority: 'Routine',
-    time: '10:30 AM Today',
-    results: [
-      { parameter: 'Total Cholesterol', value: 240, unit: 'mg/dL', reference: '< 200', isAbnormal: true },
-      { parameter: 'HDL Cholesterol', value: 45, unit: 'mg/dL', reference: '> 50', isAbnormal: true },
-      { parameter: 'LDL Cholesterol', value: 160, unit: 'mg/dL', reference: '< 100', isAbnormal: true },
-      { parameter: 'Triglycerides', value: 175, unit: 'mg/dL', reference: '< 150', isAbnormal: true },
-    ]
-  },
-  {
-    id: 'REP-1047',
-    patient: { name: 'Suresh Menon', age: 58, gender: 'M', id: 'PT-8894' },
-    testType: 'HbA1c & Fasting Glucose',
-    status: 'Awaiting Verification',
-    priority: 'STAT',
-    time: '09:00 AM Today',
-    results: [
-      { parameter: 'HbA1c', value: 8.2, unit: '%', reference: '< 5.7', isAbnormal: true },
-      { parameter: 'Fasting Blood Sugar', value: 145, unit: 'mg/dL', reference: '70 - 100', isAbnormal: true },
-    ]
-  }
-];
+import { reportsService } from '@/services';
+import { ReportTaskModel } from '@/domains/reports/model';
 
 // ─── Component ───
 
 export default function ClinicalReportsWorkspace() {
-  const { success } = useToast();
-  const [reports, setReports] = useState<ReportTask[]>(mockReports);
-  const [activeReportId, setActiveReportId] = useState<string>(mockReports[0].id);
+  const [mounted, setMounted] = useState(false);
+  const { success, error } = useToast();
+  const [reports, setReports] = useState<ReportTaskModel[]>([]);
+  const [activeReportId, setActiveReportId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    const loadReports = async () => {
+      const result = await reportsService.getAllTasks();
+      if (result.isSuccess && result.value) {
+        setReports(result.value);
+        if (result.value.length > 0) {
+          setActiveReportId(result.value[0].id);
+        }
+      }
+    };
+    loadReports();
+  }, []);
+
+  if (!mounted) return null;
 
   const activeReport = reports.find(r => r.id === activeReportId);
   const pendingCount = reports.filter(r => r.status === 'Awaiting Verification').length;
 
-  const handlePublish = (reportId: string) => {
-    // In production, this would sign the PDF and push to the backend
-    setReports(prev => prev.map(r => r.id === reportId ? { ...r, status: 'Published' } : r));
-    success('Report Verified & Published', `Report ${reportId} has been digitally signed and made available to the patient.`);
+  const handlePublish = async (reportId: string) => {
+    // Call service to update status
+    const result = await reportsService.updateStatus(reportId, 'Published');
     
-    // Auto-select the next pending report
-    const nextPending = reports.find(r => r.status === 'Awaiting Verification' && r.id !== reportId);
-    if (nextPending) setActiveReportId(nextPending.id);
+    if (result.isSuccess) {
+      // Re-fetch from service as the source of truth
+      const updated = await reportsService.getAllTasks();
+      if (updated.isSuccess && updated.value) {
+        setReports(updated.value);
+      }
+      success('Report Verified & Published', `Report ${reportId} has been digitally signed and made available to the patient.`);
+      
+      // Auto-select the next pending report
+      const nextPending = reports.find(r => r.status === 'Awaiting Verification' && r.id !== reportId);
+      if (nextPending) setActiveReportId(nextPending.id);
+    } else {
+      error('Verification Failed', 'Could not verify the report at this time.');
+    }
   };
 
   return (

@@ -3,8 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { bookingService } from '@/services';
+import { bookingService, invoiceService } from '@/services';
 import { BookingModel } from '@/domains/booking/model';
+import { InvoiceModel } from '@/domains/invoice/model';
 import { Container } from '@/components/ui';
 
 export default function BookingSuccessPage() {
@@ -13,6 +14,7 @@ export default function BookingSuccessPage() {
   const id = params.id as string;
   
   const [booking, setBooking] = useState<BookingModel | null>(null);
+  const [invoice, setInvoice] = useState<InvoiceModel | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -23,6 +25,12 @@ export default function BookingSuccessPage() {
         const result = await bookingService.getById(id);
         if (result.isSuccess) {
           setBooking(result.value);
+          
+          const invResult = await invoiceService.getAll();
+          if (invResult.isSuccess) {
+            const foundInv = invResult.value.find(i => i.bookingId === result.value.id);
+            if (foundInv) setInvoice(foundInv);
+          }
         } else {
           setBooking(null);
         }
@@ -106,6 +114,15 @@ export default function BookingSuccessPage() {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {invoice && invoice.paymentStatus === 'Pending' ? (
+              <Link 
+                href={`/payment/${invoice.id}`}
+                style={{ display: 'inline-block', padding: '16px 32px', background: 'var(--color-primary)', color: '#fff', borderRadius: '100px', fontWeight: 600, textDecoration: 'none', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(11,27,61,0.1)' }}
+              >
+                Proceed to Payment
+              </Link>
+            ) : null}
+            
             <Link 
               href="/bookings"
               style={{ display: 'inline-block', padding: '16px 32px', background: 'var(--color-dark)', color: '#fff', borderRadius: '100px', fontWeight: 600, textDecoration: 'none', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(11,27,61,0.1)' }}

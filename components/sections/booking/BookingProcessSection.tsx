@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
+import { bookingService } from '@/services';
 
 // Extracted Sub-Components
 import { BookingStepper } from './BookingStepper';
@@ -119,13 +120,19 @@ export function BookingProcessSection({ className = '' }: BookingProcessSectionP
     }
 
     setIsSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 900));
 
+    let finalPatientId = user.id;
     let selectedPatientName = user.fullName;
+    let selectedPatientAge = parseInt(user.dobOrAge || '0');
+    let selectedPatientGender = (user.gender as 'Male' | 'Female' | 'Other') || 'Male';
+
     if (selectedPatientId !== 'myself') {
       const found = user.savedPatients.find((p) => p.id === selectedPatientId);
       if (found) {
-        selectedPatientName = `${found.name} (${found.relation})`;
+        finalPatientId = found.id;
+        selectedPatientName = found.name;
+        selectedPatientAge = parseInt(found.age || '0');
+        selectedPatientGender = (found.gender as 'Male' | 'Female' | 'Other') || 'Male';
       }
     }
 
@@ -135,19 +142,46 @@ export function BookingProcessSection({ className = '' }: BookingProcessSectionP
 
     const timeSlotObj = AVAILABLE_TIMESLOTS.find((s) => s.id === selectedSlot);
 
-    setConfirmedItems([...items]);
+    try {
+      const result = await bookingService.createBooking({
+        patientId: finalPatientId,
+        patient: {
+          name: selectedPatientName,
+          phone: user.mobile || '',
+          email: user.email || '',
+          gender: selectedPatientGender,
+          age: selectedPatientAge
+        },
+        collection: {
+          type: collectionType === 'home' ? 'Home Collection' : 'Lab Visit',
+          date: selectedDate,
+          timeSlot: timeSlotObj ? timeSlotObj.time : '09:00 AM - 11:00 AM',
+          address: addressOrLab
+        },
+        items: items.map(item => ({
+          name: item.title,
+          type: item.type === 'package' ? 'Package' : 'Test',
+          price: item.price
+        })),
+        payment: {
+          total: totalAmount,
+          status: 'Pending',
+          method: paymentMethod === 'upi' ? 'UPI' : paymentMethod === 'card' ? 'Credit Card' : 'Cash'
+        },
+        timeline: []
+      });
 
-    setBookingConfirmation({
-      bookingId: `AGAM-BOOK-${Math.floor(10000 + Math.random() * 90000)}`,
-      patientName: selectedPatientName,
-      addressOrLab,
-      date: selectedDate,
-      slotTime: timeSlotObj ? timeSlotObj.time : '09:00 AM - 11:00 AM',
-      totalPayable: totalAmount,
-    });
-
-    setIsSubmitting(false);
-    clearCart();
+      if (result.isSuccess) {
+        clearCart();
+        router.push(`/book/success/${result.value.id}`);
+      } else {
+        setCheckoutError(result.error?.message || 'Failed to create booking.');
+        setIsSubmitting(false);
+      }
+    } catch (e) {
+      setCheckoutError('An unexpected error occurred.');
+      setIsSubmitting(false);
+    }
   };
 
   const handleNextStep = () => {
@@ -166,18 +200,7 @@ export function BookingProcessSection({ className = '' }: BookingProcessSectionP
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Render Confirmation Screen
-  if (bookingConfirmation) {
-    return (
-      <BookingConfirmation 
-        className={className} 
-        bookingConfirmation={bookingConfirmation} 
-        confirmedItems={confirmedItems} 
-      />
-    );
-  }
-
-  // Render Main Flow
+  // The inline confirmation screen is removed. We navigate to /book/success/[id] instead.
   return (
     <div className={`booking-step-content w-full ${className}`}>
       <Link href="/" className="inline-flex items-center gap-1 text-xs text-muted-foreground mb-6 font-semibold no-underline hover:text-primary transition-colors">

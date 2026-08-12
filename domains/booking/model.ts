@@ -3,6 +3,7 @@ export type CollectionType = 'Home Collection' | 'Lab Visit';
 
 export interface BookingModel {
   id: string;
+  patientId?: string;
   patient: {
     name: string;
     phone: string;

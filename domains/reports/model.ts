@@ -8,6 +8,8 @@ export interface TestResult {
 
 export interface ReportTaskModel {
   id: string;
+  patientId?: string;
+  bookingId?: string;
   patient: { name: string; age: number; gender: string; id: string };
   testType: string;
   status: 'Awaiting Verification' | 'Pending Upload' | 'Published';

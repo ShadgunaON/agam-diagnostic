@@ -1,26 +1,25 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { AdminIcon } from './AdminIcons';
+import { AdminIcon, AdminIconName } from './AdminIcons';
 import { useRouter } from 'next/navigation';
+import { globalSearchService } from '@/services';
+import { GlobalSearchResult } from '@/services/GlobalSearchService';
 
 export function CommandMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [results, setResults] = useState<(GlobalSearchResult | { id: string, title: string, subtitle: string, href: string, icon: string })[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  const mockCommands = [
-    { id: '1', title: 'Create Booking', icon: 'calendar', action: () => alert('Create Booking triggered') },
-    { id: '2', title: 'Search Patients', icon: 'users', action: () => router.push('/admin/patients') },
-    { id: '3', title: 'View Settings', icon: 'settings', action: () => alert('Settings triggered') },
-    { id: '4', title: 'Generate Report', icon: 'fileText', action: () => alert('Report triggered') },
+  const staticCommands = [
+    { id: 's1', type: 'static', title: 'Create Booking', subtitle: 'Action', href: '/admin/bookings/create', icon: 'calendar' },
+    { id: 's2', type: 'static', title: 'Patients List', subtitle: 'Navigation', href: '/admin/patients', icon: 'users' },
+    { id: 's3', type: 'static', title: 'View Settings', subtitle: 'Navigation', href: '/admin/settings', icon: 'settings' },
   ];
-
-  const filteredCommands = mockCommands.filter(c => 
-    c.title.toLowerCase().includes(search.toLowerCase())
-  );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -41,27 +40,47 @@ export function CommandMenu() {
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 50);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedIndex(0);
       setSearch('');
+      setResults(staticCommands);
     }
   }, [isOpen]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedIndex(0);
-  }, [search]);
+    if (!isOpen) return;
+
+    const fetchResults = async () => {
+      if (search.trim() === '') {
+        setResults(staticCommands);
+        return;
+      }
+      setIsSearching(true);
+      try {
+        const data = await globalSearchService.search(search);
+        setResults(data.length > 0 ? data : []);
+      } catch (e) {
+        console.error('Search failed:', e);
+        setResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    const timeoutId = setTimeout(fetchResults, 150);
+    return () => clearTimeout(timeoutId);
+  }, [search, isOpen]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex((prev) => (prev + 1) % filteredCommands.length);
+      setSelectedIndex((prev) => (prev + 1) % (results.length || 1));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setSelectedIndex((prev) => (prev - 1 + filteredCommands.length) % filteredCommands.length);
-    } else if (e.key === 'Enter' && filteredCommands[selectedIndex]) {
+      setSelectedIndex((prev) => (prev - 1 + results.length) % (results.length || 1));
+    } else if (e.key === 'Enter' && results[selectedIndex]) {
       e.preventDefault();
-      filteredCommands[selectedIndex].action();
+      router.push(results[selectedIndex].href);
       setIsOpen(false);
     }
   };
@@ -96,27 +115,34 @@ export function CommandMenu() {
         </div>
 
         <div className="max-h-[60vh] overflow-y-auto p-2 custom-scrollbar">
-          {filteredCommands.length === 0 ? (
+          {isSearching ? (
+            <p className="p-4 text-center text-[13px] text-slate-500">Searching...</p>
+          ) : results.length === 0 ? (
             <p className="p-4 text-center text-[13px] text-slate-500">No results found.</p>
           ) : (
             <ul>
-              {filteredCommands.map((command, index) => {
+              {results.map((result, index) => {
                 const isSelected = index === selectedIndex;
                 return (
-                  <li key={command.id}>
+                  <li key={result.id}>
                     <button
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                      className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
                         isSelected ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50'
                       }`}
                       onClick={() => {
-                        command.action();
+                        router.push(result.href);
                         setIsOpen(false);
                       }}
                       onMouseEnter={() => setSelectedIndex(index)}
                     >
-                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                      <AdminIcon name={command.icon as any} className={`w-5 h-5 ${isSelected ? 'text-slate-900' : 'text-slate-400'}`} strokeWidth={2} />
-                      <span className="text-[14px] font-medium">{command.title}</span>
+                      <div className="flex items-center gap-3">
+                        <AdminIcon name={result.icon as AdminIconName} className={`w-5 h-5 ${isSelected ? 'text-slate-900' : 'text-slate-400'}`} strokeWidth={2} />
+                        <div className="flex flex-col">
+                          <span className="text-[14px] font-medium leading-tight">{result.title}</span>
+                          {result.subtitle && <span className="text-[12px] text-slate-400 font-medium">{result.subtitle}</span>}
+                        </div>
+                      </div>
+                      <AdminIcon name="chevronRight" className={`w-4 h-4 ${isSelected ? 'text-slate-400' : 'text-transparent'}`} />
                     </button>
                   </li>
                 );

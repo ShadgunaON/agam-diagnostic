@@ -16,11 +16,11 @@ interface AuthContextType {
 
   sendOtp: (mobile: string) => Promise<boolean>;
   verifyOtp: (mobile: string, otp: string, registrationData?: Partial<UserProfile>) => Promise<{ success: boolean; isNewUser?: boolean }>;
-  updateProfile: (data: Partial<UserProfile>) => void;
-  skipProfile: () => void;
-  addPatient: (patient: Omit<PatientProfileItem, 'id'>) => void;
-  removePatient: (id: string) => void;
-  addAddress: (address: Omit<SavedAddressItem, 'id'>) => void;
+  updateProfile: (data: Partial<UserProfile>) => Promise<void>;
+  skipProfile: () => Promise<void>;
+  addPatient: (patient: Omit<PatientProfileItem, 'id'>) => Promise<void>;
+  removePatient: (id: string) => Promise<void>;
+  addAddress: (address: Omit<SavedAddressItem, 'id'>) => Promise<void>;
   logout: () => void;
 }
 
@@ -75,62 +75,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return result.isSuccess ? result.value : { success: false };
   };
 
-  const updateProfile = (data: Partial<UserProfile>) => {
+  const updateProfile = async (data: Partial<UserProfile>) => {
     if (!user) return;
-    const updatedUser: UserProfile = {
-      ...user,
-      ...data,
-      isProfileComplete: true,
-    };
-    saveUserToStateAndStorage(updatedUser);
+    const result = await authService.updateProfile(user.id, { ...data, isProfileComplete: true });
+    if (result.isSuccess) {
+      saveUserToStateAndStorage(result.value);
+    }
   };
 
-  const skipProfile = () => {
+  const skipProfile = async () => {
     if (!user) return;
-    const updatedUser: UserProfile = {
-      ...user,
-      isProfileComplete: false,
-    };
-    saveUserToStateAndStorage(updatedUser);
+    const result = await authService.updateProfile(user.id, { isProfileComplete: false });
+    if (result.isSuccess) {
+      saveUserToStateAndStorage(result.value);
+    }
   };
 
-  const addPatient = (patient: Omit<PatientProfileItem, 'id'>) => {
+  const addPatient = async (patient: Omit<PatientProfileItem, 'id'>) => {
     if (!user) return;
     const newPatientItem: PatientProfileItem = {
       ...patient,
       id: `pat_${Date.now()}`,
     };
-    const updatedUser: UserProfile = {
-      ...user,
+    const result = await authService.updateProfile(user.id, {
       savedPatients: [...user.savedPatients, newPatientItem],
-    };
-    saveUserToStateAndStorage(updatedUser);
+    });
+    if (result.isSuccess) {
+      saveUserToStateAndStorage(result.value);
+    }
   };
 
-  const removePatient = (id: string) => {
+  const removePatient = async (id: string) => {
     if (!user) return;
-    const updatedUser: UserProfile = {
-      ...user,
+    const result = await authService.updateProfile(user.id, {
       savedPatients: user.savedPatients.filter((p) => p.id !== id),
-    };
-    saveUserToStateAndStorage(updatedUser);
+    });
+    if (result.isSuccess) {
+      saveUserToStateAndStorage(result.value);
+    }
   };
 
-  const addAddress = (address: Omit<SavedAddressItem, 'id'>) => {
+  const addAddress = async (address: Omit<SavedAddressItem, 'id'>) => {
     if (!user) return;
     const newAddressItem: SavedAddressItem = {
       ...address,
       id: `addr_${Date.now()}`,
     };
-    const updatedUser: UserProfile = {
-      ...user,
+    const result = await authService.updateProfile(user.id, {
       address: address.addressLine,
       city: address.city,
       pincode: address.pincode,
       preferredAddress: `${address.addressLine}, ${address.city} - ${address.pincode}`,
       savedAddresses: [...user.savedAddresses, newAddressItem],
-    };
-    saveUserToStateAndStorage(updatedUser);
+    });
+    if (result.isSuccess) {
+      saveUserToStateAndStorage(result.value);
+    }
   };
 
   const logout = () => {

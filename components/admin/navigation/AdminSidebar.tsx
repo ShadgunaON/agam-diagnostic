@@ -33,6 +33,7 @@ const adminNavigation: NavigationGroup[] = [
       { title: 'Bookings', href: '/admin/bookings', icon: 'calendar', roles: ['ADMIN', 'STAFF', 'PHLEBOTOMIST'] },
       { title: 'Home Collections', href: '/admin/collections', icon: 'mapPin', roles: ['ADMIN', 'STAFF', 'PHLEBOTOMIST'] },
       { title: 'Patients', href: '/admin/patients', icon: 'users', roles: ['ADMIN', 'DOCTOR', 'STAFF'] },
+      { title: 'Ledger & Invoices', href: '/admin/invoices', icon: 'fileText', roles: ['ADMIN', 'STAFF'] },
       { title: 'Reports', href: '/admin/reports', icon: 'file', roles: ['ADMIN', 'DOCTOR', 'STAFF'] },
     ]
   },
