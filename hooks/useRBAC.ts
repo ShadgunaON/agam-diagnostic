@@ -97,7 +97,7 @@ export function useRBAC(): RBACState {
     return null;
   }, [staff, roles, user?.role]);
 
-  const roleId = role?.id || '';
+  const roleId = role?.id || (user?.role === 'admin' ? 'admin' : '');
 
   const hasPermission = useCallback(
     (moduleId: string, action: PermissionAction): boolean => {

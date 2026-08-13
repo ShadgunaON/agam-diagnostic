@@ -41,8 +41,11 @@ export class PermissionEvaluator {
     permissionsMap: Record<string, ModuleDataModel[]>
   ): string[] {
     if (roleId === 'admin') {
-      // Admin has access to all modules in the map
-      const allModuleIds = new Set<string>();
+      // Admin has access to all modules in the map, plus standard fallbacks if map is empty/corrupt
+      const allModuleIds = new Set<string>([
+        'analytics', 'orders', 'collections', 'patients', 'reports',
+        'invoices', 'reviews', 'staff', 'blogs', 'settings'
+      ]);
       for (const modules of Object.values(permissionsMap)) {
         for (const m of modules) {
           allModuleIds.add(m.id);
