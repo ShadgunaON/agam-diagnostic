@@ -69,7 +69,8 @@ export default function CollectionsPage() {
       }
 
       if (staffRes.isSuccess && staffRes.value) {
-        const homeCollectionRoleIds = ['phleb', 'phleb_home'];
+        // Support both new role IDs and legacy role titles that might be stuck in the user's localStorage
+        const homeCollectionRoleIds = ['phleb', 'phleb_home', 'home collection agent', 'phlebotomist'];
         setPhlebotomists(staffRes.value.filter((s: StaffModel) => homeCollectionRoleIds.includes(s.role.toLowerCase())));
       }
 
