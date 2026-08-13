@@ -6,6 +6,7 @@ import { success, failure, Result } from '@/shared/result';
 export class CollectionService {
   private bookingService?: import('./BookingService').BookingService;
   private reportsService?: import('./ReportsService').ReportsService;
+  private notificationService?: import('./NotificationService').NotificationService;
 
   constructor(private readonly repository: ICollectionRepository) {}
 
@@ -15,6 +16,10 @@ export class CollectionService {
 
   setReportsService(service: import('./ReportsService').ReportsService) {
     this.reportsService = service;
+  }
+
+  setNotificationService(service: import('./NotificationService').NotificationService) {
+    this.notificationService = service;
   }
 
   async getAll() {
@@ -66,6 +71,10 @@ export class CollectionService {
 
     if (res.isSuccess && res.value.bookingId && this.bookingService) {
       await this.bookingService.updateBookingStatus(res.value.bookingId, 'Assigned');
+    }
+
+    if (res.isSuccess && this.notificationService) {
+      await this.notificationService.createAssignmentNotification(staffId, res.value);
     }
 
     return res;

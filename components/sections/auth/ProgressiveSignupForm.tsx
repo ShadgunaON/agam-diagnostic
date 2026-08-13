@@ -30,7 +30,6 @@ export function ProgressiveSignupForm() {
   useEffect(() => {
     if (searchParams.get('reset') === 'true') {
       sessionStorage.clear();
-      localStorage.clear();
       router.replace('/login');
     }
   }, [searchParams, router]);

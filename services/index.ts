@@ -13,6 +13,8 @@ import {
   invoiceRepository,
   reviewRepository
 } from '@/repositories/registry';
+import { MockReportsRepository } from '@/repositories/mock/ReportsRepository';
+import { MockNotificationRepository } from '@/repositories/mock/NotificationRepository';
 import { BlogService } from './BlogService';
 import { ServiceCatalogService } from './ServiceCatalogService';
 import { PackageService } from './PackageService';
@@ -30,7 +32,11 @@ import { PatientService } from './PatientService';
 import { InvoiceService } from './InvoiceService';
 
 import { GlobalSearchService } from './GlobalSearchService';
+import { NotificationService } from './NotificationService';
 import { PaymentService, MockPaymentProvider } from './PaymentService';
+
+const reportsRepo = new MockReportsRepository();
+const notificationRepo = new MockNotificationRepository();
 
 export const blogService = new BlogService(blogRepository);
 export const serviceCatalogService = new ServiceCatalogService(serviceRepository);
@@ -41,7 +47,8 @@ export const bookingService = new BookingService(bookingRepository, invoiceServi
 invoiceService.setBookingService(bookingService);
 export const reviewService = new ReviewService(reviewRepository, bookingRepository);
 
-export const reportsService = new ReportsService(reportsRepository);
+export const reportsService = new ReportsService(reportsRepo);
+export const notificationService = new NotificationService(notificationRepo);
 export const testCatalogService = new TestCatalogService(testRepository);
 export const collectionService = new CollectionService(collectionRepository);
 
@@ -49,6 +56,7 @@ export const collectionService = new CollectionService(collectionRepository);
 bookingService.setCollectionService(collectionService);
 collectionService.setBookingService(bookingService);
 collectionService.setReportsService(reportsService);
+collectionService.setNotificationService(notificationService);
 reportsService.setBookingService(bookingService);
 export const staffService = new StaffService(staffRepository);
 export const activityService = new ActivityService(activityRepository);

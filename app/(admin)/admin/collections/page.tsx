@@ -55,9 +55,10 @@ export default function CollectionsPage() {
   // Load tasks and staff from services
   React.useEffect(() => {
     loadTasks(async () => {
-      const [colRes, staffRes] = await Promise.all([
+      const [colRes, staffRes, rolesRes] = await Promise.all([
         collectionService.getAll(),
-        staffService.getAllStaff()
+        staffService.getAllStaff(),
+        staffService.getAllRoles()
       ]);
       
       if (colRes.isSuccess && colRes.value.length > 0) {
@@ -68,18 +69,21 @@ export default function CollectionsPage() {
         }
       }
 
-      if (staffRes.isSuccess && staffRes.value) {
-        // Support both new role IDs and legacy role titles that might be stuck in the user's localStorage
-        const homeCollectionRoleIds = ['phleb', 'phleb_home', 'home collection agent', 'phlebotomist'];
+      if (staffRes.isSuccess && staffRes.value && rolesRes.isSuccess && rolesRes.value) {
+        // Generic Role Eligibility: Find any roles configured with 'home_collection' scope
+        const homeCollectionRoleIds = rolesRes.value
+          .filter(r => r.scope === 'home_collection')
+          .map(r => r.id.toLowerCase());
+
         let matched = staffRes.value.filter((s: StaffModel) => homeCollectionRoleIds.includes(s.role.toLowerCase()));
         
-        // FAILSAFE FOR DEMO: If strict filtering yields 0 phlebotomists, fallback to showing ALL staff
-        // This prevents the user from being completely blocked if their local storage has mutated roles
+        // FAILSAFE FOR DEMO: If strict filtering yields 0 phlebotomists (due to legacy data), 
+        // fallback to showing ALL staff
         if (matched.length === 0 && staffRes.value.length > 0) {
           matched = staffRes.value;
         }
         
-        setPhlebotomists(matched);
+        setPhlebotomists(matched.filter(s => s.status !== 'On Leave'));
       }
 
       import('@/services').then(async ({ reportsService, bookingService }) => {
@@ -246,6 +250,35 @@ export default function CollectionsPage() {
   };
 
   // Mark En Route uses CollectionService.markEnRoute
+  const handleAutoAssign = async () => {
+    if (!activeTaskId || phlebotomists.length === 0) {
+      toast({ title: 'Error', description: 'No active task or available phlebotomists.', variant: 'danger' });
+      return;
+    }
+    
+    // Auto-assignment logic: find the phlebotomist with the fewest assigned tasks
+    // deterministic based on ID if there's a tie
+    const phlebotomistTasks = phlebotomists.map(p => {
+      const activeCount = tasks.filter(t => t.phlebotomistId === p.id && !['Completed', 'Cancelled'].includes(t.status)).length;
+      return { staff: p, count: activeCount };
+    });
+    
+    phlebotomistTasks.sort((a, b) => {
+      if (a.count !== b.count) return a.count - b.count;
+      return a.staff.id.localeCompare(b.staff.id);
+    });
+    
+    const selected = phlebotomistTasks[0].staff;
+    
+    executeAssign(async () => {
+      const res = await collectionService.assignPhlebotomist(activeTaskId, selected.id, selected.name);
+      if (res.isSuccess) {
+        setTasks(tasks.map(t => t.id === activeTaskId ? { ...t, ...res.value } : t));
+        toast({ title: 'Auto Assigned', description: `Task automatically assigned to ${selected.name}`, variant: 'success' });
+      }
+    });
+  };
+
   const handleMarkEnRoute = (taskId: string) => {
     executeCollect(async () => {
       const res = await collectionService.markEnRoute(taskId);
@@ -537,25 +570,39 @@ export default function CollectionsPage() {
                     </div>
                     {(activeTask.assignedTo === 'Unassigned' || activeTask.status === 'Unassigned') ? (
                       canAssign ? (
-                        <select
-                          disabled={isAssigning}
-                          onChange={(e) => handleAssign(e.target.value)}
-                          style={{ 
-                            backgroundColor: '#2563eb', 
-                            color: 'white', border: 'none', padding: '10px 20px', 
-                            borderRadius: '10px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', 
-                            boxShadow: '0 2px 4px rgba(37,99,235,0.2)',
-                            outline: 'none',
-                            appearance: 'none'
-                          }}
-                        >
+                        <div className="flex gap-2 items-center">
+                          <button 
+                            disabled={isAssigning}
+                            onClick={handleAutoAssign}
+                            style={{ 
+                              backgroundColor: '#f8fafc', color: '#0f172a', border: '1px solid #cbd5e1', 
+                              padding: '9px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 700, 
+                              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+                            }}
+                          >
+                            <AdminIcon name="activity" style={{ width: '14px', height: '14px' }} />
+                            Auto Assign
+                          </button>
+                          <select
+                            disabled={isAssigning}
+                            onChange={(e) => handleAssign(e.target.value)}
+                            style={{ 
+                              backgroundColor: '#2563eb', 
+                              color: 'white', border: 'none', padding: '10px 20px', 
+                              borderRadius: '10px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', 
+                              boxShadow: '0 2px 4px rgba(37,99,235,0.2)',
+                              outline: 'none',
+                              appearance: 'none'
+                            }}
+                          >
                           <option value="">
                             {phlebotomists.length === 0 ? "No Staff Found in System" : "Assign Phlebotomist"}
                           </option>
-                          {phlebotomists.map(p => (
-                            <option key={p.id} value={p.id}>{p.name}</option>
-                          ))}
-                        </select>
+                            {phlebotomists.map(p => (
+                              <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                          </select>
+                        </div>
                       ) : (
                         <div style={{ padding: '10px 20px', backgroundColor: '#fee2e2', color: '#ef4444', borderRadius: '10px', fontSize: '14px', fontWeight: 700 }}>
                           Pending Assignment
