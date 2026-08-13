@@ -71,7 +71,15 @@ export default function CollectionsPage() {
       if (staffRes.isSuccess && staffRes.value) {
         // Support both new role IDs and legacy role titles that might be stuck in the user's localStorage
         const homeCollectionRoleIds = ['phleb', 'phleb_home', 'home collection agent', 'phlebotomist'];
-        setPhlebotomists(staffRes.value.filter((s: StaffModel) => homeCollectionRoleIds.includes(s.role.toLowerCase())));
+        let matched = staffRes.value.filter((s: StaffModel) => homeCollectionRoleIds.includes(s.role.toLowerCase()));
+        
+        // FAILSAFE FOR DEMO: If strict filtering yields 0 phlebotomists, fallback to showing ALL staff
+        // This prevents the user from being completely blocked if their local storage has mutated roles
+        if (matched.length === 0 && staffRes.value.length > 0) {
+          matched = staffRes.value;
+        }
+        
+        setPhlebotomists(matched);
       }
 
       import('@/services').then(async ({ reportsService, bookingService }) => {
@@ -541,7 +549,9 @@ export default function CollectionsPage() {
                             appearance: 'none'
                           }}
                         >
-                          <option value="">Assign Phlebotomist</option>
+                          <option value="">
+                            {phlebotomists.length === 0 ? "No Staff Found in System" : "Assign Phlebotomist"}
+                          </option>
                           {phlebotomists.map(p => (
                             <option key={p.id} value={p.id}>{p.name}</option>
                           ))}
