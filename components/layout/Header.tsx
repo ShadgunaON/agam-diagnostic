@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Navbar } from './Navbar';
 import { MobileNavigation } from './MobileNavigation';
@@ -9,18 +10,30 @@ import { Container } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { GlobalSearch } from '@/components/common/GlobalSearch';
-import { CartDrawer } from '@/components/cart/CartDrawer';
 
 export interface HeaderProps {
   className?: string;
 }
 
 export function Header({ className = '' }: HeaderProps) {
+  const router = useRouter();
   const { user, isAuthenticated, logout } = useAuth();
-  const { itemCount } = useCart();
+  const { itemCount, clearCart } = useCart();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <>
@@ -72,21 +85,20 @@ export function Header({ className = '' }: HeaderProps) {
             </button>
 
             {/* Cart Icon Trigger */}
-            <button 
-              type="button"
-              className="btn btn--outline btn--sm cursor-pointer !px-2 sm:!px-3 !py-1.5 sm:!py-2 flex items-center gap-1 sm:gap-2 !bg-transparent !border-primary !text-primary" 
+            <Link 
+              href="/book"
+              className="btn btn--outline btn--sm cursor-pointer !px-2 sm:!px-3 !py-1.5 sm:!py-2 flex items-center gap-1 sm:gap-2 !bg-transparent !border-primary !text-primary no-underline" 
               title="View Booking Cart"
-              onClick={() => setIsCartOpen(true)}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px]"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
               <span className="bg-accent text-white rounded-full w-[18px] h-[18px] sm:w-[20px] sm:h-[20px] inline-flex items-center justify-center text-[10px] sm:text-[11px] font-bold">
                 {itemCount}
               </span>
-            </button>
+            </Link>
 
             {/* Auth Menu / User Greeting */}
             {isAuthenticated && user ? (
-              <div className="relative">
+              <div className="relative" ref={userMenuRef}>
                 <button
                   type="button"
                   className="flex items-center gap-1 sm:gap-2 text-sm font-semibold text-primary bg-bg-alt hover:bg-muted/40 px-2 sm:px-3 py-1.5 rounded-full border border-border transition-all cursor-pointer"
@@ -121,6 +133,16 @@ export function Header({ className = '' }: HeaderProps) {
                     >
                       My Bookings
                     </Link>
+                    {(user.role === 'admin' || user.role === 'doctor' || user.role === 'lab_tech') && (
+                      <Link
+                        href="/admin/bookings"
+                        className="user-menu-dropdown__link text-primary font-bold bg-blue-50/50 hover:bg-blue-100/50 transition-colors"
+                        onClick={() => setShowUserMenu(false)}
+                        style={{ borderLeft: '3px solid var(--color-primary)' }}
+                      >
+                        Admin Portal →
+                      </Link>
+                    )}
                     <Link
                       href="/reports"
                       className="user-menu-dropdown__link"
@@ -132,8 +154,10 @@ export function Header({ className = '' }: HeaderProps) {
                       type="button"
                       className="user-menu-dropdown__btn"
                       onClick={() => {
+                        clearCart();
                         logout();
                         setShowUserMenu(false);
+                        router.push('/');
                       }}
                     >
                       Sign Out
@@ -162,7 +186,6 @@ export function Header({ className = '' }: HeaderProps) {
       </nav>
 
       <GlobalSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
-      <CartDrawer isOpen={isCartOpen} onClose={setIsCartOpen} />
     </>
   );
 }

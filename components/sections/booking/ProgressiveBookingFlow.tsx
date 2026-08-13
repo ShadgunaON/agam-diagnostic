@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { bookingService } from '@/services';
+import { bookingService, invoiceService } from '@/services';
 
 type BookingStep = 1 | 2 | 3 | 4;
 type LocationType = 'home' | 'lab';
@@ -17,6 +17,7 @@ export function ProgressiveBookingFlow() {
   
   // Booking State
   const [patientType, setPatientType] = useState<PatientType>('myself');
+  const [selectedFamilyMemberId, setSelectedFamilyMemberId] = useState<string>('');
   const [locationType, setLocationType] = useState<LocationType>('home');
   const [address, setAddress] = useState('');
   const [date, setDate] = useState('');
@@ -31,13 +32,20 @@ export function ProgressiveBookingFlow() {
     setIsSubmitting(true);
     setError(null);
 
+    const familyMember = patientType === 'family' ? user?.savedPatients.find(p => p.id === selectedFamilyMemberId) : null;
+    const finalPatientId = patientType === 'myself' ? user?.id : familyMember?.id;
+    const finalPatientName = patientType === 'myself' ? (user?.fullName || 'Guest Patient') : (familyMember?.name || 'Family Member');
+    const finalPatientAge = patientType === 'myself' ? parseInt(user?.dobOrAge || '30', 10) || 30 : parseInt(familyMember?.age || '30', 10) || 30;
+    const finalPatientGender = patientType === 'myself' ? (user?.gender || 'Not Specified') : (familyMember?.gender || 'Not Specified');
+
     const bookingPayload = {
+      patientId: finalPatientId,
       patient: {
-        name: patientType === 'myself' ? (user?.fullName || 'Guest Patient') : 'Family Member',
+        name: finalPatientName,
         phone: user?.mobile || '0000000000',
         email: user?.email || 'guest@example.com',
-        age: parseInt(user?.dobOrAge || '30', 10) || 30,
-        gender: user?.gender || 'Not Specified'
+        age: finalPatientAge,
+        gender: finalPatientGender
       },
       collection: {
         type: locationType === 'home' ? 'Home Collection' as const : 'Lab Visit' as const,
@@ -63,14 +71,26 @@ export function ProgressiveBookingFlow() {
 
     if (result.isSuccess && result.value) {
       clearCart();
-      router.push(`/book/success/${result.value.id}`);
+      const invRes = await invoiceService.getAll();
+      const invoice = invRes.isSuccess ? invRes.value.find(i => i.bookingId === result.value?.id) : null;
+      if (invoice) {
+        router.push(`/payment/${invoice.id}`);
+      } else {
+        router.push(`/book/success/${result.value.id}`);
+      }
     } else {
       const errorMsg = !result.isSuccess ? result.error?.message : "Failed to create booking.";
       setError(errorMsg || "Failed to create booking. Please try again.");
     }
   };
 
-  const handleNext = () => setCurrentStep(prev => Math.min(prev + 1, 4) as BookingStep);
+  const handleNext = () => {
+    if (currentStep === 1 && !user) {
+      router.push('/login?returnUrl=/book');
+      return;
+    }
+    setCurrentStep(prev => Math.min(prev + 1, 4) as BookingStep);
+  };
   const handleBack = () => setCurrentStep(prev => Math.max(prev - 1, 1) as BookingStep);
 
   const isCartEmpty = items.length === 0;
@@ -208,6 +228,20 @@ export function ProgressiveBookingFlow() {
                         Family Member
                       </button>
                     </div>
+                    {patientType === 'family' && (
+                      <div style={{ width: '100%', marginTop: '8px' }}>
+                        <select 
+                          value={selectedFamilyMemberId}
+                          onChange={(e) => setSelectedFamilyMemberId(e.target.value)}
+                          style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--color-border)', fontSize: '14px', outline: 'none' }}
+                        >
+                          <option value="">-- Select Family Member --</option>
+                          {user?.savedPatients.filter(p => p.relation !== 'Myself').map(member => (
+                            <option key={member.id} value={member.id}>{member.name} ({member.relation})</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
 
                   {/* LOCATION SELECTION - Compact Square Bento Cards */}
@@ -288,12 +322,12 @@ export function ProgressiveBookingFlow() {
 
                   <button 
                     onClick={handleNext} 
-                    disabled={locationType === 'home' && !address}
+                    disabled={(locationType === 'home' && !address) || (patientType === 'family' && !selectedFamilyMemberId)}
                     style={{ 
                       width: '100%', background: 'var(--color-dark)', color: '#fff', padding: '16px', borderRadius: '100px', border: 'none', 
-                      fontSize: '15px', fontWeight: 600, cursor: (locationType === 'home' && !address) ? 'not-allowed' : 'pointer', 
-                      opacity: (locationType === 'home' && !address) ? 0.5 : 1, transition: 'all 0.3s',
-                      boxShadow: (locationType === 'home' && !address) ? 'none' : '0 4px 12px rgba(11,27,61,0.15)'
+                      fontSize: '15px', fontWeight: 600, cursor: ((locationType === 'home' && !address) || (patientType === 'family' && !selectedFamilyMemberId)) ? 'not-allowed' : 'pointer', 
+                      opacity: ((locationType === 'home' && !address) || (patientType === 'family' && !selectedFamilyMemberId)) ? 0.5 : 1, transition: 'all 0.3s',
+                      boxShadow: ((locationType === 'home' && !address) || (patientType === 'family' && !selectedFamilyMemberId)) ? 'none' : '0 4px 12px rgba(11,27,61,0.15)'
                     }}
                   >
                     Select Time Slot &nbsp;→
@@ -357,7 +391,9 @@ export function ProgressiveBookingFlow() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '14px', color: 'var(--color-dark)' }}>
                       <div className="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-1 sm:gap-2">
                         <span style={{ color: 'var(--color-text-light)', fontWeight: 500 }}>Patient:</span>
-                        <span style={{ fontWeight: 600 }}>{patientType === 'myself' ? 'Self' : 'Family Member'}</span>
+                        <span style={{ fontWeight: 600 }}>
+                          {patientType === 'myself' ? 'Self' : user?.savedPatients.find(p => p.id === selectedFamilyMemberId)?.name || 'Family Member'}
+                        </span>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-1 sm:gap-2">
                         <span style={{ color: 'var(--color-text-light)', fontWeight: 500 }}>Date & Time:</span>

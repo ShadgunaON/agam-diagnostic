@@ -4,14 +4,16 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { AdminIcon, AdminIconName } from './AdminIcons';
-
-type Role = 'ADMIN' | 'DOCTOR' | 'STAFF' | 'PHLEBOTOMIST';
+import { useRBAC } from '@/hooks/useRBAC';
+import { useAuth } from '@/context/AuthContext';
+import { sidebarModuleMap } from '@/lib/rbac/routePermissions';
 
 interface NavigationItem {
   title: string;
   href: string;
   icon: AdminIconName;
-  roles: Role[];
+  /** The RBAC module ID required to view this item */
+  moduleId: string;
 }
 
 interface NavigationGroup {
@@ -23,44 +25,40 @@ const adminNavigation: NavigationGroup[] = [
   {
     title: 'Overview',
     items: [
-      { title: 'Dashboard', href: '/admin', icon: 'layoutDashboard', roles: ['ADMIN', 'DOCTOR', 'STAFF'] },
-      { title: 'Analytics', href: '/admin/analytics', icon: 'barChart', roles: ['ADMIN'] },
+      { title: 'Dashboard', href: '/admin', icon: 'layoutDashboard', moduleId: 'analytics' },
+      { title: 'Analytics', href: '/admin/analytics', icon: 'barChart', moduleId: 'analytics' },
     ]
   },
   {
     title: 'Operations',
     items: [
-      { title: 'Bookings', href: '/admin/bookings', icon: 'calendar', roles: ['ADMIN', 'STAFF', 'PHLEBOTOMIST'] },
-      { title: 'Home Collections', href: '/admin/collections', icon: 'mapPin', roles: ['ADMIN', 'STAFF', 'PHLEBOTOMIST'] },
-      { title: 'Patients', href: '/admin/patients', icon: 'users', roles: ['ADMIN', 'DOCTOR', 'STAFF'] },
-      { title: 'Ledger & Invoices', href: '/admin/invoices', icon: 'fileText', roles: ['ADMIN', 'STAFF'] },
-      { title: 'Reports', href: '/admin/reports', icon: 'file', roles: ['ADMIN', 'DOCTOR', 'STAFF'] },
+      { title: 'Bookings', href: '/admin/bookings', icon: 'calendar', moduleId: 'orders' },
+      { title: 'Home Collections', href: '/admin/collections', icon: 'mapPin', moduleId: 'collections' },
+      { title: 'Patients', href: '/admin/patients', icon: 'users', moduleId: 'patients' },
+      { title: 'Ledger & Invoices', href: '/admin/invoices', icon: 'fileText', moduleId: 'invoices' },
+      { title: 'Reports', href: '/admin/reports', icon: 'file', moduleId: 'reports' },
+      { title: 'Reviews', href: '/admin/reviews', icon: 'fileText', moduleId: 'reviews' },
     ]
   },
   {
     title: 'Management',
     items: [
-      { title: 'Staff & Roles', href: '/admin/staff', icon: 'userCog', roles: ['ADMIN'] },
-      { title: 'Content / Blogs', href: '/admin/blogs', icon: 'fileText', roles: ['ADMIN'] },
+      { title: 'Staff & Roles', href: '/admin/staff', icon: 'userCog', moduleId: 'staff' },
+      { title: 'Content / Blogs', href: '/admin/blogs', icon: 'fileText', moduleId: 'blogs' },
     ]
   },
   {
     title: 'System',
     items: [
-      { title: 'Settings', href: '/admin/settings', icon: 'settings', roles: ['ADMIN'] },
+      { title: 'Settings', href: '/admin/settings', icon: 'settings', moduleId: 'settings' },
     ]
   }
 ];
 
 export function AdminSidebar({ isCollapsed = false, setIsCollapsed = () => {} }: { isCollapsed?: boolean, setIsCollapsed?: (val: boolean) => void }) {
   const pathname = usePathname();
-
-  // Mock role for now - replace with actual auth state later
-  const userRole: Role = 'ADMIN';
-
-  const hasPermission = (userRole: Role, allowedRoles: Role[]) => {
-    return allowedRoles.includes(userRole);
-  };
+  const { user, logout } = useAuth();
+  const { accessibleModules, role, isLoading, isAdmin } = useRBAC();
 
   return (
     <aside
@@ -93,7 +91,10 @@ export function AdminSidebar({ isCollapsed = false, setIsCollapsed = () => {} }:
         style={{ padding: '8px 12px 12px 12px', overflowY: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {adminNavigation.map((group) => {
-          const visibleItems = group.items.filter(item => hasPermission(userRole as Role, item.roles));
+          // Filter items by RBAC accessible modules
+          const visibleItems = isLoading
+            ? [] // Don't show items while loading
+            : group.items.filter(item => isAdmin || accessibleModules.includes(item.moduleId));
           if (visibleItems.length === 0) return null;
 
           return (
@@ -160,14 +161,24 @@ export function AdminSidebar({ isCollapsed = false, setIsCollapsed = () => {} }:
 
       {/* Profile Section (Bottom) */}
       <div className="shrink-0 mt-auto border-t border-white/5" style={{ padding: '16px' }}>
-        <button className={`w-full flex items-center hover:bg-white/5 transition-colors group ${isCollapsed ? 'justify-center' : ''}`} style={{ padding: '8px', borderRadius: '12px', gap: '16px' }}>
+        <button 
+          onClick={logout}
+          className={`w-full flex items-center hover:bg-white/5 transition-colors group ${isCollapsed ? 'justify-center' : ''}`} 
+          style={{ padding: '8px', borderRadius: '12px', gap: '16px' }}
+        >
           <div className="bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700" style={{ width: '40px', height: '40px', borderRadius: '50%' }}>
-            <span className="text-slate-300 text-sm font-medium">AS</span>
+            <span className="text-slate-300 text-sm font-medium">
+              {user?.fullName?.substring(0, 2).toUpperCase() || 'ST'}
+            </span>
           </div>
           {!isCollapsed && (
             <div className="flex-1 flex flex-col items-start min-w-0">
-              <span className="font-medium !text-white truncate w-full text-left" style={{ fontSize: '14px' }}>Admin Staff</span>
-              <span className="!text-slate-500 truncate w-full text-left" style={{ fontSize: '12px' }}>View Profile</span>
+              <span className="font-medium !text-white truncate w-full text-left" style={{ fontSize: '14px' }}>
+                {user?.fullName || 'Staff'}
+              </span>
+              <span className="!text-slate-500 truncate w-full text-left" style={{ fontSize: '12px' }}>
+                {role?.title || user?.role || 'Staff'}
+              </span>
             </div>
           )}
         </button>

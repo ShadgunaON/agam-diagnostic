@@ -1,23 +1,23 @@
 import { IInvoiceRepository } from '@/domains/invoice/repository';
 import { InvoiceModel } from '@/domains/invoice/model';
 import { Result, success, failure } from '@/shared/result';
-import { LocalStorageAdapter } from '@/lib/storage/LocalStorageAdapter';
+import { SharedMockAdapter } from '@/lib/storage/SharedMockAdapter';
 
 export class MockInvoiceRepository implements IInvoiceRepository {
-  private adapter: LocalStorageAdapter<InvoiceModel[]>;
+  private adapter: SharedMockAdapter<InvoiceModel[]>;
 
   constructor() {
-    this.adapter = new LocalStorageAdapter<InvoiceModel[]>('mock_invoices');
+    this.adapter = new SharedMockAdapter<InvoiceModel[]>('mock_invoices');
   }
 
   async getAll(): Promise<Result<InvoiceModel[]>> {
-    const invoices = this.adapter.load() || [];
+    const invoices = (await this.adapter.load()) || [];
     invoices.sort((a: InvoiceModel, b: InvoiceModel) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     return success(invoices);
   }
 
   async getById(id: string): Promise<Result<InvoiceModel>> {
-    const invoices = this.adapter.load() || [];
+    const invoices = (await this.adapter.load()) || [];
     const invoice = invoices.find((i: InvoiceModel) => i.id === id);
     if (!invoice) return failure(new Error('Invoice not found'));
     return success(invoice);
@@ -34,14 +34,14 @@ export class MockInvoiceRepository implements IInvoiceRepository {
       updatedAt: now
     };
     
-    const invoices = this.adapter.load() || [];
+    const invoices = (await this.adapter.load()) || [];
     invoices.push(newInvoice);
-    this.adapter.save(invoices);
+    await this.adapter.save(invoices);
     return success(newInvoice);
   }
 
   async updateStatus(id: string, status: InvoiceModel['paymentStatus']): Promise<Result<InvoiceModel>> {
-    const invoices = this.adapter.load() || [];
+    const invoices = (await this.adapter.load()) || [];
     const index = invoices.findIndex((i: InvoiceModel) => i.id === id);
     if (index === -1) return failure(new Error('Invoice not found'));
     
@@ -52,12 +52,12 @@ export class MockInvoiceRepository implements IInvoiceRepository {
     };
     
     invoices[index] = updated;
-    this.adapter.save(invoices);
+    await this.adapter.save(invoices);
     return success(updated);
   }
 
   async update(id: string, updates: Partial<InvoiceModel>): Promise<Result<InvoiceModel>> {
-    const invoices = this.adapter.load() || [];
+    const invoices = (await this.adapter.load()) || [];
     const index = invoices.findIndex((i: InvoiceModel) => i.id === id);
     if (index === -1) return failure(new Error('Invoice not found'));
     
@@ -68,7 +68,7 @@ export class MockInvoiceRepository implements IInvoiceRepository {
     };
     
     invoices[index] = updated;
-    this.adapter.save(invoices);
+    await this.adapter.save(invoices);
     return success(updated);
   }
 }

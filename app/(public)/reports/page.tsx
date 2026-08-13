@@ -6,12 +6,14 @@ import { AuthGuard } from '@/components/common';
 import { reportsService } from '@/services';
 import { ReportTaskModel } from '@/domains/reports/model';
 import { Button } from '@/components/ui';
+import { ReportPreviewModal } from '@/components/shared/ReportPreviewModal';
 
 export default function ReportsPage() {
   const { isAuthenticated, user } = useAuth();
   
   const [reports, setReports] = useState<ReportTaskModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [previewReport, setPreviewReport] = useState<ReportTaskModel | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated || !user) return;
@@ -24,8 +26,7 @@ export default function ReportsPage() {
           const validIds = [user.id, ...familyIds];
           
           const userReports = result.value.filter(r => 
-            validIds.includes(r.patientId || '') || 
-            validIds.includes(r.patient.id)
+            (validIds.includes(r.patientId || '') || validIds.includes(r.patient.id))
           );
           
           setReports(userReports);
@@ -95,12 +96,19 @@ export default function ReportsPage() {
                 
                 <div className="flex flex-col gap-2 min-w-[140px]">
                   {report.status === 'Published' ? (
-                    <button className="w-full text-center py-2 px-4 bg-primary text-white text-sm font-bold rounded-full hover:bg-primary/90 transition-colors">
-                      Download PDF
+                    <button 
+                      onClick={() => setPreviewReport(report)}
+                      className="w-full text-center py-2 px-4 bg-primary text-white text-sm font-bold rounded-full hover:bg-primary/90 transition-colors"
+                    >
+                      View Report
+                    </button>
+                  ) : report.status === 'Processing' ? (
+                    <button disabled className="w-full text-center py-2 px-4 bg-bg-alt text-muted-foreground text-sm font-bold rounded-full cursor-not-allowed">
+                      Not Downloadable
                     </button>
                   ) : (
                     <button disabled className="w-full text-center py-2 px-4 bg-bg-alt text-muted-foreground text-sm font-bold rounded-full cursor-not-allowed">
-                      Pending
+                      Not Final
                     </button>
                   )}
                 </div>
@@ -109,6 +117,13 @@ export default function ReportsPage() {
           </div>
         )}
       </div>
+      
+      {previewReport && (
+        <ReportPreviewModal 
+          report={previewReport} 
+          onClose={() => setPreviewReport(null)} 
+        />
+      )}
     </AuthGuard>
   );
 }

@@ -25,6 +25,7 @@ export interface UserProfile {
   gender?: 'Male' | 'Female' | 'Other';
   dobOrAge?: string;
   role: UserRole;
+  staffId?: string;
   address?: string;
   city?: string;
   state?: string;

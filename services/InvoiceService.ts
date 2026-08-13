@@ -4,7 +4,13 @@ import { BookingModel } from '@/domains/booking/model';
 import { Result, success, failure } from '@/shared/result';
 
 export class InvoiceService {
+  private bookingService?: import('./BookingService').BookingService;
+
   constructor(private readonly repository: IInvoiceRepository) {}
+
+  setBookingService(service: import('./BookingService').BookingService) {
+    this.bookingService = service;
+  }
 
   async getAll() {
     return this.repository.getAll();
@@ -66,11 +72,17 @@ export class InvoiceService {
       return failure(new Error('Invoice is already paid'));
     }
 
-    return this.repository.update(invoiceId, {
+    const updateRes = await this.repository.update(invoiceId, {
       paymentStatus: 'Paid',
       paymentMethod: method,
       paidAt: new Date().toISOString(),
       receivedBy: staffId
     });
+
+    if (updateRes.isSuccess && this.bookingService && res.value.bookingId) {
+      await this.bookingService.updatePaymentStatus(res.value.bookingId, 'Paid');
+    }
+
+    return updateRes;
   }
 }

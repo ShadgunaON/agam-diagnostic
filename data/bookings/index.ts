@@ -60,7 +60,7 @@ export const mockBookings: Booking[] = [
       status: 'Paid',
       method: 'UPI'
     },
-    status: 'Sample Collected',
+    status: 'Completed',
     createdAt: 'Oct 10, 2026',
     timeline: [
       { id: 't1', title: 'Booking Created', timestamp: 'Oct 10, 2026 10:30 AM', status: 'success', actor: 'Patient' },

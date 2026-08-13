@@ -1,5 +1,8 @@
+"use client";
+
 import React from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useCart } from '@/context/CartContext';
 
 export interface PackageCardProps {
   title: string;
@@ -24,6 +27,24 @@ export interface PackageCardProps {
  * NO emerald-green theming. NO wellness gradients.
  */
 export function PackageCard({ title, price, description, category = 'Preventive Health', isPopular, className = '' }: PackageCardProps) {
+  const { addItem } = useCart();
+  const router = useRouter();
+
+  const handleBookNow = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const id = `pkg-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+    const item = {
+      id,
+      title,
+      price: parseInt(price.replace(/[^0-9]/g, ''), 10) || 999,
+      type: 'package' as const,
+      category,
+      slug: id
+    };
+    addItem(item);
+    router.push('/book');
+  };
+
   return (
     <div className={`card--package fade-in ${className}`}>
       {isPopular && <div className="card--package__badge">Most Popular</div>}
@@ -32,7 +53,7 @@ export function PackageCard({ title, price, description, category = 'Preventive 
       <p className="card--package__desc">{description}</p>
       <div className="card--package__footer">
         <div className="card--package__price">{price}</div>
-        <Link href="/book" className="card--package__btn">Book Now</Link>
+        <button type="button" onClick={handleBookNow} className="card--package__btn">Book Now</button>
       </div>
     </div>
   );

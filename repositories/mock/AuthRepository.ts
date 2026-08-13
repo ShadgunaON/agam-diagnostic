@@ -28,6 +28,76 @@ export const PRESEEDED_EXISTING_USER: UserProfile = {
   ],
 };
 
+export const ADMIN_USER: UserProfile = {
+  id: 'usr_admin_1',
+  fullName: 'Admin User',
+  mobile: '9999999999',
+  email: 'admin@agamdiagnostics.com',
+  role: 'admin',
+  staffId: 'EMP-001',
+  isProfileComplete: true,
+  savedPatients: [],
+  savedAddresses: [],
+};
+
+// Demo Staff: Phlebotomist (linked to EMP-002 in staff data)
+export const PHLEBOTOMIST_USER: UserProfile = {
+  id: 'usr_phleb_1',
+  fullName: 'Sunita Rao',
+  mobile: '1111111111',
+  email: 'sunita.r@agam.com',
+  role: 'lab_tech',
+  staffId: 'EMP-002',
+  isProfileComplete: true,
+  savedPatients: [],
+  savedAddresses: [],
+};
+
+// Demo Staff: Lab Technician (linked to EMP-003 in staff data)
+export const LAB_TECH_USER: UserProfile = {
+  id: 'usr_labtech_1',
+  fullName: 'Karan Malhotra',
+  mobile: '2222222222',
+  email: 'karan.m@agam.com',
+  role: 'lab_tech',
+  staffId: 'EMP-003',
+  isProfileComplete: true,
+  savedPatients: [],
+  savedAddresses: [],
+};
+
+export const PHLEBOTOMIST_USER_2: UserProfile = {
+  id: 'usr_phleb_2',
+  fullName: 'Ramesh Singh',
+  mobile: '3333333333',
+  email: 'ramesh.s@agam.com',
+  role: 'lab_tech',
+  staffId: 'EMP-005',
+  isProfileComplete: true,
+  savedPatients: [],
+  savedAddresses: [],
+};
+
+export const LAB_TECH_USER_2: UserProfile = {
+  id: 'usr_labtech_2',
+  fullName: 'Vikash Kumar',
+  mobile: '4444444444',
+  email: 'vikash.k@agam.com',
+  role: 'lab_tech',
+  staffId: 'EMP-007',
+  isProfileComplete: true,
+  savedPatients: [],
+  savedAddresses: [],
+};
+
+const memoryUsers: Map<string, UserProfile> = new Map();
+memoryUsers.set(PRESEEDED_EXISTING_USER.id, PRESEEDED_EXISTING_USER);
+memoryUsers.set(ADMIN_USER.id, ADMIN_USER);
+memoryUsers.set(PHLEBOTOMIST_USER.id, PHLEBOTOMIST_USER);
+memoryUsers.set(LAB_TECH_USER.id, LAB_TECH_USER);
+memoryUsers.set(PHLEBOTOMIST_USER_2.id, PHLEBOTOMIST_USER_2);
+memoryUsers.set(LAB_TECH_USER_2.id, LAB_TECH_USER_2);
+
 export class MockAuthRepository implements IAuthRepository {
   async sendOtp(_mobile: string): Promise<Result<boolean>> {
     return success(true);
@@ -38,8 +108,10 @@ export class MockAuthRepository implements IAuthRepository {
       return success({ success: false });
     }
 
-    if (mobile === '9876543210' || mobile === PRESEEDED_EXISTING_USER.mobile) {
-      return success({ success: true, isNewUser: false, user: PRESEEDED_EXISTING_USER });
+    // Check all preseeded users by mobile number
+    const preseededUser = Array.from(memoryUsers.values()).find(u => u.mobile === mobile);
+    if (preseededUser) {
+      return success({ success: true, isNewUser: false, user: preseededUser });
     }
 
     const newUser: UserProfile = {
@@ -65,20 +137,19 @@ export class MockAuthRepository implements IAuthRepository {
       });
     }
 
+    memoryUsers.set(newUser.id, newUser);
     return success({ success: true, isNewUser: true, user: newUser });
   }
 
   async updateProfile(userId: string, data: Partial<UserProfile>): Promise<Result<UserProfile>> {
-    // In a real app this would query the DB. We just mock by returning the data merged (mock implementation).
-    // Usually the context handles merging for mock. We'll simulate success.
-    if (userId === PRESEEDED_EXISTING_USER.id) {
-      Object.assign(PRESEEDED_EXISTING_USER, data);
-      return success(PRESEEDED_EXISTING_USER);
+    const memUser = memoryUsers.get(userId);
+    if (memUser) {
+      Object.assign(memUser, data);
+      return success(memUser);
     }
     
-    // For newly created users not strictly in the PRESEEDED object:
-    // we just return what was passed to us as a success, since the Context maintains local state.
     const mockUpdatedUser = { id: userId, role: 'patient', ...data } as UserProfile;
+    memoryUsers.set(userId, mockUpdatedUser);
     return success(mockUpdatedUser);
   }
 }

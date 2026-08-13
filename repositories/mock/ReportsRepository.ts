@@ -2,25 +2,25 @@ import { IReportsRepository } from '@/domains/reports/repository';
 import { ReportsModel, ReportTaskModel } from '@/domains/reports/model';
 import { Result, success, failure } from '@/shared/result';
 import { mockReportTasks } from '@/data/reports';
-import { LocalStorageAdapter } from '@/lib/storage/LocalStorageAdapter';
+import { SharedMockAdapter } from '@/lib/storage/SharedMockAdapter';
 
 export class MockReportsRepository implements IReportsRepository {
-  private adapter: LocalStorageAdapter<ReportTaskModel[]>;
+  private adapter: SharedMockAdapter<ReportTaskModel[]>;
 
   constructor() {
-    this.adapter = new LocalStorageAdapter<ReportTaskModel[]>('agam_reports');
+    this.adapter = new SharedMockAdapter<ReportTaskModel[]>('agam_reports');
   }
 
-  private getTasks(): ReportTaskModel[] {
-    const loaded = this.adapter.load();
+  private async getTasks(): Promise<ReportTaskModel[]> {
+    const loaded = await this.adapter.load();
     if (loaded && loaded.length > 0) {
       return loaded;
     }
     return [...mockReportTasks];
   }
 
-  private saveTasks(tasks: ReportTaskModel[]): void {
-    this.adapter.save(tasks);
+  private async saveTasks(tasks: ReportTaskModel[]): Promise<void> {
+    await this.adapter.save(tasks);
   }
 
   async getById(_id: string): Promise<Result<ReportsModel>> {
@@ -41,17 +41,24 @@ export class MockReportsRepository implements IReportsRepository {
   }
 
   async getAllTasks(): Promise<Result<ReportTaskModel[]>> {
-    return success(this.getTasks());
+    return success(await this.getTasks());
   }
 
   async updateStatus(id: string, status: ReportTaskModel['status']): Promise<Result<ReportTaskModel>> {
-    const tasks = this.getTasks();
+    const tasks = await this.getTasks();
     const taskIndex = tasks.findIndex(t => t.id === id);
     if (taskIndex === -1) {
       return failure(new Error(`Report task not found: ${id}`));
     }
     tasks[taskIndex].status = status;
-    this.saveTasks(tasks);
+    await this.saveTasks(tasks);
     return success(tasks[taskIndex]);
+  }
+
+  async createTask(task: ReportTaskModel): Promise<Result<ReportTaskModel>> {
+    const tasks = await this.getTasks();
+    tasks.push(task);
+    await this.saveTasks(tasks);
+    return success(task);
   }
 }

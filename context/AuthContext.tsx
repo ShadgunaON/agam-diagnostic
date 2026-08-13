@@ -15,10 +15,11 @@ interface AuthContextType {
   isLoading: boolean;
 
   sendOtp: (mobile: string) => Promise<boolean>;
-  verifyOtp: (mobile: string, otp: string, registrationData?: Partial<UserProfile>) => Promise<{ success: boolean; isNewUser?: boolean }>;
+  verifyOtp: (mobile: string, otp: string, registrationData?: Partial<UserProfile>) => Promise<{ success: boolean; isNewUser?: boolean; user?: UserProfile }>;
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
   skipProfile: () => Promise<void>;
   addPatient: (patient: Omit<PatientProfileItem, 'id'>) => Promise<void>;
+  editPatient: (id: string, patient: Omit<PatientProfileItem, 'id'>) => Promise<void>;
   removePatient: (id: string) => Promise<void>;
   addAddress: (address: Omit<SavedAddressItem, 'id'>) => Promise<void>;
   logout: () => void;
@@ -67,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     mobile: string,
     otp: string,
     registrationData?: Partial<UserProfile>
-  ): Promise<{ success: boolean; isNewUser?: boolean }> => {
+  ): Promise<{ success: boolean; isNewUser?: boolean; user?: UserProfile }> => {
     const result = await authService.verifyOtp(mobile, otp, registrationData);
     if (result.isSuccess && result.value.success && result.value.user) {
       saveUserToStateAndStorage(result.value.user);
@@ -100,6 +101,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const result = await authService.updateProfile(user.id, {
       savedPatients: [...user.savedPatients, newPatientItem],
     });
+    if (result.isSuccess) {
+      saveUserToStateAndStorage(result.value);
+    }
+  };
+
+  const editPatient = async (id: string, patient: Omit<PatientProfileItem, 'id'>) => {
+    if (!user) return;
+    
+    const updatedPatients = user.savedPatients.map(p => 
+      p.id === id ? { ...patient, id } : p
+    );
+    
+    const result = await authService.updateProfile(user.id, {
+      savedPatients: updatedPatients,
+    });
+    
     if (result.isSuccess) {
       saveUserToStateAndStorage(result.value);
     }
@@ -150,6 +167,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateProfile,
         skipProfile,
         addPatient,
+        editPatient,
         removePatient,
         addAddress,
         logout,

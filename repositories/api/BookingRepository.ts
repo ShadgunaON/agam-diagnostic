@@ -31,4 +31,10 @@ export class ApiBookingRepository implements IBookingRepository {
     void status;
     return failure(new ServerError('Booking API not implemented'));
   }
+
+  async updatePaymentStatus(id: string, status: BookingModel['payment']['status']): Promise<Result<BookingModel>> {
+    void id;
+    void status;
+    return failure(new ServerError('Booking API not implemented'));
+  }
 }

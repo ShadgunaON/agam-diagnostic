@@ -16,6 +16,7 @@ export default function HighlyVisualizedStaffRoles() {
   const [staff, setStaff] = useState<StaffModel[]>([]);
   const [rolePermissions, setRolePermissions] = useState<Record<string, ModuleDataModel[]>>({});
   const { toast } = useToast();
+  const [pendingPermissions, setPendingPermissions] = useState<{roleId: string, moduleId: string, field: 'view'|'create'|'edit'|'del', value: boolean}[]>([]);
   
   const [activeRole, setActiveRole] = useState<string | null>(null);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
@@ -53,10 +54,13 @@ export default function HighlyVisualizedStaffRoles() {
   const currentModules = activeRole && rolePermissions[activeRole] ? rolePermissions[activeRole] : [];
 
   // ACTIONS
-  const handleTogglePermission = async (moduleId: string, field: 'view' | 'create' | 'edit' | 'del') => {
+  const handleTogglePermission = (moduleId: string, field: 'view' | 'create' | 'edit' | 'del') => {
     if (activeRole === 'admin' || !activeRole) return; 
     
-    // Optimistic UI Update
+    const currentValue = rolePermissions[activeRole]?.find(m => m.id === moduleId)?.permissions[0][field];
+    const newValue = !currentValue;
+
+    // Local state UI Update
     setRolePermissions(prev => {
       const newMap = { ...prev };
       const modules = [...newMap[activeRole]];
@@ -65,7 +69,7 @@ export default function HighlyVisualizedStaffRoles() {
       const newMod = { ...modules[modIndex] };
       const newPerm = { ...newMod.permissions[0] };
       
-      newPerm[field] = !newPerm[field];
+      newPerm[field] = newValue;
       newMod.permissions = [newPerm];
       modules[modIndex] = newMod;
       
@@ -73,9 +77,27 @@ export default function HighlyVisualizedStaffRoles() {
       return newMap;
     });
 
-    // Update backend (Service)
-    const currentValue = rolePermissions[activeRole]?.find(m => m.id === moduleId)?.permissions[0][field];
-    await staffService.updateRolePermissions(activeRole, moduleId, field, !currentValue);
+    // Queue change
+    setPendingPermissions(prev => {
+      const existing = prev.findIndex(p => p.roleId === activeRole && p.moduleId === moduleId && p.field === field);
+      if (existing >= 0) {
+        const next = [...prev];
+        next[existing] = { roleId: activeRole, moduleId, field, value: newValue };
+        return next;
+      }
+      return [...prev, { roleId: activeRole, moduleId, field, value: newValue }];
+    });
+  };
+
+  const handleSavePermissions = async () => {
+    if (pendingPermissions.length === 0) return;
+    
+    for (const change of pendingPermissions) {
+      await staffService.updateRolePermissions(change.roleId, change.moduleId, change.field, change.value);
+    }
+    
+    setPendingPermissions([]);
+    toast({ title: 'Permissions Saved', description: 'Matrix configuration has been updated successfully.', variant: 'success' });
   };
 
   const handleSendInvite = async () => {
@@ -269,11 +291,33 @@ export default function HighlyVisualizedStaffRoles() {
                   <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: 0 }}>CRUD Operations Matrix</h3>
                   <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0 0' }}>Configure granular access controls for {activeRoleInfo?.title}.</p>
                 </div>
-                {activeRole === 'admin' && (
+                {activeRole === 'admin' ? (
                   <div style={{ padding: '8px 16px', backgroundColor: '#eff6ff', color: '#2563eb', borderRadius: '10px', fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <AdminIcon name="info" style={{ width: '16px', height: '16px' }} />
                     System Admin is immutable
                   </div>
+                ) : (
+                  <button 
+                    onClick={handleSavePermissions}
+                    disabled={pendingPermissions.length === 0}
+                    style={{ 
+                      padding: '8px 16px', 
+                      backgroundColor: pendingPermissions.length > 0 ? '#2563eb' : '#cbd5e1', 
+                      color: '#ffffff', 
+                      borderRadius: '10px', 
+                      fontSize: '13px', 
+                      fontWeight: 700, 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '6px',
+                      cursor: pendingPermissions.length > 0 ? 'pointer' : 'not-allowed',
+                      border: 'none',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <AdminIcon name="check" style={{ width: '16px', height: '16px' }} />
+                    Save Changes
+                  </button>
                 )}
               </div>
 

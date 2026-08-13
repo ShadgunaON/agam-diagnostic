@@ -19,4 +19,8 @@ export class ApiReportsRepository implements IReportsRepository {
   async updateStatus(id: string, status: ReportTaskModel['status']): Promise<Result<ReportTaskModel>> {
     return failure(new ServerError('Reports API not implemented'));
   }
+
+  async createTask(task: ReportTaskModel): Promise<Result<ReportTaskModel>> {
+    return failure(new ServerError('Reports API not implemented'));
+  }
 }

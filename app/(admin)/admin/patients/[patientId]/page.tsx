@@ -355,15 +355,16 @@ export default function PatientProfilePage() {
             )}
           </AdminCard>
 
-          <AdminCard title="Home Collections" className="border border-slate-200 shadow-sm">
+          <AdminCard title="Collections & Visits" className="border border-slate-200 shadow-sm">
             {collections.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-slate-200">
                       <th className="py-2 text-[12px] font-bold text-slate-500 uppercase">Collection ID</th>
+                      <th className="py-2 text-[12px] font-bold text-slate-500 uppercase">Type</th>
                       <th className="py-2 text-[12px] font-bold text-slate-500 uppercase">Time</th>
-                      <th className="py-2 text-[12px] font-bold text-slate-500 uppercase">Address</th>
+                      <th className="py-2 text-[12px] font-bold text-slate-500 uppercase">Address / Location</th>
                       <th className="py-2 text-[12px] font-bold text-slate-500 uppercase">Status</th>
                     </tr>
                   </thead>
@@ -371,8 +372,9 @@ export default function PatientProfilePage() {
                     {collections.map(coll => (
                       <tr key={coll.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
                         <td className="py-3 text-[13px] font-semibold text-slate-800">{coll.id}</td>
+                        <td className="py-3 text-[13px] text-slate-600">{coll.type || 'Home Collection'}</td>
                         <td className="py-3 text-[13px] text-slate-600">{coll.time}</td>
-                        <td className="py-3 text-[13px] text-slate-600 truncate max-w-[200px]">{coll.address}</td>
+                        <td className="py-3 text-[13px] text-slate-600 truncate max-w-[200px]">{coll.address || 'In-Lab'}</td>
                         <td className="py-3">
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700">
                             {coll.status}
@@ -384,7 +386,7 @@ export default function PatientProfilePage() {
                 </table>
               </div>
             ) : (
-              <div className="py-8 text-center text-slate-500 text-[14px]">No home collections found for this patient.</div>
+              <div className="py-8 text-center text-slate-500 text-[14px]">No collections or visits found for this patient.</div>
             )}
           </AdminCard>
 

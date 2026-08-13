@@ -8,9 +8,10 @@ import { BlogService } from './BlogService';
 import { TestCatalogService } from './TestCatalogService';
 import { PackageService } from './PackageService';
 import { ServiceCatalogService } from './ServiceCatalogService';
+import { ReviewService } from './ReviewService';
 import { AdminIconName } from '@/components/admin/navigation/AdminIcons';
 
-export type GlobalSearchType = 'patient' | 'booking' | 'report' | 'collection' | 'blog' | 'test' | 'package' | 'service';
+export type GlobalSearchType = 'patient' | 'booking' | 'report' | 'collection' | 'blog' | 'test' | 'package' | 'service' | 'review';
 
 export type GlobalSearchResult = {
   id: string;
@@ -31,6 +32,7 @@ export class GlobalSearchService {
     private readonly testService: TestCatalogService,
     private readonly packageService: PackageService,
     private readonly serviceCatalog: ServiceCatalogService,
+    private readonly reviewService: ReviewService,
     private readonly staffService?: StaffService,
     private readonly invoiceService?: InvoiceService
   ) {}
@@ -237,6 +239,28 @@ export class GlobalSearchService {
           subtitle: `₹${i.total} • ${i.paymentStatus}`,
           href: `/admin/invoices/${i.id}`,
           icon: 'fileText' as AdminIconName
+        })));
+      }
+    }
+
+    // 11. Reviews
+    if (this.reviewService) {
+      const revRes = await this.reviewService.getAllReviews();
+      if (revRes.isSuccess) {
+        const matched = revRes.value.filter(r => 
+          this.normalizeMatch(q, r.id) || 
+          this.normalizeMatch(q, r.displayName) || 
+          this.normalizeMatch(q, r.bookingId) || 
+          this.normalizeMatch(q, r.comment) || 
+          this.normalizeMatch(q, r.status)
+        );
+        results.push(...matched.map(r => ({
+          id: r.id,
+          type: 'review' as GlobalSearchType,
+          title: `Review ${r.id}`,
+          subtitle: `${r.displayName} • ${r.status}`,
+          href: `/admin/reviews`,
+          icon: 'messageSquare' as AdminIconName
         })));
       }
     }

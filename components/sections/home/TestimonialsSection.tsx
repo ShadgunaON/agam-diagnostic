@@ -1,8 +1,10 @@
-import React from 'react';
+"use client";
+
+import React, { useEffect, useState } from 'react';
 import { TestimonialData } from '@/data/home';
-import { Typography } from '@/components/ui';
-import { Section, Container, Grid } from '@/components/ui';
 import { TestimonialCard } from '@/components/common';
+import { reviewService } from '@/services';
+import { ReviewModel } from '@/domains/review/model';
 
 export interface TestimonialsSectionProps {
   data: TestimonialData[];
@@ -10,6 +12,26 @@ export interface TestimonialsSectionProps {
 }
 
 export function TestimonialsSection({ data, className = '' }: TestimonialsSectionProps) {
+  const [reviews, setReviews] = useState<ReviewModel[]>([]);
+  
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const res = await reviewService.getPublicReviews();
+        if (res.isSuccess && res.value.length > 0) {
+          // Take top 3 most recent approved reviews
+          setReviews(res.value.slice(0, 3));
+        }
+      } catch (err) {
+        console.error("Failed to fetch public reviews", err);
+      }
+    };
+    fetchReviews();
+  }, []);
+
+  // Use dynamic reviews if available, otherwise fallback to hardcoded data
+  const hasDynamicReviews = reviews.length > 0;
+
   return (
     <section className={`section bg-white ${className}`} id="testimonials">
       <div className="container">
@@ -20,15 +42,26 @@ export function TestimonialsSection({ data, className = '' }: TestimonialsSectio
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {data.map((review, idx) => (
-            <TestimonialCard
-              key={idx}
-              quote={review.quote}
-              authorName={review.name}
-              authorRole={review.role}
-              authorImageUrl={review.imageUrl}
-            />
-          ))}
+          {hasDynamicReviews ? (
+            reviews.map((review) => (
+              <TestimonialCard
+                key={review.id}
+                quote={review.comment}
+                authorName={review.displayName}
+                authorRole={review.verified ? 'Verified Patient' : 'Patient'}
+              />
+            ))
+          ) : (
+            data.map((review, idx) => (
+              <TestimonialCard
+                key={idx}
+                quote={review.quote}
+                authorName={review.name}
+                authorRole={review.role}
+                authorImageUrl={review.imageUrl}
+              />
+            ))
+          )}
         </div>
       </div>
     </section>

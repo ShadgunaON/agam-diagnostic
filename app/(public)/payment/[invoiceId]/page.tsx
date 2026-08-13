@@ -54,7 +54,7 @@ export default function DemoPaymentPage() {
       const result = await paymentService.processOnlinePayment(invoiceId, invoice?.total || 0, paymentMethod, shouldSucceed);
       
       if (result.isSuccess) {
-        router.push(`/bookings/${invoice?.bookingId}/receipt`);
+        router.push(`/book/success/${invoice?.bookingId}`);
       } else {
         setErrorMsg(result.error?.message || 'Payment failed. Please try again.');
         setIsProcessing(false);

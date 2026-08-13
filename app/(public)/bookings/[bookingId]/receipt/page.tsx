@@ -93,32 +93,32 @@ export default function ReceiptPage() {
         <div className="bg-white p-8 md:p-12 rounded-lg shadow-sm border border-border print:shadow-none print:border-none print:p-0">
           
           {/* Header */}
-          <div className="flex justify-between items-start border-b border-border/50 pb-6 mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start border-b border-border/50 pb-6 mb-6 gap-4">
             <div>
               <h1 className="text-2xl font-black text-primary tracking-tight">AGAM DIAGNOSTICS</h1>
               <p className="text-xs text-muted-foreground mt-1">Plot No 12, Anna Nagar Main Road,<br/>Madurai, Tamil Nadu - 625020</p>
               <p className="text-xs text-muted-foreground mt-1">Ph: +91 89408 94079</p>
             </div>
-            <div className="text-right">
-              <h2 className="text-3xl font-light text-slate-300 uppercase tracking-widest">
+            <div className="text-left sm:text-right w-full sm:w-auto">
+              <h2 className="text-2xl sm:text-3xl font-light text-slate-300 uppercase tracking-widest">
                 {invoice.paymentStatus === 'Paid' ? 'Receipt' : 'Invoice'}
               </h2>
-              <p className="text-sm font-bold text-foreground mt-2">#{invoice.id}</p>
+              <p className="text-sm font-bold text-foreground mt-2 break-all">#{invoice.id}</p>
               <p className="text-xs text-muted-foreground">Date: {invoice.createdAt}</p>
             </div>
           </div>
 
           {/* Details */}
-          <div className="grid grid-cols-2 gap-8 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 mb-8">
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Billed To</p>
               <p className="font-bold text-foreground">{booking.patient.name}</p>
               <p className="text-sm text-muted-foreground">{booking.patient.age} yrs, {booking.patient.gender}</p>
-              <p className="text-sm text-muted-foreground">{booking.patient.phone || booking.patient.email}</p>
+              <p className="text-sm text-muted-foreground break-all">{booking.patient.phone || booking.patient.email}</p>
             </div>
-            <div className="text-right">
+            <div className="text-left sm:text-right">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Appointment Info</p>
-              <p className="font-bold text-foreground">Booking #{booking.id}</p>
+              <p className="font-bold text-foreground break-all">Booking #{booking.id}</p>
               <p className="text-sm text-muted-foreground">{booking.collection.type}</p>
               <p className="text-sm text-muted-foreground">{booking.collection.date} | {booking.collection.timeSlot}</p>
             </div>

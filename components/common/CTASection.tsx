@@ -6,6 +6,7 @@ export interface CTASectionProps {
   title: string;
   description: string;
   primaryActionLabel: string;
+  primaryActionHref?: string;
   secondaryActionLabel?: string;
   secondaryActionHref?: string;
   className?: string;
@@ -15,6 +16,7 @@ export function CTASection({
   title, 
   description, 
   primaryActionLabel,
+  primaryActionHref = '/book',
   secondaryActionLabel,
   secondaryActionHref = 'tel:+918940894079',
   className = '' 
@@ -28,7 +30,7 @@ export function CTASection({
           <div className="cta-banner cta-banner--premium">
             <h3>{title}</h3>
             <p>{description}</p>
-            <a href="/book" className="btn btn--white">{primaryActionLabel}</a>
+            <a href={primaryActionHref} className="btn btn--white">{primaryActionLabel}</a>
             {secondaryActionLabel && (
               <a href={secondaryActionHref} className="btn btn--white-outline">{secondaryActionLabel}</a>
             )}
@@ -49,7 +51,7 @@ export function CTASection({
             <h2 style={{ fontSize: 'var(--fs-3xl)', color: '#fff', marginBottom: 'var(--sp-4)', lineHeight: 1.1 }}>{title}</h2>
             <p style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: 'var(--fs-lg)', marginBottom: 'var(--sp-8)', lineHeight: 'var(--lh-relaxed)' }}>{description}</p>
             <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-              <a href="/book" className="btn" style={{ background: '#fff', color: 'var(--color-primary)', borderRadius: 'var(--radius-full)', padding: '16px 40px', fontWeight: 700, fontSize: 'var(--fs-md)', boxShadow: 'var(--shadow-lg)', display: 'inline-flex', transition: 'transform var(--duration) var(--ease)' }}>
+              <a href={primaryActionHref} className="btn" style={{ background: '#fff', color: 'var(--color-primary)', borderRadius: 'var(--radius-full)', padding: '16px 40px', fontWeight: 700, fontSize: 'var(--fs-md)', boxShadow: 'var(--shadow-lg)', display: 'inline-flex', transition: 'transform var(--duration) var(--ease)' }}>
                 {primaryActionLabel}
               </a>
               {secondaryActionLabel && (

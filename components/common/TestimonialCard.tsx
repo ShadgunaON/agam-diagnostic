@@ -35,7 +35,13 @@ export function TestimonialCard({ quote, authorName, authorRole, authorImageUrl,
           </div>
         </div>
       </div>
-      <div className="review-card__text">
+      <div className="review-card__text" style={{ 
+        display: '-webkit-box', 
+        WebkitLineClamp: 6, 
+        WebkitBoxOrient: 'vertical', 
+        overflow: 'hidden', 
+        textOverflow: 'ellipsis' 
+      }}>
         &quot;{quote}&quot;
       </div>
     </div>

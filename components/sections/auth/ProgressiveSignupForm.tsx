@@ -27,6 +27,14 @@ export function ProgressiveSignupForm() {
 
   const searchParams = useSearchParams();
 
+  useEffect(() => {
+    if (searchParams.get('reset') === 'true') {
+      sessionStorage.clear();
+      localStorage.clear();
+      router.replace('/login');
+    }
+  }, [searchParams, router]);
+
   const navigateToDestination = () => {
     const returnUrl = searchParams.get('returnUrl');
     if (returnUrl) {
@@ -38,7 +46,7 @@ export function ProgressiveSignupForm() {
       const destination = queryString ? `${returnUrl}?${queryString}` : returnUrl;
       router.push(destination);
     } else {
-      router.push('/bookings'); // Default to bookings dashboard
+      router.push('/'); // Default to home page
     }
   };
 
@@ -67,8 +75,13 @@ export function ProgressiveSignupForm() {
     }
     
     await execute(async () => {
-      const { success, isNewUser } = await verifyOtp(mobile, otp);
+      const { success, isNewUser, user: verifiedUser } = await verifyOtp(mobile, otp);
       if (success) {
+        if (verifiedUser?.role === 'admin' || verifiedUser?.role === 'doctor' || verifiedUser?.role === 'lab_tech') {
+          router.push('/admin');
+          return;
+        }
+
         if (isNewUser) {
           setStep('profile');
         } else {

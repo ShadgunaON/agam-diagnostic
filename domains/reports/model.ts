@@ -12,7 +12,7 @@ export interface ReportTaskModel {
   bookingId?: string;
   patient: { name: string; age: number; gender: string; id: string };
   testType: string;
-  status: 'Awaiting Verification' | 'Pending Upload' | 'Published';
+  status: 'Processing' | 'Generated' | 'Awaiting Verification' | 'Pending Upload' | 'Published';
   priority: 'Routine' | 'STAT';
   time: string;
   results: TestResult[];

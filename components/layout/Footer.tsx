@@ -46,6 +46,7 @@ export function Footer({ className = '' }: FooterProps) {
                 <li><Link href="/services">Services</Link></li>
                 <li><Link href="/tests">Health Tests</Link></li>
                 <li><Link href="/health-packages">Health Packages</Link></li>
+                <li><Link href="/reviews">Patient Reviews</Link></li>
               </ul>
             </div>
             <div>

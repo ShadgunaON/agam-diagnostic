@@ -19,6 +19,7 @@ export interface RoleModel {
   users: number;
   desc: string;
   color: string;
+  scope?: string;
 }
 
 export interface PermissionModel {

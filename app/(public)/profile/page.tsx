@@ -7,12 +7,13 @@ import { Container, Card, Button } from '@/components/ui';
 import { PatientProfileItem } from '@/domains/auth/model';
 
 export default function ProfilePage() {
-  const { user, updateProfile, addPatient, removePatient } = useAuth();
+  const { user, updateProfile, addPatient, editPatient, removePatient } = useAuth();
   
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({ fullName: '', email: '', dobOrAge: '', gender: '' });
   
   const [showAddFamily, setShowAddFamily] = useState(false);
+  const [editingFamilyId, setEditingFamilyId] = useState<string | null>(null);
   const [familyData, setFamilyData] = useState({ name: '', relation: '', age: '', gender: 'Male' });
 
   if (!user) return null;
@@ -37,10 +38,32 @@ export default function ProfilePage() {
 
   const handleAddFamily = async () => {
     if (familyData.name && familyData.relation && familyData.age) {
-      await addPatient(familyData);
+      if (editingFamilyId) {
+        await editPatient(editingFamilyId, familyData);
+      } else {
+        await addPatient(familyData);
+      }
       setShowAddFamily(false);
+      setEditingFamilyId(null);
       setFamilyData({ name: '', relation: '', age: '', gender: 'Male' });
     }
+  };
+
+  const initEditFamily = (patient: PatientProfileItem) => {
+    setFamilyData({
+      name: patient.name,
+      relation: patient.relation,
+      age: patient.age,
+      gender: patient.gender
+    });
+    setEditingFamilyId(patient.id);
+    setShowAddFamily(true);
+  };
+
+  const handleCancelFamily = () => {
+    setShowAddFamily(false);
+    setEditingFamilyId(null);
+    setFamilyData({ name: '', relation: '', age: '', gender: 'Male' });
   };
 
   return (
@@ -173,8 +196,8 @@ export default function ProfilePage() {
                         </select>
                       </div>
                       <div className="flex gap-2 justify-end">
-                        <Button variant="outline" size="sm" onClick={() => setShowAddFamily(false)}>Cancel</Button>
-                        <Button variant="primary" size="sm" onClick={handleAddFamily}>Save Member</Button>
+                        <Button variant="outline" size="sm" onClick={handleCancelFamily}>Cancel</Button>
+                        <Button variant="primary" size="sm" onClick={handleAddFamily}>{editingFamilyId ? 'Update Member' : 'Save Member'}</Button>
                       </div>
                     </div>
                   )}
@@ -190,7 +213,10 @@ export default function ProfilePage() {
                           <span className="text-xs text-muted-foreground">{patient.gender} • {patient.age} yrs</span>
                         </div>
                         {patient.relation !== 'Myself' && (
-                          <button onClick={() => removePatient(patient.id)} className="text-red-500 hover:text-red-700 text-sm font-medium">Remove</button>
+                          <div className="flex gap-3 items-center">
+                            <button onClick={() => initEditFamily(patient)} className="text-primary hover:text-primary/80 text-sm font-medium">Edit</button>
+                            <button onClick={() => removePatient(patient.id)} className="text-red-500 hover:text-red-700 text-sm font-medium">Remove</button>
+                          </div>
                         )}
                       </div>
                     ))}

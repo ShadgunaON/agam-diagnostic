@@ -2,7 +2,7 @@ import { IPatientRepository } from '@/domains/patient/repository';
 import { PatientModel } from '@/domains/patient/model';
 import { Result, success, failure } from '@/shared/result';
 import { PaginatedResponse } from '@/lib/api/types';
-import { LocalStorageAdapter } from '@/lib/storage/LocalStorageAdapter';
+import { SharedMockAdapter } from '@/lib/storage/SharedMockAdapter';
 
 const mockPatientsData = [
   { id: 'PT-2023-001', name: 'Rahul Sharma', age: 45, gender: 'Male', phone: '+91 98765 43210', email: 'rahul.s@example.com', lastVisit: 'Oct 12, 2026', status: 'Active', bloodGroup: 'O+' },
@@ -18,11 +18,11 @@ const mockPatientsData = [
 ];
 
 export class MockPatientRepository implements IPatientRepository {
-  private adapter: LocalStorageAdapter<PatientModel[]>;
+  private adapter: SharedMockAdapter<PatientModel[]>;
   private initialPatients: PatientModel[];
 
   constructor() {
-    this.adapter = new LocalStorageAdapter<PatientModel[]>('agam_mock_patients_state');
+    this.adapter = new SharedMockAdapter<PatientModel[]>('agam_mock_patients_state');
     
     // Seed with initial mock patients if no local state
     this.initialPatients = mockPatientsData.map(p => ({
@@ -39,20 +39,20 @@ export class MockPatientRepository implements IPatientRepository {
     }));
   }
 
-  private getPatients(): PatientModel[] {
-    const loaded = this.adapter.load();
+  private async getPatients(): Promise<PatientModel[]> {
+    const loaded = await this.adapter.load();
     if (loaded && loaded.length > 0) {
       return loaded;
     }
     return [...this.initialPatients];
   }
 
-  private savePatients(patients: PatientModel[]): void {
-    this.adapter.save(patients);
+  private async savePatients(patients: PatientModel[]): Promise<void> {
+    await this.adapter.save(patients);
   }
 
   async getAll(page = 1, limit = 10): Promise<Result<PaginatedResponse<PatientModel>>> {
-    const patients = this.getPatients();
+    const patients = await this.getPatients();
     return success({
       data: patients,
       meta: {
@@ -65,24 +65,24 @@ export class MockPatientRepository implements IPatientRepository {
   }
 
   async getById(id: string): Promise<Result<PatientModel>> {
-    const patients = this.getPatients();
+    const patients = await this.getPatients();
     const patient = patients.find(p => p.id === id);
     if (!patient) return failure(new Error('Patient not found'));
     return success(patient);
   }
 
   async update(id: string, data: Partial<PatientModel>): Promise<Result<PatientModel>> {
-    const patients = this.getPatients();
+    const patients = await this.getPatients();
     const index = patients.findIndex(p => p.id === id);
     if (index === -1) return failure(new Error('Patient not found'));
 
     patients[index] = { ...patients[index], ...data, updatedAt: new Date().toISOString() };
-    this.savePatients(patients);
+    await this.savePatients(patients);
     return success(patients[index]);
   }
 
   async create(patientData: Omit<PatientModel, 'id'>): Promise<Result<PatientModel>> {
-    const patients = this.getPatients();
+    const patients = await this.getPatients();
     const id = `PT-${new Date().getFullYear()}-${String(patients.length + 1).padStart(3, '0')}`;
     const newPatient: PatientModel = {
       ...patientData,
@@ -91,7 +91,7 @@ export class MockPatientRepository implements IPatientRepository {
       updatedAt: new Date().toISOString(),
     };
     patients.push(newPatient);
-    this.savePatients(patients);
+    await this.savePatients(patients);
     return success(newPatient);
   }
 }

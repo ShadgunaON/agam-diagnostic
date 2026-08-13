@@ -16,7 +16,7 @@ export const mockStaff: StaffMember[] = [
   {
     id: 'EMP-001',
     name: 'Dr. Aravind Swamy',
-    role: 'Chief Pathologist',
+    role: 'admin',
     department: 'Pathology',
     phone: '+91 98765 11223',
     email: 'aravind.s@agam.com',
@@ -27,9 +27,9 @@ export const mockStaff: StaffMember[] = [
   {
     id: 'EMP-002',
     name: 'Sunita Rao',
-    role: 'Senior Phlebotomist',
+    role: 'phleb_home',
     department: 'Sample Collection',
-    phone: '+91 99887 22334',
+    phone: '+91 11111 11111',
     email: 'sunita.r@agam.com',
     shift: '07:00 AM - 03:00 PM',
     status: 'On Duty',
@@ -38,9 +38,9 @@ export const mockStaff: StaffMember[] = [
   {
     id: 'EMP-003',
     name: 'Karan Malhotra',
-    role: 'Lab Technician',
+    role: 'phleb_lab',
     department: 'Hematology',
-    phone: '+91 91122 33445',
+    phone: '+91 22222 22222',
     email: 'karan.m@agam.com',
     shift: '02:00 PM - 10:00 PM',
     status: 'Off Duty',
@@ -49,7 +49,7 @@ export const mockStaff: StaffMember[] = [
   {
     id: 'EMP-004',
     name: 'Neha Gupta',
-    role: 'Receptionist',
+    role: 'op',
     department: 'Front Desk',
     phone: '+91 92233 44556',
     email: 'neha.g@agam.com',
@@ -60,9 +60,9 @@ export const mockStaff: StaffMember[] = [
   {
     id: 'EMP-005',
     name: 'Ramesh Singh',
-    role: 'Field Phlebotomist',
+    role: 'phleb_home',
     department: 'Home Collection',
-    phone: '+91 93344 55667',
+    phone: '+91 33333 33333',
     email: 'ramesh.s@agam.com',
     shift: '06:00 AM - 02:00 PM',
     status: 'On Leave',
@@ -71,7 +71,7 @@ export const mockStaff: StaffMember[] = [
   {
     id: 'EMP-006',
     name: 'Dr. Meenakshi Iyer',
-    role: 'Microbiologist',
+    role: 'path',
     department: 'Microbiology',
     phone: '+91 94455 66778',
     email: 'meenakshi.i@agam.com',
@@ -82,9 +82,9 @@ export const mockStaff: StaffMember[] = [
   {
     id: 'EMP-007',
     name: 'Vikash Kumar',
-    role: 'Lab Technician',
+    role: 'phleb_lab',
     department: 'Biochemistry',
-    phone: '+91 95566 77889',
+    phone: '+91 44444 44444',
     email: 'vikash.k@agam.com',
     shift: '08:00 AM - 04:00 PM',
     status: 'On Duty',
@@ -93,7 +93,7 @@ export const mockStaff: StaffMember[] = [
   {
     id: 'EMP-008',
     name: 'Priya Desai',
-    role: 'Customer Support',
+    role: 'op',
     department: 'Support',
     phone: '+91 96677 88990',
     email: 'priya.d@agam.com',

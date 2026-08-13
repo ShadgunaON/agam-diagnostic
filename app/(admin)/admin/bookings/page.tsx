@@ -155,7 +155,12 @@ export default function GlassBookingsPage() {
                     </div>
                   </div>
                   
-                  <div data-label="Amount" style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a', textAlign: 'right' }}>₹{booking.payment.total}</div>
+                  <div data-label="Amount" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                    <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>₹{booking.payment.total}</div>
+                    <div style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '12px', backgroundColor: booking.payment.status === 'Paid' ? '#dcfce7' : (booking.payment.status === 'Failed' ? '#fee2e2' : '#fef9c3'), color: booking.payment.status === 'Paid' ? '#166534' : (booking.payment.status === 'Failed' ? '#991b1b' : '#854d0e') }}>
+                      {booking.payment.status}
+                    </div>
+                  </div>
                 </div>
               );
             })}

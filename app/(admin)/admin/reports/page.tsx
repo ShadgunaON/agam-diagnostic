@@ -6,6 +6,8 @@ import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { useToast } from '@/components/admin/feedback/Toast';
 import { reportsService } from '@/services';
 import { ReportTaskModel } from '@/domains/reports/model';
+import { useRBAC } from '@/hooks/useRBAC';
+import { ReportPreviewModal } from '@/components/shared/ReportPreviewModal';
 
 // ─── Component ───
 
@@ -14,6 +16,9 @@ export default function ClinicalReportsWorkspace() {
   const { success, error } = useToast();
   const [reports, setReports] = useState<ReportTaskModel[]>([]);
   const [activeReportId, setActiveReportId] = useState<string | null>(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const { hasPermission } = useRBAC();
+  const canEditReports = hasPermission('reports', 'edit');
 
   useEffect(() => {
     setMounted(true);
@@ -32,25 +37,21 @@ export default function ClinicalReportsWorkspace() {
   if (!mounted) return null;
 
   const activeReport = reports.find(r => r.id === activeReportId);
-  const pendingCount = reports.filter(r => r.status === 'Awaiting Verification').length;
+  const pendingCount = reports.filter(r => ['Awaiting Verification', 'Processing', 'Generated'].includes(r.status)).length;
 
-  const handlePublish = async (reportId: string) => {
-    // Call service to update status
-    const result = await reportsService.updateStatus(reportId, 'Published');
-    
+  const handleAdvanceStatus = async (reportId: string, nextStatus: ReportTaskModel['status']) => {
+    const result = await reportsService.updateStatus(reportId, nextStatus);
     if (result.isSuccess) {
-      // Re-fetch from service as the source of truth
       const updated = await reportsService.getAllTasks();
-      if (updated.isSuccess && updated.value) {
-        setReports(updated.value);
-      }
-      success('Report Verified & Published', `Report ${reportId} has been digitally signed and made available to the patient.`);
+      if (updated.isSuccess && updated.value) setReports(updated.value);
+      success('Status Updated', `Report ${reportId} advanced to ${nextStatus}.`);
       
-      // Auto-select the next pending report
-      const nextPending = reports.find(r => r.status === 'Awaiting Verification' && r.id !== reportId);
-      if (nextPending) setActiveReportId(nextPending.id);
+      if (nextStatus === 'Published') {
+        const nextPending = reports.find(r => ['Awaiting Verification', 'Processing', 'Generated'].includes(r.status) && r.id !== reportId);
+        if (nextPending) setActiveReportId(nextPending.id);
+      }
     } else {
-      error('Verification Failed', 'Could not verify the report at this time.');
+      error('Update Failed', 'Could not update the report status.');
     }
   };
 
@@ -102,7 +103,7 @@ export default function ClinicalReportsWorkspace() {
                     {report.status === 'Published' ? (
                        <AdminIcon name="check" strokeWidth={2.5} style={{ width: '16px', height: '16px', color: '#10b981' }} />
                     ) : (
-                       <span style={{ fontSize: '11px', fontWeight: 700, color: '#f59e0b', backgroundColor: '#fffbeb', padding: '4px 8px', borderRadius: '4px' }}>Needs Review</span>
+                       <span style={{ fontSize: '11px', fontWeight: 700, color: '#f59e0b', backgroundColor: '#fffbeb', padding: '4px 8px', borderRadius: '4px' }}>{report.status}</span>
                     )}
                   </div>
                 </div>
@@ -165,17 +166,40 @@ export default function ClinicalReportsWorkspace() {
                   </div>
                   
                   <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                    <button className="px-6 py-3 bg-white border border-slate-300 rounded-lg text-[14px] font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                    <button 
+                      onClick={() => setShowPreviewModal(true)}
+                      className="px-6 py-3 bg-white border border-slate-300 rounded-lg text-[14px] font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                    >
                       Preview PDF
                     </button>
-                    {activeReport.status !== 'Published' ? (
+                    {activeReport.status === 'Processing' && (
                       <button 
-                        onClick={() => handlePublish(activeReport.id)}
-                        className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 border-none rounded-lg text-[14px] font-bold text-white transition-colors shadow-[0_4px_12px_rgba(16,185,129,0.2)]"
+                        onClick={() => handleAdvanceStatus(activeReport.id, 'Generated')}
+                        disabled={!canEditReports}
+                        className={`px-6 py-3 border-none rounded-lg text-[14px] font-bold text-white transition-colors ${canEditReports ? 'bg-blue-500 hover:bg-blue-600' : 'bg-slate-300 cursor-not-allowed'}`}
+                      >
+                        Finish Processing
+                      </button>
+                    )}
+                    {activeReport.status === 'Generated' && (
+                      <button 
+                        onClick={() => handleAdvanceStatus(activeReport.id, 'Awaiting Verification')}
+                        disabled={!canEditReports}
+                        className={`px-6 py-3 border-none rounded-lg text-[14px] font-bold text-white transition-colors ${canEditReports ? 'bg-amber-500 hover:bg-amber-600' : 'bg-slate-300 cursor-not-allowed'}`}
+                      >
+                        Request Verification
+                      </button>
+                    )}
+                    {activeReport.status === 'Awaiting Verification' && (
+                      <button 
+                        onClick={() => handleAdvanceStatus(activeReport.id, 'Published')}
+                        disabled={!canEditReports}
+                        className={`px-6 py-3 border-none rounded-lg text-[14px] font-bold text-white transition-colors shadow-[0_4px_12px_rgba(16,185,129,0.2)] ${canEditReports ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-slate-300 cursor-not-allowed shadow-none'}`}
                       >
                         Digitally Sign & Publish
                       </button>
-                    ) : (
+                    )}
+                    {activeReport.status === 'Published' && (
                       <button disabled className="px-6 py-3 bg-slate-100 border border-slate-200 rounded-lg text-[14px] font-bold text-slate-400 cursor-not-allowed">
                         Published
                       </button>
@@ -192,6 +216,13 @@ export default function ClinicalReportsWorkspace() {
 
         </div>
       </div>
+      
+      {showPreviewModal && activeReport && (
+        <ReportPreviewModal 
+          report={activeReport} 
+          onClose={() => setShowPreviewModal(false)} 
+        />
+      )}
     </AdminPageTemplate>
   );
 }

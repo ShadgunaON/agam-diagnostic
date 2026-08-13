@@ -112,27 +112,32 @@ export default function BookingSuccessPage() {
               </div>
             </div>
           </div>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {invoice && invoice.paymentStatus === 'Pending' ? (
-              <Link 
-                href={`/payment/${invoice.id}`}
-                style={{ display: 'inline-block', padding: '16px 32px', background: 'var(--color-primary)', color: '#fff', borderRadius: '100px', fontWeight: 600, textDecoration: 'none', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(11,27,61,0.1)' }}
-              >
-                Proceed to Payment
-              </Link>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            {invoice && invoice.paymentStatus === 'Paid' ? (
+              <div className="flex flex-col sm:flex-row gap-3 items-center">
+                <span className="text-green-600 font-bold bg-green-50 px-3 py-1.5 rounded-full border border-green-100 flex items-center gap-1.5 text-sm">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4"><polyline points="20 6 9 17 4 12"/></svg>
+                  Payment: Paid
+                </span>
+                <Link 
+                  href={`/bookings/${booking.id}/receipt`}
+                  className="px-5 py-2 border border-primary text-primary hover:bg-primary hover:text-white rounded-full font-semibold transition-colors text-sm"
+                >
+                  View Receipt
+                </Link>
+              </div>
             ) : null}
             
             <Link 
               href="/bookings"
-              style={{ display: 'inline-block', padding: '16px 32px', background: 'var(--color-dark)', color: '#fff', borderRadius: '100px', fontWeight: 600, textDecoration: 'none', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(11,27,61,0.1)' }}
+              className="px-5 py-2 border border-primary text-primary hover:bg-primary hover:text-white rounded-full font-semibold transition-colors text-sm"
             >
               View My Bookings
             </Link>
             
             <Link 
               href="/"
-              style={{ display: 'inline-block', padding: '16px 32px', background: '#fff', color: 'var(--color-text)', border: '1px solid #cbd5e1', borderRadius: '100px', fontWeight: 600, textDecoration: 'none', transition: 'all 0.2s' }}
+              className="px-5 py-2 border border-slate-300 text-slate-600 hover:bg-slate-50 hover:text-slate-800 rounded-full font-semibold transition-colors text-sm"
             >
               Back to Home
             </Link>

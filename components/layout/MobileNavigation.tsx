@@ -74,7 +74,7 @@ export function MobileNavigation({ className = '' }: MobileNavigationProps) {
               </button>
               
               <div className={`flex flex-col gap-3 overflow-hidden transition-all duration-300 ${expandedSection === 'packages' ? 'max-h-48 mt-4 opacity-100' : 'max-h-0 opacity-0'}`}>
-                <Link href="/health-packages" className="pl-4 hover:text-primary transition-colors border-l-2 border-transparent hover:border-primary" onClick={closeMenu}>All Packages</Link>
+                <Link href="/health-packages" className="pl-4 hover:text-primary transition-colors border-l-2 border-transparent hover:border-primary" onClick={closeMenu}>Health Packages</Link>
                 <Link href="/men-health" className="pl-4 hover:text-primary transition-colors border-l-2 border-transparent hover:border-primary" onClick={closeMenu}>Men Health</Link>
                 <Link href="/women-health" className="pl-4 hover:text-primary transition-colors border-l-2 border-transparent hover:border-primary" onClick={closeMenu}>Women Health</Link>
                 <Link href="/lifestyle-health" className="pl-4 hover:text-primary transition-colors border-l-2 border-transparent hover:border-primary" onClick={closeMenu}>Lifestyle Health</Link>
@@ -101,7 +101,7 @@ export function MobileNavigation({ className = '' }: MobileNavigationProps) {
               </button>
               
               <div className={`flex flex-col gap-3 overflow-hidden transition-all duration-300 ${expandedSection === 'tests' ? 'max-h-24 mt-4 opacity-100' : 'max-h-0 opacity-0'}`}>
-                <Link href="/tests" className="pl-4 hover:text-primary transition-colors border-l-2 border-transparent hover:border-primary" onClick={closeMenu}>All Lab Tests</Link>
+                <Link href="/tests" className="pl-4 hover:text-primary transition-colors border-l-2 border-transparent hover:border-primary" onClick={closeMenu}>Tests</Link>
               </div>
             </div>
 
@@ -126,7 +126,7 @@ export function MobileNavigation({ className = '' }: MobileNavigationProps) {
               </button>
               
               <div className={`flex flex-col gap-3 overflow-hidden transition-all duration-300 ${expandedSection === 'contact' ? 'max-h-24 mt-4 opacity-100' : 'max-h-0 opacity-0'}`}>
-                <Link href="/contact" className="pl-4 hover:text-primary transition-colors border-l-2 border-transparent hover:border-primary" onClick={closeMenu}>Location & Help</Link>
+                <Link href="/contact" className="pl-4 hover:text-primary transition-colors border-l-2 border-transparent hover:border-primary" onClick={closeMenu}>Contact Us</Link>
                 <Link href="/faq" className="pl-4 hover:text-primary transition-colors border-l-2 border-transparent hover:border-primary" onClick={closeMenu}>FAQ</Link>
               </div>
             </div>

@@ -49,6 +49,9 @@ import { MockPatientRepository } from './mock/PatientRepository';
 import { IInvoiceRepository } from '@/domains/invoice/repository';
 import { MockInvoiceRepository } from './mock/InvoiceRepository';
 
+import { IReviewRepository } from '@/domains/review/repository';
+import { MockReviewRepository } from './mock/ReviewRepository';
+
 const apiClient = new ApiClient();
 
 export const blogRepository: IBlogRepository = env.useMockData 
@@ -84,3 +87,4 @@ export const staffRepository: IStaffRepository = new MockStaffRepository();
 export const activityRepository: IActivityRepository = new MockActivityRepository();
 export const patientRepository: IPatientRepository = new MockPatientRepository();
 export const invoiceRepository: IInvoiceRepository = new MockInvoiceRepository();
+export const reviewRepository: IReviewRepository = new MockReviewRepository();

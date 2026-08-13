@@ -2,14 +2,35 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { AdminIcon } from '../navigation/AdminIcons';
 import { AdminButton } from '../primitives/AdminButton';
 import { AdminInput } from '../primitives/AdminInput';
 import { AdminMobileNav } from '../navigation/AdminMobileNav';
+import { useAuth } from '@/context/AuthContext';
+import { useRBAC } from '@/hooks/useRBAC';
 
 export function AdminTopbar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout } = useAuth();
+  const { role } = useRBAC();
+  const [showDropdown, setShowDropdown] = React.useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const initials = user?.fullName
+    ? user.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    : 'ST';
 
   const getPageTitle = () => {
     if (pathname === '/admin') return 'Dashboard';
@@ -83,21 +104,60 @@ export function AdminTopbar() {
         <div className="bg-[#E5E7EB]" style={{ width: '1px', height: '24px' }}></div>
 
         {/* User Profile */}
-        <Link href="/admin/profile" className="flex items-center hover:bg-slate-50 transition-colors" style={{ borderRadius: '12px', padding: '6px', textDecoration: 'none' }}>
-          {/* Avatar */}
-          <div className="bg-slate-800 flex items-center justify-center shrink-0 shadow-sm" style={{ width: '44px', height: '44px', borderRadius: '12px' }}>
-            <span className="text-white text-[14px] font-bold tracking-wider leading-none">AS</span>
-          </div>
+        <div className="relative" ref={dropdownRef}>
+          <button 
+            type="button"
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="flex items-center hover:bg-slate-50 transition-colors cursor-pointer border-none bg-transparent outline-none" 
+            style={{ borderRadius: '12px', padding: '6px' }}
+          >
+            {/* Avatar */}
+            <div className="bg-slate-800 flex items-center justify-center shrink-0 shadow-sm" style={{ width: '44px', height: '44px', borderRadius: '12px' }}>
+              <span className="text-white text-[14px] font-bold tracking-wider leading-none">{initials}</span>
+            </div>
 
-          {/* Details */}
-          <div className="admin-hide-mobile flex-col items-start justify-center" style={{ display: 'flex', marginLeft: '14px', marginRight: '8px' }}>
-            <span className="font-semibold text-slate-900 leading-none" style={{ fontSize: '16px', marginBottom: '4px' }}>Admin Staff</span>
-            <span className="font-medium text-slate-500 leading-none" style={{ fontSize: '13px' }}>System Manager</span>
-          </div>
+            {/* Details */}
+            <div className="admin-hide-mobile flex-col items-start justify-center" style={{ display: 'flex', marginLeft: '14px', marginRight: '8px' }}>
+              <span className="font-semibold text-slate-900 leading-none" style={{ fontSize: '16px', marginBottom: '4px' }}>{user?.fullName || 'Staff'}</span>
+              <span className="font-medium text-slate-500 leading-none" style={{ fontSize: '13px' }}>{role?.title || 'Staff'}</span>
+            </div>
 
-          {/* Dropdown Indicator */}
-          <AdminIcon name="chevronDown" className="text-slate-400" style={{ width: '16px', height: '16px', marginRight: '4px' }} strokeWidth={2.5} />
-        </Link>
+            {/* Dropdown Indicator */}
+            <AdminIcon name="chevronDown" className="text-slate-400" style={{ width: '16px', height: '16px', marginRight: '4px' }} strokeWidth={2.5} />
+          </button>
+
+          {/* Dropdown Menu */}
+          {showDropdown && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden z-50">
+              <div className="p-3 border-b border-slate-100">
+                <p className="text-sm font-bold text-slate-900 truncate">{user?.fullName || 'Staff'}</p>
+                <p className="text-xs text-slate-500 truncate">{user?.email || role?.title || 'Staff Member'}</p>
+              </div>
+              <div className="p-2">
+                <Link 
+                  href="/admin/profile" 
+                  className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg transition-colors no-underline"
+                  onClick={() => setShowDropdown(false)}
+                >
+                  <AdminIcon name="user" className="w-4 h-4 text-slate-400" />
+                  My Profile
+                </Link>
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setShowDropdown(false);
+                    logout();
+                    window.location.href = '/';
+                  }}
+                  className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm font-bold text-red-600 hover:bg-red-50 rounded-lg transition-colors border-none bg-transparent cursor-pointer outline-none mt-1"
+                >
+                  <AdminIcon name="logOut" className="w-4 h-4 text-red-500" />
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
       </div>
     </header>
