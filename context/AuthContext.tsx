@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 import { UserProfile, PatientProfileItem, SavedAddressItem } from '@/domains/auth/model';
 import { authService } from '@/services';
-import { LocalStorageAdapter } from '@/lib/storage/LocalStorageAdapter';
+import { SessionStorageAdapter } from '@/lib/storage/SessionStorageAdapter';
 
 
 
@@ -32,7 +32,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const storageAdapter = React.useMemo(() => new LocalStorageAdapter<UserProfile>('agam_auth_user'), []);
+  const storageAdapter = React.useMemo(() => new SessionStorageAdapter<UserProfile>('agam_auth_user'), []);
 
 
   useEffect(() => {
