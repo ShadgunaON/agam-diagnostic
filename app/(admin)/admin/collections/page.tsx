@@ -77,10 +77,12 @@ export default function CollectionsPage() {
 
         let matched = staffRes.value.filter((s: StaffModel) => homeCollectionRoleIds.includes(s.role.toLowerCase()));
         
-        // FAILSAFE FOR DEMO: If strict filtering yields 0 phlebotomists (due to legacy data), 
-        // fallback to showing ALL staff
+        // FALLBACK: If strict scoping yields 0 (due to legacy data in localStorage), 
+        // fallback to staff whose role is explicitly 'phleb' or 'phleb_home'
         if (matched.length === 0 && staffRes.value.length > 0) {
-          matched = staffRes.value;
+          matched = staffRes.value.filter((s: StaffModel) => 
+            s.role.toLowerCase() === 'phleb' || s.role.toLowerCase() === 'phleb_home'
+          );
         }
         
         setPhlebotomists(matched.filter(s => s.status !== 'On Leave'));
