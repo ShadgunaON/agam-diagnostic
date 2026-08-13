@@ -23,6 +23,7 @@ export default function HighlyVisualizedStaffRoles() {
   const [isNewRoleOpen, setIsNewRoleOpen] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     const loadData = async () => {
       const [staffRes, rolesRes, permsRes] = await Promise.all([

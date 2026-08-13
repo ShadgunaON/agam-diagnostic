@@ -143,11 +143,11 @@ export function CartPageContent() {
               </li>
             </ul>
             
-            <a href="/book" className="btn btn--primary btn--block btn--sm mt-5" style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+            <Link href="/book" className="btn btn--primary btn--block btn--sm mt-5" style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
               Proceed to Checkout
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-            </a>
-            <a href="/tests" className="btn btn--outline btn--block btn--sm mt-3" style={{ display: 'flex', justifyContent: 'center' }}>Add More Tests</a>
+            </Link>
+            <Link href="/tests" className="btn btn--outline btn--block btn--sm mt-3" style={{ display: 'flex', justifyContent: 'center' }}>Add More Tests</Link>
           </div>
         </aside>
       </div>

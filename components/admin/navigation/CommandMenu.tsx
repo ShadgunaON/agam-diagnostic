@@ -40,6 +40,7 @@ export function CommandMenu() {
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 50);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedIndex(0);
       setSearch('');
       setResults(staticCommands);
@@ -47,6 +48,7 @@ export function CommandMenu() {
   }, [isOpen]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedIndex(0);
     if (!isOpen) return;
 

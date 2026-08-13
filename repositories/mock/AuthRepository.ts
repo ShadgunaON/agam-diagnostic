@@ -1,6 +1,7 @@
 import { IAuthRepository } from '@/domains/auth/repository';
 import { UserProfile } from '@/domains/auth/model';
-import { Result, success } from '@/shared/result';
+import { Result, success, failure } from '@/shared/result';
+import { SharedMockAdapter } from '@/lib/storage/SharedMockAdapter';
 
 export const PRESEEDED_EXISTING_USER: UserProfile = {
   id: 'usr_existing_1',
@@ -90,15 +91,34 @@ export const LAB_TECH_USER_2: UserProfile = {
   savedAddresses: [],
 };
 
-const memoryUsers: Map<string, UserProfile> = new Map();
-memoryUsers.set(PRESEEDED_EXISTING_USER.id, PRESEEDED_EXISTING_USER);
-memoryUsers.set(ADMIN_USER.id, ADMIN_USER);
-memoryUsers.set(PHLEBOTOMIST_USER.id, PHLEBOTOMIST_USER);
-memoryUsers.set(LAB_TECH_USER.id, LAB_TECH_USER);
-memoryUsers.set(PHLEBOTOMIST_USER_2.id, PHLEBOTOMIST_USER_2);
-memoryUsers.set(LAB_TECH_USER_2.id, LAB_TECH_USER_2);
+const preseededUsers: UserProfile[] = [
+  PRESEEDED_EXISTING_USER,
+  ADMIN_USER,
+  PHLEBOTOMIST_USER,
+  PHLEBOTOMIST_USER_2,
+  LAB_TECH_USER,
+  LAB_TECH_USER_2
+];
 
 export class MockAuthRepository implements IAuthRepository {
+  private adapter: SharedMockAdapter<UserProfile[]>;
+
+  constructor() {
+    this.adapter = new SharedMockAdapter<UserProfile[]>('agam_mock_users_state');
+  }
+
+  private async getUsers(): Promise<UserProfile[]> {
+    const loaded = await this.adapter.load();
+    if (loaded && loaded.length > 0) {
+      return loaded;
+    }
+    return [...preseededUsers];
+  }
+
+  private async saveUsers(users: UserProfile[]): Promise<void> {
+    await this.adapter.save(users);
+  }
+
   async sendOtp(_mobile: string): Promise<Result<boolean>> {
     return success(true);
   }
@@ -108,8 +128,8 @@ export class MockAuthRepository implements IAuthRepository {
       return success({ success: false });
     }
 
-    // Check all preseeded users by mobile number
-    const preseededUser = Array.from(memoryUsers.values()).find(u => u.mobile === mobile);
+    const users = await this.getUsers();
+    const preseededUser = users.find(u => u.mobile === mobile);
     if (preseededUser) {
       return success({ success: true, isNewUser: false, user: preseededUser });
     }
@@ -137,19 +157,21 @@ export class MockAuthRepository implements IAuthRepository {
       });
     }
 
-    memoryUsers.set(newUser.id, newUser);
+    users.push(newUser);
+    await this.saveUsers(users);
     return success({ success: true, isNewUser: true, user: newUser });
   }
 
   async updateProfile(userId: string, data: Partial<UserProfile>): Promise<Result<UserProfile>> {
-    const memUser = memoryUsers.get(userId);
-    if (memUser) {
-      Object.assign(memUser, data);
-      return success(memUser);
+    const users = await this.getUsers();
+    const index = users.findIndex(u => u.id === userId);
+    if (index !== -1) {
+      const updatedUser = { ...users[index], ...data };
+      users[index] = updatedUser;
+      await this.saveUsers(users);
+      return success(updatedUser);
     }
     
-    const mockUpdatedUser = { id: userId, role: 'patient', ...data } as UserProfile;
-    memoryUsers.set(userId, mockUpdatedUser);
-    return success(mockUpdatedUser);
+    return failure(new Error('User not found'));
   }
 }

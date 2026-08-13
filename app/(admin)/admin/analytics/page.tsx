@@ -64,7 +64,7 @@ export default function GlassAnalyticsPage() {
   // Derive unique patients from bookings
   const uniquePatients = new Set<string>();
   // We'll count total test items across all bookings for "Tests Conducted"
-  let totalItemsCount = 0;
+  const totalItemsCount = 0;
   // These are already computed inside AnalyticsService, but for KPI display we use the kpis object
 
   const kpiCards = [

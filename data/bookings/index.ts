@@ -5,6 +5,7 @@ export type CollectionType = 'Home Collection' | 'Lab Visit';
 
 export interface Booking {
   id: string;
+  patientId?: string;
   patient: {
     name: string;
     phone: string;
@@ -37,6 +38,7 @@ export interface Booking {
 export const mockBookings: Booking[] = [
   {
     id: 'B-1029',
+    patientId: 'PT-2023-001',
     patient: {
       name: 'Rahul Sharma',
       phone: '+91 98765 43210',
@@ -72,6 +74,7 @@ export const mockBookings: Booking[] = [
   },
   {
     id: 'B-1030',
+    patientId: 'PT-2023-002',
     patient: {
       name: 'Priya Patel',
       phone: '+91 91234 56789',
@@ -101,6 +104,7 @@ export const mockBookings: Booking[] = [
   },
   {
     id: 'B-1031',
+    patientId: 'PT-2023-003',
     patient: {
       name: 'Anil Kumar',
       phone: '+91 99887 76655',
@@ -131,6 +135,7 @@ export const mockBookings: Booking[] = [
   },
   {
     id: 'B-1032',
+    patientId: 'PT-2023-004',
     patient: {
       name: 'Meera Reddy',
       phone: '+91 98765 12345',
@@ -162,6 +167,7 @@ export const mockBookings: Booking[] = [
   },
   {
     id: 'B-1033',
+    patientId: 'PT-2023-005',
     patient: {
       name: 'Suresh Menon',
       phone: '+91 94444 33333',
@@ -193,6 +199,7 @@ export const mockBookings: Booking[] = [
   },
   {
     id: 'B-1034',
+    patientId: 'PT-2023-006',
     patient: {
       name: 'Kavita Singh',
       phone: '+91 90000 11111',
@@ -225,6 +232,7 @@ export const mockBookings: Booking[] = [
   },
   {
     id: 'B-1035',
+    patientId: 'PT-2023-007',
     patient: { name: 'Deepa Nair', phone: '+91 97777 88888', email: 'deepa.n@example.com', age: 41, gender: 'Female' },
     collection: { type: 'Home Collection', date: 'Oct 15, 2026', timeSlot: '09:00 AM - 10:00 AM', address: '22, MG Road, Koramangala, Bangalore', assignedPhlebotomist: 'Ravi Prasad' },
     items: [{ name: 'Complete Blood Count', type: 'Test', price: 350 }, { name: 'Lipid Profile', type: 'Test', price: 500 }],
@@ -239,6 +247,7 @@ export const mockBookings: Booking[] = [
   },
   {
     id: 'B-1036',
+    patientId: 'PT-2023-002',
     patient: { name: 'Rajesh Gupta', phone: '+91 88888 99999', email: 'rajesh.g@example.com', age: 52, gender: 'Male' },
     collection: { type: 'Lab Visit', date: 'Oct 16, 2026', timeSlot: '08:00 AM - 09:00 AM' },
     items: [{ name: 'Diabetes Screening Package', type: 'Package', price: 1299 }],
