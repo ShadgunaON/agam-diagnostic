@@ -70,22 +70,13 @@ export default function CollectionsPage() {
       }
 
       if (staffRes.isSuccess && staffRes.value && rolesRes.isSuccess && rolesRes.value) {
-        // Generic Role Eligibility: Find any roles configured with 'home_collection' scope
-        const homeCollectionRoleIds = rolesRes.value
-          .filter(r => r.scope === 'home_collection')
-          .map(r => r.id.toLowerCase());
-
-        let matched = staffRes.value.filter((s: StaffModel) => homeCollectionRoleIds.includes(s.role.toLowerCase()));
+        // STRICT Eligibility: Only allow staff with explicitly phlebotomist roles
+        let matched = staffRes.value.filter((s: StaffModel) => 
+          s.role.toLowerCase() === 'phleb' || s.role.toLowerCase() === 'phleb_home'
+        );
         
-        // FALLBACK: If strict scoping yields 0 (due to legacy data in localStorage), 
-        // fallback to staff whose role is explicitly 'phleb' or 'phleb_home'
-        if (matched.length === 0 && staffRes.value.length > 0) {
-          matched = staffRes.value.filter((s: StaffModel) => 
-            s.role.toLowerCase() === 'phleb' || s.role.toLowerCase() === 'phleb_home'
-          );
-        }
-        
-        setPhlebotomists(matched.filter(s => s.status !== 'On Leave'));
+        // Only include staff who are actively 'On Duty' (Available)
+        setPhlebotomists(matched.filter(s => s.status === 'On Duty'));
       }
 
       import('@/services').then(async ({ reportsService, bookingService }) => {
@@ -598,7 +589,7 @@ export default function CollectionsPage() {
                             }}
                           >
                           <option value="">
-                            {phlebotomists.length === 0 ? "No Staff Found in System" : "Assign Phlebotomist"}
+                            Assign Phlebotomist
                           </option>
                             {phlebotomists.map(p => (
                               <option key={p.id} value={p.id}>{p.name}</option>

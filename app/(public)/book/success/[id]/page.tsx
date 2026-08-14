@@ -71,76 +71,92 @@ export default function BookingSuccessPage() {
 
   return (
     <div style={{ background: '#f8fafc', minHeight: 'calc(100vh - 80px)', padding: '40px 0' }}>
-      <Container style={{ maxWidth: '700px' }}>
-        <div style={{ background: '#fff', borderRadius: '24px', padding: '48px', textAlign: 'center', boxShadow: '0 8px 32px rgba(11,27,61,0.06)' }}>
-          <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', boxShadow: '0 8px 16px rgba(16,185,129,0.2)' }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" style={{ width: '40px' }}><polyline points="20 6 9 17 4 12"/></svg>
-          </div>
+      <Container style={{ maxWidth: '900px' }}>
+        <div className="flex flex-col md:flex-row gap-6 md:gap-8 justify-center items-stretch">
           
-          <h1 style={{ fontSize: '32px', color: 'var(--color-dark)', margin: '0 0 8px 0' }}>Booking Confirmed!</h1>
-          <p style={{ fontSize: '16px', color: 'var(--color-text-light)', marginBottom: '32px' }}>
-            Thank you, {booking.patient.name}. Your appointment has been scheduled successfully.
-          </p>
-          
-          <div style={{ display: 'inline-block', background: '#f1f5f9', padding: '12px 24px', borderRadius: '12px', border: '1px dashed #cbd5e1', marginBottom: '40px' }}>
-            <span style={{ fontSize: '13px', color: 'var(--color-text-light)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Booking ID</span>
-            <span style={{ fontSize: '24px', color: 'var(--color-primary)', fontWeight: 800 }}>{booking.id}</span>
-          </div>
-          
-          <div style={{ textAlign: 'left', background: '#f8fafc', padding: '24px', borderRadius: '16px', marginBottom: '40px' }}>
-            <h3 style={{ fontSize: '18px', color: 'var(--color-dark)', marginTop: 0, marginBottom: '20px' }}>Appointment Summary</h3>
+          {/* LEFT: STATUS & ACTIONS CARD */}
+          <div className="flex-1 bg-white border border-slate-200/60 rounded-[20px] w-full max-w-[420px] mx-auto p-7 md:p-8 shadow-[0_4px_24px_rgba(0,0,0,0.03)] relative overflow-hidden flex flex-col justify-center items-center text-center">
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-emerald-500/90"></div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-3">
-                <span style={{ color: 'var(--color-text-light)', fontWeight: 500 }}>Patient:</span>
-                <span style={{ color: 'var(--color-dark)', fontWeight: 600 }}>{booking.patient.name} ({booking.patient.age}y, {booking.patient.gender})</span>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-3">
-                <span style={{ color: 'var(--color-text-light)', fontWeight: 500 }}>Date & Time:</span>
-                <span style={{ color: 'var(--color-dark)', fontWeight: 600 }}>{booking.collection.date} | {booking.collection.timeSlot}</span>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-3">
-                <span style={{ color: 'var(--color-text-light)', fontWeight: 500 }}>Location:</span>
-                <span style={{ color: 'var(--color-dark)', fontWeight: 600 }}>{booking.collection.type} - {booking.collection.address}</span>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-3">
-                <span style={{ color: 'var(--color-text-light)', fontWeight: 500 }}>Tests/Packages:</span>
-                <span style={{ color: 'var(--color-dark)', fontWeight: 600 }}>{booking.items.map(i => i.name).join(', ')}</span>
-              </div>
+            <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 8px 16px rgba(16,185,129,0.2)' }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" style={{ width: '28px' }}><polyline points="20 6 9 17 4 12"/></svg>
             </div>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-            {invoice && invoice.paymentStatus === 'Paid' ? (
-              <div className="flex flex-col sm:flex-row gap-3 items-center">
-                <span className="text-green-600 font-bold bg-green-50 px-3 py-1.5 rounded-full border border-green-100 flex items-center gap-1.5 text-sm">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4"><polyline points="20 6 9 17 4 12"/></svg>
-                  Payment: Paid
-                </span>
+            
+            <h1 style={{ fontSize: '24px', color: 'var(--color-dark)', margin: '0 0 8px 0', fontWeight: 800 }}>Booking Confirmed!</h1>
+            <p style={{ fontSize: '14px', color: 'var(--color-text-light)', marginBottom: '24px', lineHeight: 1.5 }}>
+              Thank you, {booking.patient.name}. Your appointment is scheduled.
+            </p>
+            
+            <div style={{ display: 'inline-block', background: '#f1f5f9', padding: '10px 20px', borderRadius: '12px', border: '1px dashed #cbd5e1', marginBottom: '32px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--color-text-light)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700, display: 'block', marginBottom: '2px' }}>Booking ID</span>
+              <span style={{ fontSize: '18px', color: 'var(--color-primary)', fontWeight: 800 }}>{booking.id}</span>
+            </div>
+            
+            <div className="flex flex-col gap-2.5 w-full mt-auto max-w-[280px]">
+              {invoice && invoice.paymentStatus === 'Paid' && (
+                 <div className="text-emerald-700 font-bold bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-100 flex justify-center items-center gap-2 text-[13px] mb-1.5 shadow-sm">
+                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-4 h-4"><polyline points="20 6 9 17 4 12"/></svg>
+                   Payment Successful
+                 </div>
+              )}
+              {invoice && invoice.paymentStatus === 'Paid' && (
                 <Link 
                   href={`/bookings/${booking.id}/receipt`}
-                  className="px-5 py-2 border border-primary text-primary hover:bg-primary hover:text-white rounded-full font-semibold transition-colors text-sm"
+                  className="w-full py-2.5 border border-primary text-primary hover:bg-slate-50 rounded-xl font-bold transition-colors text-sm"
                 >
                   View Receipt
                 </Link>
+              )}
+              <Link 
+                href="/bookings"
+                className="w-full py-2.5 bg-primary text-white hover:bg-primary-dark rounded-xl font-bold transition-colors text-sm shadow-sm"
+              >
+                View My Bookings
+              </Link>
+              
+              <Link 
+                href="/"
+                className="w-full py-2.5 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl font-bold transition-colors text-sm"
+              >
+                Back to Home
+              </Link>
+            </div>
+          </div>
+
+          {/* RIGHT: APPOINTMENT SUMMARY CARD */}
+          <div className="flex-1 bg-white border border-slate-200/60 rounded-[20px] w-full max-w-[420px] mx-auto p-7 md:p-8 shadow-[0_4px_24px_rgba(0,0,0,0.03)] relative overflow-hidden flex flex-col justify-center">
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-primary/90"></div>
+            
+            <h3 style={{ fontSize: '18px', color: 'var(--color-dark)', marginTop: 0, marginBottom: '24px', fontWeight: 800 }}>Appointment Summary</h3>
+            
+            <div className="flex flex-col gap-5">
+              <div>
+                <div style={{ fontSize: '12px', color: 'var(--color-text-light)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Patient</div>
+                <div style={{ fontSize: '15px', color: 'var(--color-dark)', fontWeight: 800 }}>{booking.patient.name} <span className="text-slate-500 font-semibold text-[13px] ml-1">({booking.patient.age}y, {booking.patient.gender})</span></div>
               </div>
-            ) : null}
-            
-            <Link 
-              href="/bookings"
-              className="px-5 py-2 border border-primary text-primary hover:bg-primary hover:text-white rounded-full font-semibold transition-colors text-sm"
-            >
-              View My Bookings
-            </Link>
-            
-            <Link 
-              href="/"
-              className="px-5 py-2 border border-slate-300 text-slate-600 hover:bg-slate-50 hover:text-slate-800 rounded-full font-semibold transition-colors text-sm"
-            >
-              Back to Home
-            </Link>
+              
+              <div>
+                <div style={{ fontSize: '12px', color: 'var(--color-text-light)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Date & Time</div>
+                <div style={{ fontSize: '15px', color: 'var(--color-dark)', fontWeight: 800 }}>{booking.collection.date} <span className="text-slate-400 font-normal mx-1">at</span> {booking.collection.timeSlot}</div>
+              </div>
+              
+              <div>
+                <div style={{ fontSize: '12px', color: 'var(--color-text-light)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Location <span className="normal-case font-semibold text-primary ml-1 bg-blue-50 px-1.5 py-0.5 rounded">{booking.collection.type}</span></div>
+                <div style={{ fontSize: '14px', color: 'var(--color-dark)', fontWeight: 700, lineHeight: 1.5 }}>{booking.collection.address}</div>
+              </div>
+              
+              <div className="pt-5 mt-2 border-t border-slate-200/80">
+                <div style={{ fontSize: '12px', color: 'var(--color-text-light)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Tests & Packages</div>
+                <div className="flex flex-col gap-2.5">
+                  {booking.items.map((i, idx) => (
+                    <div key={idx} className="flex items-start gap-2.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 mt-1.5"></div>
+                      <span style={{ fontSize: '14px', color: 'var(--color-dark)', fontWeight: 700, lineHeight: 1.3 }}>{i.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
           
         </div>

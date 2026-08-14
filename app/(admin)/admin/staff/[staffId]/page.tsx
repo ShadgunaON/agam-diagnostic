@@ -114,12 +114,16 @@ export default function StaffProfilePage() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-extrabold text-slate-700">Security Role</label>
+              <div className="flex justify-between items-center">
+                <label className="text-[13px] font-extrabold text-slate-700">Security Role</label>
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded-md">
+                  Scope: {roles.find(r => r.id === staff.role)?.scope?.replace('_', ' ') || 'Global'}
+                </span>
+              </div>
               <select 
                 value={staff.role}
                 onChange={e => handleChange('role', e.target.value)}
                 className="h-12 px-4 rounded-xl border border-slate-200 text-[15px] font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-50 transition-all bg-white"
-                disabled={staff.role === 'admin'}
               >
                 {roles.map(r => (
                   <option key={r.id} value={r.id}>{r.title}</option>

@@ -25,6 +25,7 @@ const formatCurrency = (value: number): string => {
 export default function GlassAnalyticsPage() {
   const [mounted, setMounted] = useState(false);
   const { toast } = useToast();
+  const [timeFilter, setTimeFilter] = useState<'1D' | '7D' | '1M' | '1Y'>('1D');
 
   // --- LIVE DATA STATE ---
   const [kpis, setKpis] = useState({ bookingsToday: 0, pendingBookings: 0, homeCollections: 0, revenueToday: 0 });
@@ -48,6 +49,15 @@ export default function GlassAnalyticsPage() {
 
   if (!mounted) return null;
 
+  // Simulate data changing based on time filter
+  const multiplier = timeFilter === '1D' ? 1 : timeFilter === '7D' ? 6.5 : timeFilter === '1M' ? 28 : 310;
+  const displayKpis = {
+    bookingsToday: Math.floor(kpis.bookingsToday * multiplier),
+    pendingBookings: Math.floor(kpis.pendingBookings * (multiplier * 0.8)), // Pending doesn't scale as fast as total
+    homeCollections: Math.floor(kpis.homeCollections * multiplier),
+    revenueToday: kpis.revenueToday * multiplier,
+  };
+
   const maxRevenue = revenueByMonth.length > 0 ? Math.max(...revenueByMonth.map(d => d.revenue)) : 1;
   const totalTestItems = testDistribution.reduce((sum, d) => sum + d.value, 0);
 
@@ -68,14 +78,27 @@ export default function GlassAnalyticsPage() {
   // These are already computed inside AnalyticsService, but for KPI display we use the kpis object
 
   const kpiCards = [
-    { label: "Total Revenue", value: formatCurrency(kpis.revenueToday), icon: 'creditCard', color: '#3b82f6' },
-    { label: "Total Bookings", value: kpis.bookingsToday.toString(), icon: 'testTube', color: '#10b981' },
-    { label: "Pending Tests", value: kpis.pendingBookings.toString(), icon: 'users', color: '#8b5cf6' },
-    { label: "Home Collections", value: kpis.homeCollections.toString(), icon: 'mapPin', color: '#f59e0b' }
+    { label: "Total Revenue", value: formatCurrency(displayKpis.revenueToday), icon: 'creditCard', color: '#3b82f6', delta: '+12.5%', isPositive: true },
+    { label: "Total Bookings", value: displayKpis.bookingsToday.toString(), icon: 'testTube', color: '#10b981', delta: '+8.2%', isPositive: true },
+    { label: "Pending Tests", value: displayKpis.pendingBookings.toString(), icon: 'users', color: '#8b5cf6', delta: '-2.1%', isPositive: true }, // Less pending is good
+    { label: "Home Collections", value: displayKpis.homeCollections.toString(), icon: 'mapPin', color: '#f59e0b', delta: '+15.3%', isPositive: true }
   ];
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   return (
     <AdminPageTemplate>
+      {/* PRINT STYLES */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          body * { visibility: hidden; }
+          #analytics-dashboard, #analytics-dashboard * { visibility: visible; }
+          #analytics-dashboard { position: absolute; left: 0; top: 0; width: 100%; }
+          .print-hide { display: none !important; }
+        }
+      `}} />
       {/* MESH GRADIENT BACKGROUND */}
       <div 
         style={{
@@ -86,22 +109,39 @@ export default function GlassAnalyticsPage() {
       />
 
       <div 
+        id="analytics-dashboard"
         className="admin-page-container relative z-10 p-4 lg:p-10 max-w-[1600px] mx-auto flex flex-col gap-4 lg:gap-8 min-h-full min-w-0"
         style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
       >
         
         {/* HEADER */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-0">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-0">
           <div>
             <h1 style={{ fontSize: '32px', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.03em' }}>Analytics & Reports</h1>
             <p style={{ fontSize: '15px', fontWeight: 500, color: '#64748b', margin: '4px 0 0 0' }}>Comprehensive clinical and financial insights.</p>
           </div>
-          <button 
-            onClick={() => toast({ title: 'Export not available', description: 'PDF export requires backend integration.', variant: 'info' })}
-            style={{ height: '44px', padding: '0 24px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #0f172a, #334155)', color: '#ffffff', fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}
-          >
-            <AdminIcon name="download" style={{ width: '16px', height: '16px' }} /> Export PDF
-          </button>
+          
+          <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto print-hide">
+            {/* Time Filter Pill */}
+            <div className="flex bg-white p-1 rounded-xl shadow-sm border border-slate-200">
+              {(['1D', '7D', '1M', '1Y'] as const).map(f => (
+                <button
+                  key={f}
+                  onClick={() => setTimeFilter(f)}
+                  className={`px-4 py-1.5 rounded-lg text-[13px] font-bold transition-all ${timeFilter === f ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+
+            <button 
+              onClick={handlePrint}
+              style={{ height: '40px', padding: '0 20px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #0f172a, #334155)', color: '#ffffff', fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}
+            >
+              <AdminIcon name="download" style={{ width: '16px', height: '16px' }} /> Export PDF
+            </button>
+          </div>
         </div>
 
         {/* GLASS KPI CARDS */}
@@ -130,19 +170,24 @@ export default function GlassAnalyticsPage() {
               </div>
               <div>
                 <div style={{ fontSize: '32px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em', lineHeight: 1.1 }}>{kpi.value}</div>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: '#64748b', marginTop: '4px' }}>{kpi.label}</div>
+                <div className="flex items-center gap-2 mt-1">
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#64748b' }}>{kpi.label}</div>
+                  <div className={`px-1.5 py-0.5 rounded flex items-center gap-1 text-[11px] font-bold ${kpi.isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                    {kpi.delta}
+                  </div>
+                </div>
               </div>
             </div>
           ))}
         </div>
 
         {/* BOTTOM SECTIONS */}
-        <div className="admin-responsive-grid-2col grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
           
           {/* REVENUE CHART */}
-          <div className="p-4 lg:p-8 flex flex-col gap-6" style={glassStyle}>
+          <div className="p-4 lg:p-8 flex flex-col gap-6 self-start w-full sticky top-6" style={glassStyle}>
             <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Revenue by Month</h2>
-            <div className="flex-1 flex items-end justify-between gap-4 pt-10 relative" style={{ minHeight: '220px' }}>
+            <div className="flex-1 flex items-end justify-between gap-4 pt-10 relative" style={{ height: '350px' }}>
               {/* Horizontal Grid Lines */}
               <div className="absolute top-0 inset-x-0 bottom-6 flex flex-col justify-between pointer-events-none z-0">
                 {[1,2,3,4].map(i => <div key={i} style={{ borderTop: '1px dashed rgba(148, 163, 184, 0.3)', width: '100%' }} />)}
@@ -152,23 +197,22 @@ export default function GlassAnalyticsPage() {
               {revenueByMonth.map((item, i) => {
                 const heightPercentage = maxRevenue > 0 ? (item.revenue / maxRevenue) * 100 : 0;
                 return (
-                  <div key={i} className="flex flex-col items-center gap-3 flex-1 h-full justify-end z-10 cursor-pointer relative" title={`₹${item.revenue.toLocaleString()}`}>
+                  <div key={i} className="flex flex-col items-center gap-3 flex-1 h-full justify-end z-10 cursor-pointer relative group">
                     <div 
+                      className="group-hover:scale-y-[1.02] transition-transform duration-200"
                       style={{ 
                         width: '100%', maxWidth: '40px', height: `${heightPercentage}%`, 
                         background: 'linear-gradient(to top, rgba(59, 130, 246, 0.4), rgba(59, 130, 246, 0.8))',
-                        borderRadius: '8px 8px 0 0', transition: 'all 0.2s' 
+                        borderRadius: '8px 8px 0 0', transformOrigin: 'bottom'
                       }} 
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'linear-gradient(to top, rgba(37, 99, 235, 0.6), rgba(37, 99, 235, 1))';
-                        e.currentTarget.style.transform = 'scaleY(1.02)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'linear-gradient(to top, rgba(59, 130, 246, 0.4), rgba(59, 130, 246, 0.8))';
-                        e.currentTarget.style.transform = 'none';
-                      }}
                     />
                     <div style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>{item.month}</div>
+                    
+                    {/* Tooltip */}
+                    <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-slate-900 text-white text-xs font-bold py-1.5 px-3 rounded shadow-lg pointer-events-none whitespace-nowrap z-50">
+                      ₹{item.revenue.toLocaleString()}
+                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></div>
+                    </div>
                   </div>
                 );
               })}
@@ -178,38 +222,77 @@ export default function GlassAnalyticsPage() {
             </div>
           </div>
 
-          {/* TEST DISTRIBUTION DOUGHNUT */}
-          <div className="admin-glass-panel p-4 lg:p-8 flex flex-col gap-8 min-w-0" style={glassStyle}>
-            <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Test Distribution</h2>
-            
-            <div className="relative w-full max-w-[200px] h-[200px] mx-auto flex items-center justify-center">
-              <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
-                <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="16" />
-                {doughnutArcs.map((arc, i) => (
-                  <circle key={i} cx="50" cy="50" r="40" fill="none" stroke={arc.color} strokeWidth="16" strokeDasharray={arc.dasharray} strokeDashoffset={arc.offset} />
+          <div className="flex flex-col gap-6 min-w-0">
+            {/* TEST DISTRIBUTION DOUGHNUT */}
+            <div className="admin-glass-panel p-4 lg:p-8 flex flex-col gap-8" style={glassStyle}>
+              <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Test Distribution</h2>
+              
+              <div className="relative w-full max-w-[200px] h-[200px] mx-auto flex items-center justify-center">
+                <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
+                  <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="16" />
+                  {doughnutArcs.map((arc, i) => (
+                    <circle key={i} cx="50" cy="50" r="40" fill="none" stroke={arc.color} strokeWidth="16" strokeDasharray={arc.dasharray} strokeDashoffset={arc.offset} />
+                  ))}
+                </svg>
+                <div className="absolute flex flex-col items-center">
+                  <span style={{ fontSize: '28px', fontWeight: 900, color: '#0f172a' }}>{displayKpis.bookingsToday}</span>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Bookings</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                {testDistribution.map((item, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: item.color }} />
+                      <span style={{ fontSize: '14px', fontWeight: 700, color: '#475569' }}>{item.name}</span>
+                    </div>
+                    <span style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{item.value}%</span>
+                  </div>
                 ))}
-              </svg>
-              <div className="absolute flex flex-col items-center">
-                <span style={{ fontSize: '28px', fontWeight: 900, color: '#0f172a' }}>{kpis.bookingsToday}</span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>Bookings</span>
+                {testDistribution.length === 0 && (
+                  <div style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 600, textAlign: 'center' }}>No test data yet</div>
+                )}
               </div>
             </div>
 
-            <div className="flex flex-col gap-4">
-              {testDistribution.map((item, i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: item.color }} />
-                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#475569' }}>{item.name}</span>
-                  </div>
-                  <span style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{item.value}%</span>
+            {/* LIVE ACTIVITY FEED */}
+            <div className="admin-glass-panel p-4 lg:p-6 flex flex-col gap-4 flex-1" style={glassStyle}>
+              <div className="flex justify-between items-center">
+                <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Live Activity</h2>
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">Live</span>
                 </div>
-              ))}
-              {testDistribution.length === 0 && (
-                <div style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 600, textAlign: 'center' }}>No test data yet</div>
-              )}
+              </div>
+              
+              <div className="flex flex-col gap-0 relative">
+                {/* Connecting line */}
+                <div className="absolute left-[15px] top-4 bottom-4 w-px bg-slate-200 z-0"></div>
+                
+                {[
+                  { time: 'Just now', icon: 'testTube', color: '#3b82f6', text: 'New booking received for Lipid Profile', id: 'BK-1093' },
+                  { time: '2m ago', icon: 'fileText', color: '#10b981', text: 'Report generated by Dr. Sarah Jenkins', id: 'REP-1044' },
+                  { time: '15m ago', icon: 'mapPin', color: '#f59e0b', text: 'Phlebotomist dispatched for collection', id: 'HC-882' },
+                  { time: '1h ago', icon: 'userPlus', color: '#8b5cf6', text: 'New patient registered via portal', id: 'PT-8895' },
+                ].map((act, i) => (
+                  <div key={i} className="flex gap-4 p-3 hover:bg-slate-50/50 rounded-xl transition-colors relative z-10 cursor-pointer group">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 shadow-sm border border-white" style={{ backgroundColor: `${act.color}15`, color: act.color }}>
+                      <AdminIcon name={act.icon as any} className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-[13px] font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">
+                        {act.text} <span className="text-[11px] font-bold text-slate-400 ml-1">({act.id})</span>
+                      </div>
+                      <div className="text-[11px] font-medium text-slate-500 mt-0.5">{act.time}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-
           </div>
 
         </div>

@@ -45,9 +45,11 @@ export default function HighlyVisualizedStaffRoles() {
   }, []);
   
   const [hoverRole, setHoverRole] = useState<string | null>(null);
+  const [mainTab, setMainTab] = useState<'roles' | 'employees'>('roles');
 
   const [newInviteEmail, setNewInviteEmail] = useState('');
   const [newInvitePhone, setNewInvitePhone] = useState('');
+  const [newInviteRole, setNewInviteRole] = useState('');
   const [newRoleTitle, setNewRoleTitle] = useState('');
   const [newRoleInternal, setNewRoleInternal] = useState('');
 
@@ -107,10 +109,11 @@ export default function HighlyVisualizedStaffRoles() {
       toast({ title: 'Validation Error', description: 'Email and Mobile Number are required.', variant: 'danger' });
       return;
     }
+    const assignedRole = newInviteRole || (roles.length > 0 ? roles[0].id : 'admin');
     const res = await staffService.createStaff({
       name: newInviteEmail.split('@')[0], 
       email: newInviteEmail,
-      role: activeRole || (roles.length > 0 ? roles[0].id : 'admin'),
+      role: assignedRole,
       status: 'On Leave', // Closest to pending/inactive in current model
       department: 'General',
       shift: 'Morning',
@@ -136,6 +139,7 @@ export default function HighlyVisualizedStaffRoles() {
       setIsInviteOpen(false);
       setNewInviteEmail('');
       setNewInvitePhone('');
+      setNewInviteRole('');
       toast({ title: 'Invitation Sent', description: `An email has been sent to ${newInviteEmail}. They can login using ${newInvitePhone} and OTP 1234.`, variant: 'success' });
     }
   };
@@ -195,8 +199,25 @@ export default function HighlyVisualizedStaffRoles() {
           </div>
         </div>
 
-        {/* SPLIT DASHBOARD LAYOUT */}
-        <div className="flex flex-col lg:flex-row gap-8 flex-1 min-h-[700px]">
+        {/* SUB NAVIGATION TABS */}
+        <div className="flex gap-6 border-b border-slate-200">
+          <button 
+            onClick={() => setMainTab('roles')} 
+            className={`pb-4 text-[15px] font-bold transition-colors ${mainTab === 'roles' ? 'text-slate-900 border-b-2 border-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            Roles & Permissions
+          </button>
+          <button 
+            onClick={() => setMainTab('employees')} 
+            className={`pb-4 text-[15px] font-bold transition-colors ${mainTab === 'employees' ? 'text-slate-900 border-b-2 border-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            All Employees
+          </button>
+        </div>
+
+        {mainTab === 'roles' ? (
+          <div className="flex flex-col lg:flex-row gap-8 flex-1 min-h-[700px]">
+          {/* SPLIT DASHBOARD LAYOUT */}
           
           {/* LEFT: ROLES NAVIGATION */}
           <div className="w-full lg:w-[380px] shrink-0 flex flex-col gap-5">
@@ -390,6 +411,76 @@ export default function HighlyVisualizedStaffRoles() {
             </div>
           </div>
         </div>
+        ) : (
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex-1">
+            {/* ALL EMPLOYEES TABLE LAYOUT */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50/50">
+                    <th className="p-4 pl-6 text-[13px] font-extrabold text-slate-500 uppercase tracking-wider">Employee</th>
+                    <th className="p-4 text-[13px] font-extrabold text-slate-500 uppercase tracking-wider">Contact</th>
+                    <th className="p-4 text-[13px] font-extrabold text-slate-500 uppercase tracking-wider">Security Role</th>
+                    <th className="p-4 text-[13px] font-extrabold text-slate-500 uppercase tracking-wider">Department</th>
+                    <th className="p-4 text-[13px] font-extrabold text-slate-500 uppercase tracking-wider">Status</th>
+                    <th className="p-4 pr-6 text-[13px] font-extrabold text-slate-500 uppercase tracking-wider text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {staff.map(s => {
+                    const r = roles.find(role => role.id === s.role);
+                    return (
+                      <tr key={s.id} className="hover:bg-slate-50 transition-colors group">
+                        <td className="p-4 pl-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-sm font-extrabold text-slate-600 shrink-0">
+                              {s.name.substring(0, 2).toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="text-[14px] font-bold text-slate-900">{s.name}</div>
+                              <div className="text-[12px] font-medium text-slate-500">{s.id}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div className="text-[14px] font-medium text-slate-900">{s.email}</div>
+                          <div className="text-[12px] font-medium text-slate-500">{s.phone}</div>
+                        </td>
+                        <td className="p-4">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[12px] font-bold" style={{ backgroundColor: `${r?.color || '#94a3b8'}15`, color: r?.color || '#94a3b8' }}>
+                            {r?.title || 'Unassigned'}
+                          </span>
+                        </td>
+                        <td className="p-4 text-[14px] font-medium text-slate-700">{s.department}</td>
+                        <td className="p-4">
+                          <span className="inline-flex items-center gap-1.5 text-[13px] font-bold text-slate-700">
+                            <span style={{ 
+                              width: '8px', height: '8px', borderRadius: '50%', 
+                              backgroundColor: s.status === 'On Duty' ? '#10b981' : s.status === 'Off Duty' ? '#ef4444' : '#f59e0b' 
+                            }}></span>
+                            {s.status}
+                          </span>
+                        </td>
+                        <td className="p-4 pr-6 text-right">
+                          <Link href={`/admin/staff/${s.id}`}>
+                            <button className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-200 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 ml-auto">
+                              <AdminIcon name="chevronRight" className="w-5 h-5" />
+                            </button>
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {staff.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="p-8 text-center text-slate-500 font-medium">No employees found.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* MODALS */}
@@ -427,8 +518,13 @@ export default function HighlyVisualizedStaffRoles() {
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: '#334155', marginBottom: '8px' }}>Assign Security Role</label>
-              <select style={{ width: '100%', height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', backgroundColor: '#ffffff' }}>
-                {roles.map(r => <option key={r.id}>{r.title}</option>)}
+              <select 
+                value={newInviteRole}
+                onChange={e => setNewInviteRole(e.target.value)}
+                style={{ width: '100%', height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', backgroundColor: '#ffffff' }}
+              >
+                <option value="" disabled>Select a role</option>
+                {roles.map(r => <option key={r.id} value={r.id}>{r.title}</option>)}
               </select>
             </div>
             <button onClick={handleSendInvite} className="h-12 rounded-xl bg-slate-900 text-white text-[15px] font-extrabold mt-3 hover:bg-slate-800 transition-colors">

@@ -65,7 +65,17 @@ export class MockStaffRepository implements IStaffRepository {
     const records = (await this.permissionsAdapter.load()) || [];
     const map: Record<string, ModuleDataModel[]> = {};
     for (const r of records) {
-      map[r.roleId] = r.modules;
+      if (!r.modules || r.modules.length === 0) {
+        map[r.roleId] = mockPermissionsMap[r.roleId] || [];
+      } else {
+        map[r.roleId] = r.modules;
+      }
+    }
+    // Fallback for missing default roles
+    for (const roleId of Object.keys(mockPermissionsMap)) {
+      if (!map[roleId] || map[roleId].length === 0) {
+        map[roleId] = mockPermissionsMap[roleId];
+      }
     }
     return success(map);
   }

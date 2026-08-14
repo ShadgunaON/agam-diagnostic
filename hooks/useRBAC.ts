@@ -117,7 +117,7 @@ export function useRBAC(): RBACState {
     return roleId ? PermissionEvaluator.isAdmin(roleId) : false;
   }, [roleId, user?.role]);
 
-  const isStaff = !!(staff || user?.role === 'admin');
+  const isStaff = !!(staff || (user?.role && user.role !== 'patient'));
 
   const scope = role?.scope;
 

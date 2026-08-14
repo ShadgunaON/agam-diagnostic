@@ -76,7 +76,7 @@ export function ProgressiveSignupForm() {
     await execute(async () => {
       const { success, isNewUser, user: verifiedUser } = await verifyOtp(mobile, otp);
       if (success) {
-        if (verifiedUser?.role === 'admin' || verifiedUser?.role === 'doctor' || verifiedUser?.role === 'lab_tech') {
+        if (verifiedUser?.role && verifiedUser.role !== 'patient') {
           router.push('/admin');
           return;
         }

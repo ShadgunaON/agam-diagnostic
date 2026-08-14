@@ -14,7 +14,9 @@ export class MockReportsRepository implements IReportsRepository {
   private async getTasks(): Promise<ReportTaskModel[]> {
     const loaded = await this.adapter.load();
     if (loaded && loaded.length > 0) {
-      return loaded;
+      // Deduplicate by ID to prevent React key errors if localstorage gets corrupted
+      const uniqueTasks = Array.from(new Map(loaded.map(item => [item.id, item])).values());
+      return uniqueTasks;
     }
     return [...mockReportTasks];
   }
