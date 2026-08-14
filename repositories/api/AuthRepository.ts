@@ -21,4 +21,8 @@ export class ApiAuthRepository implements IAuthRepository {
     // For now, always return failure as this is not implemented in the API layer yet.
     return failure(new Error('API Auth profile update not implemented'));
   }
+
+  async createMockAccount(_user: UserProfile): Promise<Result<void>> {
+    return failure(new Error('API Auth mock account creation not implemented'));
+  }
 }
