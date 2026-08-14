@@ -21,8 +21,8 @@ export default function WomenHealthPage() {
   return (
     <>
       <section className="hero-premium section !p-0 overflow-hidden relative" style={{ background: 'var(--color-bg-alt)' }}>
-        <div className="flex flex-col lg:grid lg:grid-cols-[45%_55%] items-stretch">
-          <div className="flex flex-col justify-center relative z-10 px-6 py-12 lg:py-20 lg:pl-[max(1.5rem,calc((100vw-var(--max-width))/2+1.5rem))] lg:pr-8">
+        <div className="flex flex-col lg:grid lg:grid-cols-[45%_55%] items-stretch lg:h-[calc(100vh-90px)] lg:max-h-[640px] lg:min-h-[480px]">
+          <div className="flex flex-col justify-start relative z-10 px-6 py-10 lg:pt-12 lg:pb-10 lg:pl-[max(1.5rem,calc((100vw-var(--max-width))/2+1.5rem))] lg:pr-12">
             <div className="breadcrumb" style={{ marginBottom: 'var(--sp-3)' }}>
               <Link href="/">Home</Link><span className="breadcrumb__sep">›</span><Link href="/health-packages">Health Packages</Link><span className="breadcrumb__sep">›</span><span className="breadcrumb__current">Women&apos;s Health</span>
             </div>
@@ -35,9 +35,9 @@ export default function WomenHealthPage() {
               </Button>
             </div>
           </div>
-          <div className="relative w-full aspect-[4/3] sm:aspect-video lg:aspect-auto lg:h-full lg:min-h-[500px] flex items-center justify-center overflow-hidden">
+          <div className="relative w-full aspect-[4/3] sm:aspect-video lg:aspect-auto lg:h-full flex items-center justify-center overflow-hidden">
             <div className="hidden lg:block absolute inset-0 z-10" style={{ background: 'linear-gradient(to right, var(--color-bg-alt) 0%, transparent 15%)' }}></div>
-            <img src="/images/modern_lab_interior.png" alt="Women's Health Screening" className="w-full h-full object-cover object-top md:object-[20%_center] lg:object-center rounded-2xl lg:rounded-none" />
+            <img src="/images/womens_hero.png" alt="Women's Health Screening" className="w-full h-full object-cover object-top md:object-[20%_center] lg:object-center rounded-2xl lg:rounded-none" />
           </div>
         </div>
       </section>
@@ -49,7 +49,7 @@ export default function WomenHealthPage() {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '14px', height: '14px' }}><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg>
               Recommended For
             </div>
-            <h2 className="section-header__title">Who Should Consider Women&apos;s Health Packages?</h2>
+            <h2 className="section-header__title" style={{ fontSize: 'clamp(1.25rem, 2vw, 1.75rem)' }}>Who Should Consider Women&apos;s Health Packages?</h2>
             <p className="section-header__desc">Our women&apos;s health packages are designed for proactive care at every life stage — whether you&apos;re planning a family, managing a condition, or simply staying ahead of health risks.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 reveal" style={{ gap: 'var(--sp-4)' }}>
@@ -106,24 +106,35 @@ export default function WomenHealthPage() {
           <div className="section-header section-header--center" style={{ marginBottom: 'var(--sp-6)' }}>
             <h2 className="section-header__title" style={{ fontSize: 'var(--fs-2xl)' }}>Explore Other Categories</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 reveal">
-            <Link href="/men-health" className="card--service" style={{ textDecoration: 'none', padding: 'var(--sp-5)', display: 'flex', alignItems: 'center', gap: 'var(--sp-5)' }}>
-              <div className="card__icon" style={{ background: '#DBEAFE', flexShrink: 0 }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <div className="flex flex-col md:flex-row justify-center gap-8 md:gap-12 reveal">
+            <Link href="/men-health" className="card--service group w-full md:w-[380px]" style={{ textDecoration: 'none', padding: 'var(--sp-6)' }}>
+              <div className="w-full h-48 rounded-xl overflow-hidden mb-6 relative shadow-sm group-hover:shadow-md transition-shadow">
+                <img src="/images/mens_health.png" className="w-full h-full object-cover object-top md:object-[center_20%] group-hover:scale-105 transition-transform duration-500" alt="Men's Health" />
               </div>
-              <div>
-                <h3 className="card__title" style={{ fontSize: 'var(--fs-base)', color: 'var(--color-primary)', marginBottom: 'var(--sp-1)' }}>Men&apos;s Health Packages</h3>
-                <p className="card__desc" style={{ fontSize: 'var(--fs-sm)', margin: 0 }}>Executive health, cardiac risk, liver & kidney screening for men.</p>
+              <h3 className="card__title" style={{ color: 'var(--color-primary)', marginBottom: 'var(--sp-2)' }}>Men&apos;s Health</h3>
+              <p className="card__desc" style={{ marginBottom: 'var(--sp-5)' }}>Executive health profiles, cardiac risk assessment, liver & kidney function, prostate screening, metabolic panels, and preventive checkups for men.</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)', marginBottom: 'var(--sp-5)' }}>
+                <span className="badge badge--primary" style={{ fontSize: '10px' }}>Executive Health</span>
+                <span className="badge badge--primary" style={{ fontSize: '10px' }}>Heart Care</span>
+                <span className="badge badge--primary" style={{ fontSize: '10px' }}>Metabolic</span>
+                <span className="badge badge--primary" style={{ fontSize: '10px' }}>Liver Health</span>
               </div>
+              <span className="card__link">Explore 6 Packages <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '16px', height: '16px', display: 'inline', marginLeft: '4px' }}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
             </Link>
-            <Link href="/lifestyle-health" className="card--service" style={{ textDecoration: 'none', padding: 'var(--sp-5)', display: 'flex', alignItems: 'center', gap: 'var(--sp-5)' }}>
-              <div className="card__icon" style={{ background: '#ECFCCB', flexShrink: 0 }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="#65A30D" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+
+            <Link href="/lifestyle-health" className="card--service group w-full md:w-[380px]" style={{ textDecoration: 'none', padding: 'var(--sp-6)' }}>
+              <div className="w-full h-48 rounded-xl overflow-hidden mb-6 relative shadow-sm group-hover:shadow-md transition-shadow">
+                <img src="/images/lifestyle_health.png" className="w-full h-full object-cover object-top md:object-[center_20%] group-hover:scale-105 transition-transform duration-500" alt="Lifestyle Health" />
               </div>
-              <div>
-                <h3 className="card__title" style={{ fontSize: 'var(--fs-base)', color: 'var(--color-primary)', marginBottom: 'var(--sp-1)' }}>Lifestyle Health Packages</h3>
-                <p className="card__desc" style={{ fontSize: 'var(--fs-sm)', margin: 0 }}>Diabetes, obesity, stress, fitness, and corporate wellness checkups.</p>
+              <h3 className="card__title" style={{ color: 'var(--color-primary)', marginBottom: 'var(--sp-2)' }}>Lifestyle Health</h3>
+              <p className="card__desc" style={{ marginBottom: 'var(--sp-5)' }}>Diabetic screening, obesity risk profiling, vitamin deficiency panels, corporate executive checkups, and fitness evaluations.</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)', marginBottom: 'var(--sp-5)' }}>
+                <span className="badge badge--primary" style={{ fontSize: '10px' }}>Diabetes</span>
+                <span className="badge badge--primary" style={{ fontSize: '10px' }}>Obesity</span>
+                <span className="badge badge--primary" style={{ fontSize: '10px' }}>Vitamins</span>
+                <span className="badge badge--primary" style={{ fontSize: '10px' }}>Corporate</span>
               </div>
+              <span className="card__link">Explore 5 Packages <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '16px', height: '16px', display: 'inline', marginLeft: '4px' }}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
             </Link>
           </div>
         </div>

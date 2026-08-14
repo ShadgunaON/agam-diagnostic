@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Section, Container, Grid } from '@/components/ui';
 
 export function PackagesCategorySection() {
@@ -19,9 +20,9 @@ export function PackagesCategorySection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 reveal">
           
           {/* Women's Health Category */}
-          <Link href="/women-health" className="card--service" style={{ textDecoration: 'none', padding: 'var(--sp-6)' }}>
-            <div className="card__icon" style={{ background: '#FCE7F3', marginBottom: 'var(--sp-5)' }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="#DB2777" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <Link href="/women-health" className="card--service group" style={{ textDecoration: 'none', padding: 'var(--sp-6)' }}>
+            <div className="w-full h-48 rounded-xl overflow-hidden mb-6 relative shadow-sm group-hover:shadow-md transition-shadow">
+              <Image src="/images/womens_health.png" fill className="object-cover group-hover:scale-105 transition-transform duration-500" alt="Women's Health" />
             </div>
             <h3 className="card__title" style={{ color: 'var(--color-primary)', marginBottom: 'var(--sp-2)' }}>Women&apos;s Health</h3>
             <p className="card__desc" style={{ marginBottom: 'var(--sp-5)' }}>Hormonal health, thyroid screening, PCOS profiling, bone density markers, pregnancy care, and comprehensive women&apos;s wellness checkups.</p>
@@ -35,9 +36,9 @@ export function PackagesCategorySection() {
           </Link>
 
           {/* Men's Health Category */}
-          <Link href="/men-health" className="card--service" style={{ textDecoration: 'none', padding: 'var(--sp-6)' }}>
-            <div className="card__icon" style={{ background: '#DBEAFE', marginBottom: 'var(--sp-5)' }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <Link href="/men-health" className="card--service group" style={{ textDecoration: 'none', padding: 'var(--sp-6)' }}>
+            <div className="w-full h-48 rounded-xl overflow-hidden mb-6 relative shadow-sm group-hover:shadow-md transition-shadow">
+              <Image src="/images/mens_health.png" fill className="object-cover group-hover:scale-105 transition-transform duration-500" alt="Men's Health" />
             </div>
             <h3 className="card__title" style={{ color: 'var(--color-primary)', marginBottom: 'var(--sp-2)' }}>Men&apos;s Health</h3>
             <p className="card__desc" style={{ marginBottom: 'var(--sp-5)' }}>Executive health profiles, cardiac risk assessment, liver & kidney function, prostate screening, metabolic panels, and preventive checkups for men.</p>
@@ -51,9 +52,9 @@ export function PackagesCategorySection() {
           </Link>
 
           {/* Lifestyle Health Category */}
-          <Link href="/lifestyle-health" className="card--service" style={{ textDecoration: 'none', padding: 'var(--sp-6)' }}>
-            <div className="card__icon" style={{ background: '#ECFCCB', marginBottom: 'var(--sp-5)' }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="#65A30D" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <Link href="/lifestyle-health" className="card--service group" style={{ textDecoration: 'none', padding: 'var(--sp-6)' }}>
+            <div className="w-full h-48 rounded-xl overflow-hidden mb-6 relative shadow-sm group-hover:shadow-md transition-shadow">
+              <Image src="/images/lifestyle_health.png" fill className="object-cover group-hover:scale-105 transition-transform duration-500" alt="Lifestyle Health" />
             </div>
             <h3 className="card__title" style={{ color: 'var(--color-primary)', marginBottom: 'var(--sp-2)' }}>Lifestyle Health</h3>
             <p className="card__desc" style={{ marginBottom: 'var(--sp-5)' }}>Diabetic screening, obesity risk profiling, vitamin deficiency panels, corporate executive checkups, smoker&apos;s risk assessment, and fitness evaluations.</p>
