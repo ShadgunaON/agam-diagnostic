@@ -60,6 +60,8 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
             <span className="breadcrumb__sep">›</span>
             <Link href="/blog">Blog</Link>
             <span className="breadcrumb__sep">›</span>
+            <span className="breadcrumb__current">{article.category}</span>
+            <span className="breadcrumb__sep">›</span>
             <span className="breadcrumb__current">{article.title}</span>
           </div>
         </div>

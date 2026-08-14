@@ -35,4 +35,12 @@ export interface PopularRead {
   title: string;
   date: string;
   icon: string;
+  imageUrl?: string;
+}
+
+export interface NewsletterSubscriber {
+  id: string;
+  email: string;
+  subscribedAt: string;
+  status: 'Active' | 'Unsubscribed';
 }

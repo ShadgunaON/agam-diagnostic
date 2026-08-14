@@ -45,4 +45,8 @@ export class ApiBlogRepository implements IBlogRepository {
     // Stub implementation
     return failure(new Error('Method not implemented.'));
   }
+
+  async subscribeToNewsletter(email: string): Promise<Result<void>> {
+    return failure(new Error('Method not implemented.'));
+  }
 }

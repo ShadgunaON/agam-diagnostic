@@ -35,4 +35,8 @@ export class BlogService {
   async updateArticle(id: string, updates: Partial<BlogArticle>) {
     return this.repository.updateArticle(id, updates);
   }
+
+  async subscribeToNewsletter(email: string) {
+    return this.repository.subscribeToNewsletter(email);
+  }
 }
