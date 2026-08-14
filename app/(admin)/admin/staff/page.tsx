@@ -128,7 +128,7 @@ export default function HighlyVisualizedStaffRoles() {
         fullName: newInviteEmail.split('@')[0],
         mobile: newInvitePhone,
         email: newInviteEmail,
-        role: 'staff',
+        role: 'admin',
         staffId: res.value.id,
         isProfileComplete: true,
         savedPatients: [],
