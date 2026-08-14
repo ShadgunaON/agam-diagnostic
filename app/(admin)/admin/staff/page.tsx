@@ -7,7 +7,7 @@ import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
 import { useToast } from '@/components/admin/feedback/Toast';
 import { Drawer } from '@/components/ui/Drawer';
 
-import { staffService } from '@/services';
+import { staffService, authService } from '@/services';
 import { StaffModel, RoleModel, ModuleDataModel } from '@/domains/staff/model';
 
 export default function HighlyVisualizedStaffRoles() {
@@ -47,6 +47,7 @@ export default function HighlyVisualizedStaffRoles() {
   const [hoverRole, setHoverRole] = useState<string | null>(null);
 
   const [newInviteEmail, setNewInviteEmail] = useState('');
+  const [newInvitePhone, setNewInvitePhone] = useState('');
   const [newRoleTitle, setNewRoleTitle] = useState('');
   const [newRoleInternal, setNewRoleInternal] = useState('');
 
@@ -102,7 +103,10 @@ export default function HighlyVisualizedStaffRoles() {
   };
 
   const handleSendInvite = async () => {
-    if (!newInviteEmail) return;
+    if (!newInviteEmail || !newInvitePhone) {
+      toast({ title: 'Validation Error', description: 'Email and Mobile Number are required.', variant: 'danger' });
+      return;
+    }
     const res = await staffService.createStaff({
       name: newInviteEmail.split('@')[0], 
       email: newInviteEmail,
@@ -110,15 +114,29 @@ export default function HighlyVisualizedStaffRoles() {
       status: 'On Leave', // Closest to pending/inactive in current model
       department: 'General',
       shift: 'Morning',
-      phone: '0000000000',
+      phone: newInvitePhone,
       joinDate: new Date().toLocaleDateString()
     });
     
     if (res.isSuccess) {
+      // Create mock auth profile so they can login immediately
+      await authService.createMockAccount({
+        id: `usr_${newInvitePhone}`,
+        fullName: newInviteEmail.split('@')[0],
+        mobile: newInvitePhone,
+        email: newInviteEmail,
+        role: 'staff',
+        staffId: res.value.id,
+        isProfileComplete: true,
+        savedPatients: [],
+        savedAddresses: []
+      });
+
       setStaff([...staff, res.value]);
       setIsInviteOpen(false);
       setNewInviteEmail('');
-      toast({ title: 'Invitation Sent', description: `An email has been sent to ${newInviteEmail}.`, variant: 'success' });
+      setNewInvitePhone('');
+      toast({ title: 'Invitation Sent', description: `An email has been sent to ${newInviteEmail}. They can login using ${newInvitePhone} and OTP 1234.`, variant: 'success' });
     }
   };
 
@@ -393,7 +411,17 @@ export default function HighlyVisualizedStaffRoles() {
                 type="email" 
                 value={newInviteEmail}
                 onChange={e => setNewInviteEmail(e.target.value)}
-                placeholder="colleague@agam.com" 
+                placeholder="colleague@agamdiagnostics.com" 
+                style={{ width: '100%', height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} 
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: '#334155', marginBottom: '8px' }}>Mobile Number (For Login)</label>
+              <input 
+                type="text" 
+                value={newInvitePhone}
+                onChange={e => setNewInvitePhone(e.target.value)}
+                placeholder="9876543210" 
                 style={{ width: '100%', height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} 
               />
             </div>

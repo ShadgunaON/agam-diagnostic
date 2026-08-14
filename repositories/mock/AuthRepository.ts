@@ -174,4 +174,17 @@ export class MockAuthRepository implements IAuthRepository {
     
     return failure(new Error('User not found'));
   }
+
+  async createMockAccount(user: UserProfile): Promise<Result<void>> {
+    const users = await this.getUsers();
+    // Overwrite if mobile already exists, otherwise push
+    const index = users.findIndex(u => u.mobile === user.mobile);
+    if (index !== -1) {
+      users[index] = { ...users[index], ...user };
+    } else {
+      users.push(user);
+    }
+    await this.saveUsers(users);
+    return success(undefined);
+  }
 }

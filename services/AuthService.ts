@@ -15,4 +15,8 @@ export class AuthService {
   async updateProfile(userId: string, data: Partial<UserProfile>) {
     return this.repository.updateProfile(userId, data);
   }
+
+  async createMockAccount(user: UserProfile) {
+    return this.repository.createMockAccount(user);
+  }
 }
