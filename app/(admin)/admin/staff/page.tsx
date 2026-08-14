@@ -224,7 +224,7 @@ export default function HighlyVisualizedStaffRoles() {
                         </div>
                       </div>
                       <div style={{ backgroundColor: '#f1f5f9', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 800, color: '#475569' }}>
-                        {role.users} Staff
+                        {staff.filter(s => s.role === role.id).length} Staff
                       </div>
                     </div>
                     

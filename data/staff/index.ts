@@ -15,11 +15,11 @@ export interface StaffMember {
 export const mockStaff: StaffMember[] = [
   {
     id: 'EMP-001',
-    name: 'Dr. Aravind Swamy',
+    name: 'Siddhi',
     role: 'admin',
-    department: 'Pathology',
-    phone: '+91 98765 11223',
-    email: 'aravind.s@agam.com',
+    department: 'Management',
+    phone: '+91 99999 99999',
+    email: 'siddhi@agamdiagnostics.com',
     shift: '09:00 AM - 05:00 PM',
     status: 'On Duty',
     joinDate: 'Jan 15, 2021'
@@ -30,75 +30,42 @@ export const mockStaff: StaffMember[] = [
     role: 'phleb_home',
     department: 'Sample Collection',
     phone: '+91 11111 11111',
-    email: 'sunita.r@agam.com',
+    email: 'sunita.r@agamdiagnostics.com',
     shift: '07:00 AM - 03:00 PM',
     status: 'On Duty',
     joinDate: 'Mar 10, 2022'
   },
   {
     id: 'EMP-003',
-    name: 'Karan Malhotra',
-    role: 'phleb_lab',
-    department: 'Hematology',
-    phone: '+91 22222 22222',
-    email: 'karan.m@agam.com',
-    shift: '02:00 PM - 10:00 PM',
-    status: 'Off Duty',
-    joinDate: 'Jun 22, 2023'
-  },
-  {
-    id: 'EMP-004',
     name: 'Neha Gupta',
     role: 'op',
     department: 'Front Desk',
     phone: '+91 92233 44556',
-    email: 'neha.g@agam.com',
+    email: 'neha.g@agamdiagnostics.com',
     shift: '08:00 AM - 04:00 PM',
     status: 'On Duty',
     joinDate: 'Nov 05, 2023'
   },
   {
-    id: 'EMP-005',
-    name: 'Ramesh Singh',
-    role: 'phleb_home',
-    department: 'Home Collection',
-    phone: '+91 33333 33333',
-    email: 'ramesh.s@agam.com',
-    shift: '06:00 AM - 02:00 PM',
-    status: 'On Leave',
-    joinDate: 'Feb 18, 2022'
-  },
-  {
-    id: 'EMP-006',
+    id: 'EMP-004',
     name: 'Dr. Meenakshi Iyer',
     role: 'path',
     department: 'Microbiology',
     phone: '+91 94455 66778',
-    email: 'meenakshi.i@agam.com',
+    email: 'meenakshi.i@agamdiagnostics.com',
     shift: '10:00 AM - 06:00 PM',
     status: 'On Duty',
     joinDate: 'Aug 30, 2021'
   },
   {
-    id: 'EMP-007',
-    name: 'Vikash Kumar',
+    id: 'EMP-005',
+    name: 'Karan Malhotra',
     role: 'phleb_lab',
-    department: 'Biochemistry',
-    phone: '+91 44444 44444',
-    email: 'vikash.k@agam.com',
-    shift: '08:00 AM - 04:00 PM',
-    status: 'On Duty',
-    joinDate: 'May 12, 2023'
-  },
-  {
-    id: 'EMP-008',
-    name: 'Priya Desai',
-    role: 'op',
-    department: 'Support',
-    phone: '+91 96677 88990',
-    email: 'priya.d@agam.com',
-    shift: '12:00 PM - 08:00 PM',
+    department: 'Hematology',
+    phone: '+91 22222 22222',
+    email: 'karan.m@agamdiagnostics.com',
+    shift: '02:00 PM - 10:00 PM',
     status: 'Off Duty',
-    joinDate: 'Sep 01, 2023'
+    joinDate: 'Jun 22, 2023'
   }
 ];
