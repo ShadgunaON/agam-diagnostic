@@ -9,7 +9,7 @@ export interface FeaturedReviewsSectionProps {
 export function FeaturedReviewsSection({ reviews }: FeaturedReviewsSectionProps) {
   if (reviews.length === 0) {
     return (
-      <section className="py-20 bg-white">
+      <section className="py-12 md:py-16 bg-white">
         <div className="container text-center max-w-2xl mx-auto">
           <div className="w-20 h-20 mx-auto mb-6 bg-bg-alt rounded-full flex items-center justify-center">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-10 h-10 text-muted-foreground/50">
@@ -26,7 +26,7 @@ export function FeaturedReviewsSection({ reviews }: FeaturedReviewsSectionProps)
   }
 
   return (
-    <section className="py-20 bg-white relative">
+    <section className="py-12 md:py-16 bg-white relative">
       <div className="container">
         <div className="text-center mb-16">
           <h2 className="section__title">Patient Experiences</h2>

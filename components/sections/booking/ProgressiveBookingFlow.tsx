@@ -6,13 +6,14 @@ import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { bookingService, invoiceService } from '@/services';
+import { performGlobalSearch, SearchResultItem } from '@/app/actions/globalSearch';
 
 type BookingStep = 1 | 2 | 3 | 4;
 type LocationType = 'home' | 'lab';
 type PatientType = 'myself' | 'family';
 
 export function ProgressiveBookingFlow() {
-  const { items, totalAmount, collectionFee, removeItem, duplicateWarnings, removeDuplicateTest, clearCart } = useCart();
+  const { items, addItem, totalAmount, collectionFee, removeItem, duplicateWarnings, removeDuplicateTest, clearCart } = useCart();
   const [currentStep, setCurrentStep] = useState<BookingStep>(1);
   
   // Booking State
@@ -27,6 +28,31 @@ export function ProgressiveBookingFlow() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Empty cart search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Handle search
+  React.useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (searchQuery.trim().length > 1) {
+        setIsSearching(true);
+        try {
+          const results = await performGlobalSearch(searchQuery);
+          setSearchResults(results.filter(r => r.type === 'test' || r.type === 'package' || r.type === 'service'));
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const handlePayment = async () => {
     setIsSubmitting(true);
@@ -155,9 +181,79 @@ export function ProgressiveBookingFlow() {
                   </div>
                 )}
                 {isCartEmpty ? (
-                  <div style={{ textAlign: 'center', padding: '48px', background: '#fff', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: '0 2px 8px rgba(11,27,61,0.04)' }}>
-                    <p style={{ color: 'var(--color-text-light)', marginBottom: '16px' }}>Your cart is empty.</p>
-                    <Link href="/services" style={{ color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'none' }}>Browse Services</Link>
+                  <div style={{ background: '#fff', padding: '32px', borderRadius: '16px', border: '1px solid var(--color-border)', boxShadow: '0 4px 12px rgba(11,27,61,0.04)' }}>
+                    <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                      <h3 style={{ fontSize: '20px', color: 'var(--color-dark)', marginBottom: '8px' }}>What would you like to add?</h3>
+                      <p style={{ color: 'var(--color-text-light)', fontSize: '14px', marginBottom: '0' }}>Search and add tests, packages or services to your booking.</p>
+                    </div>
+
+                    <div style={{ position: 'relative', marginBottom: '24px' }}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', width: '18px', color: 'var(--color-text-light)' }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      <input 
+                        type="text" 
+                        placeholder="Search for a test, package, or service..." 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        style={{ width: '100%', padding: '16px 16px 16px 48px', borderRadius: '12px', border: '1px solid var(--color-border)', fontSize: '15px', outline: 'none', transition: 'all 0.2s' }}
+                        onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'}
+                        onBlur={(e) => e.target.style.borderColor = 'var(--color-border)'}
+                      />
+                    </div>
+
+                    {searchQuery.trim().length > 1 ? (
+                      <div>
+                        {isSearching ? (
+                          <div style={{ textAlign: 'center', padding: '24px', color: 'var(--color-text-light)', fontSize: '14px' }}>Searching...</div>
+                        ) : searchResults.length > 0 ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {searchResults.map(result => (
+                              <div key={result.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid var(--color-border)' }}>
+                                <div>
+                                  <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{result.type} • {result.category}</div>
+                                  <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-dark)', marginBottom: '4px' }}>{result.title}</div>
+                                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--color-dark)' }}>₹{result.price || 499}</div>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="btn btn--primary btn--sm"
+                                  onClick={() => addItem({
+                                    id: `${result.type}-${result.slug}`,
+                                    slug: result.slug,
+                                    title: result.title,
+                                    type: result.type as 'test'|'package'|'service',
+                                    category: result.category,
+                                    price: typeof result.price === 'string' ? parseInt(result.price.replace(/\D/g, ''), 10) : (result.price || 499),
+                                    originalPrice: Math.round((typeof result.price === 'string' ? parseInt(result.price.replace(/\D/g, ''), 10) : (result.price || 499)) * 1.3),
+                                  })}
+                                >
+                                  + Add
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div style={{ textAlign: 'center', padding: '24px', color: 'var(--color-text-light)', fontSize: '14px' }}>No results found for &quot;{searchQuery}&quot;</div>
+                        )}
+                      </div>
+                    ) : (
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-light)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Or browse catalog</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <Link href="/tests" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px', borderRadius: '12px', background: '#f8fafc', border: '1px solid var(--color-border)', textDecoration: 'none', color: 'var(--color-dark)', fontWeight: 600, fontSize: '14px', transition: 'all 0.2s' }}>
+                            <span style={{ fontSize: '24px', marginBottom: '8px' }}>🔬</span>
+                            Tests
+                          </Link>
+                          <Link href="/health-packages" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px', borderRadius: '12px', background: '#f8fafc', border: '1px solid var(--color-border)', textDecoration: 'none', color: 'var(--color-dark)', fontWeight: 600, fontSize: '14px', transition: 'all 0.2s' }}>
+                            <span style={{ fontSize: '24px', marginBottom: '8px' }}>📦</span>
+                            Health Packages
+                          </Link>
+                          <Link href="/services" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px', borderRadius: '12px', background: '#f8fafc', border: '1px solid var(--color-border)', textDecoration: 'none', color: 'var(--color-dark)', fontWeight: 600, fontSize: '14px', transition: 'all 0.2s' }}>
+                            <span style={{ fontSize: '24px', marginBottom: '8px' }}>🏥</span>
+                            Services
+                          </Link>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -297,25 +393,19 @@ export function ProgressiveBookingFlow() {
                           <h3 style={{ fontSize: '13px', margin: 0, color: 'var(--color-dark)' }}>Collection Address</h3>
                         </div>
                         
-                        {address ? (
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: '#f8fafc', padding: '12px', borderRadius: '8px' }}>
-                            <p style={{ margin: 0, fontSize: '13px', color: 'var(--color-dark)', lineHeight: 1.5, fontWeight: 500 }}>{address}</p>
-                            <button onClick={() => setAddress('')} style={{ color: 'var(--color-primary)', background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', fontSize: '12px', padding: '2px 6px' }}>Edit</button>
-                          </div>
-                        ) : (
-                          <div>
-                            <textarea 
-                              placeholder="Enter your complete address..." 
-                              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--color-border)', minHeight: '60px', fontFamily: 'inherit', resize: 'none', fontSize: '13px', outline: 'none', transition: 'border-color 0.2s' }}
-                              onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'}
-                              onBlur={(e) => {
-                                e.target.style.borderColor = 'var(--color-border)';
-                                setAddress(e.target.value);
-                              }}
-                            />
+                        <div style={{ marginBottom: '16px' }}>
+                          <textarea 
+                            placeholder="Enter your complete address..." 
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--color-border)', minHeight: '60px', fontFamily: 'inherit', resize: 'none', fontSize: '13px', outline: 'none', transition: 'border-color 0.2s' }}
+                            onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'}
+                            onBlur={(e) => e.target.style.borderColor = 'var(--color-border)'}
+                          />
+                          {!address && (
                             <p style={{ fontSize: '11px', color: '#ef4444', margin: '4px 0 0 0', fontWeight: 500 }}>* Address is mandatory</p>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -346,7 +436,7 @@ export function ProgressiveBookingFlow() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                       <div>
                         <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '8px', color: 'var(--color-text-light)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Select Date</label>
-                        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '15px', outline: 'none', transition: 'all 0.2s', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }} onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'} onBlur={(e) => e.target.style.borderColor = 'rgba(14,165,233,0.2)'} />
+                        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} min={new Date().toISOString().split('T')[0]} style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '15px', outline: 'none', transition: 'all 0.2s', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }} onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'} onBlur={(e) => e.target.style.borderColor = 'rgba(14,165,233,0.2)'} />
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '8px', color: 'var(--color-text-light)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Select Time Slot</label>
@@ -427,7 +517,7 @@ export function ProgressiveBookingFlow() {
                     ) : (
                       <>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: '18px' }}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                        Pay ₹{finalTotal} Securely
+                        {finalTotal === 0 ? 'Confirm Free Booking' : `Pay ₹${finalTotal} Securely`}
                       </>
                     )}
                   </button>

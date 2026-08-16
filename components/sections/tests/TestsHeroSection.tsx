@@ -14,7 +14,7 @@ export function TestsHeroSection({ data, className = '' }: TestsHeroSectionProps
   return (
     <section className={`hero-premium section !p-0 overflow-hidden relative ${className}`.trim()} style={{ background: 'var(--color-bg-alt)' }}>
       <div className="flex flex-col lg:grid lg:grid-cols-[45%_55%] xl:grid-cols-[40%_60%] items-stretch">
-        <div className="flex flex-col justify-center relative z-10 px-6 py-12 lg:py-20 lg:pl-[max(1.5rem,calc((100vw-var(--max-width))/2+1.5rem))] lg:pr-8">
+        <div className="flex flex-col justify-center relative z-10 px-6 py-6 lg:py-8 lg:pl-[max(1.5rem,calc((100vw-var(--max-width))/2+1.5rem))] lg:pr-8">
           <div className="breadcrumb" style={{ marginBottom: 'var(--sp-4)' }}>
             <Link href="/">Home</Link>
             <span className="breadcrumb__sep">›</span>
@@ -25,9 +25,14 @@ export function TestsHeroSection({ data, className = '' }: TestsHeroSectionProps
             {data.description}
           </p>
           <div>
-            <Link href="/book" className="btn btn--primary inline-flex">
-              Book Home Collection
-            </Link>
+            <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
+              <Link href="/book" className="btn btn--primary inline-flex">
+                Book Home Collection
+              </Link>
+              <Link href="/genetic-tests" className="btn btn--outline inline-flex">
+                Explore Genetic Tests
+              </Link>
+            </div>
           </div>
         </div>
         

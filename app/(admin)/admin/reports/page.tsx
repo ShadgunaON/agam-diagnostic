@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { useToast } from '@/components/admin/feedback/Toast';
-import { reportsService } from '@/services';
+import { reportsService, bookingService } from '@/services';
 import { ReportTaskModel } from '@/domains/reports/model';
+import { BookingModel } from '@/domains/booking/model';
 import { useRBAC } from '@/hooks/useRBAC';
 import { ReportPreviewModal } from '@/components/shared/ReportPreviewModal';
 
@@ -17,17 +18,27 @@ export default function ClinicalReportsWorkspace() {
   const [reports, setReports] = useState<ReportTaskModel[]>([]);
   const [activeReportId, setActiveReportId] = useState<string | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [sortKey, setSortKey] = useState('date_oldest');
+  const [allBookings, setAllBookings] = useState<BookingModel[]>([]);
   const { hasPermission } = useRBAC();
   const canEditReports = hasPermission('reports', 'edit');
 
   useEffect(() => {
     setMounted(true);
     const loadReports = async () => {
-      const result = await reportsService.getAllTasks();
-      if (result.isSuccess && result.value) {
-        setReports(result.value);
-        if (result.value.length > 0) {
-          setActiveReportId(result.value[0].id);
+      const [repRes, bookRes] = await Promise.all([
+        reportsService.getAllTasks(),
+        bookingService.getAll()
+      ]);
+      
+      if (bookRes.isSuccess && bookRes.value) {
+        setAllBookings(bookRes.value);
+      }
+
+      if (repRes.isSuccess && repRes.value) {
+        setReports(repRes.value);
+        if (repRes.value.length > 0) {
+          setActiveReportId(repRes.value[0].id);
         }
       }
     };
@@ -75,11 +86,27 @@ export default function ClinicalReportsWorkspace() {
                   Filter
                 </span>
               </div>
+              <div className="flex flex-col gap-2 mt-3">
+                <select
+                  value={sortKey}
+                  onChange={(e) => setSortKey(e.target.value)}
+                  className="w-full h-9 px-3 rounded-md border border-slate-300 bg-white text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20"
+                >
+                  <option value="date_oldest">Booking Date (Oldest First)</option>
+                  <option value="date_newest">Booking Date (Newest First)</option>
+                </select>
+              </div>
             </div>
 
             {/* Queue List */}
             <div className="flex flex-col gap-3 overflow-y-auto flex-1 pr-1">
-              {reports.map((report) => (
+              {[...reports].sort((a, b) => {
+                const bkA = allBookings.find(bk => bk.id === a.bookingId);
+                const bkB = allBookings.find(bk => bk.id === b.bookingId);
+                const timeA = bkA ? new Date(bkA.createdAt).getTime() : 0;
+                const timeB = bkB ? new Date(bkB.createdAt).getTime() : 0;
+                return sortKey === 'date_newest' ? timeB - timeA : timeA - timeB;
+              }).map((report) => (
                 <div 
                   key={report.id}
                   onClick={() => setActiveReportId(report.id)}

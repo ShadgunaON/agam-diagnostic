@@ -88,6 +88,9 @@ export default function ReportsPage() {
                   <h3 className="font-bold text-lg mb-1">{report.testType}</h3>
                   <p className="text-sm text-muted-foreground mb-2">
                     Patient: <strong className="text-foreground">{report.patient.name}</strong>
+                    {report.patientId && report.patientId !== user?.id && (
+                      <span className="ml-2 text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider font-semibold">Family Member</span>
+                    )}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Generated: {report.time}

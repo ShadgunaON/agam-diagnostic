@@ -4,15 +4,18 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { PackagesFeaturedSection } from '@/components/sections/packages';
 import { siteConfig } from '@/config/site';
-import { packagesData } from '@/data/packages';
+import { packageService } from '@/services';
 
 export const metadata: Metadata = {
   title: `Women's Health Packages — Preventive Care for Women | ${siteConfig.name}`,
   description: "Specialized health packages for women including hormonal profiling, thyroid screening, PCOS evaluation, pregnancy care, and comprehensive women's wellness checkups.",
 };
 
-export default function WomenHealthPage() {
-  const womensPackages = packagesData.featured.filter(pkg => 
+export default async function WomenHealthPage() {
+  const featuredResult = await packageService.getFeaturedPackages();
+  const allFeatured = featuredResult.isSuccess ? featuredResult.value : [];
+  
+  const womensPackages = allFeatured.filter(pkg => 
     pkg.slug.includes('women') || 
     pkg.slug.includes('basic') || 
     pkg.slug.includes('master')
@@ -109,7 +112,7 @@ export default function WomenHealthPage() {
           <div className="flex flex-col md:flex-row justify-center gap-8 md:gap-12 reveal">
             <Link href="/men-health" className="card--service group w-full md:w-[380px]" style={{ textDecoration: 'none', padding: 'var(--sp-6)' }}>
               <div className="w-full h-48 rounded-xl overflow-hidden mb-6 relative shadow-sm group-hover:shadow-md transition-shadow">
-                <img src="/images/mens_health.png" className="w-full h-full object-cover object-top md:object-[center_20%] group-hover:scale-105 transition-transform duration-500" alt="Men's Health" />
+                <img src="/images/mens_health.png" className="w-full h-full object-cover object-top  group-hover:scale-105 transition-transform duration-500" alt="Men's Health" />
               </div>
               <h3 className="card__title" style={{ color: 'var(--color-primary)', marginBottom: 'var(--sp-2)' }}>Men&apos;s Health</h3>
               <p className="card__desc" style={{ marginBottom: 'var(--sp-5)' }}>Executive health profiles, cardiac risk assessment, liver & kidney function, prostate screening, metabolic panels, and preventive checkups for men.</p>
@@ -124,7 +127,7 @@ export default function WomenHealthPage() {
 
             <Link href="/lifestyle-health" className="card--service group w-full md:w-[380px]" style={{ textDecoration: 'none', padding: 'var(--sp-6)' }}>
               <div className="w-full h-48 rounded-xl overflow-hidden mb-6 relative shadow-sm group-hover:shadow-md transition-shadow">
-                <img src="/images/lifestyle_health.png" className="w-full h-full object-cover object-top md:object-[center_20%] group-hover:scale-105 transition-transform duration-500" alt="Lifestyle Health" />
+                <img src="/images/lifestyle_health.png" className="w-full h-full object-cover object-top  group-hover:scale-105 transition-transform duration-500" alt="Lifestyle Health" />
               </div>
               <h3 className="card__title" style={{ color: 'var(--color-primary)', marginBottom: 'var(--sp-2)' }}>Lifestyle Health</h3>
               <p className="card__desc" style={{ marginBottom: 'var(--sp-5)' }}>Diabetic screening, obesity risk profiling, vitamin deficiency panels, corporate executive checkups, and fitness evaluations.</p>

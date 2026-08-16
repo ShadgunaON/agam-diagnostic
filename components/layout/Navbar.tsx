@@ -17,7 +17,7 @@ export function Navbar({ className = '' }: NavbarProps) {
   };
 
   return (
-    <div className={`nav-links hidden lg:flex ${className}`.trim()} aria-label="Main Navigation">
+    <div className={`nav-links hidden lg:flex items-center gap-2 xl:gap-5 lg:text-[13px] xl:text-sm ${className}`.trim()} aria-label="Main Navigation">
       <style dangerouslySetInnerHTML={{ __html: `
         .nav-link { position: relative; padding-bottom: 4px; }
         .nav-link.is-active::after {
@@ -64,13 +64,12 @@ export function Navbar({ className = '' }: NavbarProps) {
       <Link href="/blog" className={`nav-link ${isActive('/blog') ? 'is-active' : ''}`}>Blog</Link>
 
       <div className="nav-item">
-        <span className={`nav-link nav-link--has-dropdown cursor-default ${isActive('/contact') ? 'is-active' : ''}`}>
-          Contact Us
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+        <span className={`nav-link nav-link--has-dropdown cursor-default ${isActive('/help') ? 'is-active' : ''}`}>
+          Support
+          <svg className="nav-dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </span>
         <div className="nav-dropdown">
-          <Link href="/contact" className="nav-dropdown__link">Contact Us</Link>
-          <Link href="/faq" className="nav-dropdown__link">FAQ</Link>
+          <Link href="/help" className="nav-dropdown__link">Help & Contact</Link>
         </div>
       </div>
     </div>

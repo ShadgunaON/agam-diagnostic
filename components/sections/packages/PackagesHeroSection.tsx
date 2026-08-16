@@ -19,7 +19,7 @@ export function PackagesHeroSection({ data, className = '' }: PackagesHeroSectio
     <section className={`hero-premium section ${className}`.trim()} style={{ padding: 0, background: 'var(--color-bg-alt)', overflow: 'hidden', position: 'relative' }}>
       <div className="grid grid-cols-1 md:grid-cols-[45%_55%] items-stretch">
         
-        <div style={{ padding: 'var(--sp-2) var(--sp-6) var(--sp-10) max(var(--sp-6), calc((100vw - var(--max-width)) / 2 + var(--sp-6)))', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', zIndex: 2 }}>
+        <div className="flex flex-col justify-center relative z-10 px-6 py-6 md:py-8 md:pl-[max(1.5rem,calc((100vw-var(--max-width))/2+1.5rem))] md:pr-8">
           <div className="breadcrumb" style={{ marginBottom: 'var(--sp-3)' }}>
             <Link href="/">Home</Link><span className="breadcrumb__sep">›</span><span className="breadcrumb__current">Health Packages</span>
           </div>
@@ -32,10 +32,7 @@ export function PackagesHeroSection({ data, className = '' }: PackagesHeroSectio
           </p>
           
           <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
-            <Button href="#browse-category" className="btn btn--primary">
-              Explore Packages
-            </Button>
-            <Button href="/book" className="btn btn--outline">
+            <Button href="/book" className="btn btn--primary">
               Book Appointment
             </Button>
           </div>

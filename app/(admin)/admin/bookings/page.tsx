@@ -7,6 +7,8 @@ import { useToast } from '@/components/admin/feedback/Toast';
 
 import { bookingService } from '@/services';
 import { BookingModel } from '@/domains/booking/model';
+import { useRBAC } from '@/hooks/useRBAC';
+import { useAuth } from '@/context/AuthContext';
 
 // --- STYLES ---
 const glassStyle = {
@@ -28,8 +30,13 @@ const getStatusColor = (status: string) => {
 export default function GlassBookingsPage() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState('All');
+  const [sortKey, setSortKey] = useState('date_newest');
   const { toast } = useToast();
   const [bookings, setBookings] = useState<BookingModel[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const { scope, isAdmin } = useRBAC();
+  const { user } = useAuth();
 
   useEffect(() => { 
     setMounted(true); 
@@ -43,6 +50,15 @@ export default function GlassBookingsPage() {
   }, []);
   
   if (!mounted) return null;
+
+  const filteredBookings = bookings.filter(b => {
+    if (isAdmin || !scope) return true;
+    if (scope === 'home_collection') {
+      if (b.collection.type !== 'Home Collection') return false;
+      return b.collection.assignedPhlebotomist === user?.fullName;
+    }
+    return true;
+  });
 
   return (
     <AdminPageTemplate>
@@ -91,14 +107,28 @@ export default function GlassBookingsPage() {
               </button>
             ))}
           </div>
-          {/* Search */}
-          <div className="relative w-full lg:w-[320px]">
-            <AdminIcon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Search ID, patient, or phone..." 
-              className="w-full h-10 pl-11 pr-4 rounded-lg border border-slate-200/80 bg-white/50 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
-            />
+          {/* Search and Sort */}
+          <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto items-center">
+            <select
+              value={sortKey}
+              onChange={(e) => setSortKey(e.target.value)}
+              className="h-10 px-4 rounded-lg border border-slate-200/80 bg-white/50 text-sm font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20 w-full sm:w-auto"
+            >
+              <option value="date_oldest">Date (Oldest First)</option>
+              <option value="date_newest">Date (Newest First)</option>
+              <option value="amount_high">Amount (High to Low)</option>
+              <option value="amount_low">Amount (Low to High)</option>
+            </select>
+            <div className="relative w-full sm:w-[260px] lg:w-[320px]">
+              <AdminIcon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input 
+                type="text" 
+                placeholder="Search ID, patient, or phone..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-10 pl-11 pr-4 rounded-lg border border-slate-200/80 bg-white/50 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+              />
+            </div>
           </div>
         </div>
 
@@ -117,7 +147,28 @@ export default function GlassBookingsPage() {
 
           {/* Table Rows */}
           <div className="flex flex-col gap-3">
-            {bookings.filter(b => activeTab === 'All' || b.status === activeTab || b.collection.type === activeTab).map((booking) => {
+            {filteredBookings
+              .filter(b => activeTab === 'All' || b.status === activeTab || b.collection.type === activeTab)
+              .filter(b => {
+                if (!searchQuery) return true;
+                const query = searchQuery.toLowerCase();
+                return b.id.toLowerCase().includes(query) || 
+                       b.patient.name.toLowerCase().includes(query) || 
+                       b.patient.phone.includes(query);
+              })
+              .sort((a, b) => {
+                if (sortKey === 'date_newest') {
+                  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                } else if (sortKey === 'date_oldest') {
+                  return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+                } else if (sortKey === 'amount_high') {
+                  return b.payment.total - a.payment.total;
+                } else if (sortKey === 'amount_low') {
+                  return a.payment.total - b.payment.total;
+                }
+                return 0;
+              })
+              .map((booking) => {
               const statusTheme = getStatusColor(booking.status);
               return (
                 <div 
@@ -129,6 +180,9 @@ export default function GlassBookingsPage() {
                 >
                   <div data-label="Order ID" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{booking.id}</div>
+                    <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>
+                      {new Date(booking.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric' })}
+                    </div>
                     <div style={{ fontSize: '12px', fontWeight: 700, color: booking.collection.type === 'Home Collection' ? '#3b82f6' : '#8b5cf6', backgroundColor: booking.collection.type === 'Home Collection' ? '#eff6ff' : '#f3e8ff', display: 'inline-flex', padding: '2px 8px', borderRadius: '12px', alignSelf: 'flex-start' }}>{booking.collection.type}</div>
                   </div>
                   

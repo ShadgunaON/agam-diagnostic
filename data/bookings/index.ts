@@ -63,7 +63,7 @@ export const mockBookings: Booking[] = [
       method: 'UPI'
     },
     status: 'Completed',
-    createdAt: 'Oct 10, 2026',
+    createdAt: '2026-08-07T11:18:00.000Z',
     timeline: [
       { id: 't1', title: 'Booking Created', timestamp: 'Oct 10, 2026 10:30 AM', status: 'success', actor: 'Patient' },
       { id: 't2', title: 'Payment Received', timestamp: 'Oct 10, 2026 10:32 AM', status: 'success', actor: 'System' },
@@ -96,7 +96,7 @@ export const mockBookings: Booking[] = [
       method: 'Pay at Lab'
     },
     status: 'Confirmed',
-    createdAt: 'Oct 11, 2026',
+    createdAt: '2026-08-04T08:29:00.000Z',
     timeline: [
       { id: 'p1', title: 'Booking Created', timestamp: 'Oct 11, 2026 02:15 PM', status: 'success', actor: 'Patient' },
       { id: 'p2', title: 'Booking Confirmed', timestamp: 'Oct 11, 2026 02:16 PM', status: 'success', actor: 'System' }
@@ -127,7 +127,7 @@ export const mockBookings: Booking[] = [
       method: 'Credit Card'
     },
     status: 'Pending',
-    createdAt: 'Oct 12, 2026',
+    createdAt: '2026-08-03T09:49:00.000Z',
     timeline: [
       { id: 'a1', title: 'Booking Created', timestamp: 'Oct 12, 2026 09:10 AM', status: 'success', actor: 'Patient' },
       { id: 'a2', title: 'Payment Received', timestamp: 'Oct 12, 2026 09:12 AM', status: 'success', actor: 'System' }
@@ -157,7 +157,7 @@ export const mockBookings: Booking[] = [
       method: 'UPI'
     },
     status: 'Processing',
-    createdAt: 'Oct 09, 2026',
+    createdAt: '2026-08-05T08:29:00.000Z',
     timeline: [
       { id: 'm1', title: 'Booking Created', timestamp: 'Oct 09, 2026 11:20 AM', status: 'success', actor: 'Patient' },
       { id: 'm2', title: 'Booking Confirmed', timestamp: 'Oct 09, 2026 11:25 AM', status: 'success', actor: 'System' },
@@ -190,7 +190,7 @@ export const mockBookings: Booking[] = [
       method: 'Net Banking'
     },
     status: 'Cancelled',
-    createdAt: 'Oct 11, 2026',
+    createdAt: '2026-08-09T08:09:00.000Z',
     timeline: [
       { id: 's1', title: 'Booking Created', timestamp: 'Oct 11, 2026 10:00 AM', status: 'neutral', actor: 'Patient' },
       { id: 's2', title: 'Payment Failed', description: 'Bank server timeout', timestamp: 'Oct 11, 2026 10:05 AM', status: 'danger', actor: 'System' },
@@ -222,7 +222,7 @@ export const mockBookings: Booking[] = [
       method: 'Cash'
     },
     status: 'Completed',
-    createdAt: 'Oct 07, 2026',
+    createdAt: '2026-08-08T09:30:00.000Z',
     timeline: [
       { id: 'k1', title: 'Booking Created', timestamp: 'Oct 07, 2026 04:00 PM', status: 'success', actor: 'Patient' },
       { id: 'k2', title: 'Sample Collected', timestamp: 'Oct 08, 2026 11:15 AM', status: 'success', actor: 'Lab Tech' },
@@ -238,7 +238,7 @@ export const mockBookings: Booking[] = [
     items: [{ name: 'Complete Blood Count', type: 'Test', price: 350 }, { name: 'Lipid Profile', type: 'Test', price: 500 }],
     payment: { total: 850, status: 'Paid', method: 'UPI' },
     status: 'Assigned',
-    createdAt: 'Oct 13, 2026',
+    createdAt: '2026-08-07T07:40:00.000Z',
     timeline: [
       { id: 'd1', title: 'Booking Created', timestamp: 'Oct 13, 2026 03:00 PM', status: 'success', actor: 'Patient' },
       { id: 'd2', title: 'Payment Received', timestamp: 'Oct 13, 2026 03:02 PM', status: 'success', actor: 'System' },
@@ -253,7 +253,7 @@ export const mockBookings: Booking[] = [
     items: [{ name: 'Diabetes Screening Package', type: 'Package', price: 1299 }],
     payment: { total: 1299, status: 'Pending', method: 'Pay at Lab' },
     status: 'Confirmed',
-    createdAt: 'Oct 14, 2026',
+    createdAt: '2026-08-04T11:02:00.000Z',
     timeline: [
       { id: 'r1', title: 'Booking Created', timestamp: 'Oct 14, 2026 11:00 AM', status: 'success', actor: 'Patient' },
       { id: 'r2', title: 'Booking Confirmed', timestamp: 'Oct 14, 2026 11:05 AM', status: 'success', actor: 'System' }
@@ -266,7 +266,7 @@ export const mockBookings: Booking[] = [
     items: [{ name: 'Thyroid Profile', type: 'Test', price: 499 }, { name: 'Vitamin B12', type: 'Test', price: 750 }],
     payment: { total: 1249, status: 'Paid', method: 'Credit Card' },
     status: 'Completed',
-    createdAt: 'Oct 11, 2026',
+    createdAt: '2026-08-04T06:04:00.000Z',
     timeline: [
       { id: 'l1', title: 'Booking Created', timestamp: 'Oct 11, 2026 06:00 PM', status: 'success', actor: 'Patient' },
       { id: 'l2', title: 'Sample Collected', timestamp: 'Oct 13, 2026 07:30 AM', status: 'success', actor: 'Suresh Kumar' },
@@ -281,7 +281,7 @@ export const mockBookings: Booking[] = [
     items: [{ name: 'Liver Function Test', type: 'Test', price: 800 }],
     payment: { total: 800, status: 'Paid', method: 'Net Banking' },
     status: 'Pending',
-    createdAt: 'Oct 15, 2026',
+    createdAt: '2026-08-08T10:11:00.000Z',
     timeline: [
       { id: 'v1', title: 'Booking Created', timestamp: 'Oct 15, 2026 09:30 AM', status: 'success', actor: 'Patient' },
       { id: 'v2', title: 'Payment Received', timestamp: 'Oct 15, 2026 09:32 AM', status: 'success', actor: 'System' }
@@ -294,7 +294,7 @@ export const mockBookings: Booking[] = [
     items: [{ name: 'Women Wellness Package', type: 'Package', price: 2999 }],
     payment: { total: 2999, status: 'Paid', method: 'UPI' },
     status: 'Processing',
-    createdAt: 'Oct 08, 2026',
+    createdAt: '2026-08-05T08:04:00.000Z',
     timeline: [
       { id: 'su1', title: 'Booking Created', timestamp: 'Oct 08, 2026 08:00 AM', status: 'success', actor: 'Receptionist' },
       { id: 'su2', title: 'Sample Collected (Lab)', timestamp: 'Oct 09, 2026 10:20 AM', status: 'success', actor: 'Lab Tech' },
@@ -308,7 +308,7 @@ export const mockBookings: Booking[] = [
     items: [{ name: 'COVID RT-PCR', type: 'Test', price: 500 }],
     payment: { total: 500, status: 'Pending', method: 'Pay at Lab' },
     status: 'Pending',
-    createdAt: 'Oct 16, 2026',
+    createdAt: '2026-08-01T07:09:00.000Z',
     timeline: [
       { id: 'ar1', title: 'Booking Created', timestamp: 'Oct 16, 2026 02:00 PM', status: 'success', actor: 'Patient' }
     ]

@@ -357,15 +357,9 @@
    2. PAGE HERO
    ============================================================ */
 .hero-premium {
-  padding: var(--sp-4) 0 var(--sp-24);
+  padding: 0 0 var(--sp-24);
   position: relative;
   background-color: #ffffff;
-  background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 1) 40%, rgba(255, 255, 255, 0) 65%),
-    url('/images/hero_lab_visual.png');
-  background-size: cover;
-  background-position: center right;
-  background-repeat: no-repeat;
   overflow: hidden;
 }
 
@@ -401,7 +395,7 @@
 
 /* Strict 55/45 Split for inner pages */
 .hero-split {
-  padding: var(--sp-4) 0 var(--sp-12);
+  padding: 0 0 var(--sp-12);
   position: relative;
   background-color: var(--color-bg-alt);
   background-image:
@@ -5894,6 +5888,13 @@ details[open] .faq-summary {
   align-items: flex-end;
   margin-bottom: var(--sp-10);
   gap: var(--sp-4);
+}
+
+@media (max-width: 768px) {
+  .section-header-split {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 /* ==========================================================================

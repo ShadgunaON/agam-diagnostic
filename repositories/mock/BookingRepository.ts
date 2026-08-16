@@ -65,9 +65,8 @@ export class MockBookingRepository implements IBookingRepository {
     const bookings = await this.getBookings();
     const newId = this.generateNextId(bookings);
     
-    // Formatting today's date for createdAt
-    const today = new Date();
-    const formattedDate = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    // Formatting today's date and time as ISO string for sorting
+    const formattedDate = new Date().toISOString();
 
     const newBooking: BookingModel = {
       ...bookingParams,

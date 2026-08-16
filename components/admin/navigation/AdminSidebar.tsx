@@ -33,7 +33,7 @@ const adminNavigation: NavigationGroup[] = [
     title: 'Operations',
     items: [
       { title: 'Bookings', href: '/admin/bookings', icon: 'calendar', moduleId: 'orders' },
-      { title: 'Home Collections', href: '/admin/collections', icon: 'mapPin', moduleId: 'collections' },
+      { title: 'Collections', href: '/admin/collections', icon: 'mapPin', moduleId: 'collections' },
       { title: 'Patients', href: '/admin/patients', icon: 'users', moduleId: 'patients' },
       { title: 'Ledger & Invoices', href: '/admin/invoices', icon: 'fileText', moduleId: 'invoices' },
       { title: 'Reports', href: '/admin/reports', icon: 'file', moduleId: 'reports' },
@@ -56,10 +56,16 @@ const adminNavigation: NavigationGroup[] = [
   }
 ];
 
-export function AdminSidebar({ isCollapsed = false, setIsCollapsed = () => {} }: { isCollapsed?: boolean, setIsCollapsed?: (val: boolean) => void }) {
+export function AdminSidebar(props: { isCollapsed?: boolean, setIsCollapsed?: (val: boolean) => void }) {
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+
+  const { isCollapsed = false, setIsCollapsed = () => {} } = props || {};
   const pathname = usePathname();
+  const { accessibleModules, isAdmin, role, isLoading } = useRBAC();
   const { user, logout } = useAuth();
-  const { accessibleModules, role, isLoading, isAdmin } = useRBAC();
+
+  if (!mounted) return null;
 
   return (
     <aside

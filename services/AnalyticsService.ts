@@ -50,10 +50,15 @@ export class AnalyticsService {
     };
 
     bookings.forEach(b => {
-      // Assuming b.createdAt is something like 'Oct 12, 2026'
       const monthMatch = b.createdAt.match(/^[a-zA-Z]{3}/);
       if (monthMatch && monthMatch[0]) {
         const month = monthMatch[0];
+        if (monthlyRevenue[month] !== undefined) {
+          monthlyRevenue[month] += b.payment.total;
+        }
+      } else {
+        const date = new Date(b.createdAt);
+        const month = date.toLocaleString('default', { month: 'short' });
         if (monthlyRevenue[month] !== undefined) {
           monthlyRevenue[month] += b.payment.total;
         }

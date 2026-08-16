@@ -16,8 +16,8 @@ export type AdminBlogArticle = {
 };
 
 export const mockAdminArticles: AdminBlogArticle[] = [
-  { id: '1', title: 'Understanding Your Complete Blood Count (CBC) Results', category: 'Patient Education', status: 'Published', author: 'Dr. Sarah Jenkins', date: 'Aug 1, 2026', views: 1240, image: 'https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=600&q=80' },
-  { id: '2', title: 'The Future of Molecular Diagnostics in Preventive Care', category: 'Medical Research', status: 'Published', author: 'Dr. Robert Wilson', date: 'Jul 28, 2026', views: 890, image: 'https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&w=600&q=80' }
+  { id: '1', title: 'Understanding Your Complete Blood Count (CBC) Results', category: 'Patient Education', status: 'Published', author: 'Dr. Sarah Jenkins', date: 'Aug 1, 2026', views: 1240, image: '/images/blog_lab.png' },
+  { id: '2', title: 'The Future of Molecular Diagnostics in Preventive Care', category: 'Medical Research', status: 'Published', author: 'Dr. Robert Wilson', date: 'Jul 28, 2026', views: 890, image: '/images/blog_heart.png' }
 ];
 
 export interface BlogArticle {
@@ -67,14 +67,14 @@ export const blogData: BlogData = {
       title: 'Understanding Your Blood Test Reports',
       date: 'May 10, 2026',
       icon: '📊',
-      imageUrl: 'https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=800&q=80',
+      imageUrl: '/images/blog_lab.png',
     },
     {
       slug: 'why-preventive-health-checkups-matter',
       title: 'Why Preventive Health Checkups Matter',
       date: 'May 01, 2026',
       icon: '🩺',
-      imageUrl: 'https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&w=800&q=80',
+      imageUrl: '/images/blog_lifestyle.png',
     },
   ],
   featuredArticle: {
@@ -104,7 +104,7 @@ export const blogData: BlogData = {
       icon: '📊',
       colorPrimary: '#C8E6C9',
       colorSecondary: '#E8F5E9',
-      imageUrl: 'https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=800&q=80',
+      imageUrl: '/images/blog_lab.png',
       content: `
         <p>Receiving a medical report can sometimes feel like trying to decipher a foreign language. The array of numbers, acronyms, and reference ranges can be overwhelming. However, having a basic understanding of what these terms mean empowers you to take a more active role in your healthcare.</p>
         <h2>The Basics: Reference Ranges</h2>
@@ -148,7 +148,7 @@ export const blogData: BlogData = {
       icon: '🩺',
       colorPrimary: '#E1BEE7',
       colorSecondary: '#F3E5F5',
-      imageUrl: 'https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&w=800&q=80',
+      imageUrl: '/images/blog_lifestyle.png',
       content: `
         <h2>Prevention Over Cure</h2>
         <p>Preventive health checkups are designed to identify potential health issues before they become serious problems. By catching conditions early, treatments are often more effective and less invasive.</p>

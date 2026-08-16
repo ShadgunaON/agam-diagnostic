@@ -5,8 +5,7 @@
 export const routes = {
   home: '/',
   about: '/about',
-  contact: '/contact',
-  faq: '/faq',
+  help: '/help',
   privacyPolicy: '/privacy-policy',
   terms: '/terms',
   

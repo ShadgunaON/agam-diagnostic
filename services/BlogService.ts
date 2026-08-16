@@ -36,6 +36,10 @@ export class BlogService {
     return this.repository.updateArticle(id, updates);
   }
 
+  async deleteArticle(id: string) {
+    return this.repository.deleteArticle(id);
+  }
+
   async subscribeToNewsletter(email: string) {
     return this.repository.subscribeToNewsletter(email);
   }

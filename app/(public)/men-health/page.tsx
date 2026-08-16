@@ -4,15 +4,18 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { PackagesFeaturedSection } from '@/components/sections/packages';
 import { siteConfig } from '@/config/site';
-import { packagesData } from '@/data/packages';
+import { packageService } from '@/services';
 
 export const metadata: Metadata = {
   title: `Men's Health Packages — Executive & Preventive Checkups | ${siteConfig.name}`,
   description: "Specialized health packages for men including cardiac risk assessment, executive health profiles, liver & kidney screening, prostate health, and metabolic panels.",
 };
 
-export default function MenHealthPage() {
-  const mensPackages = packagesData.featured.filter(pkg => 
+export default async function MenHealthPage() {
+  const featuredResult = await packageService.getFeaturedPackages();
+  const allFeatured = featuredResult.isSuccess ? featuredResult.value : [];
+
+  const mensPackages = allFeatured.filter(pkg => 
     pkg.slug.includes('men') || 
     pkg.slug.includes('executive') || 
     pkg.slug.includes('advanced') ||
@@ -21,6 +24,25 @@ export default function MenHealthPage() {
 
   return (
     <>
+      <style dangerouslySetInnerHTML={{ __html: `
+        #packages-grid .grid > .premium-carousel-card:nth-child(2) {
+          background-image: url('/images/medical_background.jpg') !important;
+          background-size: cover !important;
+          background-position: center !important;
+          background-blend-mode: overlay;
+          background-color: rgba(15, 23, 42, 0.8) !important;
+          border-color: rgba(255,255,255,0.2) !important;
+        }
+        #packages-grid .grid > .premium-carousel-card:nth-child(2) * {
+          color: white !important;
+        }
+        #packages-grid .grid > .premium-carousel-card:nth-child(2) > div:first-child {
+          background: transparent !important;
+        }
+        #packages-grid .grid > .premium-carousel-card:nth-child(2) svg {
+          stroke: white !important;
+        }
+      `}} />
       <section className="hero-premium section !p-0 overflow-hidden relative" style={{ background: 'var(--color-bg-alt)' }}>
         <div className="flex flex-col lg:grid lg:grid-cols-[45%_55%] items-stretch lg:h-[calc(100vh-90px)] lg:max-h-[640px] lg:min-h-[480px]">
           <div className="flex flex-col justify-start relative z-10 px-6 py-10 lg:pt-12 lg:pb-10 lg:pl-[max(1.5rem,calc((100vw-var(--max-width))/2+1.5rem))] lg:pr-12">
@@ -53,7 +75,7 @@ export default function MenHealthPage() {
           <div className="flex flex-col md:flex-row justify-center gap-8 md:gap-12 reveal">
             <Link href="/women-health" className="card--service group w-full md:w-[380px]" style={{ textDecoration: 'none', padding: 'var(--sp-6)' }}>
               <div className="w-full h-48 rounded-xl overflow-hidden mb-6 relative shadow-sm group-hover:shadow-md transition-shadow">
-                <img src="/images/womens_health.png" className="w-full h-full object-cover object-top md:object-[center_20%] group-hover:scale-105 transition-transform duration-500" alt="Women's Health" />
+                <img src="/images/womens_health.png" className="w-full h-full object-cover object-top  group-hover:scale-105 transition-transform duration-500" alt="Women's Health" />
               </div>
               <h3 className="card__title" style={{ color: 'var(--color-primary)', marginBottom: 'var(--sp-2)' }}>Women&apos;s Health</h3>
               <p className="card__desc" style={{ marginBottom: 'var(--sp-5)' }}>Hormonal health, thyroid screening, PCOS profiling, bone density markers, pregnancy care, and comprehensive women&apos;s wellness checkups.</p>
@@ -68,7 +90,7 @@ export default function MenHealthPage() {
 
             <Link href="/lifestyle-health" className="card--service group w-full md:w-[380px]" style={{ textDecoration: 'none', padding: 'var(--sp-6)' }}>
               <div className="w-full h-48 rounded-xl overflow-hidden mb-6 relative shadow-sm group-hover:shadow-md transition-shadow">
-                <img src="/images/lifestyle_health.png" className="w-full h-full object-cover object-top md:object-[center_20%] group-hover:scale-105 transition-transform duration-500" alt="Lifestyle Health" />
+                <img src="/images/lifestyle_health.png" className="w-full h-full object-cover object-top  group-hover:scale-105 transition-transform duration-500" alt="Lifestyle Health" />
               </div>
               <h3 className="card__title" style={{ color: 'var(--color-primary)', marginBottom: 'var(--sp-2)' }}>Lifestyle Health</h3>
               <p className="card__desc" style={{ marginBottom: 'var(--sp-5)' }}>Diabetic screening, obesity risk profiling, vitamin deficiency panels, corporate executive checkups, and fitness evaluations.</p>

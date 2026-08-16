@@ -187,37 +187,49 @@ export default function GlassAnalyticsPage() {
           {/* REVENUE CHART */}
           <div className="p-4 lg:p-8 flex flex-col gap-6 self-start w-full sticky top-6" style={glassStyle}>
             <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Revenue by Month</h2>
-            <div className="flex-1 flex items-end justify-between gap-4 pt-10 relative" style={{ height: '350px' }}>
+            <div className="flex justify-between gap-4 relative" style={{ height: '350px', minHeight: '350px' }}>
               {/* Horizontal Grid Lines */}
-              <div className="absolute top-0 inset-x-0 bottom-6 flex flex-col justify-between pointer-events-none z-0">
+              <div className="absolute inset-x-0 flex flex-col justify-between pointer-events-none z-0" style={{ top: '40px', bottom: '32px' }}>
                 {[1,2,3,4].map(i => <div key={i} style={{ borderTop: '1px dashed rgba(148, 163, 184, 0.3)', width: '100%' }} />)}
               </div>
               
-              {/* Bars */}
-              {revenueByMonth.map((item, i) => {
-                const heightPercentage = maxRevenue > 0 ? (item.revenue / maxRevenue) * 100 : 0;
-                return (
-                  <div key={i} className="flex flex-col items-center gap-3 flex-1 h-full justify-end z-10 cursor-pointer relative group">
-                    <div 
-                      className="group-hover:scale-y-[1.02] transition-transform duration-200"
-                      style={{ 
-                        width: '100%', maxWidth: '40px', height: `${heightPercentage}%`, 
-                        background: 'linear-gradient(to top, rgba(59, 130, 246, 0.4), rgba(59, 130, 246, 0.8))',
-                        borderRadius: '8px 8px 0 0', transformOrigin: 'bottom'
-                      }} 
-                    />
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>{item.month}</div>
-                    
-                    {/* Tooltip */}
-                    <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-slate-900 text-white text-xs font-bold py-1.5 px-3 rounded shadow-lg pointer-events-none whitespace-nowrap z-50">
-                      ₹{item.revenue.toLocaleString()}
-                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></div>
+              {/* Bars Container */}
+              <div className="absolute inset-x-0 flex justify-between gap-4 z-10" style={{ top: '40px', bottom: '32px' }}>
+                {revenueByMonth.map((item, i) => {
+                  const heightPercentage = maxRevenue > 0 ? Math.max((item.revenue / maxRevenue) * 100, 2) : 0;
+                  return (
+                    <div key={i} className="flex-1 h-full relative group cursor-pointer">
+                      {/* Bar */}
+                      <div 
+                        className="absolute rounded-t-lg transition-transform duration-200 group-hover:scale-y-[1.02] origin-bottom"
+                        style={{ 
+                          bottom: 0,
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          width: '100%',
+                          maxWidth: '40px',
+                          height: `${heightPercentage}%`,
+                          backgroundColor: '#3b82f6'
+                        }} 
+                      >
+                        {/* Tooltip */}
+                        <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-slate-900 text-white text-xs font-bold py-1.5 px-3 rounded shadow-lg pointer-events-none whitespace-nowrap z-50">
+                          ₹{item.revenue.toLocaleString()}
+                          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></div>
+                        </div>
+                      </div>
+                      
+                      {/* Label */}
+                      <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[13px] font-semibold text-slate-500 whitespace-nowrap">
+                        {item.month}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+
               {revenueByMonth.length === 0 && (
-                <div className="flex-1 flex items-center justify-center" style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 600 }}>No revenue data yet</div>
+                <div className="absolute inset-0 flex items-center justify-center" style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 600 }}>No revenue data yet</div>
               )}
             </div>
           </div>
@@ -300,3 +312,5 @@ export default function GlassAnalyticsPage() {
     </AdminPageTemplate>
   );
 }
+
+// Trigger Turbopack recompile again

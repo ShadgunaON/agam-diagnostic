@@ -7,10 +7,12 @@ import { useToast } from '@/components/admin/feedback/Toast';
 import { Drawer } from '@/components/ui/Drawer';
 import { blogService } from '@/services';
 import { BlogArticle } from '@/domains/blog/model';
-import { createBlogArticleAction, updateBlogArticleAction } from './actions';
+import { useRBAC } from '@/hooks/useRBAC';
+import { createBlogArticleAction, updateBlogArticleAction, deleteBlogArticleAction } from './actions';
 
 export default function AdminBlogsPage() {
   const [mounted, setMounted] = useState(false);
+  const { hasPermission, isAdmin, isLoading: rbacLoading } = useRBAC();
   const [articles, setArticles] = useState<BlogArticle[]>([]);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingArticleId, setEditingArticleId] = useState<string | null>(null);
@@ -23,6 +25,9 @@ export default function AdminBlogsPage() {
   const [newDescription, setNewDescription] = useState('');
   const [newImageUrl, setNewImageUrl] = useState('');
   const [newContent, setNewContent] = useState('');
+  const [newSlug, setNewSlug] = useState('');
+  const [newAuthor, setNewAuthor] = useState('Admin User');
+  const [newDate, setNewDate] = useState('');
 
   useEffect(() => {
     setMounted(true);
@@ -45,6 +50,9 @@ export default function AdminBlogsPage() {
       setNewDescription(article.description);
       setNewImageUrl(article.imageUrl || article.image || '');
       setNewContent(article.content || '');
+      setNewSlug(article.slug || '');
+      setNewAuthor(article.author || 'Admin User');
+      setNewDate(article.date || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
     } else {
       setEditingArticleId(null);
       setNewTitle('');
@@ -52,12 +60,18 @@ export default function AdminBlogsPage() {
       setNewDescription('');
       setNewImageUrl('');
       setNewContent('');
+      setNewSlug('');
+      setNewAuthor('Admin User');
+      setNewDate(new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
     }
     setIsEditorOpen(true);
   };
 
-  const handlePublish = async () => {
-    if (!newTitle) return;
+  const handlePublish = async (status: 'Published' | 'Draft' = 'Published') => {
+    if (!newTitle) {
+      toast({ title: 'Validation Error', description: 'Title is required.', variant: 'danger' });
+      return;
+    }
     
     if (editingArticleId) {
       const updates: Partial<BlogArticle> = {
@@ -67,6 +81,10 @@ export default function AdminBlogsPage() {
         imageUrl: newImageUrl,
         image: newImageUrl,
         content: newContent,
+        status: status,
+        slug: newSlug || newTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
+        author: newAuthor,
+        date: newDate,
       };
       
       const result = await updateBlogArticleAction(editingArticleId, updates);
@@ -81,16 +99,16 @@ export default function AdminBlogsPage() {
       const newArticleData: Omit<BlogArticle, 'id'> = {
         title: newTitle,
         category: newCategory,
-        slug: newTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
+        slug: newSlug || newTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
         description: newDescription,
         content: newContent,
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        date: newDate || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         authorId: 'admin',
         icon: 'fileText',
         colorPrimary: '#3b82f6',
         colorSecondary: '#bfdbfe',
-        status: 'Published',
-        author: 'Admin User',
+        status: status,
+        author: newAuthor || 'Admin User',
         views: 0,
         imageUrl: newImageUrl,
         image: newImageUrl
@@ -108,12 +126,36 @@ export default function AdminBlogsPage() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this article?')) return;
+    const result = await deleteBlogArticleAction(id);
+    if (result.success) {
+      setArticles(articles.filter(a => a.id !== id));
+      toast({ title: 'Article Deleted', description: 'The article has been removed.', variant: 'success' });
+    } else {
+      error('Delete Failed', 'Could not delete the article.');
+    }
+  };
+
+  const canCreate = isAdmin || hasPermission('blogs', 'create');
+  const canEdit = isAdmin || hasPermission('blogs', 'edit');
+  const canDelete = isAdmin || hasPermission('blogs', 'del');
+
+  if (rbacLoading) return null;
+
   return (
     <AdminPageTemplate>
       <div 
         className="admin-page-container w-full max-w-[1600px] mx-auto p-4 lg:p-10 lg:py-8 flex flex-col gap-4 lg:gap-8 min-h-full"
         style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
       >
+        {/* BREADCRUMB */}
+        <div className="flex items-center gap-2 text-[13px] font-semibold text-slate-500">
+          <span>Admin Portal</span>
+          <span>/</span>
+          <span className="text-slate-900">Blogs</span>
+        </div>
+
         {/* TOP HEADER */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-4 lg:px-8 lg:py-6 rounded-2xl border border-slate-200 shadow-sm gap-4">
           <div>
@@ -121,13 +163,15 @@ export default function AdminBlogsPage() {
             <p className="text-[14px] sm:text-[15px] font-medium text-slate-500 mt-1">Create, publish, and manage health insights for the public portal.</p>
           </div>
           <div className="flex gap-3 w-full sm:w-auto">
-            <button 
-              onClick={() => handleOpenEditor()}
-              className="w-full sm:w-auto h-[44px] px-6 rounded-xl border-none bg-slate-900 text-white text-[14px] font-bold flex items-center justify-center sm:justify-start gap-2 cursor-pointer shadow-[0_4px_12px_rgba(15,23,42,0.15)] transition-transform hover:-translate-y-0.5"
-            >
-              <AdminIcon name="plus" className="w-[18px] h-[18px]" />
-              Write New Article
-            </button>
+            {canCreate && (
+              <button 
+                onClick={() => handleOpenEditor()}
+                className="w-full sm:w-auto h-[44px] px-6 rounded-xl border-none bg-slate-900 text-white text-[14px] font-bold flex items-center justify-center sm:justify-start gap-2 cursor-pointer shadow-[0_4px_12px_rgba(15,23,42,0.15)] transition-transform hover:-translate-y-0.5"
+              >
+                <AdminIcon name="plus" className="w-[18px] h-[18px]" />
+                Write New Article
+              </button>
+            )}
           </div>
         </div>
 
@@ -179,12 +223,26 @@ export default function AdminBlogsPage() {
                   <div className={`absolute top-3 left-3 text-white text-[11px] font-extrabold px-2.5 py-1 rounded-full uppercase ${article.status === 'Published' ? 'bg-emerald-500' : 'bg-amber-500'}`}>
                     {article.status}
                   </div>
-                  <button 
-                    onClick={() => handleOpenEditor(article)}
-                    className="absolute top-3 right-3 bg-white/90 backdrop-blur text-slate-700 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-sm border border-slate-200 hover:bg-white"
-                  >
-                    <AdminIcon name="edit" className="w-4 h-4" />
-                  </button>
+                  <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {canEdit && (
+                      <button 
+                        onClick={() => handleOpenEditor(article)}
+                        className="bg-white/90 backdrop-blur text-slate-700 p-2 rounded-lg shadow-sm border border-slate-200 hover:bg-white cursor-pointer"
+                        title="Edit Article"
+                      >
+                        <AdminIcon name="edit" className="w-4 h-4" />
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button 
+                        onClick={() => handleDelete(article.id)}
+                        className="bg-white/90 backdrop-blur text-red-600 p-2 rounded-lg shadow-sm border border-slate-200 hover:bg-white cursor-pointer"
+                        title="Delete Article"
+                      >
+                        <AdminIcon name="x" className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="p-4 lg:p-5 flex-1 flex flex-col">
                   <div className="text-[12px] font-bold text-blue-500 uppercase tracking-wider mb-2">
@@ -234,6 +292,40 @@ export default function AdminBlogsPage() {
                 onChange={e => setNewTitle(e.target.value)}
                 placeholder="e.g. Importance of Vitamin D Testing" 
                 className="w-full h-12 px-4 rounded-xl border border-slate-300 text-sm outline-none font-semibold focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[13px] font-extrabold text-slate-700 mb-2">Slug</label>
+                <input 
+                  type="text" 
+                  value={newSlug}
+                  onChange={e => setNewSlug(e.target.value)}
+                  placeholder="e.g. importance-of-vitamin-d" 
+                  className="w-full h-12 px-4 rounded-xl border border-slate-300 text-sm outline-none font-medium focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                />
+              </div>
+              <div>
+                <label className="block text-[13px] font-extrabold text-slate-700 mb-2">Publish Date</label>
+                <input 
+                  type="text" 
+                  value={newDate}
+                  onChange={e => setNewDate(e.target.value)}
+                  placeholder="e.g. Aug 15, 2026" 
+                  className="w-full h-12 px-4 rounded-xl border border-slate-300 text-sm outline-none font-medium focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-extrabold text-slate-700 mb-2">Author</label>
+              <input 
+                type="text" 
+                value={newAuthor}
+                onChange={e => setNewAuthor(e.target.value)}
+                placeholder="e.g. Dr. John Doe" 
+                className="w-full h-12 px-4 rounded-xl border border-slate-300 text-sm outline-none font-medium focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
               />
             </div>
 
@@ -298,12 +390,16 @@ export default function AdminBlogsPage() {
             
           </div>
           <div className="p-4 lg:p-6 border-t border-slate-200 bg-slate-50 flex flex-col-reverse sm:flex-row gap-3 justify-end shrink-0">
-             <button onClick={() => setIsEditorOpen(false)} className="h-12 px-6 rounded-xl bg-white text-slate-600 text-sm font-extrabold border border-slate-300 cursor-pointer hover:bg-slate-50 w-full sm:w-auto">
+            <button onClick={() => setIsEditorOpen(false)} className="h-12 px-6 rounded-xl bg-white text-slate-600 text-sm font-extrabold border border-slate-300 cursor-pointer hover:bg-slate-50 w-full sm:w-auto">
               Cancel
             </button>
-            <button onClick={handlePublish} className="h-12 px-6 rounded-xl bg-slate-900 text-white text-sm font-extrabold border-none cursor-pointer flex items-center justify-center sm:justify-start gap-2 hover:bg-slate-800 w-full sm:w-auto">
+            <button onClick={() => handlePublish('Draft')} className="h-12 px-6 rounded-xl bg-amber-100 text-amber-700 text-sm font-extrabold border-none cursor-pointer flex items-center justify-center sm:justify-start gap-2 hover:bg-amber-200 w-full sm:w-auto">
+              <AdminIcon name="edit" className="w-4 h-4" />
+              Save Draft
+            </button>
+            <button onClick={() => handlePublish('Published')} className="h-12 px-6 rounded-xl bg-slate-900 text-white text-sm font-extrabold border-none cursor-pointer flex items-center justify-center sm:justify-start gap-2 hover:bg-slate-800 w-full sm:w-auto">
               <AdminIcon name={editingArticleId ? 'save' : 'send'} className="w-4 h-4" />
-              {editingArticleId ? 'Save Changes' : 'Publish Article'}
+              {editingArticleId ? 'Update & Publish' : 'Publish Article'}
             </button>
           </div>
         </Drawer.Content>

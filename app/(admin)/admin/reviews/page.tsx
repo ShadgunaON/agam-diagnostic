@@ -80,7 +80,7 @@ export default function AdminReviewsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 w-full custom-scrollbar">
       <div>
         <h1 className="text-2xl font-bold text-foreground mb-2">Patient Reviews</h1>
         <p className="text-muted-foreground text-sm">

@@ -16,7 +16,8 @@ export const testsData = {
     { id: "all", label: "All Tests" },
     { id: "blood", label: "Blood Tests" },
     { id: "organ", label: "Organ Profiles" },
-    { id: "molecular", label: "Molecular" }
+    { id: "molecular", label: "Molecular" },
+    { id: "genetics", label: "Genetic Tests" }
   ],
   catalog: [
     {
@@ -74,6 +75,27 @@ export const testsData = {
       category: "blood",
       tag: "Urine Test",
       description: "Detects urinary tract infections, kidney problems, diabetes, and other metabolic disorders."
+    },
+    {
+      slug: "brca1-brca2",
+      title: "BRCA1 & BRCA2 Mutation Analysis",
+      category: "genetics",
+      tag: "Genetic Test",
+      description: "Comprehensive screening for mutations in BRCA1 and BRCA2 genes associated with hereditary breast and ovarian cancer."
+    },
+    {
+      slug: "sma-carrier",
+      title: "SMA Carrier Screening",
+      category: "genetics",
+      tag: "Genetic Test",
+      description: "Screens for carriers of Spinal Muscular Atrophy to assess reproductive risk."
+    },
+    {
+      slug: "whole-exome-sequencing",
+      title: "Whole Exome Sequencing (WES)",
+      category: "genetics",
+      tag: "Genetic Test",
+      description: "Advanced genetic test that sequences all protein-coding regions to identify rare genetic disorders."
     }
   ] as TestItem[]
 };

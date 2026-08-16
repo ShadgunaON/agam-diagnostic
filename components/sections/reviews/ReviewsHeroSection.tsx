@@ -8,7 +8,7 @@ export interface ReviewsHeroSectionProps {
 
 export function ReviewsHeroSection({ totalReviews, averageRating }: ReviewsHeroSectionProps) {
   return (
-    <section className="bg-bg-alt py-12 md:py-16 relative overflow-hidden">
+    <section className="bg-bg-alt py-8 md:py-12 relative overflow-hidden">
       <div className="container relative z-10 text-center max-w-3xl mx-auto">
         <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4 leading-tight">
           Trusted by patients across their health journey

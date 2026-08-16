@@ -12,6 +12,7 @@ export interface IBlogRepository {
   
   createArticle(article: Omit<BlogArticle, 'id'>): Promise<Result<BlogArticle>>;
   updateArticle(id: string, updates: Partial<BlogArticle>): Promise<Result<BlogArticle>>;
+  deleteArticle(id: string): Promise<Result<void>>;
   
   subscribeToNewsletter(email: string): Promise<Result<void>>;
 }

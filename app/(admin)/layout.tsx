@@ -12,7 +12,6 @@ const inter = Inter({
 
 import { AdminSidebar } from "@/components/admin/navigation/AdminSidebar";
 import { AdminTopbar } from "@/components/admin/layout/AdminTopbar";
-import { CommandMenu } from "@/components/admin/navigation/CommandMenu";
 import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "@/components/admin/feedback/Toast";
 
@@ -48,7 +47,6 @@ export default function AdminLayout({
                   </main>
                 </div>
               </div>
-              <CommandMenu />
               </div>
             </AdminAuthGuard>
           </ToastProvider>
@@ -57,3 +55,5 @@ export default function AdminLayout({
     </html>
   );
 }
+
+// Trigger Turbopack recompile

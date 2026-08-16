@@ -5,9 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
-import { bookingService, alertService, activityService, analyticsService } from '@/services';
+import { bookingService, analyticsService } from '@/services';
 import { BookingModel } from '@/domains/booking/model';
-import { ActivityRecordModel } from '@/domains/activity/model';
 
 // --- STYLES ---
 const glassStyle = {
@@ -30,24 +29,18 @@ export default function GlassDashboard() {
   const router = useRouter();
 
   const [recentBookings, setRecentBookings] = useState<BookingModel[]>([]);
-  const [operationalAlerts, setOperationalAlerts] = useState<any[]>([]);
-  const [activityFeed, setActivityFeed] = useState<ActivityRecordModel[]>([]);
   const [kpis, setKpis] = useState({ bookingsToday: 0, pendingBookings: 0, homeCollections: 0, revenueToday: 0 });
 
   useEffect(() => {
     setMounted(true);
     
     const loadDashboardData = async () => {
-      const [bookingsRes, alertsRes, activityRes, kpisRes] = await Promise.all([
+      const [bookingsRes, kpisRes] = await Promise.all([
         bookingService.getRecent(4),
-        alertService.getOperationalAlerts(),
-        activityService.getAll(),
         analyticsService.getDashboardKPIs()
       ]);
 
       if (bookingsRes.isSuccess) setRecentBookings(bookingsRes.value);
-      setOperationalAlerts(alertsRes); // alertsRes is array directly
-      if (activityRes.isSuccess) setActivityFeed(activityRes.value);
       setKpis(kpisRes);
     };
 
@@ -119,29 +112,30 @@ export default function GlassDashboard() {
         {/* QUICK ACTIONS (FLOATING PILLS) */}
         <div className="admin-quick-actions flex flex-col sm:flex-row flex-wrap gap-3 lg:gap-4">
           {[
-            { label: 'New Booking', icon: 'plus', bg: 'linear-gradient(135deg, #3b82f6, #2563eb)', href: '/admin/bookings' },
-            { label: 'Upload Report', icon: 'fileText', bg: 'linear-gradient(135deg, #10b981, #059669)', href: '/admin/reports' },
-            { label: 'Add Patient', icon: 'users', bg: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', href: '/admin/patients' },
-            { label: 'View Schedule', icon: 'calendar', bg: 'linear-gradient(135deg, #f59e0b, #d97706)', href: '/admin/collections' }
+            { label: 'New Booking', icon: 'plus', bg: 'rgba(59, 130, 246, 0.1)', color: '#2563eb', border: '1px solid rgba(59, 130, 246, 0.2)', href: '/admin/bookings' },
+            { label: 'Upload Report', icon: 'fileText', bg: 'rgba(16, 185, 129, 0.1)', color: '#059669', border: '1px solid rgba(16, 185, 129, 0.2)', href: '/admin/reports' },
+            { label: 'Add Patient', icon: 'users', bg: 'rgba(139, 92, 246, 0.1)', color: '#7c3aed', border: '1px solid rgba(139, 92, 246, 0.2)', href: '/admin/patients' },
+            { label: 'View Schedule', icon: 'calendar', bg: 'rgba(245, 158, 11, 0.1)', color: '#d97706', border: '1px solid rgba(245, 158, 11, 0.2)', href: '/admin/collections' }
           ].map((action, i) => (
             <button
               key={i}
               onClick={() => router.push(action.href)}
               style={{
-                flex: 1, minWidth: '200px', height: '48px', borderRadius: '16px', border: 'none', background: action.bg, color: '#ffffff',
-                fontSize: '14px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', gap: '10px',
-                cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', transition: 'all 0.2s', position: 'relative', overflow: 'hidden'
+                flex: 1, minWidth: '200px', height: '48px', borderRadius: '16px', background: action.bg, color: action.color, border: action.border,
+                fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', gap: '10px',
+                cursor: 'pointer', transition: 'all 0.2s', position: 'relative', overflow: 'hidden'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+                e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.05)';
+                e.currentTarget.style.background = 'white';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'none';
-                e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.background = action.bg;
               }}
             >
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(to bottom, rgba(255,255,255,0.2), transparent)', pointerEvents: 'none' }} />
               <AdminIcon name={action.icon as any} style={{ width: '16px', height: '16px', position: 'relative', zIndex: 1 }} />
               <span style={{ position: 'relative', zIndex: 1 }}>{action.label}</span>
             </button>
@@ -149,7 +143,7 @@ export default function GlassDashboard() {
         </div>
 
         {/* BOTTOM SECTIONS */}
-        <div className="admin-responsive-grid-2col grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
+        <div className="grid grid-cols-1 gap-6 w-full">
 
           {/* RECENT BOOKINGS GLASS TABLE */}
           <div className="admin-glass-panel p-4 lg:p-8 flex flex-col gap-4 lg:gap-6 min-w-0" style={glassStyle}>
@@ -191,50 +185,6 @@ export default function GlassDashboard() {
                 );
               })}
             </div>
-          </div>
-
-          {/* RIGHT PANELS: ALERTS & ACTIVITY */}
-          <div className="flex flex-col gap-6 min-w-0">
-
-            {/* ALERTS */}
-            <div className="admin-glass-panel p-4 lg:p-6 min-w-0" style={glassStyle}>
-              <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: '0 0 20px 0' }}>Operational Alerts</h2>
-              <div className="flex flex-col gap-4">
-                {operationalAlerts.map(alert => (
-                  <div key={alert.id} style={{ display: 'flex', gap: '16px' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '12px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: alert.severity === 'danger' ? 'rgba(244,63,94,0.1)' : alert.severity === 'warning' ? 'rgba(245,158,11,0.1)' : 'rgba(59,130,246,0.1)', color: alert.severity === 'danger' ? '#f43f5e' : alert.severity === 'warning' ? '#f59e0b' : '#3b82f6' }}>
-                      <AdminIcon name="alertTriangle" style={{ width: '18px', height: '18px' }} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', lineHeight: 1.4 }}>{alert.message}</div>
-                      <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', marginTop: '4px' }}>{alert.time}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* ACTIVITY FEED */}
-            <div className="admin-glass-panel p-4 lg:p-6 flex-1 min-w-0" style={glassStyle}>
-              <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', margin: '0 0 20px 0' }}>Activity Feed</h2>
-              <div className="flex flex-col gap-5">
-                {activityFeed.map((activity, i) => (
-                  <div key={activity.id} style={{ display: 'flex', gap: '16px', position: 'relative' }}>
-                    {i !== activityFeed.length - 1 && <div style={{ position: 'absolute', top: '32px', left: '15px', bottom: '-20px', width: '2px', backgroundColor: 'rgba(226,232,240,0.5)' }} />}
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', flexShrink: 0, backgroundColor: '#ffffff', border: '2px solid rgba(226,232,240,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
-                      <AdminIcon name="user" style={{ width: '14px', height: '14px' }} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '13px', color: '#475569', lineHeight: 1.4 }}>
-                        <span style={{ fontWeight: 800, color: '#0f172a' }}>{activity.user}</span> {activity.action}
-                      </div>
-                      <div style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', marginTop: '2px' }}>{activity.time}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
           </div>
 
         </div>

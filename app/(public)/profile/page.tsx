@@ -77,19 +77,47 @@ export default function ProfilePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-1 space-y-6">
-              <Card>
+              <Card className="h-auto">
                 <Card.Content className="pt-6 text-center">
-                  <div className="w-24 h-24 bg-primary text-white rounded-full flex items-center justify-center text-4xl font-bold mx-auto mb-4">
-                    {user.fullName ? user.fullName.charAt(0) : 'P'}
+                  <div className="w-24 h-24 bg-primary text-white rounded-full flex items-center justify-center text-4xl font-bold mx-auto mb-4 shadow-sm">
+                    {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'P'}
                   </div>
-                  <h2 className="text-xl font-bold">{user.fullName || 'Patient'}</h2>
+                  <h2 className="text-xl font-bold text-foreground">{user.fullName || 'Patient'}</h2>
                   <p className="text-sm text-muted-foreground mt-1">+91 {user.mobile}</p>
+                </Card.Content>
+              </Card>
+
+              <Card className="h-auto">
+                <Card.Content className="p-0">
+                  <div className="flex flex-col">
+                    <a href="/bookings" className="flex items-center gap-3 px-6 py-4 border-b border-border/50 hover:bg-bg-alt transition-colors">
+                      <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm text-foreground">My Bookings</p>
+                        <p className="text-xs text-muted-foreground">View appointment history</p>
+                      </div>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-muted-foreground ml-auto"><polyline points="9 18 15 12 9 6"/></svg>
+                    </a>
+                    
+                    <a href="/reports" className="flex items-center gap-3 px-6 py-4 hover:bg-bg-alt transition-colors">
+                      <div className="w-8 h-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm text-foreground">My Reports</p>
+                        <p className="text-xs text-muted-foreground">Download lab results</p>
+                      </div>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-muted-foreground ml-auto"><polyline points="9 18 15 12 9 6"/></svg>
+                    </a>
+                  </div>
                 </Card.Content>
               </Card>
             </div>
 
             <div className="md:col-span-2 space-y-6">
-              <Card>
+              <Card className="h-auto">
                 <Card.Header className="flex flex-row justify-between items-center border-b border-border/50 pb-4">
                   <Card.Title>Personal Information</Card.Title>
                   {!isEditing && (
@@ -166,7 +194,7 @@ export default function ProfilePage() {
                 </Card.Content>
               </Card>
 
-              <Card>
+              <Card className="h-auto">
                 <Card.Header className="flex flex-row justify-between items-center border-b border-border/50 pb-4">
                   <div>
                     <Card.Title>Family Members</Card.Title>
@@ -203,7 +231,7 @@ export default function ProfilePage() {
                   )}
 
                   <div className="space-y-3">
-                    {user.savedPatients.map(patient => (
+                    {user.savedPatients?.map(patient => (
                       <div key={patient.id} className="flex justify-between items-center p-4 border border-border rounded-xl">
                         <div>
                           <div className="flex items-center gap-2 mb-1">

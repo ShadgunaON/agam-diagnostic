@@ -7,6 +7,7 @@ import { AdminIcon } from '../navigation/AdminIcons';
 import { AdminButton } from '../primitives/AdminButton';
 import { AdminInput } from '../primitives/AdminInput';
 import { AdminMobileNav } from '../navigation/AdminMobileNav';
+import { AdminSearch } from './AdminSearch';
 import { useAuth } from '@/context/AuthContext';
 import { useRBAC } from '@/hooks/useRBAC';
 
@@ -99,28 +100,7 @@ export function AdminTopbar() {
       <div className="flex items-center justify-end shrink-0" style={{ gap: '20px' }}>
 
         {/* Search */}
-        <div style={{ width: '480px', height: '52px' }} className="admin-hide-mobile relative">
-          <div
-            className="flex items-center w-full h-full bg-white border border-[#E5E7EB] shadow-[0_1px_2px_rgba(0,0,0,0.02)] cursor-pointer hover:border-slate-300 transition-colors"
-            style={{ borderRadius: '14px', padding: '0 16px' }}
-            onClick={() => {
-              const event = new KeyboardEvent('keydown', { key: 'k', metaKey: true });
-              window.dispatchEvent(event);
-            }}
-          >
-            <AdminIcon name="search" className="text-slate-400 shrink-0" style={{ width: '20px', height: '20px' }} strokeWidth={2} />
-            <input
-              type="text"
-              placeholder="Search..."
-              readOnly
-              className="flex-1 bg-transparent border-none outline-none text-[15px] font-medium text-slate-700 placeholder:text-slate-400 cursor-pointer"
-              style={{ marginLeft: '12px' }}
-            />
-            <div className="flex items-center justify-center bg-slate-50 border border-slate-200 shrink-0" style={{ width: '32px', height: '26px', borderRadius: '6px' }}>
-              <span className="text-[12px] font-bold text-slate-500">⌘K</span>
-            </div>
-          </div>
-        </div>
+        <AdminSearch />
 
         {/* Notifications */}
         <div className="relative" ref={notifRef}>

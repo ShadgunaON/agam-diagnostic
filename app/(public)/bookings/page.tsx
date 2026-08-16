@@ -190,7 +190,12 @@ export default function BookingsPage() {
                       </div>
                       <h3 className="font-bold text-lg mb-1">{booking.items.map(i => i.name).join(', ')}</h3>
                       <p className="text-sm text-muted-foreground mb-2">
-                        Patient: <strong className="text-foreground">{booking.patient.name}</strong> • {booking.collection.date} | {booking.collection.timeSlot}
+                        Patient: <strong className="text-foreground">{booking.patient.name}</strong>
+                        {booking.patientId && booking.patientId !== user?.id && (
+                          <span className="ml-2 text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider font-semibold">Family Member</span>
+                        )}
+                        <span className="mx-2">•</span>
+                        {booking.collection.date} | {booking.collection.timeSlot}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {booking.collection.type} • {booking.collection.address}
@@ -228,8 +233,8 @@ export default function BookingsPage() {
                   </div>
 
                   {/* Progress Tracker */}
-                  <div className="w-full mt-2 pt-4 border-t border-slate-100">
-                    <div className="flex items-start justify-between w-full overflow-x-auto pb-2 hide-scrollbar relative min-w-[600px]">
+                  <div className="w-full mt-2 pt-4 border-t border-slate-100 overflow-x-auto hide-scrollbar">
+                    <div className="flex items-start justify-between w-full pb-2 relative min-w-[600px]">
                       {steps.map((step, idx) => (
                         <div key={idx} className="flex-1 flex flex-col items-center relative">
                           {/* Connecting Line */}

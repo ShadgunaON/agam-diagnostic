@@ -19,7 +19,7 @@ export function AboutHeroSection({ data, className = '' }: AboutHeroSectionProps
       <div className="grid grid-cols-1 md:grid-cols-[45%_55%] items-stretch">
         
         {/* Content Left */}
-        <div style={{ padding: 'var(--sp-12) var(--sp-6) var(--sp-12) max(var(--sp-6), calc((100vw - var(--max-width)) / 2 + var(--sp-6)))', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', zIndex: 2 }}>
+        <div className="flex flex-col justify-center relative z-10 px-6 py-6 md:py-8 md:pl-[max(1.5rem,calc((100vw-var(--max-width))/2+1.5rem))] md:pr-8">
           <div className="breadcrumb" style={{ marginBottom: 'var(--sp-4)' }}>
             <Link href="/">Home</Link><span className="breadcrumb__sep">›</span><span className="breadcrumb__current">About Us</span>
           </div>
@@ -36,10 +36,12 @@ export function AboutHeroSection({ data, className = '' }: AboutHeroSectionProps
                 icon = <><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></>;
               }
               return (
-                <div key={idx} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: 'var(--fs-sm)', color: 'var(--color-primary)', background: '#fff', padding: '6px 12px', borderRadius: 'var(--radius-full)', boxShadow: 'var(--shadow-sm)' }}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" style={{ width: '16px', height: '16px' }}>
-                    {icon}
-                  </svg>
+                <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontWeight: 700, fontSize: 'var(--fs-sm)', color: 'var(--color-primary)', background: '#fff', padding: '16px', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)', minWidth: '140px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" style={{ width: '20px', height: '20px' }}>
+                      {icon}
+                    </svg>
+                  </div>
                   {badge}
                 </div>
               );
@@ -48,14 +50,13 @@ export function AboutHeroSection({ data, className = '' }: AboutHeroSectionProps
         </div>
         
         {/* Image Right */}
-        <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: '500px' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, var(--color-bg-alt) 0%, transparent 20%)', zIndex: 1 }}></div>
+        <div className="relative w-full aspect-[4/3] sm:aspect-video md:aspect-auto md:h-full md:min-h-[400px] flex items-center justify-center overflow-hidden">
+          <div className="hidden md:block absolute inset-0 z-10" style={{ background: 'linear-gradient(to right, var(--color-bg-alt) 0%, transparent 20%)' }}></div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img 
             src={data.image} 
             alt="AGAM Diagnostics Team" 
-            className="object-cover object-center"
-            style={{ width: '100%', height: '100%', borderRadius: 0 }}
+            className="w-full h-full object-cover object-top md:object-center rounded-2xl md:rounded-none"
           />
         </div>
         

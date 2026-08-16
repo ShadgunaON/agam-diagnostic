@@ -20,7 +20,6 @@ export function Header({ className = '' }: HeaderProps) {
   const { user, isAuthenticated, logout } = useAuth();
   const { itemCount, clearCart } = useCart();
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,7 +28,7 @@ export function Header({ className = '' }: HeaderProps) {
         setShowUserMenu(false);
       }
     }
-    document.addEventListener("mousedown", handleClickOutside);
+    
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -65,25 +64,17 @@ export function Header({ className = '' }: HeaderProps) {
       <nav className="nav-main sticky top-0 z-[1000] min-h-[60px] md:static md:min-h-auto" id="nav-main">
         <Container className="flex justify-between items-center w-full">
           <Link href="/" className="nav-logo shrink-0">
-            <img loading="lazy" src="https://www.agamdiagnostics.com/wp-content/uploads/2023/08/agam-site-logo.webp" alt="Agam Diagnostics" width="184" height="63" className="w-[130px] sm:w-[184px] h-auto" />
+            <img loading="lazy" src="https://www.agamdiagnostics.com/wp-content/uploads/2023/08/agam-site-logo.webp" alt="Agam Diagnostics" width="184" height="63" className="w-[130px] sm:w-[150px] lg:w-[160px] xl:w-[184px] h-auto transition-all" />
           </Link>
           
           <Navbar />
           
-          <div id="nav-auth-section" className="flex items-center gap-1 sm:gap-3">
+          <div id="nav-auth-section" className="flex items-center gap-1 sm:gap-2 xl:gap-3">
             
-            {/* Search Icon Trigger */}
-            <button
-              type="button"
-              className="p-1.5 sm:p-2 text-foreground hover:bg-bg-alt rounded-full transition-colors cursor-pointer border-none bg-transparent"
-              onClick={() => setIsSearchOpen(true)}
-              title="Search Tests & Packages"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              </svg>
-            </button>
-
+            {/* Global Search Inline */}
+            <div className="hidden sm:block">
+              <GlobalSearch />
+            </div>
             {/* Cart Icon Trigger */}
             <Link 
               href="/book"
@@ -135,7 +126,7 @@ export function Header({ className = '' }: HeaderProps) {
                     </Link>
                     {(user.role === 'admin' || user.role === 'doctor' || user.role === 'lab_tech') && (
                       <Link
-                        href="/admin/bookings"
+                        href="/admin"
                         className="user-menu-dropdown__link text-primary font-bold bg-blue-50/50 hover:bg-blue-100/50 transition-colors"
                         onClick={() => setShowUserMenu(false)}
                         style={{ borderLeft: '3px solid var(--color-primary)' }}
@@ -175,9 +166,14 @@ export function Header({ className = '' }: HeaderProps) {
             )}
 
             {/* Make Appointment CTA */}
-            <Button href="/book" className="btn btn--primary btn--sm nav-cta !hidden lg:!inline-flex">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              Make Appointment
+            <Button 
+              href="/book" 
+              className="btn btn--accent btn--sm nav-cta !hidden lg:!flex shrink-0 w-9 h-9 !p-0 items-center justify-center rounded-lg"
+              title="Make Appointment"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
             </Button>
             
             <MobileNavigation />
@@ -185,7 +181,6 @@ export function Header({ className = '' }: HeaderProps) {
         </Container>
       </nav>
 
-      <GlobalSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>
   );
 }

@@ -26,3 +26,14 @@ export async function updateBlogArticleAction(id: string, updates: Partial<BlogA
   }
   return { success: false, error: 'Failed to update' };
 }
+
+export async function deleteBlogArticleAction(id: string) {
+  const result = await blogService.deleteArticle(id);
+  revalidatePath('/blog');
+  revalidatePath('/admin/blogs');
+  
+  if (result.isSuccess) {
+    return { success: true };
+  }
+  return { success: false, error: 'Failed to delete' };
+}

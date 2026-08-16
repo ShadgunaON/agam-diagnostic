@@ -7,19 +7,12 @@ import { PaginatedResponse } from '@/lib/api/types';
 import { NotFoundError } from '@/lib/api/errors';
 import { blogData } from '@/data/blog';
 
-// Use globalThis to persist state across Next.js dev mode hot reloads
-// without breaking browser builds (since it avoids 'fs' module)
-const globalForMock = globalThis as unknown as {
-  __mockArticles?: BlogArticle[];
-};
+import { LocalStorageAdapter } from '@/lib/storage/LocalStorageAdapter';
 
 export class MockBlogRepository implements IBlogRepository {
-  private get articles(): BlogArticle[] {
-    if (globalForMock.__mockArticles) {
-      return globalForMock.__mockArticles;
-    }
-    
-    // Initialize if it doesn't exist
+  private readonly storageAdapter = new LocalStorageAdapter<BlogArticle[]>('mock_blog_articles');
+
+  private get initialArticles(): BlogArticle[] {
     const rawArticles = blogData.articles;
     const dtos: BlogArticleDto[] = rawArticles.map((raw, index) => ({
       id: `blog-${index}`,
@@ -35,26 +28,37 @@ export class MockBlogRepository implements IBlogRepository {
       color_secondary: raw.colorSecondary,
     }));
 
-    const initialArticles = dtos.map(mapBlogArticleDtoToModel).map(a => ({
+    return dtos.map(mapBlogArticleDtoToModel).map(a => ({
       ...a,
       status: 'Published' as const,
       views: Math.floor(Math.random() * 1000),
       author: 'Admin User',
-      image: a.imageUrl || 'https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=600&q=80',
-      imageUrl: a.imageUrl || 'https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=600&q=80'
+      image: a.imageUrl || '/images/blog_lab.png',
+      imageUrl: a.imageUrl || '/images/blog_lab.png'
     }));
+  }
+
+  private get articles(): BlogArticle[] {
+    if (typeof window !== 'undefined') {
+      const stored = this.storageAdapter.load();
+      if (stored) return stored;
+      
+      const initial = this.initialArticles;
+      this.storageAdapter.save(initial);
+      return initial;
+    }
     
-    globalForMock.__mockArticles = initialArticles;
-    return initialArticles;
+    // Server-side: return seed data without mutating global state
+    return this.initialArticles;
   }
 
   private set articles(newArticles: BlogArticle[]) {
-    globalForMock.__mockArticles = newArticles;
+    if (typeof window !== 'undefined') {
+      this.storageAdapter.save(newArticles);
+    }
   }
 
-  constructor() {
-    // constructor doesn't need to do anything anymore as we use getters/setters
-  }
+  constructor() {}
 
   async getArticles(page = 1, limit = 10): Promise<Result<PaginatedResponse<BlogArticle>>> {
     return success({
@@ -74,21 +78,11 @@ export class MockBlogRepository implements IBlogRepository {
   }
 
   async getFeaturedArticle(): Promise<Result<BlogArticle>> {
-    const raw = blogData.featuredArticle;
-    const featured = mapBlogArticleDtoToModel({
-      id: 'featured',
-      slug: raw.slug,
-      title: raw.title,
-      description: raw.description,
-      content: raw.content || '',
-      published_at: raw.date,
-      category: raw.category,
-      author_id: 'mock-author',
-      icon: raw.icon,
-      color_primary: raw.colorPrimary,
-      color_secondary: raw.colorSecondary,
-    });
-    return success(featured);
+    const publishedArticles = this.articles.filter(a => a.status === 'Published');
+    if (publishedArticles.length > 0) {
+      return success(publishedArticles[0]);
+    }
+    return failure(new NotFoundError('No featured article found'));
   }
 
   async getPopularReads(): Promise<Result<PopularRead[]>> {
@@ -118,6 +112,16 @@ export class MockBlogRepository implements IBlogRepository {
     currentArticles[index] = { ...currentArticles[index], ...updates };
     this.articles = currentArticles; // Trigger setter
     return success(currentArticles[index]);
+  }
+
+  async deleteArticle(id: string): Promise<Result<void>> {
+    const currentArticles = this.articles;
+    const index = currentArticles.findIndex(a => a.id === id);
+    if (index === -1) return failure(new NotFoundError(`Article not found`));
+    
+    currentArticles.splice(index, 1);
+    this.articles = currentArticles; // Trigger setter
+    return success(undefined);
   }
 
   private subscribers: string[] = [];

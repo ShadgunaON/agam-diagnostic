@@ -99,7 +99,7 @@ export default function AdminInvoicesPage() {
                       <div className="text-[12px] font-medium text-slate-400">{inv.bookingId}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-[14px] font-black text-slate-900">₹{inv.total.toLocaleString()}</div>
+                      <div className="text-[14px] font-black text-slate-900">₹{(inv.total || 0).toLocaleString()}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wide

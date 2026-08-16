@@ -14,9 +14,11 @@ interface BlogDetailPageProps {
 export async function generateStaticParams() {
   const result = await blogService.getArticles(1, 100);
   if (result.isFailure) return [];
-  return result.value.data.map((article) => ({
-    slug: article.slug,
-  }));
+  return result.value.data
+    .filter(a => a.status === 'Published')
+    .map((article) => ({
+      slug: article.slug,
+    }));
 }
 
 export async function generateMetadata({ params }: BlogDetailPageProps): Promise<Metadata> {
@@ -35,21 +37,30 @@ export async function generateMetadata({ params }: BlogDetailPageProps): Promise
 export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
   const { slug } = await params;
   
-  const [articleResult, categoriesResult, popularResult, allArticlesResult] = await Promise.all([
+  const [articleResult, popularResult, allArticlesResult] = await Promise.all([
     blogService.getArticleBySlug(slug),
-    blogService.getCategories(),
     blogService.getPopularReads(),
-    blogService.getArticles(1, 10)
+    blogService.getArticles(1, 100) // fetch more for better related matching
   ]);
 
-  if (articleResult.isFailure) {
+  if (articleResult.isFailure || articleResult.value.status !== 'Published') {
     notFound();
   }
 
   const article = articleResult.value;
-  const categories = categoriesResult.isSuccess ? categoriesResult.value : [];
   const popularReads = popularResult.isSuccess ? popularResult.value : [];
-  const relatedArticles = allArticlesResult.isSuccess ? allArticlesResult.value.data.filter(a => a.slug !== slug).slice(0, 2) : [];
+  
+  // Deterministic related articles matching:
+  // 1. Same category
+  // 2. Not the current article
+  let relatedArticles: any[] = [];
+  if (allArticlesResult.isSuccess) {
+    const publishedOnly = allArticlesResult.value.data.filter(a => a.status === 'Published' && a.slug !== slug);
+    const sameCategory = publishedOnly.filter(a => a.category === article.category);
+    const others = publishedOnly.filter(a => a.category !== article.category);
+    
+    relatedArticles = [...sameCategory, ...others].slice(0, 2);
+  }
 
   return (
     <>
@@ -71,7 +82,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
         <div className="container">
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-8">
             <BlogDetailContent article={article} relatedArticles={relatedArticles} />
-            <BlogSidebar categories={categories} popularReads={popularReads} />
+            <BlogSidebar popularReads={popularReads} />
           </div>
         </div>
       </section>

@@ -6,34 +6,13 @@ import Image from 'next/image';
 import { BlogCategory, PopularRead } from '@/domains/blog/model';
 
 export interface BlogSidebarProps {
-  categories: BlogCategory[];
   popularReads: PopularRead[];
   className?: string;
 }
 
-export function BlogSidebar({ categories, popularReads, className = '' }: BlogSidebarProps) {
+export function BlogSidebar({ popularReads, className = '' }: BlogSidebarProps) {
   return (
     <aside className={`space-y-8 sticky top-24 ${className}`}>
-      
-      {/* Search fallback for mobile/sidebar if needed in future (currently in hero) */}
-      
-      {/* Categories */}
-      <div className="bg-bg-alt p-6 rounded-2xl border border-border shadow-sm">
-        <h3 className="text-lg font-bold mb-5 flex items-center gap-2">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 text-primary"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-          Categories
-        </h3>
-        <ul className="space-y-3 m-0 p-0 list-none">
-          {categories.map((category) => (
-            <li key={category.id}>
-              <Link href={`/blog?category=${category.id}`} className="group flex justify-between items-center py-2 px-3 rounded-lg hover:bg-background transition-colors border border-transparent hover:border-border">
-                <span className="font-medium text-foreground group-hover:text-primary transition-colors">{category.name}</span>
-                <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-1 rounded-full group-hover:bg-primary/10 group-hover:text-primary transition-colors">{category.count}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
 
       {/* Popular Reads */}
       <div className="bg-bg-alt p-6 rounded-2xl border border-border shadow-sm">

@@ -10,7 +10,7 @@ export interface BlogHeroSectionProps {
 
 export function BlogHeroSection({ title, description, className = '' }: BlogHeroSectionProps) {
   return (
-    <section className={`relative pt-24 pb-20 md:pt-32 md:pb-28 overflow-hidden bg-bg-alt ${className}`}>
+    <section className={`relative py-10 md:py-16 overflow-hidden bg-bg-alt ${className}`}>
       {/* Premium subtle background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
       

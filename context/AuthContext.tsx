@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 import { UserProfile, PatientProfileItem, SavedAddressItem } from '@/domains/auth/model';
-import { authService } from '@/services';
+import { authService, patientService } from '@/services';
 import { SessionStorageAdapter } from '@/lib/storage/SessionStorageAdapter';
 
 
@@ -94,9 +94,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addPatient = async (patient: Omit<PatientProfileItem, 'id'>) => {
     if (!user) return;
+
+    // Duplicate check
+    const isDuplicate = user.savedPatients.some(
+      p => p.name.toLowerCase() === patient.name.toLowerCase() && p.relation === patient.relation
+    );
+    if (isDuplicate) {
+      console.warn('Duplicate family member detected');
+      return;
+    }
+
+    // Create a canonical patient via patientService
+    const patientResult = await patientService.create({
+      name: patient.name,
+      age: parseInt(patient.age) || 0,
+      gender: patient.gender,
+      phone: user.mobile,
+      email: user.email || '',
+      status: 'Active',
+      bloodGroup: 'Unknown'
+    });
+
     const newPatientItem: PatientProfileItem = {
       ...patient,
-      id: `pat_${Date.now()}`,
+      id: patientResult.isSuccess ? patientResult.value.id : `pat_${Date.now()}`,
     };
     const result = await authService.updateProfile(user.id, {
       savedPatients: [...user.savedPatients, newPatientItem],
@@ -109,6 +130,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const editPatient = async (id: string, patient: Omit<PatientProfileItem, 'id'>) => {
     if (!user) return;
     
+    // Update canonical patient via patientService
+    if (!id.startsWith('pat_')) {
+      await patientService.update(id, {
+        name: patient.name,
+        age: parseInt(patient.age) || 0,
+        gender: patient.gender
+      });
+    }
+
     const updatedPatients = user.savedPatients.map(p => 
       p.id === id ? { ...patient, id } : p
     );

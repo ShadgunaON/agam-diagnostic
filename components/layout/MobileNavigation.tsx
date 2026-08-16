@@ -126,8 +126,9 @@ export function MobileNavigation({ className = '' }: MobileNavigationProps) {
               </button>
               
               <div className={`flex flex-col gap-3 overflow-hidden transition-all duration-300 ${expandedSection === 'contact' ? 'max-h-24 mt-4 opacity-100' : 'max-h-0 opacity-0'}`}>
-                <Link href="/contact" className="pl-4 hover:text-primary transition-colors border-l-2 border-transparent hover:border-primary" onClick={closeMenu}>Contact Us</Link>
-                <Link href="/faq" className="pl-4 hover:text-primary transition-colors border-l-2 border-transparent hover:border-primary" onClick={closeMenu}>FAQ</Link>
+                <div className="flex flex-col gap-2">
+                  <Link href="/help" className="pl-4 hover:text-primary transition-colors border-l-2 border-transparent hover:border-primary" onClick={closeMenu}>Help & Contact</Link>
+                </div>
               </div>
             </div>
           </nav>

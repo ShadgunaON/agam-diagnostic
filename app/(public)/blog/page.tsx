@@ -16,19 +16,20 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogPage() {
-  const [heroResult, featuredResult, articlesResult, categoriesResult, popularResult] = await Promise.all([
+  const [heroResult, featuredResult, articlesResult, popularResult] = await Promise.all([
     blogService.getHeroData(),
     blogService.getFeaturedArticle(),
     blogService.getArticles(1, 10),
-    blogService.getCategories(),
     blogService.getPopularReads(),
   ]);
 
-  if (articlesResult.isFailure || featuredResult.isFailure || categoriesResult.isFailure || popularResult.isFailure || heroResult.isFailure) {
+  if (articlesResult.isFailure || popularResult.isFailure || heroResult.isFailure) {
     return <ErrorState title="Failed to load blog" description="We couldn't load the articles right now. Please try again later." />;
   }
 
-  const articles = articlesResult.value.data;
+  const allArticles = articlesResult.value.data;
+  const articles = allArticles.filter(a => a.status === 'Published');
+  const featuredArticle = featuredResult.isSuccess && featuredResult.value.status === 'Published' ? featuredResult.value : null;
 
   return (
     <>
@@ -38,14 +39,14 @@ export default async function BlogPage() {
         <div className="container">
           <div className="grid md:grid-cols-[2fr_1fr] gap-8 items-start">
             <div>
-              <BlogFeaturedSection article={featuredResult.value} />
+              {featuredArticle && <BlogFeaturedSection article={featuredArticle} />}
               {articles.length > 0 ? (
                 <BlogGridSection articles={articles} />
               ) : (
                 <EmptyState title="No articles found" description="Check back later for more updates." />
               )}
             </div>
-            <BlogSidebar categories={categoriesResult.value} popularReads={popularResult.value} />
+            <BlogSidebar popularReads={popularResult.value} />
           </div>
         </div>
       </section>

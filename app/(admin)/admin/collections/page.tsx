@@ -24,6 +24,7 @@ export default function CollectionsPage() {
   const [tasks, setTasks] = useState<CollectionTaskModel[]>([]);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'HOME' | 'LAB'>(defaultTab);
+  const [sortKey, setSortKey] = useState('date_oldest');
   const [activeInvoice, setActiveInvoice] = useState<InvoiceModel | null>(null);
   const [activeReport, setActiveReport] = useState<any>(null);
   const [activeBooking, setActiveBooking] = useState<any>(null);
@@ -71,7 +72,7 @@ export default function CollectionsPage() {
 
       if (staffRes.isSuccess && staffRes.value && rolesRes.isSuccess && rolesRes.value) {
         // STRICT Eligibility: Only allow staff with explicitly phlebotomist roles
-        let matched = staffRes.value.filter((s: StaffModel) => 
+        const matched = staffRes.value.filter((s: StaffModel) => 
           s.role.toLowerCase() === 'phleb' || s.role.toLowerCase() === 'phleb_home'
         );
         
@@ -96,9 +97,10 @@ export default function CollectionsPage() {
   const filteredTasks = tasks.filter(task => {
     if (isAdmin || !scope) return true;
     
-    // For Home Collection agents, only show their explicitly assigned tasks
-    if (scope === 'home_collection' && task.type !== 'Lab Visit') {
-      return task.phlebotomistId === user?.staffId;
+    // For Home Collection agents, only show their explicitly assigned tasks and NO lab visits
+    if (scope === 'home_collection') {
+      if (task.type !== 'Home Collection') return false;
+      return task.phlebotomistId === user?.staffId || task.assignedTo === user?.fullName;
     }
     
     // For In-Lab techs, show all tasks (both Home Collections and Lab Visits)
@@ -415,6 +417,16 @@ export default function CollectionsPage() {
                   style={{ width: '100%', height: '40px', padding: '0 16px 0 36px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', fontWeight: 500, outline: 'none', backgroundColor: '#ffffff' }}
                 />
               </div>
+              <div className="mt-3">
+                <select
+                  value={sortKey}
+                  onChange={(e) => setSortKey(e.target.value)}
+                  className="w-full h-10 px-3 rounded-lg border border-slate-300 bg-white text-sm font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20"
+                >
+                  <option value="date_oldest">Booking Date (Oldest First)</option>
+                  <option value="date_newest">Booking Date (Newest First)</option>
+                </select>
+              </div>
             </div>
 
             {/* Scrollable Queue List */}
@@ -424,7 +436,13 @@ export default function CollectionsPage() {
               ) : tasks.length === 0 ? (
                 <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>No tasks found.</div>
               ) : (
-                homeTasks.map((task, index) => {
+                [...homeTasks].sort((a, b) => {
+                  const bkA = allBookings.find(bk => bk.id === a.bookingId);
+                  const bkB = allBookings.find(bk => bk.id === b.bookingId);
+                  const timeA = bkA ? new Date(bkA.createdAt).getTime() : 0;
+                  const timeB = bkB ? new Date(bkB.createdAt).getTime() : 0;
+                  return sortKey === 'date_newest' ? timeB - timeA : timeA - timeB;
+                }).map((task, index) => {
                   const isActive = activeTaskId === task.id;
                 
                 let statusColor = '#64748b'; // Default Grey
@@ -761,12 +779,28 @@ export default function CollectionsPage() {
         ) : (
           /* IN-LAB VISITS TAB — No phlebotomist assignment */
           <div className="flex-1 min-h-[600px] min-w-0 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-slate-900 mb-6">In-Lab Visits Queue</h2>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+              <h2 className="text-lg font-bold text-slate-900 mb-0">In-Lab Visits Queue</h2>
+              <select
+                value={sortKey}
+                onChange={(e) => setSortKey(e.target.value)}
+                className="h-10 px-4 rounded-lg border border-slate-300 bg-white text-sm font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20"
+              >
+                <option value="date_oldest">Booking Date (Oldest First)</option>
+                <option value="date_newest">Booking Date (Newest First)</option>
+              </select>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {labTasks.length === 0 ? (
                 <div className="col-span-full text-center py-20 text-slate-500 font-medium">No in-lab visits scheduled.</div>
               ) : (
-                labTasks.map(task => (
+                [...labTasks].sort((a, b) => {
+                  const bkA = allBookings.find(bk => bk.id === a.bookingId);
+                  const bkB = allBookings.find(bk => bk.id === b.bookingId);
+                  const timeA = bkA ? new Date(bkA.createdAt).getTime() : 0;
+                  const timeB = bkB ? new Date(bkB.createdAt).getTime() : 0;
+                  return sortKey === 'date_newest' ? timeB - timeA : timeA - timeB;
+                }).map(task => (
                   <div key={task.id} className="border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col gap-4 bg-slate-50 relative">
                     <div className="flex justify-between items-start">
                       <div>
@@ -794,7 +828,7 @@ export default function CollectionsPage() {
                     </div>
 
                     {/* In-Lab Progress Tracker */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', paddingTop: '8px', borderTop: '1px solid #e2e8f0', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', paddingTop: '8px', paddingBottom: '8px', borderTop: '1px solid #e2e8f0', overflowX: 'auto' }}>
                       {(() => {
                         const taskReport = allReports.find(r => r.bookingId === task.bookingId);
                         const taskBooking = allBookings.find(b => b.id === task.bookingId);
