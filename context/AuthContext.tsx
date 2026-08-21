@@ -63,10 +63,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const meRes = await patientService.getMe();
       if (meRes.isSuccess && meRes.value) {
         const p = meRes.value;
+        const isUuidName = p.name && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(p.name);
+        const isCurrentUuid = updatedUser.fullName && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(updatedUser.fullName);
+        
+        let resolvedName = updatedUser.fullName;
+        if (p.name && !isUuidName) {
+          resolvedName = p.name;
+        } else if (isCurrentUuid || !updatedUser.fullName) {
+          resolvedName = p.email ? p.email.split('@')[0] : (updatedUser.email ? updatedUser.email.split('@')[0] : 'User');
+        }
+
         updatedUser = {
           ...updatedUser,
           id: p.id || updatedUser.id,
-          fullName: p.name || updatedUser.fullName,
+          fullName: resolvedName,
           email: p.email || updatedUser.email,
           mobile: p.phone || updatedUser.mobile,
           gender: (p.gender as 'Male' | 'Female' | 'Other') || updatedUser.gender,

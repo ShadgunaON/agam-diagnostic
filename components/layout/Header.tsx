@@ -88,28 +88,37 @@ export function Header({ className = '' }: HeaderProps) {
             </Link>
 
             {/* Auth Menu / User Greeting */}
-            {isAuthenticated && user ? (
-              <div className="relative" ref={userMenuRef}>
-                <button
-                  type="button"
-                  className="flex items-center gap-1 sm:gap-2 text-sm font-semibold text-primary bg-bg-alt hover:bg-muted/40 px-2 sm:px-3 py-1.5 rounded-full border border-border transition-all cursor-pointer"
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                >
-                  <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary text-white text-[10px] sm:text-xs font-bold flex items-center justify-center uppercase">
-                    {user.fullName ? user.fullName.charAt(0) : 'P'}
-                  </span>
-                  <span className="hidden sm:inline-block max-w-[100px] truncate">{user.fullName ? user.fullName.split(' ')[0] : 'Patient'}</span>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3 sm:w-3.5 h-3 sm:h-3.5">
-                    <polyline points="6 9 12 15 18 9"/>
-                  </svg>
-                </button>
+            {isAuthenticated && user ? (() => {
+              const isUuid = (str?: string) => !!str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+              const displayName = !isUuid(user.fullName) && user.fullName
+                ? user.fullName
+                : (user.email ? user.email.split('@')[0] : 'Patient');
+              const initial = displayName.charAt(0).toUpperCase() || 'P';
+              const shortName = displayName.split(' ')[0];
 
-                {showUserMenu && (
-                  <div className="user-menu-dropdown animate-in fade-in zoom-in-95">
-                    <div className="user-menu-dropdown__header">
-                      <p className="user-menu-dropdown__name">{user.fullName || 'Agam Patient'}</p>
-                      <p className="user-menu-dropdown__phone">+91 {user.mobile}</p>
-                    </div>
+              return (
+                <div className="relative" ref={userMenuRef}>
+                  <button
+                    type="button"
+                    className="flex items-center gap-1 sm:gap-2 text-sm font-semibold text-primary bg-bg-alt hover:bg-muted/40 px-2 sm:px-3 py-1.5 rounded-full border border-border transition-all cursor-pointer"
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                  >
+                    <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary text-white text-[10px] sm:text-xs font-bold flex items-center justify-center uppercase">
+                      {initial}
+                    </span>
+                    <span className="hidden sm:inline-block max-w-[100px] truncate">{shortName}</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3 sm:w-3.5 h-3 sm:h-3.5">
+                      <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                  </button>
+
+                  {showUserMenu && (
+                    <div className="user-menu-dropdown animate-in fade-in zoom-in-95">
+                      <div className="user-menu-dropdown__header">
+                        <p className="user-menu-dropdown__name">{displayName}</p>
+                        {user.mobile && <p className="user-menu-dropdown__phone">+91 {user.mobile}</p>}
+                        {user.email && <p className="text-xs text-slate-500 truncate m-0">{user.email}</p>}
+                      </div>
                     <Link
                       href="/profile"
                       className="user-menu-dropdown__link"
@@ -156,7 +165,8 @@ export function Header({ className = '' }: HeaderProps) {
                   </div>
                 )}
               </div>
-            ) : (
+              );
+            })() : (
               <Link 
                 href="/login" 
                 className="text-[10px] sm:text-xs font-bold text-primary hover:underline px-1.5 sm:px-2.5 py-1.5 rounded-md hover:bg-bg-alt transition-colors no-underline whitespace-nowrap"

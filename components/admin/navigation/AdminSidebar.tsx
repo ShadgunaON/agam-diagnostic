@@ -67,6 +67,18 @@ export function AdminSidebar(props: { isCollapsed?: boolean, setIsCollapsed?: (v
 
   if (!mounted) return null;
 
+  const isUuid = (str?: string) => !!str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+  const displayName = !isUuid(user?.fullName) && user?.fullName
+    ? user.fullName
+    : (user?.email ? user.email.split('@')[0] : (role?.title || 'Staff'));
+  const initials = displayName
+    .split(/[\s._-]+/)
+    .filter(Boolean)
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2) || 'AD';
+
   return (
     <aside
       style={{ width: isCollapsed ? 80 : 210, flexShrink: 0, position: 'relative', display: 'flex' }}
@@ -175,13 +187,13 @@ export function AdminSidebar(props: { isCollapsed?: boolean, setIsCollapsed?: (v
         >
           <div className="bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700" style={{ width: '40px', height: '40px', borderRadius: '50%' }}>
             <span className="text-slate-300 text-sm font-medium">
-              {user?.fullName?.substring(0, 2).toUpperCase() || 'ST'}
+              {initials}
             </span>
           </div>
           {!isCollapsed && (
             <div className="flex-1 flex flex-col items-start min-w-0">
               <span className="font-medium !text-white truncate w-full text-left" style={{ fontSize: '14px' }}>
-                {user?.fullName || 'Staff'}
+                {displayName}
               </span>
               <span className="!text-slate-500 truncate w-full text-left" style={{ fontSize: '12px' }}>
                 {role?.title || user?.role || 'Staff'}

@@ -57,9 +57,18 @@ export function AdminTopbar() {
     setShowNotifDropdown(false);
   };
 
-  const initials = user?.fullName
-    ? user.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-    : 'ST';
+  const isUuid = (str?: string) => !!str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+  const displayName = !isUuid(user?.fullName) && user?.fullName
+    ? user.fullName
+    : (user?.email ? user.email.split('@')[0] : (role?.title || 'Staff'));
+
+  const initials = displayName
+    .split(/[\s._-]+/)
+    .filter(Boolean)
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2) || 'AD';
 
   const getPageTitle = () => {
     if (pathname === '/admin') return 'Dashboard';
@@ -163,7 +172,7 @@ export function AdminTopbar() {
 
             {/* Details */}
             <div className="admin-hide-mobile flex-col items-start justify-center" style={{ display: 'flex', marginLeft: '14px', marginRight: '8px' }}>
-              <span className="font-semibold text-slate-900 leading-none" style={{ fontSize: '16px', marginBottom: '4px' }}>{user?.fullName || 'Staff'}</span>
+              <span className="font-semibold text-slate-900 leading-none" style={{ fontSize: '16px', marginBottom: '4px' }}>{displayName}</span>
               <span className="font-medium text-slate-500 leading-none" style={{ fontSize: '13px' }}>{role?.title || 'Staff'}</span>
             </div>
 
@@ -175,7 +184,7 @@ export function AdminTopbar() {
           {showDropdown && (
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden z-50">
               <div className="p-3 border-b border-slate-100">
-                <p className="text-sm font-bold text-slate-900 truncate">{user?.fullName || 'Staff'}</p>
+                <p className="text-sm font-bold text-slate-900 truncate">{displayName}</p>
                 <p className="text-xs text-slate-500 truncate">{user?.email || role?.title || 'Staff Member'}</p>
               </div>
               <div className="p-2">
