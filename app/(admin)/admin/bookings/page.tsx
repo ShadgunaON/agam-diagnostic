@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
-import { useToast } from '@/components/admin/feedback/Toast';
 
 import { bookingService } from '@/services';
 import { BookingModel } from '@/domains/booking/model';
@@ -31,7 +30,6 @@ export default function GlassBookingsPage() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState('All');
   const [sortKey, setSortKey] = useState('date_newest');
-  const { toast } = useToast();
   const [bookings, setBookings] = useState<BookingModel[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -51,11 +49,12 @@ export default function GlassBookingsPage() {
   
   if (!mounted) return null;
 
-  const filteredBookings = bookings.filter(b => {
+  const filteredBookings = (bookings || []).filter(b => {
+    if (!b) return false;
     if (isAdmin || !scope) return true;
     if (scope === 'home_collection') {
-      if (b.collection.type !== 'Home Collection') return false;
-      return b.collection.assignedPhlebotomist === user?.fullName;
+      if (b.collection?.type !== 'Home Collection') return false;
+      return b.collection?.assignedPhlebotomist === user?.fullName;
     }
     return true;
   });
@@ -147,77 +146,85 @@ export default function GlassBookingsPage() {
 
           {/* Table Rows */}
           <div className="flex flex-col gap-3">
-            {filteredBookings
-              .filter(b => activeTab === 'All' || b.status === activeTab || b.collection.type === activeTab)
-              .filter(b => {
-                if (!searchQuery) return true;
-                const query = searchQuery.toLowerCase();
-                return b.id.toLowerCase().includes(query) || 
-                       b.patient.name.toLowerCase().includes(query) || 
-                       b.patient.phone.includes(query);
-              })
-              .sort((a, b) => {
-                if (sortKey === 'date_newest') {
-                  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-                } else if (sortKey === 'date_oldest') {
-                  return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-                } else if (sortKey === 'amount_high') {
-                  return b.payment.total - a.payment.total;
-                } else if (sortKey === 'amount_low') {
-                  return a.payment.total - b.payment.total;
-                }
-                return 0;
-              })
-              .map((booking) => {
-              const statusTheme = getStatusColor(booking.status);
-              return (
-                <div 
-                  key={booking.id}
-                  className="admin-table-row admin-mobile-grid-row grid lg:grid-cols-[1.2fr_2fr_1.5fr_1.5fr_1fr_1fr] items-center p-4 lg:px-6 lg:py-4 border border-white/80 transition-colors duration-200 cursor-pointer rounded-2xl"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.5)' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.9)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.5)'}
-                >
-                  <div data-label="Order ID" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{booking.id}</div>
-                    <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>
-                      {new Date(booking.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric' })}
+            {filteredBookings.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '48px 24px', color: '#64748b' }}>
+                <p style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 8px 0', color: '#334155' }}>No bookings found</p>
+                <p style={{ fontSize: '13px', margin: 0 }}>There are currently no active bookings matching this filter.</p>
+              </div>
+            ) : (
+              filteredBookings
+                .filter(b => activeTab === 'All' || b.status === activeTab || b.collection?.type === activeTab)
+                .filter(b => {
+                  if (!searchQuery) return true;
+                  const query = searchQuery.toLowerCase();
+                  return (b.id || '').toLowerCase().includes(query) || 
+                         (b.patient?.name || '').toLowerCase().includes(query) || 
+                         (b.patient?.phone || '').includes(query);
+                })
+                .sort((a, b) => {
+                  if (sortKey === 'date_newest') {
+                    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+                  } else if (sortKey === 'date_oldest') {
+                    return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+                  } else if (sortKey === 'amount_high') {
+                    return (b.payment?.total || 0) - (a.payment?.total || 0);
+                  } else if (sortKey === 'amount_low') {
+                    return (a.payment?.total || 0) - (b.payment?.total || 0);
+                  }
+                  return 0;
+                })
+                .map((booking) => {
+                const statusTheme = getStatusColor(booking.status || 'Pending');
+                const isHome = booking.collection?.type === 'Home Collection';
+                return (
+                  <div 
+                    key={booking.id}
+                    className="admin-table-row admin-mobile-grid-row grid lg:grid-cols-[1.2fr_2fr_1.5fr_1.5fr_1fr_1fr] items-center p-4 lg:px-6 lg:py-4 border border-white/80 transition-colors duration-200 cursor-pointer rounded-2xl"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.5)' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.9)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.5)'}
+                  >
+                    <div data-label="Order ID" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{booking.id}</div>
+                      <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>
+                        {booking.createdAt ? new Date(booking.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric' }) : 'N/A'}
+                      </div>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: isHome ? '#3b82f6' : '#8b5cf6', backgroundColor: isHome ? '#eff6ff' : '#f3e8ff', display: 'inline-flex', padding: '2px 8px', borderRadius: '12px', alignSelf: 'flex-start' }}>{booking.collection?.type || 'Home Collection'}</div>
                     </div>
-                    <div style={{ fontSize: '12px', fontWeight: 700, color: booking.collection.type === 'Home Collection' ? '#3b82f6' : '#8b5cf6', backgroundColor: booking.collection.type === 'Home Collection' ? '#eff6ff' : '#f3e8ff', display: 'inline-flex', padding: '2px 8px', borderRadius: '12px', alignSelf: 'flex-start' }}>{booking.collection.type}</div>
-                  </div>
-                  
-                  <div data-label="Patient Details">
-                    <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>{booking.patient.name}</div>
-                    <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>{booking.patient.phone}</div>
-                  </div>
-                  
-                  <div data-label="Schedule">
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>{booking.collection.date}</div>
-                    <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>{booking.collection.timeSlot}</div>
-                  </div>
+                    
+                    <div data-label="Patient Details">
+                      <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>{booking.patient?.name || 'Unknown Patient'}</div>
+                      <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>{booking.patient?.phone || 'N/A'}</div>
+                    </div>
+                    
+                    <div data-label="Schedule">
+                      <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>{booking.collection?.date || 'Scheduled'}</div>
+                      <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>{booking.collection?.timeSlot || 'Flexible'}</div>
+                    </div>
 
-                  <div data-label="Tests">
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>
-                      {booking.items.map((t, i) => <div key={i}>{t.name}</div>)}
+                    <div data-label="Tests">
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>
+                        {(booking.items || []).map((t, i) => <div key={i}>{t.name}</div>)}
+                      </div>
+                    </div>
+                    
+                    <div data-label="Status">
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: statusTheme.bg, padding: '6px 12px', borderRadius: '20px' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: statusTheme.dot }}></span>
+                        <span style={{ fontSize: '12px', fontWeight: 800, color: statusTheme.text }}>{booking.status || 'Pending'}</span>
+                      </div>
+                    </div>
+                    
+                    <div data-label="Amount" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                      <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>₹{booking.payment?.total ?? 0}</div>
+                      <div style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '12px', backgroundColor: booking.payment?.status === 'Paid' ? '#dcfce7' : (booking.payment?.status === 'Failed' ? '#fee2e2' : '#fef9c3'), color: booking.payment?.status === 'Paid' ? '#166534' : (booking.payment?.status === 'Failed' ? '#991b1b' : '#854d0e') }}>
+                        {booking.payment?.status || 'Pending'}
+                      </div>
                     </div>
                   </div>
-                  
-                  <div data-label="Status">
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: statusTheme.bg, padding: '6px 12px', borderRadius: '20px' }}>
-                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: statusTheme.dot }}></span>
-                      <span style={{ fontSize: '12px', fontWeight: 800, color: statusTheme.text }}>{booking.status}</span>
-                    </div>
-                  </div>
-                  
-                  <div data-label="Amount" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                    <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>₹{booking.payment.total}</div>
-                    <div style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '12px', backgroundColor: booking.payment.status === 'Paid' ? '#dcfce7' : (booking.payment.status === 'Failed' ? '#fee2e2' : '#fef9c3'), color: booking.payment.status === 'Paid' ? '#166534' : (booking.payment.status === 'Failed' ? '#991b1b' : '#854d0e') }}>
-                      {booking.payment.status}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
 
         </div>
