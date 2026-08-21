@@ -65,17 +65,10 @@ import { ApiDocumentRepository } from './api/DocumentRepository';
 
 const apiClient = new ApiClient();
 
-export const blogRepository: IBlogRepository = env.useMockData 
-  ? new MockBlogRepository() 
-  : new ApiBlogRepository(apiClient);
-
-export const serviceRepository: IServicesRepository = env.useMockData
-  ? new MockServiceRepository()
-  : new ApiServiceRepository(apiClient);
-
-export const packageRepository: IPackagesRepository = env.useMockData
-  ? new MockPackageRepository()
-  : new ApiPackageRepository(apiClient);
+// ==========================================================
+// REPOSITORIES WITH REAL BACKEND API (Lambda endpoints exist)
+// These route to API implementations in production mode.
+// ==========================================================
 
 export const authRepository: IAuthRepository = env.useMockData
   ? new MockAuthRepository()
@@ -85,13 +78,9 @@ export const bookingRepository: IBookingRepository = env.useMockData
   ? new MockBookingRepository()
   : new ApiBookingRepository(apiClient);
 
-export const reportsRepository: IReportsRepository = env.useMockData
-  ? new MockReportsRepository()
-  : new ApiReportsRepository(apiClient);
-
-export const testRepository: ITestsRepository = env.useMockData
-  ? new MockTestRepository()
-  : new ApiTestRepository(apiClient);
+export const patientRepository: IPatientRepository = env.useMockData
+  ? new MockPatientRepository()
+  : new ApiPatientRepository(apiClient);
 
 export const collectionRepository: ICollectionRepository = env.useMockData
   ? new MockCollectionRepository()
@@ -105,16 +94,28 @@ export const invoiceRepository: IInvoiceRepository = env.useMockData
   ? new MockInvoiceRepository()
   : new ApiInvoiceRepository(apiClient);
 
-export const patientRepository: IPatientRepository = env.useMockData
-  ? new MockPatientRepository()
-  : new ApiPatientRepository(apiClient);
-
-export const staffRepository: IStaffRepository = new MockStaffRepository();
-export const activityRepository: IActivityRepository = new MockActivityRepository();
 export const reviewRepository: IReviewRepository = env.useMockData
   ? new MockReviewRepository()
   : new ApiReviewRepository(apiClient);
 
+export const blogRepository: IBlogRepository = env.useMockData 
+  ? new MockBlogRepository() 
+  : new ApiBlogRepository(apiClient);
+
 export const documentRepository: IDocumentRepository = env.useMockData
   ? new MockDocumentRepository()
   : new ApiDocumentRepository(apiClient);
+
+// ==========================================================
+// CONTENT-CATALOG REPOSITORIES (No backend Lambda exists yet)
+// These always use local data repositories in ALL modes.
+// Their "API" implementations are stubs that return failure.
+// When backend endpoints are built, move them to the section above.
+// ==========================================================
+
+export const serviceRepository: IServicesRepository = new MockServiceRepository();
+export const packageRepository: IPackagesRepository = new MockPackageRepository();
+export const testRepository: ITestsRepository = new MockTestRepository();
+export const reportsRepository: IReportsRepository = new MockReportsRepository();
+export const staffRepository: IStaffRepository = new MockStaffRepository();
+export const activityRepository: IActivityRepository = new MockActivityRepository();
