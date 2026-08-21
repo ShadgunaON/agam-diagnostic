@@ -8,9 +8,9 @@ export const env = {
   isDevelopment: process.env.NODE_ENV === 'development',
   isTest: process.env.NODE_ENV === 'test',
   
-  apiUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api',
+  apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://35ea31w6qf.execute-api.us-east-1.amazonaws.com/dev',
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
-  useMockData: process.env.NEXT_PUBLIC_USE_MOCK_DATA !== 'false',
+  useMockData: process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true',
 
   // AWS Cognito Configuration
   cognitoRegion: process.env.NEXT_PUBLIC_AWS_REGION || 'us-east-1',
