@@ -11,6 +11,11 @@ export const env = {
   apiUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api',
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
   useMockData: process.env.NEXT_PUBLIC_USE_MOCK_DATA !== 'false',
+
+  // AWS Cognito Configuration
+  cognitoRegion: process.env.NEXT_PUBLIC_AWS_REGION || 'us-east-1',
+  cognitoUserPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID || 'us-east-1_09a7n9aQH',
+  cognitoClientId: process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID || '1d72mbjmcvqqeunig5glbnich9',
   
   // Future integrations
   analyticsId: process.env.NEXT_PUBLIC_ANALYTICS_ID,

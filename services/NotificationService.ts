@@ -4,9 +4,10 @@ import { CollectionTaskModel } from '@/domains/collections/model';
 export class NotificationService {
   constructor(private readonly repository: INotificationRepository) {}
 
-  async getMyNotifications(userId: string) {
+  async getMyNotifications(userId?: string) {
     return this.repository.getByUserId(userId);
   }
+
 
   async markAsRead(id: string) {
     return this.repository.markAsRead(id);

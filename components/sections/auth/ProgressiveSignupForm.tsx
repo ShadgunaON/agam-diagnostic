@@ -3,29 +3,47 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import Link from 'next/link';
 import { FormField } from '@/components/ui/FormField';
-
-type SignupStep = 'mobile' | 'otp' | 'profile';
-
 import { useAsyncAction } from '@/hooks/useAsyncAction';
+import { env } from '@/config/env';
+
+type AuthMode =
+  | 'signin'
+  | 'signup'
+  | 'confirm_signup'
+  | 'forgot_password'
+  | 'reset_password';
 
 export function ProgressiveSignupForm() {
   const router = useRouter();
-  const { sendOtp, verifyOtp, updateProfile, skipProfile, user } = useAuth();
-  
-  const [step, setStep] = useState<SignupStep>('mobile');
-  const [mobile, setMobile] = useState('');
-  const [otp, setOtp] = useState('');
-  const [fullName, setFullName] = useState('');
-  
-  const { isLoading, error, setError, execute } = useAsyncAction();
-
-  // Optional profile fields
-  const [gender, setGender] = useState<'Male' | 'Female' | 'Other' | ''>('');
-  const [age, setAge] = useState('');
-
   const searchParams = useSearchParams();
+  const isDemo = env.useMockData;
+
+  const {
+    signInWithPassword,
+    signUpWithPassword,
+    confirmSignUp,
+    forgotPassword,
+    confirmForgotPassword,
+  } = useAuth();
+
+  const { isLoading, error, setError, execute } = useAsyncAction();
+  const [successMessage, setSuccessMessage] = useState('');
+
+  // Mode state
+  const [mode, setMode] = useState<AuthMode>('signin');
+
+  // Form fields
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [code, setCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+
+  // Show/Hide password toggles
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   useEffect(() => {
     if (searchParams.get('reset') === 'true') {
@@ -34,228 +52,663 @@ export function ProgressiveSignupForm() {
     }
   }, [searchParams, router]);
 
-  const navigateToDestination = () => {
+  const navigateToDestination = (role?: string) => {
+    if (role && role !== 'patient') {
+      router.push('/admin');
+      return;
+    }
     const returnUrl = searchParams.get('returnUrl');
     if (returnUrl) {
-      // Create a new URLSearchParams to filter out returnUrl from the rest of the query params
       const newParams = new URLSearchParams(searchParams.toString());
       newParams.delete('returnUrl');
       const queryString = newParams.toString();
-      
       const destination = queryString ? `${returnUrl}?${queryString}` : returnUrl;
       router.push(destination);
     } else {
-      router.push('/'); // Default to home page
+      router.push('/');
     }
   };
 
-  const handleSendOtp = async (e: React.FormEvent) => {
+  // ==========================================
+  // SIGN IN HANDLER
+  // ==========================================
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (mobile.length !== 10) {
-      setError('Please enter a valid 10-digit mobile number.');
+    setError('');
+    setSuccessMessage('');
+
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setError('Please enter a valid email address.');
       return;
     }
-    
+    if (!password) {
+      setError('Please enter your password.');
+      return;
+    }
+
     await execute(async () => {
-      const success = await sendOtp(mobile);
-      if (success) {
-        setStep('otp');
+      const res = await signInWithPassword(cleanEmail, password);
+      if (res.success && res.user) {
+        navigateToDestination(res.user.role);
       } else {
-        throw new Error('Failed to send OTP. Please try again.');
+        throw new Error(res.error || 'Authentication failed. Please check your credentials.');
       }
     });
   };
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
+  // ==========================================
+  // SIGN UP HANDLER
+  // ==========================================
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otp.length !== 4) {
-      setError('OTP must be 4 digits. (Try 1234)');
+    setError('');
+    setSuccessMessage('');
+
+    const cleanEmail = email.trim();
+    const cleanName = fullName.trim();
+
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setError('Please enter a valid email address.');
       return;
     }
-    
-    await execute(async () => {
-      const { success, isNewUser, user: verifiedUser } = await verifyOtp(mobile, otp);
-      if (success) {
-        if (verifiedUser?.role && verifiedUser.role !== 'patient') {
-          router.push('/admin');
-          return;
-        }
+    if (!password || password.length < 8) {
+      setError('Password must be at least 8 characters long.');
+      return;
+    }
+    if (!cleanName) {
+      setError('Please enter your full name.');
+      return;
+    }
 
-        if (isNewUser) {
-          setStep('profile');
+    await execute(async () => {
+      const res = await signUpWithPassword(cleanEmail, password, cleanName, phone.trim() || undefined);
+      if (res.success) {
+        if (res.isSignUpComplete) {
+          const loginRes = await signInWithPassword(cleanEmail, password);
+          if (loginRes.success && loginRes.user) {
+            navigateToDestination(loginRes.user.role);
+          } else {
+            setMode('signin');
+            setSuccessMessage('Account created successfully! Please sign in.');
+          }
         } else {
-          navigateToDestination();
+          setMode('confirm_signup');
+          setSuccessMessage(`Confirmation code sent to ${cleanEmail}. Please enter the code below.`);
         }
       } else {
-        throw new Error('Invalid OTP. Please try again.');
+        throw new Error(res.error || 'Registration failed. Please try again.');
       }
     });
   };
 
-  const handleSaveProfile = async (e: React.FormEvent) => {
+  // ==========================================
+  // CONFIRM SIGN UP HANDLER
+  // ==========================================
+  const handleConfirmSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName) {
-      setError('Full Name is required.');
+    setError('');
+    setSuccessMessage('');
+
+    const cleanEmail = email.trim();
+    const cleanCode = code.trim();
+
+    if (!cleanCode) {
+      setError('Please enter the confirmation code sent to your email.');
       return;
     }
-    
+
     await execute(async () => {
-      updateProfile({
-        fullName,
-        gender: gender || undefined,
-        dobOrAge: age || undefined,
-        isProfileComplete: true,
-        savedPatients: [
-          { id: `pat_${Date.now()}`, name: fullName, relation: 'Myself', age: age || '30', gender: gender || 'Male' }
-        ]
-      });
-      navigateToDestination();
+      const res = await confirmSignUp(cleanEmail, cleanCode);
+      if (res.success) {
+        if (password) {
+          const loginRes = await signInWithPassword(cleanEmail, password);
+          if (loginRes.success && loginRes.user) {
+            navigateToDestination(loginRes.user.role);
+            return;
+          }
+        }
+        setMode('signin');
+        setSuccessMessage('Email verified successfully! Please sign in with your credentials.');
+      } else {
+        throw new Error(res.error || 'Invalid confirmation code.');
+      }
     });
+  };
+
+  // ==========================================
+  // FORGOT PASSWORD HANDLER
+  // ==========================================
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccessMessage('');
+
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
+    await execute(async () => {
+      const res = await forgotPassword(cleanEmail);
+      if (res.success) {
+        setMode('reset_password');
+        setSuccessMessage(`Password reset code sent to ${cleanEmail}.`);
+      } else {
+        throw new Error(res.error || 'Failed to initiate password reset.');
+      }
+    });
+  };
+
+  // ==========================================
+  // RESET PASSWORD HANDLER
+  // ==========================================
+  const handleConfirmForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccessMessage('');
+
+    const cleanEmail = email.trim();
+    const cleanCode = code.trim();
+
+    if (!cleanCode) {
+      setError('Please enter the reset code.');
+      return;
+    }
+    if (!newPassword || newPassword.length < 8) {
+      setError('New password must be at least 8 characters long.');
+      return;
+    }
+
+    await execute(async () => {
+      const res = await confirmForgotPassword(cleanEmail, cleanCode, newPassword);
+      if (res.success) {
+        setMode('signin');
+        setSuccessMessage('Password reset successful! Please sign in with your new password.');
+      } else {
+        throw new Error(res.error || 'Failed to reset password. Please verify the code.');
+      }
+    });
+  };
+
+  // Demo Quick-Fill Helper
+  const handleDemoFill = (demoEmail: string, demoPass: string) => {
+    setEmail(demoEmail);
+    setPassword(demoPass);
+    setError('');
+    setSuccessMessage('');
   };
 
   return (
     <div style={{ minHeight: 'calc(100vh - 80px)', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
-      <div style={{ background: '#fff', padding: '40px', borderRadius: '24px', border: '1px solid rgba(14,165,233,0.15)', boxShadow: '0 12px 32px rgba(11,27,61,0.08)', maxWidth: '480px', width: '100%' }}>
+      <div style={{ background: '#fff', padding: '40px 32px', borderRadius: '24px', border: '1px solid rgba(14,165,233,0.15)', boxShadow: '0 12px 32px rgba(11,27,61,0.08)', maxWidth: '460px', width: '100%' }}>
         
-        {/* Step 1: Mobile */}
-        {step === 'mobile' && (
-          <form onSubmit={handleSendOtp}>
-            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '64px', height: '64px', borderRadius: '20px', background: 'linear-gradient(145deg, #f0f9ff, #e0f2fe)', color: 'var(--color-primary)', marginBottom: '16px' }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: '32px' }}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-              </div>
-              <h1 style={{ fontSize: '24px', color: 'var(--color-dark)', margin: '0 0 8px 0', fontWeight: 700 }}>Welcome to Agam</h1>
-              <p style={{ color: 'var(--color-text-light)', margin: 0, fontSize: '15px' }}>Enter your mobile number to get started.</p>
-            </div>
+        {/* Header Icon & Title */}
+        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '60px', height: '60px', borderRadius: '18px', background: 'linear-gradient(145deg, #f0f9ff, #e0f2fe)', color: 'var(--color-primary)', marginBottom: '14px' }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: '30px' }}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <h1 style={{ fontSize: '24px', color: 'var(--color-dark)', margin: '0 0 6px 0', fontWeight: 700 }}>
+            {mode === 'signin' && 'Sign In to Agam'}
+            {mode === 'signup' && 'Create Your Account'}
+            {mode === 'confirm_signup' && 'Verify Email Address'}
+            {mode === 'forgot_password' && 'Reset Password'}
+            {mode === 'reset_password' && 'Set New Password'}
+          </h1>
+          <p style={{ color: 'var(--color-text-light)', margin: 0, fontSize: '14px' }}>
+            {mode === 'signin' && 'Enter your email address and password to continue.'}
+            {mode === 'signup' && 'Register to manage diagnostic bookings and health records.'}
+            {mode === 'confirm_signup' && `Enter the confirmation code sent to ${email}`}
+            {mode === 'forgot_password' && 'Enter your email to receive a password reset code.'}
+            {mode === 'reset_password' && 'Enter the reset code and your new password.'}
+          </p>
+        </div>
 
-            {error && <div style={{ background: '#fef2f2', color: '#ef4444', padding: '12px 16px', borderRadius: '12px', marginBottom: '20px', fontSize: '14px', fontWeight: 500 }}>{error}</div>}
+        {/* Feedback Alerts */}
+        {error && (
+          <div style={{ background: '#fef2f2', color: '#ef4444', padding: '12px 16px', borderRadius: '12px', marginBottom: '20px', fontSize: '14px', fontWeight: 500 }}>
+            {error}
+          </div>
+        )}
+        {successMessage && (
+          <div style={{ background: '#f0fdf4', color: '#16a34a', padding: '12px 16px', borderRadius: '12px', marginBottom: '20px', fontSize: '14px', fontWeight: 500 }}>
+            {successMessage}
+          </div>
+        )}
 
-            <div style={{ marginBottom: '24px' }}>
-              <FormField label="Mobile Number" htmlFor="signup-mobile">
-                <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-light)', fontWeight: 600 }}>+91</span>
-                  <input 
-                    id="signup-mobile"
-                    type="tel" 
-                    value={mobile}
-                    onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                    placeholder="98765 43210"
-                    style={{ width: '100%', padding: '16px 16px 16px 56px', borderRadius: '16px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '16px', outline: 'none' }} 
-                  />
-                </div>
+        {/* ==================================================== */}
+        {/* MODE 1: SIGN IN (EMAIL + PASSWORD)                   */}
+        {/* ==================================================== */}
+        {mode === 'signin' && (
+          <form onSubmit={handleSignIn} noValidate>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginBottom: '24px' }}>
+              
+              <FormField label="Email Address" htmlFor="signin-email" required>
+                <input
+                  id="signin-email"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '15px', outline: 'none' }}
+                  required
+                />
               </FormField>
+
+              <div>
+                <FormField label="Password" htmlFor="signin-password" required>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      id="signin-password"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      style={{ width: '100%', padding: '14px 44px 14px 16px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '15px', outline: 'none' }}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--color-text-light)',
+                        padding: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {showPassword ? (
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      )}
+                    </button>
+                  </div>
+                </FormField>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={() => { setMode('forgot_password'); setError(''); setSuccessMessage(''); }}
+                    style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontSize: '13px', fontWeight: 600, cursor: 'pointer', padding: 0 }}
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+              </div>
+
             </div>
 
-            <button 
-              type="submit" 
-              disabled={isLoading || mobile.length !== 10}
-              style={{ width: '100%', background: 'var(--color-dark)', color: '#fff', padding: '18px', borderRadius: '100px', border: 'none', fontSize: '16px', fontWeight: 600, cursor: (isLoading || mobile.length !== 10) ? 'not-allowed' : 'pointer', opacity: (isLoading || mobile.length !== 10) ? 0.5 : 1 }}
+            <button
+              type="submit"
+              disabled={isLoading || !email.trim() || !password}
+              style={{
+                width: '100%',
+                background: 'var(--color-dark)',
+                color: '#fff',
+                padding: '16px',
+                borderRadius: '100px',
+                border: 'none',
+                fontSize: '15px',
+                fontWeight: 600,
+                cursor: (isLoading || !email.trim() || !password) ? 'not-allowed' : 'pointer',
+                opacity: (isLoading || !email.trim() || !password) ? 0.5 : 1,
+                marginBottom: '20px',
+              }}
             >
-              {isLoading ? 'Sending...' : 'Get OTP'}
+              {isLoading ? 'Signing In...' : 'Sign In'}
             </button>
+
+            <div style={{ textAlign: 'center', fontSize: '14px', color: 'var(--color-text-light)' }}>
+              Don&apos;t have an account?{' '}
+              <button
+                type="button"
+                onClick={() => { setMode('signup'); setError(''); setSuccessMessage(''); }}
+                style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontWeight: 600, cursor: 'pointer', padding: 0 }}
+              >
+                Register / Create Account
+              </button>
+            </div>
+
+            {/* Demo Quick-Fill Pill options when running with mock data */}
+            {isDemo && (
+              <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px dashed #e2e8f0', textAlign: 'center' }}>
+                <p style={{ fontSize: '12px', color: 'var(--color-text-light)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Demo Quick Fill</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
+                  <button type="button" onClick={() => handleDemoFill('john.doe@example.com', 'Password123!')} style={{ padding: '6px 12px', borderRadius: '20px', border: '1px solid #cbd5e1', background: '#f8fafc', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>Patient (John)</button>
+                  <button type="button" onClick={() => handleDemoFill('admin@agamdiagnostics.com', 'Password123!')} style={{ padding: '6px 12px', borderRadius: '20px', border: '1px solid #cbd5e1', background: '#f8fafc', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>Admin</button>
+                  <button type="button" onClick={() => handleDemoFill('sunita.r@agam.com', 'Password123!')} style={{ padding: '6px 12px', borderRadius: '20px', border: '1px solid #cbd5e1', background: '#f8fafc', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>Staff (Sunita)</button>
+                </div>
+              </div>
+            )}
           </form>
         )}
 
-        {/* Step 2: OTP */}
-        {step === 'otp' && (
-          <form onSubmit={handleVerifyOtp}>
-            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <h2 style={{ fontSize: '24px', color: 'var(--color-dark)', margin: '0 0 8px 0', fontWeight: 700 }}>Verify your number</h2>
-              <p style={{ color: 'var(--color-text-light)', margin: 0, fontSize: '15px' }}>We sent a 4-digit code to +91 {mobile}. <span onClick={() => setStep('mobile')} style={{ color: 'var(--color-primary)', cursor: 'pointer', fontWeight: 600 }}>Edit</span></p>
+        {/* ==================================================== */}
+        {/* MODE 2: SIGN UP (CREATE ACCOUNT)                     */}
+        {/* ==================================================== */}
+        {mode === 'signup' && (
+          <form onSubmit={handleSignUp} noValidate>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+              
+              <FormField label="Full Name" htmlFor="signup-fullname" required>
+                <input
+                  id="signup-fullname"
+                  type="text"
+                  autoComplete="name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="e.g. Ramesh Kumar"
+                  style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '15px', outline: 'none' }}
+                  required
+                />
+              </FormField>
+
+              <FormField label="Email Address" htmlFor="signup-email" required>
+                <input
+                  id="signup-email"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '15px', outline: 'none' }}
+                  required
+                />
+              </FormField>
+
+              <FormField label="Password" htmlFor="signup-password" required>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="signup-password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Min. 8 characters"
+                    style={{ width: '100%', padding: '14px 44px 14px 16px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '15px', outline: 'none' }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--color-text-light)',
+                      padding: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {showPassword ? (
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    )}
+                  </button>
+                </div>
+              </FormField>
+
+              <FormField label="Mobile Number (Optional)" htmlFor="signup-phone">
+                <input
+                  id="signup-phone"
+                  type="tel"
+                  autoComplete="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="e.g. 9876543210"
+                  style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '15px', outline: 'none' }}
+                />
+              </FormField>
+
             </div>
 
-            {error && <div style={{ background: '#fef2f2', color: '#ef4444', padding: '12px 16px', borderRadius: '12px', marginBottom: '20px', fontSize: '14px', fontWeight: 500 }}>{error}</div>}
+            <button
+              type="submit"
+              disabled={isLoading || !email.trim() || !password || !fullName.trim()}
+              style={{
+                width: '100%',
+                background: 'var(--color-primary)',
+                color: '#fff',
+                padding: '16px',
+                borderRadius: '100px',
+                border: 'none',
+                fontSize: '15px',
+                fontWeight: 600,
+                cursor: (isLoading || !email.trim() || !password || !fullName.trim()) ? 'not-allowed' : 'pointer',
+                opacity: (isLoading || !email.trim() || !password || !fullName.trim()) ? 0.5 : 1,
+                marginBottom: '16px',
+              }}
+            >
+              {isLoading ? 'Creating Account...' : 'Register'}
+            </button>
 
-            <div style={{ marginBottom: '32px' }}>
-              <FormField label="Enter OTP" htmlFor="signup-otp">
-                <input 
-                  id="signup-otp"
-                  type="text" 
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                  placeholder="1234"
-                  style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '24px', letterSpacing: '8px', textAlign: 'center', outline: 'none' }} 
+            <div style={{ textAlign: 'center', fontSize: '14px', color: 'var(--color-text-light)' }}>
+              Already registered?{' '}
+              <button
+                type="button"
+                onClick={() => { setMode('signin'); setError(''); setSuccessMessage(''); }}
+                style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontWeight: 600, cursor: 'pointer', padding: 0 }}
+              >
+                Sign In
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* ==================================================== */}
+        {/* MODE 3: CONFIRM SIGN UP (EMAIL CODE)                 */}
+        {/* ==================================================== */}
+        {mode === 'confirm_signup' && (
+          <form onSubmit={handleConfirmSignUp} noValidate>
+            <div style={{ marginBottom: '24px' }}>
+              <FormField label="Enter Confirmation Code" htmlFor="confirm-code" required>
+                <input
+                  id="confirm-code"
+                  type="text"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="123456"
+                  style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '20px', letterSpacing: '6px', textAlign: 'center', outline: 'none' }}
+                  required
                 />
               </FormField>
             </div>
 
-            <button 
-              type="submit" 
-              disabled={isLoading || otp.length !== 4}
-              style={{ width: '100%', background: 'var(--color-primary)', color: '#fff', padding: '18px', borderRadius: '100px', border: 'none', fontSize: '16px', fontWeight: 600, cursor: (isLoading || otp.length !== 4) ? 'not-allowed' : 'pointer', opacity: (isLoading || otp.length !== 4) ? 0.5 : 1 }}
+            <button
+              type="submit"
+              disabled={isLoading || !code.trim()}
+              style={{
+                width: '100%',
+                background: 'var(--color-primary)',
+                color: '#fff',
+                padding: '16px',
+                borderRadius: '100px',
+                border: 'none',
+                fontSize: '15px',
+                fontWeight: 600,
+                cursor: (isLoading || !code.trim()) ? 'not-allowed' : 'pointer',
+                opacity: (isLoading || !code.trim()) ? 0.5 : 1,
+                marginBottom: '16px',
+              }}
             >
-              {isLoading ? 'Verifying...' : 'Verify & Continue'}
+              {isLoading ? 'Verifying...' : 'Verify Email & Continue'}
             </button>
+
+            <div style={{ textAlign: 'center', fontSize: '14px' }}>
+              <button
+                type="button"
+                onClick={() => { setMode('signin'); setError(''); setSuccessMessage(''); }}
+                style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontWeight: 600, cursor: 'pointer', padding: 0 }}
+              >
+                Back to Sign In
+              </button>
+            </div>
           </form>
         )}
 
-        {/* Step 3: Complete Profile (New Users) */}
-        {step === 'profile' && (
-          <form onSubmit={handleSaveProfile}>
-            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '64px', height: '64px', borderRadius: '32px', background: '#dcfce7', color: '#10b981', marginBottom: '16px' }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ width: '32px' }}><polyline points="20 6 9 17 4 12"/></svg>
-              </div>
-              <h2 style={{ fontSize: '24px', color: 'var(--color-dark)', margin: '0 0 8px 0', fontWeight: 700 }}>Welcome!</h2>
-              <p style={{ color: 'var(--color-text-light)', margin: 0, fontSize: '15px' }}>Help us personalize your healthcare experience.</p>
+        {/* ==================================================== */}
+        {/* MODE 4: FORGOT PASSWORD (REQUEST CODE)               */}
+        {/* ==================================================== */}
+        {mode === 'forgot_password' && (
+          <form onSubmit={handleForgotPassword} noValidate>
+            <div style={{ marginBottom: '24px' }}>
+              <FormField label="Registered Email Address" htmlFor="forgot-email" required>
+                <input
+                  id="forgot-email"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '15px', outline: 'none' }}
+                  required
+                />
+              </FormField>
             </div>
 
-            {error && <div style={{ background: '#fef2f2', color: '#ef4444', padding: '12px 16px', borderRadius: '12px', marginBottom: '20px', fontSize: '14px', fontWeight: 500 }}>{error}</div>}
-
-            <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '20px', marginBottom: '32px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                
-                <div>
-                  <FormField label="Full Name" htmlFor="signup-name" required>
-                    <input 
-                      id="signup-name"
-                      type="text" 
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="e.g. John Doe"
-                      style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '15px', outline: 'none' }} 
-                      required
-                    />
-                  </FormField>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-dark)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Gender <span style={{ color: 'var(--color-text-light)', textTransform: 'none', fontWeight: 400 }}>(Optional)</span></label>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    {['Male', 'Female', 'Other'].map(g => (
-                      <button
-                        key={g}
-                        type="button"
-                        onClick={() => setGender(g as any)}
-                        style={{ flex: 1, padding: '12px 8px', borderRadius: '12px', border: gender === g ? '2px solid var(--color-primary)' : '1px solid var(--color-border)', background: gender === g ? '#f0f9ff' : '#fff', color: gender === g ? 'var(--color-primary)' : 'var(--color-text-light)', fontWeight: 600, fontSize: '14px', cursor: 'pointer' }}
-                      >
-                        {g}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-dark)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Age <span style={{ color: 'var(--color-text-light)', textTransform: 'none', fontWeight: 400 }}>(Optional)</span></label>
-                  <input 
-                    type="number" 
-                    value={age}
-                    onChange={(e) => setAge(e.target.value)}
-                    placeholder="e.g. 32"
-                    style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '15px', outline: 'none' }} 
-                  />
-                </div>
-
-              </div>
-            </div>
-
-            <button 
-              type="submit" 
-              disabled={isLoading || !fullName}
-              style={{ width: '100%', background: 'var(--color-dark)', color: '#fff', padding: '18px', borderRadius: '100px', border: 'none', fontSize: '16px', fontWeight: 600, cursor: (isLoading || !fullName) ? 'not-allowed' : 'pointer', opacity: (isLoading || !fullName) ? 0.5 : 1 }}
+            <button
+              type="submit"
+              disabled={isLoading || !email.trim()}
+              style={{
+                width: '100%',
+                background: 'var(--color-dark)',
+                color: '#fff',
+                padding: '16px',
+                borderRadius: '100px',
+                border: 'none',
+                fontSize: '15px',
+                fontWeight: 600,
+                cursor: (isLoading || !email.trim()) ? 'not-allowed' : 'pointer',
+                opacity: (isLoading || !email.trim()) ? 0.5 : 1,
+                marginBottom: '16px',
+              }}
             >
-              {isLoading ? 'Saving...' : 'Save Details & Finish'}
+              {isLoading ? 'Sending Code...' : 'Send Reset Code'}
             </button>
+
+            <div style={{ textAlign: 'center', fontSize: '14px' }}>
+              <button
+                type="button"
+                onClick={() => { setMode('signin'); setError(''); setSuccessMessage(''); }}
+                style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontWeight: 600, cursor: 'pointer', padding: 0 }}
+              >
+                Back to Sign In
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* ==================================================== */}
+        {/* MODE 5: RESET PASSWORD (CONFIRM CODE & NEW PASSWORD) */}
+        {/* ==================================================== */}
+        {mode === 'reset_password' && (
+          <form onSubmit={handleConfirmForgotPassword} noValidate>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+              
+              <FormField label="Reset Code" htmlFor="reset-code" required>
+                <input
+                  id="reset-code"
+                  type="text"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="123456"
+                  style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '15px', outline: 'none' }}
+                  required
+                />
+              </FormField>
+
+              <FormField label="New Password" htmlFor="reset-newpassword" required>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="reset-newpassword"
+                    type={showNewPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Min. 8 characters"
+                    style={{ width: '100%', padding: '14px 44px 14px 16px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '15px', outline: 'none' }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--color-text-light)',
+                      padding: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {showNewPassword ? (
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    )}
+                  </button>
+                </div>
+              </FormField>
+
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading || !code.trim() || !newPassword}
+              style={{
+                width: '100%',
+                background: 'var(--color-primary)',
+                color: '#fff',
+                padding: '16px',
+                borderRadius: '100px',
+                border: 'none',
+                fontSize: '15px',
+                fontWeight: 600,
+                cursor: (isLoading || !code.trim() || !newPassword) ? 'not-allowed' : 'pointer',
+                opacity: (isLoading || !code.trim() || !newPassword) ? 0.5 : 1,
+                marginBottom: '16px',
+              }}
+            >
+              {isLoading ? 'Resetting Password...' : 'Confirm New Password'}
+            </button>
+
+            <div style={{ textAlign: 'center', fontSize: '14px' }}>
+              <button
+                type="button"
+                onClick={() => { setMode('signin'); setError(''); setSuccessMessage(''); }}
+                style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontWeight: 600, cursor: 'pointer', padding: 0 }}
+              >
+                Back to Sign In
+              </button>
+            </div>
           </form>
         )}
 
@@ -263,4 +716,3 @@ export function ProgressiveSignupForm() {
     </div>
   );
 }
-

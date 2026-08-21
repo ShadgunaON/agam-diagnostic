@@ -2,6 +2,7 @@ import { IAuthRepository } from '@/domains/auth/repository';
 import { UserProfile } from '@/domains/auth/model';
 import { Result, success, failure } from '@/shared/result';
 import { SharedMockAdapter } from '@/lib/storage/SharedMockAdapter';
+import { ValidationError, NotFoundError } from '@/lib/api/errors';
 
 export const PRESEEDED_EXISTING_USER: UserProfile = {
   id: 'usr_existing_1',
@@ -97,7 +98,7 @@ const preseededUsers: UserProfile[] = [
   PHLEBOTOMIST_USER,
   PHLEBOTOMIST_USER_2,
   LAB_TECH_USER,
-  LAB_TECH_USER_2
+  LAB_TECH_USER_2,
 ];
 
 export class MockAuthRepository implements IAuthRepository {
@@ -119,26 +120,133 @@ export class MockAuthRepository implements IAuthRepository {
     await this.adapter.save(users);
   }
 
-  async sendOtp(_mobile: string): Promise<Result<boolean>> {
+  async signInWithPassword(
+    email: string,
+    _password: string
+  ): Promise<Result<{ user: UserProfile; accessToken: string }>> {
+    const users = await this.getUsers();
+    const foundUser = users.find(
+      (u) => u.email?.toLowerCase() === email.toLowerCase() || u.mobile === email
+    );
+
+    if (foundUser) {
+      return success({
+        user: foundUser,
+        accessToken: `mock_jwt_token_${foundUser.id}`,
+      });
+    }
+
+    // Allow arbitrary demo email sign-in for testing
+    const demoUser: UserProfile = {
+      id: `usr_${Date.now()}`,
+      fullName: email.split('@')[0] || 'Demo User',
+      email,
+      mobile: '9876543210',
+      role: 'patient',
+      isProfileComplete: true,
+      savedPatients: [
+        {
+          id: `pat_${Date.now()}`,
+          name: email.split('@')[0] || 'Demo User',
+          relation: 'Myself',
+          age: '30',
+          gender: 'Male',
+        },
+      ],
+      savedAddresses: [],
+    };
+
+    users.push(demoUser);
+    await this.saveUsers(users);
+    return success({
+      user: demoUser,
+      accessToken: `mock_jwt_token_${demoUser.id}`,
+    });
+  }
+
+  async signUpWithPassword(
+    email: string,
+    _password: string,
+    fullName: string,
+    phone?: string
+  ): Promise<Result<{ isSignUpComplete: boolean; userId?: string }>> {
+    const users = await this.getUsers();
+    const existing = users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+    if (existing) {
+      return failure(new ValidationError('An account with this email address already exists.'));
+    }
+
+    const newUser: UserProfile = {
+      id: `usr_${Date.now()}`,
+      fullName,
+      email,
+      mobile: phone || '',
+      role: 'patient',
+      isProfileComplete: true,
+      savedPatients: [
+        {
+          id: `pat_${Date.now()}`,
+          name: fullName,
+          relation: 'Myself',
+          age: '30',
+          gender: 'Male',
+        },
+      ],
+      savedAddresses: [],
+    };
+
+    users.push(newUser);
+    await this.saveUsers(users);
+    return success({ isSignUpComplete: true, userId: newUser.id });
+  }
+
+  async confirmSignUp(_email: string, _code: string): Promise<Result<boolean>> {
     return success(true);
   }
 
-  async verifyOtp(mobile: string, otp: string, registrationData?: Partial<UserProfile>): Promise<Result<{ success: boolean; isNewUser?: boolean; user?: UserProfile }>> {
-    if (otp !== '1234' && otp.length !== 4) {
+  async forgotPassword(email: string): Promise<Result<boolean>> {
+    const users = await this.getUsers();
+    const existing = users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+    if (!existing) {
+      return failure(new NotFoundError('No account found with this email address.'));
+    }
+    return success(true);
+  }
+
+  async confirmForgotPassword(
+    _email: string,
+    _code: string,
+    _newPassword: string
+  ): Promise<Result<boolean>> {
+    return success(true);
+  }
+
+  async sendEmailOtp(_email: string): Promise<Result<boolean>> {
+    return success(true);
+  }
+
+  async verifyEmailOtp(
+    email: string,
+    otp: string,
+    registrationData?: Partial<UserProfile>
+  ): Promise<Result<{ success: boolean; isNewUser?: boolean; user?: UserProfile }>> {
+    if (otp !== '1234' && otp !== '123456' && otp.length !== 4 && otp.length !== 6) {
       return success({ success: false });
     }
 
     const users = await this.getUsers();
-    const preseededUser = users.find(u => u.mobile === mobile);
+    const preseededUser = users.find(
+      (u) => u.email?.toLowerCase() === email.toLowerCase() || u.mobile === email
+    );
     if (preseededUser) {
       return success({ success: true, isNewUser: false, user: preseededUser });
     }
 
     const newUser: UserProfile = {
-      id: `usr_${mobile}`,
+      id: `usr_${Date.now()}`,
       fullName: registrationData?.fullName || '',
-      mobile,
-      email: registrationData?.email || '',
+      mobile: registrationData?.mobile || '',
+      email,
       gender: registrationData?.gender || undefined,
       dobOrAge: registrationData?.dobOrAge || '',
       role: 'patient',
@@ -146,14 +254,14 @@ export class MockAuthRepository implements IAuthRepository {
       savedPatients: [],
       savedAddresses: [],
     };
-    
+
     if (newUser.fullName) {
-      newUser.savedPatients.push({ 
-        id: `pat_${Date.now()}`, 
-        name: newUser.fullName, 
-        relation: 'Myself', 
-        age: newUser.dobOrAge || '30', 
-        gender: newUser.gender || 'Male' 
+      newUser.savedPatients.push({
+        id: `pat_${Date.now()}`,
+        name: newUser.fullName,
+        relation: 'Myself',
+        age: newUser.dobOrAge || '30',
+        gender: newUser.gender || 'Male',
       });
     }
 
@@ -162,23 +270,34 @@ export class MockAuthRepository implements IAuthRepository {
     return success({ success: true, isNewUser: true, user: newUser });
   }
 
+  async sendOtp(identifier: string): Promise<Result<boolean>> {
+    return this.sendEmailOtp(identifier);
+  }
+
+  async verifyOtp(
+    identifier: string,
+    otp: string,
+    registrationData?: Partial<UserProfile>
+  ): Promise<Result<{ success: boolean; isNewUser?: boolean; user?: UserProfile }>> {
+    return this.verifyEmailOtp(identifier, otp, registrationData);
+  }
+
   async updateProfile(userId: string, data: Partial<UserProfile>): Promise<Result<UserProfile>> {
     const users = await this.getUsers();
-    const index = users.findIndex(u => u.id === userId);
+    const index = users.findIndex((u) => u.id === userId);
     if (index !== -1) {
       const updatedUser = { ...users[index], ...data };
       users[index] = updatedUser;
       await this.saveUsers(users);
       return success(updatedUser);
     }
-    
+
     return failure(new Error('User not found'));
   }
 
   async createMockAccount(user: UserProfile): Promise<Result<void>> {
     const users = await this.getUsers();
-    // Overwrite if mobile already exists, otherwise push
-    const index = users.findIndex(u => u.mobile === user.mobile);
+    const index = users.findIndex((u) => u.mobile === user.mobile);
     if (index !== -1) {
       users[index] = { ...users[index], ...user };
     } else {

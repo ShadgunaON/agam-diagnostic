@@ -9,6 +9,9 @@ export interface PatientModel {
   email: string;
   status: PatientStatus;
   bloodGroup: string;
+  relation?: string;
+  dobOrAge?: string;
+  ownerSub?: string;
   createdAt?: string;
   updatedAt?: string;
 }

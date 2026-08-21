@@ -19,6 +19,17 @@ export class PatientService {
     return this.patientRepository.getAll(page, limit);
   }
 
+  async getMe(): Promise<Result<PatientModel>> {
+    if (this.patientRepository.getMe) {
+      return this.patientRepository.getMe();
+    }
+    const res = await this.getAll(1, 1);
+    if (res.isSuccess && res.value.data.length > 0) {
+      return success(res.value.data[0]);
+    }
+    return failure(new Error('Patient profile not found'));
+  }
+
   async getById(id: string) {
     return this.patientRepository.getById(id);
   }

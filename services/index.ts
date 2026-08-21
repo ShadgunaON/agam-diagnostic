@@ -11,10 +11,10 @@ import {
   activityRepository,
   patientRepository,
   invoiceRepository,
-  reviewRepository
+  reviewRepository,
+  notificationRepository
 } from '@/repositories/registry';
 import { MockReportsRepository } from '@/repositories/mock/ReportsRepository';
-import { MockNotificationRepository } from '@/repositories/mock/NotificationRepository';
 import { BlogService } from './BlogService';
 import { ServiceCatalogService } from './ServiceCatalogService';
 import { PackageService } from './PackageService';
@@ -36,7 +36,6 @@ import { NotificationService } from './NotificationService';
 import { PaymentService, MockPaymentProvider } from './PaymentService';
 
 const reportsRepo = new MockReportsRepository();
-const notificationRepo = new MockNotificationRepository();
 
 export const blogService = new BlogService(blogRepository);
 export const serviceCatalogService = new ServiceCatalogService(serviceRepository);
@@ -48,7 +47,7 @@ invoiceService.setBookingService(bookingService);
 export const reviewService = new ReviewService(reviewRepository, bookingRepository);
 
 export const reportsService = new ReportsService(reportsRepo);
-export const notificationService = new NotificationService(notificationRepo);
+export const notificationService = new NotificationService(notificationRepository);
 export const testCatalogService = new TestCatalogService(testRepository);
 export const collectionService = new CollectionService(collectionRepository);
 

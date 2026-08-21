@@ -10,11 +10,13 @@ export class MockNotificationRepository implements INotificationRepository {
     this.adapter = new SharedMockAdapter<NotificationModel[]>('mock_notifications');
   }
 
-  async getByUserId(userId: string): Promise<Result<NotificationModel[]>> {
+  async getByUserId(userId?: string): Promise<Result<NotificationModel[]>> {
     const data = await this.adapter.load() || [];
-    const userNotifs = data.filter(n => n.userId === userId).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const userNotifs = (userId ? data.filter(n => n.userId === userId) : data)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     return success(userNotifs);
   }
+
 
   async create(notif: Omit<NotificationModel, 'id' | 'createdAt'>): Promise<Result<NotificationModel>> {
     const data = await this.adapter.load() || [];

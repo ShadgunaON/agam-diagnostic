@@ -27,27 +27,83 @@ export interface IApiClient {
  * that implements this interface.
  */
 export class ApiClient implements IApiClient {
-  async get<T>(_url: string, _options?: ApiRequestOptions): Promise<HttpResponse<T>> {
-    throw new NetworkError('ApiClient.get is not implemented yet.');
+  private get baseUrl(): string {
+    return process.env.NEXT_PUBLIC_API_URL || 'https://35ea31w6qf.execute-api.us-east-1.amazonaws.com/dev';
   }
 
-  async post<T>(_url: string, _body?: unknown, _options?: ApiRequestOptions): Promise<HttpResponse<T>> {
-    throw new NetworkError('ApiClient.post is not implemented yet.');
+  private getAuthToken(): string | null {
+    if (typeof window === 'undefined') return null;
+    return sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token');
   }
 
-  async put<T>(_url: string, _body?: unknown, _options?: ApiRequestOptions): Promise<HttpResponse<T>> {
-    throw new NetworkError('ApiClient.put is not implemented yet.');
+  private async execute<T>(endpoint: string, options: RequestInit = {}): Promise<HttpResponse<T>> {
+    const url = endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+    
+    const headers = new Headers(options.headers || {});
+    if (!headers.has('Content-Type') && options.body && typeof options.body === 'string') {
+      headers.set('Content-Type', 'application/json');
+    }
+
+    const token = this.getAuthToken();
+    if (token && !headers.has('Authorization')) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    try {
+      const response = await fetch(url, { ...options, headers });
+      
+      let data: any = null;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        data = await response.text();
+      }
+
+      if (!response.ok) {
+        if (response.status === 401) {
+           throw new NetworkError('Unauthorized');
+        }
+        throw new NetworkError(data?.error?.message || data?.message || 'API request failed');
+      }
+
+      const responseHeaders: Record<string, string> = {};
+      response.headers.forEach((value, key) => {
+        responseHeaders[key] = value;
+      });
+
+      return { data: (data?.data !== undefined ? data.data : data) as T, status: response.status, headers: responseHeaders };
+    } catch (error) {
+      if (error instanceof NetworkError) throw error;
+      throw new NetworkError(error instanceof Error ? error.message : 'Network error');
+    }
   }
 
-  async patch<T>(_url: string, _body?: unknown, _options?: ApiRequestOptions): Promise<HttpResponse<T>> {
-    throw new NetworkError('ApiClient.patch is not implemented yet.');
+  async get<T>(url: string, options?: ApiRequestOptions): Promise<HttpResponse<T>> {
+    return this.execute<T>(url, { method: 'GET', ...options });
   }
 
-  async delete<T>(_url: string, _options?: ApiRequestOptions): Promise<HttpResponse<T>> {
-    throw new NetworkError('ApiClient.delete is not implemented yet.');
+  async post<T>(url: string, body?: unknown, options?: ApiRequestOptions): Promise<HttpResponse<T>> {
+    return this.execute<T>(url, { method: 'POST', body: JSON.stringify(body), ...options });
   }
 
-  async request<T>(_config: HttpRequest): Promise<HttpResponse<T>> {
-    throw new NetworkError('ApiClient.request is not implemented yet.');
+  async put<T>(url: string, body?: unknown, options?: ApiRequestOptions): Promise<HttpResponse<T>> {
+    return this.execute<T>(url, { method: 'PUT', body: JSON.stringify(body), ...options });
+  }
+
+  async patch<T>(url: string, body?: unknown, options?: ApiRequestOptions): Promise<HttpResponse<T>> {
+    return this.execute<T>(url, { method: 'PATCH', body: JSON.stringify(body), ...options });
+  }
+
+  async delete<T>(url: string, options?: ApiRequestOptions): Promise<HttpResponse<T>> {
+    return this.execute<T>(url, { method: 'DELETE', ...options });
+  }
+
+  async request<T>(config: HttpRequest): Promise<HttpResponse<T>> {
+    return this.execute<T>(config.url, {
+      method: config.method,
+      body: config.body ? JSON.stringify(config.body) : undefined,
+      headers: config.headers as any
+    });
   }
 }

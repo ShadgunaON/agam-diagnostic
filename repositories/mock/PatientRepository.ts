@@ -64,6 +64,14 @@ export class MockPatientRepository implements IPatientRepository {
     });
   }
 
+  async getMe(): Promise<Result<PatientModel>> {
+    const patients = await this.getPatients();
+    if (patients.length > 0) {
+      return success(patients[0]);
+    }
+    return success(this.initialPatients[0]);
+  }
+
   async getById(id: string): Promise<Result<PatientModel>> {
     const patients = await this.getPatients();
     const patient = patients.find(p => p.id === id);
