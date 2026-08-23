@@ -29,6 +29,7 @@ export interface PermissionModel {
   create: boolean;
   edit: boolean;
   del: boolean;
+  assign?: boolean;
 }
 
 export interface ModuleDataModel {

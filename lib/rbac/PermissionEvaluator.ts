@@ -1,6 +1,6 @@
 import { ModuleDataModel } from '@/domains/staff/model';
 
-export type PermissionAction = 'view' | 'create' | 'edit' | 'del';
+export type PermissionAction = 'view' | 'create' | 'edit' | 'del' | 'assign';
 
 /**
  * Central Permission Evaluator

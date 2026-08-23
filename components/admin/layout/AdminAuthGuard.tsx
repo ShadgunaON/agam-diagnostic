@@ -4,7 +4,7 @@ import React from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { useRBAC } from '@/hooks/useRBAC';
-import { routePermissions } from '@/lib/rbac/routePermissions';
+import { routePermissions, getRoutePermission } from '@/lib/rbac/routePermissions';
 import { getDefaultRoute } from '@/lib/rbac/routePermissions';
 
 /**
@@ -44,7 +44,7 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     }
 
     // Gate 3: Check route-level permissions
-    const routePerm = routePermissions[pathname];
+    const routePerm = getRoutePermission(pathname);
     if (routePerm) {
       const hasAccess = hasPermission(routePerm.moduleId, routePerm.action);
       if (!hasAccess) {

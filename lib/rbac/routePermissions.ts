@@ -18,6 +18,7 @@ export const routePermissions: Record<string, RoutePermission> = {
   '/admin': { moduleId: 'analytics', action: 'view' },
   '/admin/analytics': { moduleId: 'analytics', action: 'view' },
   '/admin/bookings': { moduleId: 'orders', action: 'view' },
+  '/admin/bookings/create': { moduleId: 'orders', action: 'create' },
   '/admin/collections': { moduleId: 'collections', action: 'view' },
   '/admin/patients': { moduleId: 'patients', action: 'view' },
   '/admin/invoices': { moduleId: 'invoices', action: 'view' },
@@ -27,6 +28,27 @@ export const routePermissions: Record<string, RoutePermission> = {
   '/admin/blogs': { moduleId: 'blogs', action: 'view' },
   '/admin/settings': { moduleId: 'settings', action: 'view' },
 };
+
+/**
+ * Resolves the required permission for a given pathname, including dynamic routes.
+ */
+export function getRoutePermission(pathname: string): RoutePermission | undefined {
+  // 1. Exact match (fastest)
+  if (routePermissions[pathname]) {
+    return routePermissions[pathname];
+  }
+
+  // 2. Dynamic route match (e.g., /admin/staff/123 -> /admin/staff)
+  const segments = pathname.split('/').filter(Boolean);
+  
+  if (segments[0] === 'admin' && segments.length >= 3) {
+    // Reconstruct base path from first two segments
+    const baseRoute = `/${segments[0]}/${segments[1]}`;
+    return routePermissions[baseRoute];
+  }
+
+  return undefined;
+}
 
 /**
  * Maps sidebar navigation module IDs to the permission module IDs.

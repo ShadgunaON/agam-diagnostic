@@ -100,7 +100,7 @@ export default function CollectionsPage() {
     // For Home Collection agents, only show their explicitly assigned tasks and NO lab visits
     if (scope === 'home_collection') {
       if (task.type !== 'Home Collection') return false;
-      return task.phlebotomistId === user?.staffId || task.assignedTo === user?.fullName;
+      return task.phlebotomistId === user?.staffId;
     }
     
     // For In-Lab techs, show all tasks (both Home Collections and Lab Visits)
@@ -161,8 +161,8 @@ export default function CollectionsPage() {
   const enRouteTasks = homeTasks.filter(t => t.status === 'En Route').length;
   const unassignedTasks = homeTasks.filter(t => t.status === 'Unassigned').length;
 
-  // Can the logged-in user assign phlebotomists? Requires collections.edit permission
-  const canAssign = isAdmin || hasPermission('collections', 'edit');
+  // Can the logged-in user assign phlebotomists? Requires collections.assign permission
+  const canAssign = isAdmin || hasPermission('collections', 'assign');
   // Can the logged-in user edit collection status?
   const canEditStatus = isAdmin || hasPermission('collections', 'edit');
   // Can the logged-in user record payments?

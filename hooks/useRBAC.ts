@@ -105,25 +105,16 @@ export function useRBAC(): RBACState {
   const hasPermission = useCallback(
     (moduleId: string, action: PermissionAction): boolean => {
       if (!roleId) return false;
-      if ((user?.role?.toLowerCase() === 'phlebotomist' || role?.title?.toLowerCase() === 'phlebotomist' || roleId === 'phleb') && (moduleId === 'collections' || moduleId === 'orders' || moduleId === 'patients')) {
-        return true;
-      }
       return PermissionEvaluator.hasPermission(roleId, moduleId, action, permissionsMap);
     },
-    [roleId, permissionsMap, user, role]
+    [roleId, permissionsMap]
   );
 
   const accessibleModules = useMemo(() => {
     if (!roleId) return [];
-    let modules = PermissionEvaluator.getAccessibleModules(roleId, permissionsMap);
-    // Hardcode fallback for Phlebotomists / Deekshitha in case local DB permissions are missing
-    if (user?.role?.toLowerCase() === 'phlebotomist' || role?.title?.toLowerCase() === 'phlebotomist' || roleId === 'phleb') {
-      if (!modules.includes('collections')) modules = [...modules, 'collections'];
-      if (!modules.includes('orders')) modules = [...modules, 'orders'];
-      if (!modules.includes('patients')) modules = [...modules, 'patients'];
-    }
+    const modules = PermissionEvaluator.getAccessibleModules(roleId, permissionsMap);
     return modules;
-  }, [roleId, permissionsMap, user, role]);
+  }, [roleId, permissionsMap]);
 
   const isAdmin = useMemo(() => {
     if (user?.role === 'admin') return true;

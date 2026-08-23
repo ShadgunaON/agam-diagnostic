@@ -252,6 +252,7 @@ export class ApiAuthRepository implements IAuthRepository {
       mobile,
       role: role as UserProfile['role'],
       isProfileComplete: true,
+      staffId: role !== 'patient' ? sub : undefined,
       savedPatients: [
         {
           id: `pat_${sub}`,

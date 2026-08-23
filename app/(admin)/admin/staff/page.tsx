@@ -9,8 +9,10 @@ import { Drawer } from '@/components/ui/Drawer';
 
 import { staffService } from '@/services';
 import { StaffModel, RoleModel, ModuleDataModel } from '@/domains/staff/model';
+import { useRBAC } from '@/hooks/useRBAC';
 
 export default function HighlyVisualizedStaffRoles() {
+  const { hasPermission } = useRBAC();
   const [mounted, setMounted] = useState(false);
   const [roles, setRoles] = useState<RoleModel[]>([]);
   const [staff, setStaff] = useState<StaffModel[]>([]);
@@ -201,20 +203,22 @@ export default function HighlyVisualizedStaffRoles() {
             <p style={{ fontSize: '15px', fontWeight: 500, color: '#64748b', margin: '4px 0 0 0' }}>Manage your entire workforce, roles, and granular permissions from one command center.</p>
           </div>
           <div className="flex flex-wrap gap-3 w-full md:w-auto">
-            <button 
-              onClick={() => setIsInviteOpen(true)}
-              style={{ 
-                height: '44px', padding: '0 24px', borderRadius: '12px', border: 'none', 
-                backgroundColor: '#0f172a', color: '#ffffff', 
-                fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)', transition: 'transform 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
-            >
-              <AdminIcon name="userPlus" style={{ width: '18px', height: '18px' }} />
-              Invite Member
-            </button>
+            {hasPermission('staff', 'create') && (
+              <button 
+                onClick={() => setIsInviteOpen(true)}
+                style={{ 
+                  height: '44px', padding: '0 24px', borderRadius: '12px', border: 'none', 
+                  backgroundColor: '#0f172a', color: '#ffffff', 
+                  fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)', transition: 'transform 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
+              >
+                <AdminIcon name="userPlus" style={{ width: '18px', height: '18px' }} />
+                Invite Member
+              </button>
+            )}
           </div>
         </div>
 

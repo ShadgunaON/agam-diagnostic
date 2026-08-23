@@ -73,10 +73,6 @@ export class CollectionService {
       await this.bookingService.updateBookingStatus(res.value.bookingId, 'Assigned');
     }
 
-    if (res.isSuccess && this.notificationService) {
-      await this.notificationService.createAssignmentNotification(staffId, res.value);
-    }
-
     return res;
   }
 
