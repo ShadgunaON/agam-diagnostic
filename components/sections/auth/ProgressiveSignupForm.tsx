@@ -12,7 +12,8 @@ type AuthMode =
   | 'signup'
   | 'confirm_signup'
   | 'forgot_password'
-  | 'reset_password';
+  | 'reset_password'
+  | 'new_password';
 
 export function ProgressiveSignupForm() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export function ProgressiveSignupForm() {
 
   const {
     signInWithPassword,
+    completeNewPasswordChallenge,
     signUpWithPassword,
     confirmSignUp,
     forgotPassword,
@@ -44,6 +46,12 @@ export function ProgressiveSignupForm() {
   // Show/Hide password toggles
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
+
+  // Cognito NEW_PASSWORD_REQUIRED challenge state (in-memory only)
+  const [challengeSession, setChallengeSession] = useState<string | null>(null);
+  const [challengeEmail, setChallengeEmail] = useState<string>('');
 
   useEffect(() => {
     if (searchParams.get('reset') === 'true') {
@@ -91,8 +99,50 @@ export function ProgressiveSignupForm() {
       const res = await signInWithPassword(cleanEmail, password);
       if (res.success && res.user) {
         navigateToDestination(res.user.role);
+      } else if (res.needsNewPassword && res.session) {
+        // Cognito FORCE_CHANGE_PASSWORD — employee first login
+        setChallengeSession(res.session);
+        setChallengeEmail(res.challengeEmail || cleanEmail);
+        setMode('new_password');
+        setPassword(''); // Clear temporary password from state
       } else {
         throw new Error(res.error || 'Authentication failed. Please check your credentials.');
+      }
+    });
+  };
+
+  // ==========================================
+  // SET NEW PASSWORD HANDLER (Cognito FORCE_CHANGE_PASSWORD)
+  // ==========================================
+  const handleSetNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccessMessage('');
+
+    if (!newPassword || newPassword.length < 8) {
+      setError('Password must be at least 8 characters long.');
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+    if (!challengeSession) {
+      setError('Session expired. Please sign in again.');
+      setMode('signin');
+      return;
+    }
+
+    await execute(async () => {
+      const res = await completeNewPasswordChallenge(challengeEmail, newPassword, challengeSession);
+      if (res.success && res.user) {
+        setChallengeSession(null);
+        setChallengeEmail('');
+        setNewPassword('');
+        setConfirmNewPassword('');
+        navigateToDestination(res.user.role);
+      } else {
+        throw new Error(res.error || 'Failed to set new password. Please try again.');
       }
     });
   };
@@ -255,6 +305,7 @@ export function ProgressiveSignupForm() {
             {mode === 'confirm_signup' && 'Verify Email Address'}
             {mode === 'forgot_password' && 'Reset Password'}
             {mode === 'reset_password' && 'Set New Password'}
+            {mode === 'new_password' && 'Set Your Password'}
           </h1>
           <p style={{ color: 'var(--color-text-light)', margin: 0, fontSize: '14px' }}>
             {mode === 'signin' && 'Enter your email address and password to continue.'}
@@ -262,6 +313,7 @@ export function ProgressiveSignupForm() {
             {mode === 'confirm_signup' && `Enter the confirmation code sent to ${email}`}
             {mode === 'forgot_password' && 'Enter your email to receive a password reset code.'}
             {mode === 'reset_password' && 'Enter the reset code and your new password.'}
+            {mode === 'new_password' && 'Welcome! Please create a permanent password for your account.'}
           </p>
         </div>
 
@@ -704,6 +756,159 @@ export function ProgressiveSignupForm() {
               <button
                 type="button"
                 onClick={() => { setMode('signin'); setError(''); setSuccessMessage(''); }}
+                style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontWeight: 600, cursor: 'pointer', padding: 0 }}
+              >
+                Back to Sign In
+              </button>
+            </div>
+          </form>
+        )}
+        {/* ==================================================== */}
+        {/* MODE 6: SET NEW PASSWORD (Cognito FORCE_CHANGE)       */}
+        {/* ==================================================== */}
+        {mode === 'new_password' && (
+          <form onSubmit={handleSetNewPassword} noValidate>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginBottom: '24px' }}>
+
+              {/* Info banner */}
+              <div style={{ background: '#f0f9ff', color: '#0369a1', padding: '12px 16px', borderRadius: '12px', fontSize: '13px', fontWeight: 500, lineHeight: '1.5' }}>
+                Your account has been created by an administrator. Please set a permanent password to continue.
+              </div>
+
+              <FormField label="New Password" htmlFor="new-password-set" required>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="new-password-set"
+                    type={showNewPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Min. 8 characters"
+                    style={{ width: '100%', padding: '14px 44px 14px 16px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '15px', outline: 'none' }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--color-text-light)',
+                      padding: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {showNewPassword ? (
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    )}
+                  </button>
+                </div>
+              </FormField>
+
+              <FormField label="Confirm Password" htmlFor="confirm-new-password-set" required>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="confirm-new-password-set"
+                    type={showConfirmNewPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    placeholder="Re-enter your password"
+                    style={{ width: '100%', padding: '14px 44px 14px 16px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '15px', outline: 'none' }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
+                    aria-label={showConfirmNewPassword ? 'Hide password' : 'Show password'}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--color-text-light)',
+                      padding: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {showConfirmNewPassword ? (
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    )}
+                  </button>
+                </div>
+              </FormField>
+
+              {/* Password strength indicators */}
+              <div style={{ fontSize: '12px', color: 'var(--color-text-light)', padding: '0 4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                  <span style={{ color: newPassword.length >= 8 ? '#16a34a' : '#94a3b8' }}>
+                    {newPassword.length >= 8 ? '✓' : '○'}
+                  </span>
+                  At least 8 characters
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                  <span style={{ color: /[A-Z]/.test(newPassword) ? '#16a34a' : '#94a3b8' }}>
+                    {/[A-Z]/.test(newPassword) ? '✓' : '○'}
+                  </span>
+                  One uppercase letter
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                  <span style={{ color: /[0-9]/.test(newPassword) ? '#16a34a' : '#94a3b8' }}>
+                    {/[0-9]/.test(newPassword) ? '✓' : '○'}
+                  </span>
+                  One number
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ color: confirmNewPassword && newPassword === confirmNewPassword ? '#16a34a' : '#94a3b8' }}>
+                    {confirmNewPassword && newPassword === confirmNewPassword ? '✓' : '○'}
+                  </span>
+                  Passwords match
+                </div>
+              </div>
+
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading || !newPassword || newPassword.length < 8 || newPassword !== confirmNewPassword}
+              style={{
+                width: '100%',
+                background: 'var(--color-primary)',
+                color: '#fff',
+                padding: '16px',
+                borderRadius: '100px',
+                border: 'none',
+                fontSize: '15px',
+                fontWeight: 600,
+                cursor: (isLoading || !newPassword || newPassword.length < 8 || newPassword !== confirmNewPassword) ? 'not-allowed' : 'pointer',
+                opacity: (isLoading || !newPassword || newPassword.length < 8 || newPassword !== confirmNewPassword) ? 0.5 : 1,
+                marginBottom: '16px',
+              }}
+            >
+              {isLoading ? 'Setting Password...' : 'Set Password & Continue'}
+            </button>
+
+            <div style={{ textAlign: 'center', fontSize: '14px' }}>
+              <button
+                type="button"
+                onClick={() => { setMode('signin'); setError(''); setSuccessMessage(''); setChallengeSession(null); }}
                 style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontWeight: 600, cursor: 'pointer', padding: 0 }}
               >
                 Back to Sign In

@@ -45,6 +45,7 @@ import { MockNotificationRepository } from './mock/NotificationRepository';
 import { ApiNotificationRepository } from './api/NotificationRepository';
 import { IStaffRepository } from '@/domains/staff/repository';
 import { MockStaffRepository } from './mock/StaffRepository';
+import { ApiStaffRepository } from './api/StaffRepository';
 import { IActivityRepository } from '@/domains/activity/repository';
 import { MockActivityRepository } from './mock/ActivityRepository';
 
@@ -117,5 +118,7 @@ export const serviceRepository: IServicesRepository = new MockServiceRepository(
 export const packageRepository: IPackagesRepository = new MockPackageRepository();
 export const testRepository: ITestsRepository = new MockTestRepository();
 export const reportsRepository: IReportsRepository = new MockReportsRepository();
-export const staffRepository: IStaffRepository = new MockStaffRepository();
+export const staffRepository: IStaffRepository = env.useMockData
+  ? new MockStaffRepository()
+  : new ApiStaffRepository(apiClient);
 export const activityRepository: IActivityRepository = new MockActivityRepository();

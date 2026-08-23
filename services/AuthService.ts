@@ -8,6 +8,10 @@ export class AuthService {
     return this.repository.signInWithPassword(email, password);
   }
 
+  async completeNewPasswordChallenge(email: string, newPassword: string, session: string) {
+    return this.repository.completeNewPasswordChallenge(email, newPassword, session);
+  }
+
   async signUpWithPassword(email: string, password: string, fullName: string, phone?: string) {
     return this.repository.signUpWithPassword(email, password, fullName, phone);
   }

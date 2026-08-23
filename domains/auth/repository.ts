@@ -3,7 +3,8 @@ import { UserProfile } from './model';
 
 export interface IAuthRepository {
   // Password-based authentication (P3C.4)
-  signInWithPassword(email: string, password: string): Promise<Result<{ user: UserProfile; accessToken: string }>>;
+  signInWithPassword(email: string, password: string): Promise<Result<{ user: UserProfile; accessToken: string } | { needsNewPassword: true; session: string; email: string }>>;
+  completeNewPasswordChallenge(email: string, newPassword: string, session: string): Promise<Result<{ user: UserProfile; accessToken: string }>>;
   signUpWithPassword(email: string, password: string, fullName: string, phone?: string): Promise<Result<{ isSignUpComplete: boolean; userId?: string }>>;
   confirmSignUp(email: string, code: string): Promise<Result<boolean>>;
   forgotPassword(email: string): Promise<Result<boolean>>;
@@ -17,3 +18,4 @@ export interface IAuthRepository {
   updateProfile(userId: string, data: Partial<UserProfile>): Promise<Result<UserProfile>>;
   createMockAccount(user: UserProfile): Promise<Result<void>>;
 }
+

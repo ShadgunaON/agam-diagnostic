@@ -1,4 +1,4 @@
-export type UserRole = 'patient' | 'doctor' | 'lab_tech' | 'admin';
+export type UserRole = 'patient' | 'admin' | 'op' | 'path' | 'phleb' | 'phleb_home' | 'phleb_lab' | 'doctor' | 'lab_tech';
 
 export interface PatientProfileItem {
   id: string;

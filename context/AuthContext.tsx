@@ -13,7 +13,8 @@ interface AuthContextType {
   isProfileComplete: boolean;
   isLoading: boolean;
 
-  signInWithPassword: (email: string, password: string) => Promise<{ success: boolean; user?: UserProfile; error?: string }>;
+  signInWithPassword: (email: string, password: string) => Promise<{ success: boolean; user?: UserProfile; error?: string; needsNewPassword?: boolean; session?: string; challengeEmail?: string }>;
+  completeNewPasswordChallenge: (email: string, newPassword: string, session: string) => Promise<{ success: boolean; user?: UserProfile; error?: string }>;
   signUpWithPassword: (email: string, password: string, fullName: string, phone?: string) => Promise<{ success: boolean; isSignUpComplete?: boolean; error?: string }>;
   confirmSignUp: (email: string, code: string) => Promise<{ success: boolean; error?: string }>;
   forgotPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
@@ -136,8 +137,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, [storageAdapter, syncPatientData]);
 
-  const signInWithPassword = async (email: string, password: string): Promise<{ success: boolean; user?: UserProfile; error?: string }> => {
+  const signInWithPassword = async (email: string, password: string): Promise<{ success: boolean; user?: UserProfile; error?: string; needsNewPassword?: boolean; session?: string; challengeEmail?: string }> => {
     const result = await authService.signInWithPassword(email, password);
+    if (result.isSuccess) {
+      const value = result.value;
+      // Check if this is a NEW_PASSWORD_REQUIRED challenge response
+      if ('needsNewPassword' in value && value.needsNewPassword) {
+        return { success: false, needsNewPassword: true, session: value.session, challengeEmail: value.email };
+      }
+      // Normal successful login
+      if ('user' in value) {
+        const syncedUser = await syncPatientData(value.user);
+        saveUserToStateAndStorage(syncedUser);
+        return { success: true, user: syncedUser };
+      }
+    }
+    return { success: false, error: result.isSuccess ? 'Authentication response was unexpected.' : result.error.message };
+  };
+
+  const completeNewPasswordChallenge = async (email: string, newPassword: string, session: string): Promise<{ success: boolean; user?: UserProfile; error?: string }> => {
+    const result = await authService.completeNewPasswordChallenge(email, newPassword, session);
     if (result.isSuccess) {
       const syncedUser = await syncPatientData(result.value.user);
       saveUserToStateAndStorage(syncedUser);
@@ -381,6 +400,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
 
         signInWithPassword,
+        completeNewPasswordChallenge,
         signUpWithPassword,
         confirmSignUp,
         forgotPassword,

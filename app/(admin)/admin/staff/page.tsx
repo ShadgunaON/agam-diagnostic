@@ -7,7 +7,7 @@ import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
 import { useToast } from '@/components/admin/feedback/Toast';
 import { Drawer } from '@/components/ui/Drawer';
 
-import { staffService, authService } from '@/services';
+import { staffService } from '@/services';
 import { StaffModel, RoleModel, ModuleDataModel } from '@/domains/staff/model';
 
 export default function HighlyVisualizedStaffRoles() {
@@ -47,9 +47,11 @@ export default function HighlyVisualizedStaffRoles() {
   const [hoverRole, setHoverRole] = useState<string | null>(null);
   const [mainTab, setMainTab] = useState<'roles' | 'employees'>('roles');
 
+  const [newInviteName, setNewInviteName] = useState('');
   const [newInviteEmail, setNewInviteEmail] = useState('');
   const [newInvitePhone, setNewInvitePhone] = useState('');
   const [newInviteRole, setNewInviteRole] = useState('');
+  const [isInviteSubmitting, setIsInviteSubmitting] = useState(false);
   const [newRoleTitle, setNewRoleTitle] = useState('');
   const [newRoleInternal, setNewRoleInternal] = useState('');
 
@@ -105,42 +107,59 @@ export default function HighlyVisualizedStaffRoles() {
   };
 
   const handleSendInvite = async () => {
-    if (!newInviteEmail || !newInvitePhone) {
-      toast({ title: 'Validation Error', description: 'Email and Mobile Number are required.', variant: 'danger' });
+    if (!newInviteName.trim()) {
+      toast({ title: 'Validation Error', description: 'Employee name is required.', variant: 'danger' });
       return;
     }
-    const assignedRole = newInviteRole || (roles.length > 0 ? roles[0].id : 'admin');
-    const res = await staffService.createStaff({
-      name: newInviteEmail.split('@')[0], 
-      email: newInviteEmail,
-      role: assignedRole,
-      status: 'On Leave', // Closest to pending/inactive in current model
-      department: 'General',
-      shift: 'Morning',
-      phone: newInvitePhone,
-      joinDate: new Date().toLocaleDateString()
-    });
-    
-    if (res.isSuccess) {
-      // Create mock auth profile so they can login immediately
-      await authService.createMockAccount({
-        id: `usr_${newInvitePhone}`,
-        fullName: newInviteEmail.split('@')[0],
-        mobile: newInvitePhone,
-        email: newInviteEmail,
-        role: assignedRole as any,
-        staffId: res.value.id,
-        isProfileComplete: true,
-        savedPatients: [],
-        savedAddresses: []
+    if (!newInviteEmail || !newInviteEmail.includes('@')) {
+      toast({ title: 'Validation Error', description: 'A valid email address is required.', variant: 'danger' });
+      return;
+    }
+    if (!newInvitePhone) {
+      toast({ title: 'Validation Error', description: 'Phone number is required.', variant: 'danger' });
+      return;
+    }
+    const assignedRole = newInviteRole || (roles.length > 0 ? roles[0].id : 'op');
+    setIsInviteSubmitting(true);
+    try {
+      const res = await staffService.createStaff({
+        name: newInviteName.trim(),
+        email: newInviteEmail.trim().toLowerCase(),
+        role: assignedRole,
+        status: 'On Duty',
+        department: 'General',
+        shift: 'Morning',
+        phone: newInvitePhone.trim(),
+        joinDate: new Date().toISOString()
       });
 
-      setStaff([...staff, res.value]);
-      setIsInviteOpen(false);
-      setNewInviteEmail('');
-      setNewInvitePhone('');
-      setNewInviteRole('');
-      toast({ title: 'Invitation Sent', description: `An email has been sent to ${newInviteEmail}. They can login using ${newInvitePhone} and OTP 1234.`, variant: 'success' });
+      if (res.isSuccess) {
+        setStaff([...staff, res.value]);
+        setIsInviteOpen(false);
+        setNewInviteName('');
+        setNewInviteEmail('');
+        setNewInvitePhone('');
+        setNewInviteRole('');
+        toast({
+          title: 'Employee Created',
+          description: `A Cognito invitation email has been sent to ${newInviteEmail}. The employee can set their password using the temporary credentials.`,
+          variant: 'success'
+        });
+      } else {
+        toast({
+          title: 'Creation Failed',
+          description: res.error?.message || 'Failed to create employee account.',
+          variant: 'danger'
+        });
+      }
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'An unexpected error occurred.',
+        variant: 'danger'
+      });
+    } finally {
+      setIsInviteSubmitting(false);
     }
   };
 
@@ -497,6 +516,16 @@ export default function HighlyVisualizedStaffRoles() {
           </div>
           <div className="p-6 flex flex-col gap-6">
             <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: '#334155', marginBottom: '8px' }}>Employee Name</label>
+              <input 
+                type="text" 
+                value={newInviteName}
+                onChange={e => setNewInviteName(e.target.value)}
+                placeholder="Full Name" 
+                style={{ width: '100%', height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} 
+              />
+            </div>
+            <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: '#334155', marginBottom: '8px' }}>Email Address</label>
               <input 
                 type="email" 
@@ -507,7 +536,7 @@ export default function HighlyVisualizedStaffRoles() {
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: '#334155', marginBottom: '8px' }}>Mobile Number (For Login)</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: '#334155', marginBottom: '8px' }}>Mobile Number</label>
               <input 
                 type="text" 
                 value={newInvitePhone}
@@ -527,8 +556,12 @@ export default function HighlyVisualizedStaffRoles() {
                 {roles.map(r => <option key={r.id} value={r.id}>{r.title}</option>)}
               </select>
             </div>
-            <button onClick={handleSendInvite} className="h-12 rounded-xl bg-slate-900 text-white text-[15px] font-extrabold mt-3 hover:bg-slate-800 transition-colors">
-              Send Invitation Link
+            <button 
+              onClick={handleSendInvite}
+              disabled={isInviteSubmitting}
+              className="h-12 rounded-xl bg-slate-900 text-white text-[15px] font-extrabold mt-3 hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isInviteSubmitting ? 'Creating Employee...' : 'Create Employee & Send Invitation'}
             </button>
           </div>
         </Drawer.Content>

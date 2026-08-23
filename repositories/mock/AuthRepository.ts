@@ -164,6 +164,15 @@ export class MockAuthRepository implements IAuthRepository {
     });
   }
 
+  async completeNewPasswordChallenge(
+    _email: string,
+    _newPassword: string,
+    _session: string
+  ): Promise<Result<{ user: UserProfile; accessToken: string }>> {
+    // Mock mode: no real Cognito challenge — return failure
+    return failure(new ValidationError('New password challenge is not supported in mock mode.'));
+  }
+
   async signUpWithPassword(
     email: string,
     _password: string,

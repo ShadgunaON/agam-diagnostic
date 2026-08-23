@@ -68,7 +68,7 @@ export class ApiAuthRepository implements IAuthRepository {
   async signInWithPassword(
     email: string,
     password: string
-  ): Promise<Result<{ user: UserProfile; accessToken: string }>> {
+  ): Promise<Result<{ user: UserProfile; accessToken: string } | { needsNewPassword: true; session: string; email: string }>> {
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail || !cleanEmail.includes('@')) {
       return failure(new ValidationError('Please enter a valid email address.'));
@@ -107,11 +107,27 @@ export class ApiAuthRepository implements IAuthRepository {
         const challengeResponse = await this.cognitoClient.send(challengeCommand);
         authResult = challengeResponse.AuthenticationResult;
 
+        // Check if the PASSWORD challenge led to NEW_PASSWORD_REQUIRED
+        if (!authResult && challengeResponse.ChallengeName === 'NEW_PASSWORD_REQUIRED' && challengeResponse.Session) {
+          return success({
+            needsNewPassword: true as const,
+            session: challengeResponse.Session,
+            email: cleanEmail,
+          });
+        }
+
         if (!authResult && challengeResponse.ChallengeName) {
           return failure(
             new UnauthorizedError(`Additional authentication challenge required: ${challengeResponse.ChallengeName}`)
           );
         }
+      } else if (!authResult && initResponse.ChallengeName === 'NEW_PASSWORD_REQUIRED' && initResponse.Session) {
+        // Direct NEW_PASSWORD_REQUIRED from initial auth (FORCE_CHANGE_PASSWORD user)
+        return success({
+          needsNewPassword: true as const,
+          session: initResponse.Session,
+          email: cleanEmail,
+        });
       } else if (!authResult && initResponse.ChallengeName) {
         return failure(
           new UnauthorizedError(`Unexpected authentication challenge: ${initResponse.ChallengeName}`)
@@ -119,89 +135,139 @@ export class ApiAuthRepository implements IAuthRepository {
       }
 
       if (authResult && authResult.AccessToken) {
-        this.storeTokens(authResult);
-
-        let role = 'patient';
-        let fullName = cleanEmail.split('@')[0];
-        let sub = `usr_${cleanEmail.replace(/[^a-zA-Z0-9]/g, '_')}`;
-        let mobile = '';
-        let resolvedEmail = cleanEmail;
-
-        if (authResult.IdToken) {
-          try {
-            const parts = authResult.IdToken.split('.');
-            if (parts.length === 3) {
-              const payload = JSON.parse(
-                typeof atob !== 'undefined'
-                  ? atob(parts[1])
-                  : Buffer.from(parts[1], 'base64').toString('utf8')
-              );
-              if (payload.sub) sub = payload.sub;
-              if (payload.name) fullName = payload.name;
-              if (payload.email) resolvedEmail = payload.email;
-              if (payload.phone_number) mobile = payload.phone_number;
-
-              const rawGroups = payload['cognito:groups'];
-              const groups = Array.isArray(rawGroups)
-                ? rawGroups
-                : typeof rawGroups === 'string'
-                ? rawGroups.split(',').map((g: string) => g.trim())
-                : [];
-
-              if (payload['custom:role']) {
-                role = payload['custom:role'];
-              } else if (
-                groups.some(
-                  (g: string) =>
-                    g.toLowerCase() === 'admingroup' || g.toLowerCase() === 'admin'
-                )
-              ) {
-                role = 'admin';
-              } else if (
-                groups.some(
-                  (g: string) =>
-                    g.toLowerCase() === 'staffgroup' || g.toLowerCase() === 'doctor'
-                )
-              ) {
-                role = 'doctor';
-              } else if (groups.includes('lab_tech')) {
-                role = 'lab_tech';
-              }
-            }
-          } catch {
-            // fallback to defaults
-          }
-        }
-
-        const user: UserProfile = {
-          id: sub,
-          fullName,
-          email: resolvedEmail,
-          mobile,
-          role: role as UserProfile['role'],
-          isProfileComplete: true,
-          savedPatients: [
-            {
-              id: `pat_${sub}`,
-              name: fullName || 'Myself',
-              relation: 'Myself',
-              age: '30',
-              gender: 'Male',
-            },
-          ],
-          savedAddresses: [],
-        };
-
-        return success({
-          user,
-          accessToken: authResult.AccessToken,
-        });
+        return this.buildUserFromAuthResult(authResult, cleanEmail);
       }
 
       return failure(new UnauthorizedError('Authentication could not be completed with the provided credentials.'));
     } catch (err: unknown) {
       return failure(this.mapCognitoError(err));
     }
+  }
+
+  /**
+   * Completes the NEW_PASSWORD_REQUIRED challenge for invited employees.
+   * Called after signInWithPassword returns { needsNewPassword: true }.
+   */
+  async completeNewPasswordChallenge(
+    email: string,
+    newPassword: string,
+    session: string
+  ): Promise<Result<{ user: UserProfile; accessToken: string }>> {
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!newPassword || newPassword.length < 8) {
+      return failure(new ValidationError('Password must be at least 8 characters with uppercase, lowercase, and numbers.'));
+    }
+
+    try {
+      const challengeCommand = new RespondToAuthChallengeCommand({
+        ChallengeName: 'NEW_PASSWORD_REQUIRED',
+        ClientId: this.clientId,
+        Session: session,
+        ChallengeResponses: {
+          USERNAME: cleanEmail,
+          NEW_PASSWORD: newPassword,
+        },
+      });
+
+      const challengeResponse = await this.cognitoClient.send(challengeCommand);
+      const authResult = challengeResponse.AuthenticationResult;
+
+      if (authResult && authResult.AccessToken) {
+        return this.buildUserFromAuthResult(authResult, cleanEmail);
+      }
+
+      return failure(new UnauthorizedError('Password change was not completed. Please try again.'));
+    } catch (err: unknown) {
+      return failure(this.mapCognitoError(err));
+    }
+  }
+
+  /**
+   * Extracts user profile and tokens from a successful Cognito AuthenticationResult.
+   * Shared between signInWithPassword and completeNewPasswordChallenge.
+   */
+  private buildUserFromAuthResult(
+    authResult: { AccessToken?: string; IdToken?: string; RefreshToken?: string },
+    cleanEmail: string
+  ): Result<{ user: UserProfile; accessToken: string }> {
+    this.storeTokens(authResult);
+
+    let role = 'patient';
+    let fullName = cleanEmail.split('@')[0];
+    let sub = `usr_${cleanEmail.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    let mobile = '';
+    let resolvedEmail = cleanEmail;
+
+    if (authResult.IdToken) {
+      try {
+        const parts = authResult.IdToken.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(
+            typeof atob !== 'undefined'
+              ? atob(parts[1])
+              : Buffer.from(parts[1], 'base64').toString('utf8')
+          );
+          if (payload.sub) sub = payload.sub;
+          if (payload.name) fullName = payload.name;
+          if (payload.email) resolvedEmail = payload.email;
+          if (payload.phone_number) mobile = payload.phone_number;
+
+          const rawGroups = payload['cognito:groups'];
+          const groups = Array.isArray(rawGroups)
+            ? rawGroups
+            : typeof rawGroups === 'string'
+            ? rawGroups.split(',').map((g: string) => g.trim())
+            : [];
+
+          if (payload['custom:role']) {
+            role = payload['custom:role'];
+          } else if (
+            groups.some(
+              (g: string) =>
+                g.toLowerCase() === 'admingroup' || g.toLowerCase() === 'admin'
+            )
+          ) {
+            role = 'admin';
+          } else if (
+            groups.some(
+              (g: string) =>
+                g.toLowerCase() === 'staffgroup' || g.toLowerCase() === 'doctor'
+            )
+          ) {
+            role = 'doctor';
+          } else if (groups.includes('lab_tech')) {
+            role = 'lab_tech';
+          }
+        }
+      } catch {
+        // fallback to defaults
+      }
+    }
+
+    const user: UserProfile = {
+      id: sub,
+      fullName,
+      email: resolvedEmail,
+      mobile,
+      role: role as UserProfile['role'],
+      isProfileComplete: true,
+      savedPatients: [
+        {
+          id: `pat_${sub}`,
+          name: fullName || 'Myself',
+          relation: 'Myself',
+          age: '30',
+          gender: 'Male',
+        },
+      ],
+      savedAddresses: [],
+    };
+
+    return success({
+      user,
+      accessToken: authResult.AccessToken!,
+    });
   }
 
   /**
