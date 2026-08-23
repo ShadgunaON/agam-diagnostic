@@ -46,7 +46,7 @@ export class ApiClient implements IApiClient {
 
     const token = this.getAuthToken();
     if (token && !headers.has('Authorization')) {
-      headers.set('Authorization', `Bearer ${token}`);
+      headers.set('Authorization', token);
     }
 
     try {
