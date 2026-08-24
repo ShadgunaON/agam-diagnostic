@@ -6,6 +6,7 @@ const {
   canAccessInvoice,
   canModifyInvoice,
   isValidInvoiceTransition,
+  hasPermission,
 } = require('../shared/auth');
 const { success, error } = require('../shared/response');
 const { logger } = require('../shared/logger');
@@ -66,9 +67,15 @@ exports.handler = async (event) => {
 
         // 3. General list: /api/invoices
         if (isAdmin(identity) || (isStaff(identity) && !isPhlebotomist(identity))) {
+          if (!(await hasPermission(identity, 'invoices', 'view'))) {
+            return error.forbidden('Access denied: Missing invoices.view permission');
+          }
           const invoices = await invoiceRepo.getAll();
           return success(invoices);
         } else if (isPhlebotomist(identity)) {
+          if (!(await hasPermission(identity, 'invoices', 'view'))) {
+            return error.forbidden('Access denied: Missing invoices.view permission');
+          }
           // Phlebotomists don't get the broad invoice list
           return success([]);
         } else {
@@ -110,6 +117,11 @@ exports.handler = async (event) => {
             if (patient && !canAccessPatient(identity, patient)) {
               return error.forbidden('Access denied: Cannot create invoice for unauthorized patient.');
             }
+          }
+        } else {
+          // Staff RBAC check
+          if (!(await hasPermission(identity, 'invoices', 'create'))) {
+            return error.forbidden('Access denied: Missing invoices.create permission');
           }
         }
 
@@ -163,6 +175,11 @@ exports.handler = async (event) => {
           // Regular patients and phlebotomists cannot directly change paymentStatus
           if (!isAdmin(identity) && !(isStaff(identity) && !isPhlebotomist(identity))) {
             return error.forbidden('Access denied: Only authorized staff or payment recording can update invoice payment status.');
+          } else {
+            // Staff RBAC check for editing invoices
+            if (!(await hasPermission(identity, 'invoices', 'edit'))) {
+              return error.forbidden('Access denied: Missing invoices.edit permission');
+            }
           }
 
           if (!isValidInvoiceTransition(existingInvoice.paymentStatus, nextStatus)) {

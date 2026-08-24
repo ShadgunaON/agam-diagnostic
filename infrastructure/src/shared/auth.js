@@ -1,7 +1,62 @@
+const rbacRepo = require('../repositories/dynamo-rbac');
+const { logger } = require('./logger');
+
 /**
  * Shared Authentication and Authorization utilities for Agam Lambda Handlers.
  * Extracts Cognito authorizer claims and enforces server-side role/ownership access control.
  */
+
+// ----------------------------------------------------
+// DYNAMODB RBAC CACHE & EVALUATION
+// ----------------------------------------------------
+let rbacCache = null;
+let rbacCacheTime = 0;
+const CACHE_TTL = 30000; // 30 seconds
+
+/**
+ * Safely load the RBAC permissions matrix from DynamoDB, with a short-lived cache.
+ */
+async function getRBACMatrix() {
+  const now = Date.now();
+  if (rbacCache && (now - rbacCacheTime < CACHE_TTL)) {
+    return rbacCache;
+  }
+  try {
+    const perms = await rbacRepo.getPermissions();
+    if (!perms) {
+      logger.warn('DynamoDB RBAC permissions matrix is completely missing.');
+      return null;
+    }
+    rbacCache = perms;
+    rbacCacheTime = now;
+    return perms;
+  } catch (err) {
+    logger.error('Failed to query DynamoDB for RBAC permissions', err);
+    return null;
+  }
+}
+
+/**
+ * Evaluates whether an authenticated identity is permitted to perform a given action on a module.
+ * FAIL-CLOSED: Any failure to load or parse permissions results in denial.
+ */
+async function hasPermission(identity, moduleId, action) {
+  if (!isStaff(identity)) return false; // Non-staff are immediately rejected from staff matrix actions
+
+  const matrix = await getRBACMatrix();
+  if (!matrix) return false; // Fail closed if DB fails
+
+  const roleId = (identity.role || '').toLowerCase();
+  if (!roleId) return false;
+
+  const roleRecord = matrix.find(r => r.roleId === roleId);
+  if (!roleRecord) return false;
+
+  const mod = (roleRecord.modules || []).find(m => m.id === moduleId);
+  if (!mod || !mod.permissions || mod.permissions.length === 0) return false;
+
+  return !!mod.permissions[0][action];
+}
 
 function extractIdentity(event) {
   let claims = event.requestContext?.authorizer?.claims;
@@ -419,6 +474,7 @@ module.exports = {
   canCreateBlog,
   canModifyBlog,
   canDeleteBlog,
+  hasPermission,
 };
 
 

@@ -1,4 +1,4 @@
-const { extractIdentity, isAdmin, isStaff, canAccessPatient } = require('../shared/auth');
+const { extractIdentity, isAdmin, isStaff, canAccessPatient, hasPermission } = require('../shared/auth');
 const { success, error } = require('../shared/response');
 const { logger } = require('../shared/logger');
 const patientRepo = require('../repositories/dynamo-patient');
@@ -64,12 +64,16 @@ exports.handler = async (event) => {
 
         // Handle /api/patients (list)
         if (isAdmin(identity) || (isStaff(identity) && !isPhlebotomist(identity))) {
+          if (!(await hasPermission(identity, 'patients', 'view'))) {
+            return error.forbidden('Access denied: Missing patients.view permission');
+          }
           const allPatients = await patientRepo.getAll();
           return success(allPatients);
         } else if (isPhlebotomist(identity)) {
           // Phlebotomists don't get the broad patient list
           return success([]);
         } else {
+          // Patient self-service (ownership check)
           const myPatients = await patientRepo.getByOwner(identity.sub);
           return success(myPatients);
         }
@@ -77,6 +81,14 @@ exports.handler = async (event) => {
 
       case 'POST': {
         const body = JSON.parse(event.body || '{}');
+        
+        // RBAC Check for staff creating patients
+        if (isStaff(identity) && !(await hasPermission(identity, 'patients', 'create'))) {
+          // Note: Patients can create their own profile/family during signup (self-service).
+          // We distinguish by checking if they are acting as staff.
+          return error.forbidden('Access denied: Missing patients.create permission');
+        }
+
         const patientId = body.id || `pat_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
         
         const newPatientData = {
@@ -124,6 +136,14 @@ exports.handler = async (event) => {
 
         if (!canAccessPatient(identity, existingPatient)) {
           return error.forbidden('Access denied: You are not authorized to update this patient record.');
+        }
+
+        // RBAC Check for staff editing patients
+        // If identity is staff and NOT the owner of the patient record, require patients.edit
+        if (isStaff(identity) && existingPatient.ownerSub !== identity.sub) {
+          if (!(await hasPermission(identity, 'patients', 'edit'))) {
+            return error.forbidden('Access denied: Missing patients.edit permission');
+          }
         }
 
         const updateBody = JSON.parse(event.body || '{}');
