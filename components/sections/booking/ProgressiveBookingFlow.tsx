@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { bookingService, invoiceService } from '@/services';
+import { bookingService } from '@/services';
 import { performGlobalSearch, SearchResultItem } from '@/app/actions/globalSearch';
 
 type BookingStep = 1 | 2 | 3 | 4;
@@ -97,13 +97,10 @@ export function ProgressiveBookingFlow() {
 
     if (result.isSuccess && result.value) {
       clearCart();
-      const invRes = await invoiceService.getAll();
-      const invoice = invRes.isSuccess ? invRes.value.find(i => i.bookingId === result.value?.id) : null;
-      if (invoice) {
-        router.push(`/payment/${invoice.id}`);
-      } else {
-        router.push(`/book/success/${result.value.id}`);
-      }
+      // Bypass the simulated payment page as per user request to remove the extra transition.
+      // The booking will remain in 'Pending' payment state, and payment will be collected
+      // offline (at lab or home collection) in this demo.
+      router.push(`/book/success/${result.value.id}`);
     } else {
       const errorMsg = !result.isSuccess ? result.error?.message : "Failed to create booking.";
       setError(errorMsg || "Failed to create booking. Please try again.");
@@ -517,7 +514,7 @@ export function ProgressiveBookingFlow() {
                     ) : (
                       <>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: '18px' }}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                        {finalTotal === 0 ? 'Confirm Free Booking' : `Pay ₹${finalTotal} Securely`}
+                        {finalTotal === 0 ? 'Confirm Free Booking' : `Confirm Booking (₹${finalTotal})`}
                       </>
                     )}
                   </button>

@@ -43,7 +43,7 @@ export class PatientService {
   }
 
   async resolvePatientBookings(patient: PatientModel) {
-    const result = await this.bookingService.getAll();
+    const result = await this.bookingService.getByPatientId(patient.id);
     if (!result.isSuccess) return [];
 
     return result.value.filter(booking => {

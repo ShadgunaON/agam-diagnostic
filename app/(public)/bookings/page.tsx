@@ -204,9 +204,9 @@ export default function BookingsPage() {
 
                     <div className="flex flex-col gap-2 min-w-[140px]">
                       {invoice?.paymentStatus === 'Pending' && (
-                        <Link href={`/payment/${invoice.id}`} className="w-full text-center py-2 px-4 bg-primary text-white text-sm font-bold rounded-full hover:bg-primary/90 transition-colors">
-                          Pay Now
-                        </Link>
+                        <span className="w-full text-center py-2 px-4 bg-slate-100 text-slate-700 text-xs font-bold rounded-full border border-slate-200">
+                          Payment Due
+                        </span>
                       )}
                       {invoice?.paymentStatus === 'Paid' && (
                         <Link href={`/bookings/${booking.id}/receipt`} className="w-full text-center py-2 px-4 bg-white border border-border text-foreground text-sm font-bold rounded-full hover:bg-bg-alt transition-colors">

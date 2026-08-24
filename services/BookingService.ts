@@ -1,6 +1,9 @@
 import { IBookingRepository } from '@/domains/booking/repository';
-
+import { Result, success as resultSuccess } from '@/shared/result';
 import { InvoiceService } from './InvoiceService';
+
+/** Extended booking result that includes the generated invoice ID when available */
+export type BookingCreateResult = import('@/domains/booking/model').BookingModel & { invoiceId?: string };
 
 export class BookingService {
   private collectionService?: import('./CollectionService').CollectionService;
@@ -22,19 +25,36 @@ export class BookingService {
     return this.repository.getAll();
   }
 
+  async getByPatientId(patientId: string) {
+    if (this.repository.getByPatientId) {
+      return this.repository.getByPatientId(patientId);
+    }
+    // Fallback if not implemented in repo
+    const all = await this.getAll();
+    if (all.isSuccess) {
+      return resultSuccess(all.value.filter(b => b.patientId === patientId));
+    }
+    return all;
+  }
+
   async getRecent(limit?: number) {
     return this.repository.getRecent(limit);
   }
 
-  async createBooking(booking: Omit<import('@/domains/booking/model').BookingModel, 'id' | 'createdAt' | 'status'>) {
+  async createBooking(booking: Omit<import('@/domains/booking/model').BookingModel, 'id' | 'createdAt' | 'status'>): Promise<Result<BookingCreateResult>> {
     const res = await this.repository.create(booking);
     if (res.isSuccess) {
+      let invoiceId: string | undefined;
       if (this.invoiceService) {
-        await this.invoiceService.generateFromBooking(res.value);
+        const invRes = await this.invoiceService.generateFromBooking(res.value);
+        if (invRes.isSuccess) {
+          invoiceId = invRes.value.id;
+        }
       }
       if (this.collectionService) {
         await this.collectionService.createFromBooking(res.value);
       }
+      return resultSuccess({ ...res.value, invoiceId });
     }
     return res;
   }

@@ -52,7 +52,7 @@ export class InvoiceService {
 
     const invoiceParams: Omit<InvoiceModel, 'id' | 'createdAt' | 'updatedAt'> = {
       bookingId: booking.id,
-      patientId: booking.patient.phone || booking.patient.email, // Using whatever id is available
+      patientId: booking.patientId || booking.patient.phone || booking.patient.email, // Authoritative identity; phone/email fallback for legacy bookings
       items,
       subtotal,
       discount,

@@ -99,6 +99,15 @@ export class ApiBookingRepository implements IBookingRepository {
     return res;
   }
 
+  async getByPatientId(patientId: string): Promise<Result<BookingModel[]>> {
+    const res = await toResult(this.apiClient.get<BookingModel[]>(`/api/bookings?patientId=${patientId}`));
+    if (res.isSuccess) {
+      const list = Array.isArray(res.value) ? res.value.map(normalizeBooking) : [];
+      return success(list);
+    }
+    return res;
+  }
+
   async getRecent(limit: number = 10): Promise<Result<BookingModel[]>> {
     const res = await toResult(this.apiClient.get<BookingModel[]>(`/api/bookings?limit=${limit}`));
     if (res.isSuccess) {
