@@ -32,6 +32,8 @@ export default function GlassBookingsPage() {
   const [sortKey, setSortKey] = useState('date_newest');
   const [bookings, setBookings] = useState<BookingModel[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [errorState, setErrorState] = useState<'none' | '401' | '403' | '500'>('none');
+  const [isLoading, setIsLoading] = useState(true);
   
   const { scope, isAdmin } = useRBAC();
   const { user } = useAuth();
@@ -39,9 +41,25 @@ export default function GlassBookingsPage() {
   useEffect(() => { 
     setMounted(true); 
     const loadBookings = async () => {
-      const result = await bookingService.getAll();
-      if (result.isSuccess) {
-        setBookings(result.value);
+      try {
+        const result = await bookingService.getAll();
+        if (result.isSuccess) {
+          setBookings(result.value);
+        } else {
+          const status = (result.error as any)?.status;
+          if (status === 401 || result.error?.message?.includes('401')) {
+            setErrorState('401');
+          } else if (status === 403 || result.error?.message?.includes('403') || result.error?.message?.includes('Forbidden')) {
+            setErrorState('403');
+          } else {
+            setErrorState('500');
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load bookings", err);
+        setErrorState('500');
+      } finally {
+        setIsLoading(false);
       }
     };
     loadBookings();
@@ -146,10 +164,31 @@ export default function GlassBookingsPage() {
 
           {/* Table Rows */}
           <div className="flex flex-col gap-3">
-            {filteredBookings.length === 0 ? (
+            {isLoading ? (
+              <div style={{ textAlign: 'center', padding: '48px 24px', color: '#64748b' }} className="animate-pulse">
+                <p style={{ fontSize: '16px', fontWeight: 600 }}>Loading bookings...</p>
+              </div>
+            ) : errorState === '401' ? (
               <div style={{ textAlign: 'center', padding: '48px 24px', color: '#64748b' }}>
-                <p style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 8px 0', color: '#334155' }}>No bookings found</p>
-                <p style={{ fontSize: '13px', margin: 0 }}>There are currently no active bookings matching this filter.</p>
+                <p style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>Your session has expired. Please sign in again.</p>
+                <button onClick={() => window.location.href = '/login'} className="px-4 py-2 bg-slate-100 rounded-lg text-sm font-semibold hover:bg-slate-200">Sign In</button>
+              </div>
+            ) : errorState === '403' ? (
+              <div style={{ textAlign: 'center', padding: '48px 24px', color: '#64748b' }}>
+                <p style={{ fontSize: '16px', fontWeight: 600 }}>You do not have permission to view these bookings.</p>
+              </div>
+            ) : errorState === '500' ? (
+              <div style={{ textAlign: 'center', padding: '48px 24px', color: '#64748b' }}>
+                <p style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>Unable to load bookings. Please try again.</p>
+                <button onClick={() => window.location.reload()} className="px-4 py-2 bg-slate-100 rounded-lg text-sm font-semibold hover:bg-slate-200">Retry</button>
+              </div>
+            ) : filteredBookings.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '48px 24px', color: '#64748b' }}>
+                <div style={{ width: '48px', height: '48px', backgroundColor: '#f1f5f9', borderRadius: '50%', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <AdminIcon name="calendar" style={{ width: '24px', height: '24px', color: '#94a3b8' }} />
+                </div>
+                <p style={{ fontSize: '16px', fontWeight: 600, color: '#334155' }}>No bookings found.</p>
+                <p style={{ fontSize: '14px', marginTop: '4px' }}>Try adjusting your filters or search query.</p>
               </div>
             ) : (
               filteredBookings

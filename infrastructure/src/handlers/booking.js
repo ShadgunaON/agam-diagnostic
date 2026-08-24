@@ -1,4 +1,4 @@
-const { extractIdentity, isAdmin, isStaff, canAccessPatient, canAccessBooking } = require('../shared/auth');
+const { extractIdentity, isAdmin, isStaff, isPhlebotomist, canAccessPatient, canAccessBooking } = require('../shared/auth');
 const { success, error } = require('../shared/response');
 const { logger } = require('../shared/logger');
 const bookingRepo = require('../repositories/dynamo-booking');
@@ -72,21 +72,36 @@ exports.handler = async (event) => {
 
         // Handle /api/bookings (list)
         if (isAdmin(identity) || (isStaff(identity) && !isPhlebotomist(identity))) {
-          const limit = queryStringParameters.limit ? parseInt(queryStringParameters.limit, 10) : 20;
-          const bookings = await bookingRepo.getRecent(limit);
+          const limit = queryStringParameters.limit ? parseInt(queryStringParameters.limit, 10) : 100;
+          let bookings = await bookingRepo.getRecent(limit);
+          bookings = bookings.sort((a, b) => {
+            const dateA = new Date(a.createdAt || 0).getTime();
+            const dateB = new Date(b.createdAt || 0).getTime();
+            return dateB - dateA;
+          });
           return success(bookings);
         } else if (isPhlebotomist(identity)) {
           // Phlebotomists don't have broad booking list access
           return success([]);
         } else {
-          // Regular patient: retrieve bookings for all owned patients
-          const ownedPatients = await patientRepo.getByOwner(identity.sub);
-          const allPatientIds = new Set([identity.primaryPatientId, identity.sub, ...ownedPatients.map((p) => p.id)]);
+          // Regular patient: retrieve bookings for self + family members
+          const allPatientIds = new Set([identity.primaryPatientId, identity.sub]);
+          
+          const primaryPatient = await patientRepo.getById(identity.primaryPatientId);
+          if (primaryPatient && Array.isArray(primaryPatient.savedPatients)) {
+            primaryPatient.savedPatients.forEach(p => {
+              if (p.id) allPatientIds.add(p.id);
+            });
+          }
 
           const bookingLists = await Promise.all(
             Array.from(allPatientIds).map((pId) => bookingRepo.getByPatientId(pId))
           );
-          const flattened = bookingLists.flat();
+          let flattened = bookingLists.flat();
+          
+          // Secure ownership boundary: only return bookings owned by the authenticated identity
+          flattened = flattened.filter(b => b.ownerSub === identity.sub);
+          
           return success(flattened);
         }
       }
