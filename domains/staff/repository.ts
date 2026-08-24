@@ -11,4 +11,5 @@ export interface IStaffRepository {
   updateStaff(id: string, updates: Partial<StaffModel>): Promise<Result<StaffModel>>;
   createRole(role: RoleModel): Promise<Result<RoleModel>>;
   updateRolePermissions(roleId: string, moduleId: string, field: 'view' | 'create' | 'edit' | 'del', value: boolean): Promise<Result<void>>;
+  updateAllPermissions(map: Record<string, ModuleDataModel[]>): Promise<Result<void>>;
 }

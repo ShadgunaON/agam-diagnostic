@@ -62,7 +62,7 @@ export function AdminSidebar(props: { isCollapsed?: boolean, setIsCollapsed?: (v
 
   const { isCollapsed = false, setIsCollapsed = () => {} } = props || {};
   const pathname = usePathname();
-  const { accessibleModules, isAdmin, role, isLoading } = useRBAC();
+  const { accessibleModules, role, isLoading } = useRBAC();
   const { user, logout } = useAuth();
 
   if (!mounted) return null;
@@ -113,7 +113,7 @@ export function AdminSidebar(props: { isCollapsed?: boolean, setIsCollapsed?: (v
           // Filter items by RBAC accessible modules
           const visibleItems = isLoading
             ? [] // Don't show items while loading
-            : group.items.filter(item => isAdmin || accessibleModules.includes(item.moduleId));
+            : group.items.filter(item => accessibleModules.includes(item.moduleId));
           if (visibleItems.length === 0) return null;
 
           return (

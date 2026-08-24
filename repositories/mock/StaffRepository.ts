@@ -133,4 +133,14 @@ export class MockStaffRepository implements IStaffRepository {
     await this.permissionsAdapter.save(perms);
     return success(undefined);
   }
+
+  async updateAllPermissions(map: Record<string, ModuleDataModel[]>): Promise<Result<void>> {
+    const records = Object.entries(map).map(([roleId, modules]) => ({
+      id: roleId,
+      roleId,
+      modules
+    }));
+    await this.permissionsAdapter.save(records);
+    return success(undefined);
+  }
 }

@@ -22,8 +22,6 @@ export class PermissionEvaluator {
     action: PermissionAction,
     permissionsMap: Record<string, ModuleDataModel[]>
   ): boolean {
-    if (roleId === 'admin') return true;
-
     const modules = permissionsMap[roleId];
     if (!modules) return false;
 
@@ -40,20 +38,6 @@ export class PermissionEvaluator {
     roleId: string,
     permissionsMap: Record<string, ModuleDataModel[]>
   ): string[] {
-    if (roleId === 'admin') {
-      // Admin has access to all modules in the map, plus standard fallbacks if map is empty/corrupt
-      const allModuleIds = new Set<string>([
-        'analytics', 'orders', 'collections', 'patients', 'reports',
-        'invoices', 'reviews', 'staff', 'blogs', 'settings'
-      ]);
-      for (const modules of Object.values(permissionsMap)) {
-        for (const m of modules) {
-          allModuleIds.add(m.id);
-        }
-      }
-      return Array.from(allModuleIds);
-    }
-
     const modules = permissionsMap[roleId];
     if (!modules) return [];
 

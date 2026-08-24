@@ -100,12 +100,15 @@ export default function HighlyVisualizedStaffRoles() {
   const handleSavePermissions = async () => {
     if (pendingPermissions.length === 0) return;
     
-    for (const change of pendingPermissions) {
-      await staffService.updateRolePermissions(change.roleId, change.moduleId, change.field, change.value);
-    }
+    // Use the new batch save API for efficiency
+    const result = await staffService.updateAllPermissions(rolePermissions);
     
-    setPendingPermissions([]);
-    toast({ title: 'Permissions Saved', description: 'Matrix configuration has been updated successfully.', variant: 'success' });
+    if (result.isSuccess) {
+      setPendingPermissions([]);
+      toast({ title: 'Permissions Saved', description: 'Matrix configuration has been updated successfully.', variant: 'success' });
+    } else {
+      toast({ title: 'Save Failed', description: result.error?.message || 'Failed to update permissions.', variant: 'danger' });
+    }
   };
 
   const handleSendInvite = async () => {

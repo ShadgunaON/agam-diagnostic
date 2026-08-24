@@ -1,4 +1,6 @@
 import { IStaffRepository } from '@/domains/staff/repository';
+import { Result } from '@/shared/result';
+import { ModuleDataModel } from '@/domains/staff/model';
 
 export class StaffService {
   constructor(private readonly repository: IStaffRepository) {}
@@ -35,7 +37,11 @@ export class StaffService {
     return this.repository.createRole(role);
   }
 
-  async updateRolePermissions(roleId: string, moduleId: string, field: 'view' | 'create' | 'edit' | 'del', value: boolean) {
+  async updateRolePermissions(roleId: string, moduleId: string, field: 'view' | 'create' | 'edit' | 'del', value: boolean): Promise<Result<void>> {
     return this.repository.updateRolePermissions(roleId, moduleId, field, value);
+  }
+
+  async updateAllPermissions(map: Record<string, ModuleDataModel[]>): Promise<Result<void>> {
+    return this.repository.updateAllPermissions(map);
   }
 }

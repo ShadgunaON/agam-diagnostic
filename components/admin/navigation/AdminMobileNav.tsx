@@ -6,37 +6,51 @@ import { usePathname } from 'next/navigation';
 import { AdminIcon } from './AdminIcons';
 import { Drawer } from '@/components/ui/Drawer';
 
-type Role = 'ADMIN' | 'DOCTOR' | 'STAFF' | 'PHLEBOTOMIST';
+import { useRBAC } from '@/hooks/useRBAC';
 
-const adminNavigation = [
+interface NavigationItem {
+  title: string;
+  href: string;
+  icon: any;
+  moduleId: string;
+}
+
+interface NavigationGroup {
+  title: string;
+  items: NavigationItem[];
+}
+
+const adminNavigation: NavigationGroup[] = [
   {
     title: 'Overview',
     items: [
-      { title: 'Dashboard', href: '/admin', icon: 'dashboard' as const, roles: ['ADMIN', 'DOCTOR', 'STAFF'] },
-      { title: 'Analytics', href: '/admin/analytics', icon: 'chart' as const, roles: ['ADMIN'] },
+      { title: 'Dashboard', href: '/admin', icon: 'dashboard', moduleId: 'analytics' },
+      { title: 'Analytics', href: '/admin/analytics', icon: 'chart', moduleId: 'analytics' },
     ]
   },
   {
     title: 'Operations',
     items: [
-      { title: 'Bookings', href: '/admin/bookings', icon: 'calendar' as const, roles: ['ADMIN', 'STAFF', 'PHLEBOTOMIST'] },
-      { title: 'Collections', href: '/admin/collections', icon: 'mapPin' as const, roles: ['ADMIN', 'STAFF', 'PHLEBOTOMIST'] },
-      { title: 'Patients', href: '/admin/patients', icon: 'users' as const, roles: ['ADMIN', 'DOCTOR', 'STAFF'] },
-      { title: 'Ledger & Invoices', href: '/admin/invoices', icon: 'fileText' as const, roles: ['ADMIN', 'STAFF'] },
-      { title: 'Reports', href: '/admin/reports', icon: 'file' as const, roles: ['ADMIN', 'DOCTOR', 'STAFF'] },
+      { title: 'Bookings', href: '/admin/bookings', icon: 'calendar', moduleId: 'orders' },
+      { title: 'Collections', href: '/admin/collections', icon: 'mapPin', moduleId: 'collections' },
+      { title: 'Patients', href: '/admin/patients', icon: 'users', moduleId: 'patients' },
+      { title: 'Ledger & Invoices', href: '/admin/invoices', icon: 'fileText', moduleId: 'invoices' },
+      { title: 'Reports', href: '/admin/reports', icon: 'file', moduleId: 'reports' },
+      { title: 'Reviews', href: '/admin/reviews', icon: 'fileText', moduleId: 'reviews' },
     ]
   },
   {
     title: 'Management',
     items: [
-      { title: 'Staff & Roles', href: '/admin/staff', icon: 'userCog' as const, roles: ['ADMIN'] },
-      { title: 'Content / Blogs', href: '/admin/blogs', icon: 'fileText' as const, roles: ['ADMIN'] },
+      { title: 'Staff & Roles', href: '/admin/staff', icon: 'userCog', moduleId: 'staff' },
+      { title: 'Content / Blogs', href: '/admin/blogs', icon: 'fileText', moduleId: 'blogs' },
+      { title: 'Newsletter', href: '/admin/newsletter', icon: 'mail', moduleId: 'blogs' },
     ]
   },
   {
     title: 'System',
     items: [
-      { title: 'Settings', href: '/admin/settings', icon: 'settings' as const, roles: ['ADMIN'] },
+      { title: 'Settings', href: '/admin/settings', icon: 'settings', moduleId: 'settings' },
     ]
   }
 ];
@@ -44,13 +58,7 @@ const adminNavigation = [
 export function AdminMobileNav() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
-  
-  // Mock role for now
-  const userRole: Role = 'ADMIN';
-
-  const hasPermission = (userRole: Role, allowedRoles: string[]) => {
-    return allowedRoles.includes(userRole);
-  };
+  const { accessibleModules, isLoading } = useRBAC();
 
   const closeMenu = () => setIsOpen(false);
 
@@ -80,7 +88,9 @@ export function AdminMobileNav() {
         
         <Drawer.Body className="p-4 bg-white flex-1 overflow-y-auto">
           {adminNavigation.map((group) => {
-            const visibleItems = group.items.filter(item => hasPermission(userRole, item.roles));
+            const visibleItems = isLoading
+              ? []
+              : group.items.filter(item => accessibleModules.includes(item.moduleId));
             if (visibleItems.length === 0) return null;
 
             return (
