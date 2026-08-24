@@ -1,0 +1,15 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "agam-diagnostics-foundation"
+resolve_s3 = true
+s3_prefix = "agam-diagnostics-foundation"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+
+[default.build.parameters]
+region = "us-east-1"
+
+[default.validate.parameters]
+region = "us-east-1"
