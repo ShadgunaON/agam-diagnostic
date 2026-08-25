@@ -4,7 +4,7 @@ import { Result, success, failure } from '@/shared/result';
 import { IApiClient } from '@/lib/api/client';
 import { toResult } from '@/lib/api/utils';
 import { mockRoles } from '@/data/roles';
-import { mockPermissionsMap } from '@/data/permissions';
+import { mockPermissionsMap, createRolePerms } from '@/data/permissions';
 
 /**
  * API Staff Repository
@@ -107,7 +107,7 @@ export class ApiStaffRepository implements IStaffRepository {
 
     for (const r of records) {
       if (!r.modules || r.modules.length === 0) {
-        map[r.roleId] = (mockPermissionsMap[r.roleId] as ModuleDataModel[]) || [];
+        map[r.roleId] = (mockPermissionsMap[r.roleId] as ModuleDataModel[]) || createRolePerms({});
       } else {
         map[r.roleId] = r.modules;
       }
@@ -124,8 +124,11 @@ export class ApiStaffRepository implements IStaffRepository {
   }
 
   async createRole(role: RoleModel): Promise<Result<RoleModel>> {
-    // Currently unimplemented on backend, UI doesn't strictly depend on it for P6
-    return failure(new Error('createRole not implemented on API'));
+    const result = await toResult(this.apiClient.post<RoleModel>('/api/staff/roles', role));
+    if (result.isSuccess) {
+      return success(result.value);
+    }
+    return failure(result.error);
   }
 
   async updateRolePermissions(roleId: string, moduleId: string, field: 'view' | 'create' | 'edit' | 'del', value: boolean): Promise<Result<void>> {
