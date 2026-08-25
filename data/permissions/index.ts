@@ -11,6 +11,7 @@ export const baseModules: ModuleData[] = [
   { id: 'analytics', title: 'Analytics', description: 'View dashboards and business metrics.', permissions: [{ name: 'analytics', description: '', view: false, create: false, edit: false, del: false, assign: false }] },
   { id: 'settings', title: 'Settings', description: 'System configuration and preferences.', permissions: [{ name: 'settings', description: '', view: false, create: false, edit: false, del: false, assign: false }] },
   { id: 'blogs', title: 'Content / Blogs', description: 'Manage blog posts and content.', permissions: [{ name: 'blogs', description: '', view: false, create: false, edit: false, del: false, assign: false }] },
+  { id: 'newsletter', title: 'Newsletter', description: 'Manage newsletter subscriptions.', permissions: [{ name: 'newsletter', description: '', view: false, create: false, edit: false, del: false, assign: false }] },
   { id: 'invoices', title: 'Ledger & Invoices', description: 'View and manage financial records.', permissions: [{ name: 'invoices', description: '', view: false, create: false, edit: false, del: false, assign: false }] },
   { id: 'reviews', title: 'Reviews', description: 'View and manage patient reviews.', permissions: [{ name: 'reviews', description: '', view: false, create: false, edit: false, del: false, assign: false }] },
 ];
@@ -31,7 +32,7 @@ export const mockPermissionsMap: Record<string, ModuleData[]> = {
   admin: createRolePerms({
     patients: allTrue, orders: allTrue, collections: allTrue, reports: allTrue,
     catalog: allTrue, staff: allTrue, analytics: allTrue, settings: allTrue,
-    blogs: allTrue, invoices: allTrue, reviews: allTrue
+    blogs: allTrue, newsletter: { view: true }, invoices: allTrue, reviews: allTrue
   }),
   op: createRolePerms({
     patients: { view: true, create: true, edit: true },

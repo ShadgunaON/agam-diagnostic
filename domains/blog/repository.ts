@@ -1,5 +1,5 @@
 import { Result } from '../../shared/result';
-import { BlogArticle, BlogCategory, BlogHero, PopularRead } from './model';
+import { BlogArticle, BlogCategory, BlogHero, PopularRead, NewsletterSubscriber } from './model';
 import { PaginatedResponse } from '../../lib/api/types';
 
 export interface IBlogRepository {
@@ -14,5 +14,6 @@ export interface IBlogRepository {
   updateArticle(id: string, updates: Partial<BlogArticle>): Promise<Result<BlogArticle>>;
   deleteArticle(id: string): Promise<Result<void>>;
   
-  subscribeToNewsletter(email: string): Promise<Result<void>>;
+  subscribeToNewsletter(email: string): Promise<Result<{ message: string; subscriber: NewsletterSubscriber }>>;
+  getNewsletterSubscribers(): Promise<Result<NewsletterSubscriber[]>>;
 }

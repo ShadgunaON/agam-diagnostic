@@ -7,8 +7,9 @@ export class NotificationService {
   async getMyNotifications(userId?: string) {
     return this.repository.getByUserId(userId);
   }
-
-
+  async create(notification: any) {
+    return this.repository.create(notification);
+  }
   async markAsRead(id: string) {
     return this.repository.markAsRead(id);
   }

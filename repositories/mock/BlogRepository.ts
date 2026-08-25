@@ -124,13 +124,38 @@ export class MockBlogRepository implements IBlogRepository {
     return success(undefined);
   }
 
-  private subscribers: string[] = [];
+  private subscribers: any[] = [];
 
-  async subscribeToNewsletter(email: string): Promise<Result<void>> {
-    if (this.subscribers.includes(email)) {
-      return failure(new Error('Email already subscribed'));
+  async subscribeToNewsletter(email: string): Promise<Result<{ message: string; subscriber: any }>> {
+    const existing = this.subscribers.find(s => s.email === email);
+    if (!existing) {
+      const sub = { id: Date.now().toString(), email, status: 'Active', subscribedAt: new Date().toISOString() };
+      this.subscribers.push(sub);
+      
+      try {
+        // Dispatch notification to mock admin to mirror backend behavior
+        const { notificationService } = await import('@/services');
+        const { PRESEEDED_EXISTING_USER, ADMIN_USER } = await import('@/repositories/mock/AuthRepository');
+        
+        await notificationService.create({
+          userId: ADMIN_USER.staffId || ADMIN_USER.id,
+          title: 'New Newsletter Subscriber',
+          message: `${email} has subscribed to the newsletter.`,
+          type: 'success',
+          link: '/admin/newsletter',
+          ownerSub: PRESEEDED_EXISTING_USER.id, // Just a placeholder owner
+          createdBy: 'system'
+        });
+      } catch (err) {
+        console.warn('Failed to dispatch mock newsletter notification', err);
+      }
+      
+      return success({ message: 'Subscribed successfully', subscriber: sub });
     }
-    this.subscribers.push(email);
-    return success(undefined);
+    return success({ message: 'Subscribed successfully', subscriber: existing });
+  }
+
+  async getNewsletterSubscribers(): Promise<Result<any[]>> {
+    return success(this.subscribers);
   }
 }

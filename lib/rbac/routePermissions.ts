@@ -26,6 +26,7 @@ export const routePermissions: Record<string, RoutePermission> = {
   '/admin/reviews': { moduleId: 'reviews', action: 'view' },
   '/admin/staff': { moduleId: 'staff', action: 'view' },
   '/admin/blogs': { moduleId: 'blogs', action: 'view' },
+  '/admin/newsletter': { moduleId: 'newsletter', action: 'view' },
   '/admin/settings': { moduleId: 'settings', action: 'view' },
 };
 
@@ -65,6 +66,7 @@ export const sidebarModuleMap: Record<string, string> = {
   '/admin/reviews': 'reviews',
   '/admin/staff': 'staff',
   '/admin/blogs': 'blogs',
+  '/admin/newsletter': 'newsletter',
   '/admin/settings': 'settings',
 };
 

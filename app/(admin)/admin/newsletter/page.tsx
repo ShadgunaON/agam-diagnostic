@@ -4,28 +4,32 @@ import React, { useState, useEffect } from 'react';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
 import { NewsletterSubscriber } from '@/domains/blog/model';
-
-// Mock some realistic data for the admin UI demonstration
-const MOCK_SUBSCRIBERS: NewsletterSubscriber[] = [
-  { id: '1', email: 'johndoe@example.com', subscribedAt: 'Aug 10, 2026', status: 'Active' },
-  { id: '2', email: 'sarah.williams@company.net', subscribedAt: 'Aug 11, 2026', status: 'Active' },
-  { id: '3', email: 'michael_chen@startup.io', subscribedAt: 'Aug 12, 2026', status: 'Active' },
-  { id: '4', email: 'emily.davis@healthcare.org', subscribedAt: 'Aug 13, 2026', status: 'Unsubscribed' },
-  { id: '5', email: 'robert_johnson@email.com', subscribedAt: 'Aug 14, 2026', status: 'Active' },
-];
+import { blogService } from '@/services';
 
 export default function AdminNewsletterPage() {
   const [mounted, setMounted] = useState(false);
   const [subscribers, setSubscribers] = useState<NewsletterSubscriber[]>([]);
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
-    // In a real implementation, we would fetch from blogService.getNewsletterSubscribers()
-    // For now, we simulate an API call using the mock data.
-    setTimeout(() => {
-      setSubscribers(MOCK_SUBSCRIBERS);
-    }, 400);
+    async function loadSubscribers() {
+      try {
+        const result = await blogService.getNewsletterSubscribers();
+        if (result.isSuccess) {
+          setSubscribers(result.value);
+        } else {
+          setError(result.error.message || 'Failed to load subscribers');
+        }
+      } catch (err: any) {
+        setError(err.message || 'An unexpected error occurred');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadSubscribers();
   }, []);
 
   if (!mounted) return null;
@@ -93,55 +97,69 @@ export default function AdminNewsletterPage() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[600px] text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/80">
-                  <th className="px-6 py-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">Email Address</th>
-                  <th className="px-6 py-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">Subscribed Date</th>
-                  <th className="px-6 py-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredSubscribers.map((subscriber) => (
-                  <tr key={subscriber.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs shrink-0">
-                          {subscriber.email[0].toUpperCase()}
+          {loading ? (
+            <div className="p-12 text-center text-slate-500 font-medium text-sm flex flex-col items-center gap-3">
+              <svg className="animate-spin h-6 w-6 text-blue-500" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+              Loading subscribers...
+            </div>
+          ) : error ? (
+            <div className="p-12 text-center text-red-500 font-medium text-sm flex flex-col items-center gap-2">
+              <AdminIcon name="alertTriangle" className="w-6 h-6" />
+              {error}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[600px] text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50/80">
+                    <th className="px-6 py-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">Email Address</th>
+                    <th className="px-6 py-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">Subscribed Date</th>
+                    <th className="px-6 py-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredSubscribers.map((subscriber) => (
+                    <tr key={subscriber.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs shrink-0">
+                            {subscriber.email[0].toUpperCase()}
+                          </div>
+                          <span className="text-[14px] font-semibold text-slate-800">{subscriber.email}</span>
                         </div>
-                        <span className="text-[14px] font-semibold text-slate-800">{subscriber.email}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${
-                        subscriber.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
-                      }`}>
-                        {subscriber.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-[14px] font-medium text-slate-500">{subscriber.subscribedAt}</span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button className="text-slate-400 hover:text-blue-500 transition-colors p-1 rounded hover:bg-blue-50">
-                        <AdminIcon name="moreVertical" className="w-5 h-5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                
-                {filteredSubscribers.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-slate-500 text-[14px] font-medium">
-                      No subscribers found matching your search.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${
+                          subscriber.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          {subscriber.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-[14px] font-medium text-slate-500">
+                          {new Date(subscriber.subscribedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button className="text-slate-400 hover:text-blue-500 transition-colors p-1 rounded hover:bg-blue-50">
+                          <AdminIcon name="moreVertical" className="w-5 h-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  
+                  {filteredSubscribers.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-12 text-center text-slate-500 text-[14px] font-medium">
+                        No subscribers found matching your search.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </AdminPageTemplate>

@@ -373,6 +373,7 @@ const defaultMockPermissionsMap = {
     { id: 'analytics', title: 'Analytics', description: '', permissions: [{ ...ALL_TRUE, name: 'analytics', description: '' }] },
     { id: 'settings', title: 'Settings', description: '', permissions: [{ ...ALL_TRUE, name: 'settings', description: '' }] },
     { id: 'blogs', title: 'Content / Blogs', description: '', permissions: [{ ...ALL_TRUE, name: 'blogs', description: '' }] },
+    { id: 'newsletter', title: 'Newsletter', description: '', permissions: [{ view: true, create: false, edit: false, del: false, assign: false, name: 'newsletter', description: '' }] },
     { id: 'invoices', title: 'Ledger & Invoices', description: '', permissions: [{ ...ALL_TRUE, name: 'invoices', description: '' }] },
     { id: 'reviews', title: 'Reviews', description: '', permissions: [{ ...ALL_TRUE, name: 'reviews', description: '' }] }
   ],

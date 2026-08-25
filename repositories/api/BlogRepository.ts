@@ -1,5 +1,5 @@
 import { IBlogRepository } from '@/domains/blog/repository';
-import { BlogArticle, BlogCategory, BlogHero, PopularRead } from '@/domains/blog/model';
+import { BlogArticle, BlogCategory, BlogHero, PopularRead, NewsletterSubscriber } from '@/domains/blog/model';
 import { Result, success, failure } from '@/shared/result';
 import { PaginatedResponse } from '@/lib/api/types';
 import { NotFoundError } from '@/lib/api/errors';
@@ -67,8 +67,11 @@ export class ApiBlogRepository implements IBlogRepository {
     return toResult(this.apiClient.delete<void>(`/api/blogs/${encodeURIComponent(id)}`));
   }
 
-  async subscribeToNewsletter(_email: string): Promise<Result<void>> {
-    // Explicitly deferred per P3C.12 requirements (Newsletter separation)
-    return success(undefined);
+  async subscribeToNewsletter(email: string): Promise<Result<{ message: string; subscriber: NewsletterSubscriber }>> {
+    return toResult(this.apiClient.post<{ message: string; subscriber: NewsletterSubscriber }>('/api/newsletter/subscribe', { email }));
+  }
+
+  async getNewsletterSubscribers(): Promise<Result<NewsletterSubscriber[]>> {
+    return toResult(this.apiClient.get<NewsletterSubscriber[]>('/api/newsletter/subscribers'));
   }
 }

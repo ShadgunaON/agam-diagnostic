@@ -2,6 +2,8 @@ const { extractIdentity, isAdmin, canAccessBlog, hasPermission } = require('../s
 const { success, error } = require('../shared/response');
 const { logger } = require('../shared/logger');
 const blogRepo = require('../repositories/dynamo-blog');
+const newsletterRepo = require('../repositories/dynamo-newsletter');
+const notificationRepo = require('../repositories/dynamo-notification');
 
 function sanitizePublicBlog(article) {
   if (!article) return null;
@@ -43,6 +45,66 @@ exports.handler = async (event) => {
     const segments = proxy.split('/').filter(Boolean);
     const resourceId = segments[0] ? decodeURIComponent(segments[0]) : null;
     const isCollection = !resourceId;
+    const isNewsletter = event.path.startsWith('/api/newsletter');
+
+    // ----------------------------------------------------
+    // NEWSLETTER ENDPOINTS
+    // ----------------------------------------------------
+    if (isNewsletter) {
+      if (method === 'POST' && event.path === '/api/newsletter/subscribe') {
+        let body = {};
+        try {
+          body = JSON.parse(event.body || '{}');
+        } catch {
+          return error.badRequest('Invalid JSON body');
+        }
+
+        if (!body.email || !/^\S+@\S+\.\S+$/.test(body.email)) {
+          return error.badRequest('Valid email is required');
+        }
+
+        const result = await newsletterRepo.subscribe(body.email);
+        
+        // If it's a new or reactivated subscription, notify admins
+        if (result.isNew) {
+          try {
+            const staffRepo = require('../repositories/dynamo-staff');
+            const allStaff = await staffRepo.getAllStaff();
+            const admins = allStaff.filter(s => s.role === 'admin' || s.role === 'superadmin');
+            
+            const promises = admins.map(admin => 
+              notificationRepo.create({
+                userId: admin.id,
+                title: 'New Newsletter Subscriber',
+                message: `${result.subscriber.email} has subscribed to the newsletter.`,
+                type: 'success',
+                link: '/admin/newsletter',
+                isRead: false,
+                createdBy: identity.sub || 'system'
+              }).catch(err => logger.error(`Failed to create newsletter notification for ${admin.id}`, err))
+            );
+            await Promise.all(promises);
+          } catch (error) {
+            logger.error('Failed to dispatch admin newsletter notifications', error);
+          }
+        }
+
+        return success({ message: 'Subscribed successfully', subscriber: result.subscriber });
+      }
+
+      if (method === 'GET' && event.path === '/api/newsletter/subscribers') {
+        if (!identity) {
+          return error.unauthorized('Unauthorized');
+        }
+        if (!(await hasPermission(identity, 'newsletter', 'view')) && !(await hasPermission(identity, 'blogs', 'view'))) {
+          return error.forbidden('Forbidden: Missing newsletter.view or blogs.view permission');
+        }
+        const subscribers = await newsletterRepo.getAll();
+        return success(subscribers);
+      }
+
+      return error(405, 'METHOD_NOT_ALLOWED', 'Method Not Allowed');
+    }
 
     // ----------------------------------------------------
     // GET /api/blogs or GET /api/blogs/{slugOrId}

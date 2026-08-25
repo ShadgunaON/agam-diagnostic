@@ -563,6 +563,20 @@ Resources:
             RestApiId: !Ref AgamApi
             Path: /api/blogs/{proxy+}
             Method: any
+        PublicNewsletterSubscribe:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AgamApi
+            Path: /api/newsletter/subscribe
+            Method: post
+            Auth:
+              Authorizer: NONE
+        AdminNewsletterSubscribers:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AgamApi
+            Path: /api/newsletter/subscribers
+            Method: get
 
   StaffFunction:
     Type: AWS::Serverless::Function

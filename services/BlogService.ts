@@ -43,4 +43,8 @@ export class BlogService {
   async subscribeToNewsletter(email: string) {
     return this.repository.subscribeToNewsletter(email);
   }
+
+  async getNewsletterSubscribers() {
+    return this.repository.getNewsletterSubscribers();
+  }
 }
