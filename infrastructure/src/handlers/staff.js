@@ -89,9 +89,18 @@ async function handleCreateStaff(event, identity) {
   if (!phone || typeof phone !== 'string' || phone.trim().length === 0) {
     return respond(400, { error: 'Employee phone number is required.' });
   }
-  if (!role || !VALID_STAFF_ROLES.includes(role)) {
+  // Fetch dynamic roles to validate
+  let validRoles = VALID_STAFF_ROLES;
+  try {
+    const dbRoles = await rbacRepo.getRoles();
+    if (dbRoles) validRoles = dbRoles.map(r => r.id);
+  } catch (err) {
+    console.warn('Could not fetch roles for validation, using fallback');
+  }
+
+  if (!role || !validRoles.includes(role)) {
     return respond(400, {
-      error: `Invalid role. Must be one of: ${VALID_STAFF_ROLES.join(', ')}`,
+      error: `Invalid role. Must be one of: ${validRoles.join(', ')}`,
     });
   }
 
@@ -238,10 +247,20 @@ async function handleUpdateStaff(staffId, event, identity) {
   }
 
   // Validate role if being changed
-  if (body.role && !VALID_STAFF_ROLES.includes(body.role)) {
-    return respond(400, {
-      error: `Invalid role. Must be one of: ${VALID_STAFF_ROLES.join(', ')}`,
-    });
+  if (body.role) {
+    let validRoles = VALID_STAFF_ROLES;
+    try {
+      const dbRoles = await rbacRepo.getRoles();
+      if (dbRoles) validRoles = dbRoles.map(r => r.id);
+    } catch (err) {
+      console.warn('Could not fetch roles for validation, using fallback');
+    }
+
+    if (!validRoles.includes(body.role)) {
+      return respond(400, {
+        error: `Invalid role. Must be one of: ${validRoles.join(', ')}`,
+      });
+    }
   }
 
   // Block sensitive field modifications
@@ -286,6 +305,58 @@ async function handleGetRoles(identity) {
   } catch (err) {
     console.error('Failed to get roles:', err);
     return respond(500, { error: 'Failed to fetch roles.' });
+  }
+}
+
+async function handleCreateRole(event, identity) {
+  if (!isAdmin(identity)) {
+    return respond(403, { error: 'Only administrators can create custom roles.' });
+  }
+
+  let body;
+  try {
+    body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
+  } catch {
+    return respond(400, { error: 'Invalid JSON body.' });
+  }
+
+  const { id, title, internal, desc, color } = body;
+  if (!id || !title || !internal) {
+    return respond(400, { error: 'Role id, title, and internal identifier are required.' });
+  }
+
+  // System roles boundary check
+  if (VALID_STAFF_ROLES.includes(id)) {
+    return respond(400, { error: 'Cannot override system roles.' });
+  }
+
+  try {
+    let roles = await rbacRepo.getRoles() || [];
+    if (roles.find(r => r.id === id)) {
+      return respond(409, { error: 'A role with this ID already exists.' });
+    }
+
+    const newRole = { id, title, internal, users: 0, desc: desc || 'Custom role', color: color || '#0ea5e9' };
+    roles.push(newRole);
+    await rbacRepo.setRoles(roles);
+
+    // Initialize fail-closed permissions matrix
+    let perms = await rbacRepo.getPermissions() || [];
+    if (!perms.find(p => p.roleId === id)) {
+      const emptyModules = defaultMockPermissionsMap.admin.map(m => ({
+        id: m.id,
+        title: m.title,
+        description: m.description,
+        permissions: [{ view: false, create: false, edit: false, del: false, assign: false, name: m.permissions[0].name, description: m.permissions[0].description }]
+      }));
+      perms.push({ id, roleId: id, modules: emptyModules });
+      await rbacRepo.setPermissions(perms);
+    }
+
+    return respond(201, newRole);
+  } catch (err) {
+    console.error('Failed to create role:', err);
+    return respond(500, { error: 'Failed to create role.' });
   }
 }
 
@@ -400,6 +471,7 @@ exports.handler = async (event) => {
   // RBAC Routes
   if (path.endsWith('/roles') || path.includes('/api/staff/roles')) {
     if (method === 'GET') return handleGetRoles(identity);
+    if (method === 'POST') return handleCreateRole(event, identity);
     return respond(405, { error: `Method ${method} not allowed for /roles.` });
   }
 
