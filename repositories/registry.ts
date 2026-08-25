@@ -107,6 +107,10 @@ export const documentRepository: IDocumentRepository = env.useMockData
   ? new MockDocumentRepository()
   : new ApiDocumentRepository(apiClient);
 
+export const reportsRepository: IReportsRepository = env.useMockData
+  ? new MockReportsRepository()
+  : new ApiReportsRepository(apiClient);
+
 // ==========================================================
 // CONTENT-CATALOG REPOSITORIES (No backend Lambda exists yet)
 // These always use local data repositories in ALL modes.
@@ -117,7 +121,6 @@ export const documentRepository: IDocumentRepository = env.useMockData
 export const serviceRepository: IServicesRepository = new MockServiceRepository();
 export const packageRepository: IPackagesRepository = new MockPackageRepository();
 export const testRepository: ITestsRepository = new MockTestRepository();
-export const reportsRepository: IReportsRepository = new MockReportsRepository();
 export const staffRepository: IStaffRepository = env.useMockData
   ? new MockStaffRepository()
   : new ApiStaffRepository(apiClient);

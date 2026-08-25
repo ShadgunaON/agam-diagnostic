@@ -486,6 +486,33 @@ Resources:
             Path: /api/documents/{proxy+}
             Method: any
 
+  ReportFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        EntryPoints:
+          - src/handlers/report.js
+    Properties:
+      CodeUri: .
+      Handler: src/handlers/report.handler
+      Role: !GetAtt AgamLambdaExecutionRole.Arn
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AgamApi
+            Path: /api/reports
+            Method: any
+        ApiProxy:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AgamApi
+            Path: /api/reports/{proxy+}
+            Method: any
+
   ReviewFunction:
     Type: AWS::Serverless::Function
     Metadata:

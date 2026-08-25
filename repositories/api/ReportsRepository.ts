@@ -1,26 +1,57 @@
 import { IReportsRepository } from '@/domains/reports/repository';
 import { ReportsModel, ReportTaskModel } from '@/domains/reports/model';
-import { Result, failure } from '@/shared/result';
+import { Result, failure, success } from '@/shared/result';
 import { ServerError } from '@/lib/api/errors';
 import { IApiClient } from '@/lib/api/client';
 
 export class ApiReportsRepository implements IReportsRepository {
   constructor(private readonly apiClient: IApiClient) {}
 
-  async getById(_id: string): Promise<Result<ReportsModel>> {
-    void _id;
-    return failure(new ServerError('Reports API not implemented'));
+  async getById(id: string): Promise<Result<ReportsModel>> {
+    try {
+      const response = await this.apiClient.get<ReportsModel>(`/reports/${id}`);
+      if (response.error) {
+        return failure(new ServerError(response.error.message || 'Failed to fetch report'));
+      }
+      return success(response.data!);
+    } catch (err: any) {
+      return failure(new ServerError(err.message || 'Failed to fetch report'));
+    }
   }
 
   async getAllTasks(): Promise<Result<ReportTaskModel[]>> {
-    return failure(new ServerError('Reports API not implemented'));
+    try {
+      const response = await this.apiClient.get<ReportTaskModel[]>('/reports');
+      if (response.error) {
+        return failure(new ServerError(response.error.message || 'Failed to fetch reports'));
+      }
+      return success(response.data || []);
+    } catch (err: any) {
+      return failure(new ServerError(err.message || 'Failed to fetch reports'));
+    }
   }
 
   async updateStatus(id: string, status: ReportTaskModel['status']): Promise<Result<ReportTaskModel>> {
-    return failure(new ServerError('Reports API not implemented'));
+    try {
+      const response = await this.apiClient.put<ReportTaskModel>(`/reports/${id}/status`, { status });
+      if (response.error) {
+        return failure(new ServerError(response.error.message || 'Failed to update report status'));
+      }
+      return success(response.data!);
+    } catch (err: any) {
+      return failure(new ServerError(err.message || 'Failed to update report status'));
+    }
   }
 
   async createTask(task: ReportTaskModel): Promise<Result<ReportTaskModel>> {
-    return failure(new ServerError('Reports API not implemented'));
+    try {
+      const response = await this.apiClient.post<ReportTaskModel>('/reports', task);
+      if (response.error) {
+        return failure(new ServerError(response.error.message || 'Failed to create report'));
+      }
+      return success(response.data!);
+    } catch (err: any) {
+      return failure(new ServerError(err.message || 'Failed to create report'));
+    }
   }
 }
