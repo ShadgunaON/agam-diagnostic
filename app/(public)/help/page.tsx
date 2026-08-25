@@ -67,7 +67,7 @@ export default function HelpPage() {
                     key={idx}
                     question={faq.question}
                     answer={faq.answer}
-                    isOpen={catIdx === 0 && idx === 0}
+                    defaultOpen={catIdx === 0 && idx === 0}
                   />
                 ))}
               </div>
