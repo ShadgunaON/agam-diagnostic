@@ -12,7 +12,7 @@ import { createBlogArticleAction, updateBlogArticleAction, deleteBlogArticleActi
 
 export default function AdminBlogsPage() {
   const [mounted, setMounted] = useState(false);
-  const { hasPermission, isAdmin, isLoading: rbacLoading } = useRBAC();
+  const { hasPermission, isLoading: rbacLoading } = useRBAC();
   const [articles, setArticles] = useState<BlogArticle[]>([]);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingArticleId, setEditingArticleId] = useState<string | null>(null);
@@ -137,9 +137,9 @@ export default function AdminBlogsPage() {
     }
   };
 
-  const canCreate = isAdmin || hasPermission('blogs', 'create');
-  const canEdit = isAdmin || hasPermission('blogs', 'edit');
-  const canDelete = isAdmin || hasPermission('blogs', 'del');
+  const canCreate = hasPermission('blogs', 'create');
+  const canEdit = hasPermission('blogs', 'edit');
+  const canDelete = hasPermission('blogs', 'del');
 
   if (rbacLoading) return null;
 

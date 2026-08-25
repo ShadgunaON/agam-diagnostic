@@ -431,22 +431,10 @@ function canModerateReview(identity) {
   return isAdmin(identity) || isStaff(identity);
 }
 
-function canAccessBlog(identity, blog) {
+async function canAccessBlog(identity, blog) {
   if (!blog) return false;
   if (blog.status === 'Published') return true;
-  return isAdmin(identity);
-}
-
-function canCreateBlog(identity) {
-  return isAdmin(identity);
-}
-
-function canModifyBlog(identity) {
-  return isAdmin(identity);
-}
-
-function canDeleteBlog(identity) {
-  return isAdmin(identity);
+  return hasPermission(identity, 'blogs', 'view');
 }
 
 module.exports = {
@@ -471,9 +459,6 @@ module.exports = {
   canCreateReview,
   canModerateReview,
   canAccessBlog,
-  canCreateBlog,
-  canModifyBlog,
-  canDeleteBlog,
   hasPermission,
 };
 

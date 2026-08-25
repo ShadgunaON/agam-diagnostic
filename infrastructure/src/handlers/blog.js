@@ -1,4 +1,4 @@
-const { extractIdentity, isAdmin, canAccessBlog, canCreateBlog, canModifyBlog, canDeleteBlog, hasPermission } = require('../shared/auth');
+const { extractIdentity, isAdmin, canAccessBlog, hasPermission } = require('../shared/auth');
 const { success, error } = require('../shared/response');
 const { logger } = require('../shared/logger');
 const blogRepo = require('../repositories/dynamo-blog');
@@ -81,7 +81,7 @@ exports.handler = async (event) => {
           return error.notFound('Article not found');
         }
 
-        if (!canAccessBlog(identity, article)) {
+        if (!(await canAccessBlog(identity, article))) {
           return error.notFound('Article not found or access denied');
         }
 
