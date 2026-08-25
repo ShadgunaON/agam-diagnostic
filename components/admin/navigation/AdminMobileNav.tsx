@@ -46,12 +46,6 @@ const adminNavigation: NavigationGroup[] = [
       { title: 'Content / Blogs', href: '/admin/blogs', icon: 'fileText', moduleId: 'blogs' },
       { title: 'Newsletter', href: '/admin/newsletter', icon: 'mail', moduleId: 'blogs' },
     ]
-  },
-  {
-    title: 'System',
-    items: [
-      { title: 'Settings', href: '/admin/settings', icon: 'settings', moduleId: 'settings' },
-    ]
   }
 ];
 

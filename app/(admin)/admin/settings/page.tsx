@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
 import { useToast } from '@/components/admin/feedback/Toast';
@@ -13,8 +14,14 @@ const navItems = [
 ];
 
 export default function DiagnosticsSettingsPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState(navItems[0].id);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Redirect away from unfinished settings experience
+    router.replace('/admin');
+  }, [router]);
 
   return (
     <AdminPageTemplate>
