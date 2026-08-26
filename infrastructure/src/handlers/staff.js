@@ -62,7 +62,7 @@ function respond(statusCode, body) {
 // ============================================================
 async function handleCreateStaff(event, identity) {
   // Admin-only authorization (Business rule for Cognito provisioning)
-  if (!isAdmin(identity)) {
+  if (!(await isAdmin(identity))) {
     return respond(403, { error: 'Only administrators can create staff accounts.' });
   }
   // RBAC Matrix check (Though Admin naturally passes this, we check for matrix completeness)
@@ -319,7 +319,7 @@ async function handleGetRoles(identity) {
 }
 
 async function handleCreateRole(event, identity) {
-  if (!isAdmin(identity)) {
+  if (!(await isAdmin(identity))) {
     return respond(403, { error: 'Only administrators can create custom roles.' });
   }
   if (!(await hasPermission(identity, 'staff', 'create'))) {
@@ -445,7 +445,7 @@ async function handleGetPermissions(identity) {
 }
 
 async function handleUpdatePermissions(event, identity) {
-  if (!isAdmin(identity)) {
+  if (!(await isAdmin(identity))) {
     return respond(403, { error: 'Only administrators can modify permissions.' });
   }
   if (!(await hasPermission(identity, 'staff', 'edit'))) {

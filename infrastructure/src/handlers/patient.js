@@ -44,7 +44,7 @@ exports.handler = async (event) => {
           if (!(await canAccessPatient(identity, patient))) {
             // Verify if phlebotomist is assigned to a collection for this patient
             let hasPhlebAccess = false;
-            if (isPhlebotomist(identity)) {
+            if (await isPhlebotomist(identity)) {
               const collectionRepo = require('../repositories/dynamo-collection');
               const collections = await collectionRepo.getByPatientId(patient.id);
               hasPhlebAccess = collections.some(c => 
@@ -63,13 +63,13 @@ exports.handler = async (event) => {
         }
 
         // Handle /api/patients (list)
-        if (isAdmin(identity) || (isStaff(identity) && !isPhlebotomist(identity))) {
+        if ((await isAdmin(identity)) || ((await isStaff(identity)) && !(await isPhlebotomist(identity)))) {
           if (!(await hasPermission(identity, 'patients', 'view'))) {
             return error.forbidden('Access denied: Missing patients.view permission');
           }
           const allPatients = await patientRepo.getAll();
           return success(allPatients);
-        } else if (isPhlebotomist(identity)) {
+        } else if (await isPhlebotomist(identity)) {
           // Phlebotomists don't get the broad patient list
           return success([]);
         } else {
@@ -83,7 +83,7 @@ exports.handler = async (event) => {
         const body = JSON.parse(event.body || '{}');
         
         // RBAC Check for staff creating patients
-        if (isStaff(identity) && !(await hasPermission(identity, 'patients', 'create'))) {
+        if ((await isStaff(identity)) && !(await hasPermission(identity, 'patients', 'create'))) {
           // Note: Patients can create their own profile/family during signup (self-service).
           // We distinguish by checking if they are acting as staff.
           return error.forbidden('Access denied: Missing patients.create permission');
@@ -140,7 +140,7 @@ exports.handler = async (event) => {
 
         // RBAC Check for staff editing patients
         // If identity is staff and NOT the owner of the patient record, require patients.edit
-        if (isStaff(identity) && existingPatient.ownerSub !== identity.sub) {
+        if (await (await isStaff(identity)) && existingPatient.ownerSub !== identity.sub) {
           if (!(await hasPermission(identity, 'patients', 'edit'))) {
             return error.forbidden('Access denied: Missing patients.edit permission');
           }

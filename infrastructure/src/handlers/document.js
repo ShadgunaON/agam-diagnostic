@@ -219,7 +219,7 @@ async function handleListDocuments(event, identity) {
       logger.warn(`Could not fetch patient ${patientId} for list query check`);
     }
 
-    if (!isAdmin(identity) && !(isStaff(identity) && !isPhlebotomist(identity))) {
+    if (!(await isAdmin(identity)) && !((await isStaff(identity)) && !(await isPhlebotomist(identity)))) {
       if (!(await canAccessPatient(identity, patient)) && patientId !== identity.sub && patientId !== identity.primaryPatientId) {
         return error(403, 'FORBIDDEN', 'Access denied: Unauthorized patient document query.');
       }
@@ -238,7 +238,7 @@ async function handleListDocuments(event, identity) {
     const documents = await documentRepo.getByEntity(entityType, entityId);
 
     // If caller is patient or phlebotomist, filter to only owned documents
-    if (!isAdmin(identity) && !(isStaff(identity) && !isPhlebotomist(identity))) {
+    if (!(await isAdmin(identity)) && !((await isStaff(identity)) && !(await isPhlebotomist(identity)))) {
       let familyPatients = [];
       try {
         familyPatients = await patientRepo.getByOwner(identity.sub);
@@ -265,7 +265,7 @@ async function handleListDocuments(event, identity) {
   }
 
   // 3. General list for Patient (resolve authorized patient records)
-  if (!isAdmin(identity) && !(isStaff(identity) && !isPhlebotomist(identity))) {
+  if (!(await isAdmin(identity)) && !((await isStaff(identity)) && !(await isPhlebotomist(identity)))) {
     let familyPatients = [];
     try {
       familyPatients = await patientRepo.getByOwner(identity.sub);

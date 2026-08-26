@@ -9,7 +9,7 @@ export class ApiReportsRepository implements IReportsRepository {
 
   async getById(id: string): Promise<Result<ReportsModel>> {
     try {
-      const response = await this.apiClient.get<ReportsModel>(`/reports/${id}`);
+      const response = await this.apiClient.get<ReportsModel>(`/api/reports/${id}`);
       return success(response.data!);
     } catch (err: any) {
       return failure(new ServerError(err.message || 'Failed to fetch report'));
@@ -18,7 +18,7 @@ export class ApiReportsRepository implements IReportsRepository {
 
   async getAllTasks(): Promise<Result<ReportTaskModel[]>> {
     try {
-      const response = await this.apiClient.get<ReportTaskModel[]>('/reports');
+      const response = await this.apiClient.get<ReportTaskModel[]>('/api/reports');
       return success(response.data || []);
     } catch (err: any) {
       return failure(new ServerError(err.message || 'Failed to fetch reports'));
@@ -27,7 +27,7 @@ export class ApiReportsRepository implements IReportsRepository {
 
   async updateStatus(id: string, status: ReportTaskModel['status']): Promise<Result<ReportTaskModel>> {
     try {
-      const response = await this.apiClient.put<ReportTaskModel>(`/reports/${id}/status`, { status });
+      const response = await this.apiClient.put<ReportTaskModel>(`/api/reports/${id}/status`, { status });
       return success(response.data!);
     } catch (err: any) {
       return failure(new ServerError(err.message || 'Failed to update report status'));
@@ -36,7 +36,7 @@ export class ApiReportsRepository implements IReportsRepository {
 
   async createTask(task: ReportTaskModel): Promise<Result<ReportTaskModel>> {
     try {
-      const response = await this.apiClient.post<ReportTaskModel>('/reports', task);
+      const response = await this.apiClient.post<ReportTaskModel>('/api/reports', task);
       return success(response.data!);
     } catch (err: any) {
       return failure(new ServerError(err.message || 'Failed to create report'));

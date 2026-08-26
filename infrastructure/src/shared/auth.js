@@ -7,11 +7,37 @@ const { logger } = require('./logger');
  */
 
 // ----------------------------------------------------
+
+const CACHE_TTL = 30000; // 30 seconds
+
+const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm');
+const ssmClient = new SSMClient({ region: process.env.AWS_REGION || 'us-east-1' });
+let cachedSuperAdminSub = null;
+let cachedSuperAdminSubTime = 0;
+
+async function getSuperAdminSub() {
+  const now = Date.now();
+  if (cachedSuperAdminSub && (now - cachedSuperAdminSubTime < CACHE_TTL)) {
+    return cachedSuperAdminSub;
+  }
+  const ssmPath = process.env.SUPER_ADMIN_SSM_PATH || '/agam/SuperAdminSub';
+  try {
+    const command = new GetParameterCommand({ Name: ssmPath, WithDecryption: true });
+    const response = await ssmClient.send(command);
+    cachedSuperAdminSub = response.Parameter.Value;
+    cachedSuperAdminSubTime = now;
+    return cachedSuperAdminSub;
+  } catch (err) {
+    logger.error('Failed to retrieve SuperAdminSub from SSM', err);
+    return null; // Fail closed
+  }
+}
+
 // DYNAMODB RBAC CACHE & EVALUATION
 // ----------------------------------------------------
 let rbacCache = null;
 let rbacCacheTime = 0;
-const CACHE_TTL = 30000; // 30 seconds
+
 
 /**
  * Safely load the RBAC permissions matrix from DynamoDB, with a short-lived cache.
@@ -36,11 +62,11 @@ async function getRBACMatrix() {
   }
 }
 
-function isSuperAdmin(identity) {
+async function isSuperAdmin(identity) {
   if (!identity) return false;
   
   // 1. Immutable Infrastructure Root Authority
-  const rootSub = process.env.SUPER_ADMIN_SUB;
+  const rootSub = await getSuperAdminSub();
   if (rootSub && identity.sub === rootSub) {
     return true;
   }
@@ -53,9 +79,9 @@ function isSuperAdmin(identity) {
  * FAIL-CLOSED: Any failure to load or parse permissions results in denial.
  */
 async function hasPermission(identity, moduleId, action) {
-  if (isSuperAdmin(identity)) return true; // Super Admin is the permanent root authority
+  if (await isSuperAdmin(identity)) return true; // Super Admin is the permanent root authority
 
-  if (!isStaff(identity)) return false; // Non-staff are immediately rejected from staff matrix actions
+  if (!(await isStaff(identity))) return false; // Non-staff are immediately rejected from staff matrix actions
 
   const matrix = await getRBACMatrix();
   if (!matrix) return false; // Fail closed if DB fails
@@ -129,9 +155,9 @@ function extractAuthContext(event) {
   return extractIdentity(event);
 }
 
-function isAdmin(identity) {
+async function isAdmin(identity) {
   if (!identity) return false;
-  if (isSuperAdmin(identity)) return true;
+  if (await isSuperAdmin(identity)) return true;
   const role = (identity.role || '').toLowerCase();
   return (
     role === 'admin' ||
@@ -139,9 +165,9 @@ function isAdmin(identity) {
   );
 }
 
-function isStaff(identity) {
+async function isStaff(identity) {
   if (!identity) return false;
-  if (isAdmin(identity)) return true;
+  if (await isAdmin(identity)) return true;
   const role = (identity.role || '').toLowerCase();
   const staffRoles = ['doctor', 'lab_tech', 'phleb', 'phleb_home', 'phlebotomist', 'staff', 'op', 'path', 'phleb_lab'];
   if (staffRoles.includes(role)) return true;
@@ -149,7 +175,7 @@ function isStaff(identity) {
   return identity.groups?.some(g => staffGroups.includes(g.toLowerCase()));
 }
 
-function isPhlebotomist(identity) {
+async function isPhlebotomist(identity) {
   if (!identity) return false;
   const role = (identity.role || '').toLowerCase();
   return (

@@ -51,7 +51,7 @@ exports.handler = async (event) => {
 
         // 2. Patient-scoped query: /api/invoices?patientId={id}
         if (patientId) {
-          if (!isAdmin(identity) && !(isStaff(identity) && !isPhlebotomist(identity))) {
+          if (!(await isAdmin(identity)) && !((await isStaff(identity)) && !(await isPhlebotomist(identity)))) {
             const patient = await patientRepo.getById(patientId);
             if (patient && !(await canAccessPatient(identity, patient))) {
               return error.forbidden('Access denied: You are not authorized to view invoices for this patient.');
@@ -71,13 +71,13 @@ exports.handler = async (event) => {
         }
 
         // 3. General list: /api/invoices
-        if (isAdmin(identity) || (isStaff(identity) && !isPhlebotomist(identity))) {
+        if ((await isAdmin(identity)) || ((await isStaff(identity)) && !(await isPhlebotomist(identity)))) {
           if (!(await hasPermission(identity, 'invoices', 'view'))) {
             return error.forbidden('Access denied: Missing invoices.view permission');
           }
           const invoices = await invoiceRepo.getAll();
           return success(invoices);
-        } else if (isPhlebotomist(identity)) {
+        } else if (await isPhlebotomist(identity)) {
           if (!(await hasPermission(identity, 'invoices', 'view'))) {
             return error.forbidden('Access denied: Missing invoices.view permission');
           }
@@ -116,7 +116,7 @@ exports.handler = async (event) => {
         const body = JSON.parse(event.body || '{}');
 
         // Verify patient ownership if caller is regular patient or phlebotomist
-        if (!isAdmin(identity) && !(isStaff(identity) && !isPhlebotomist(identity))) {
+        if (!(await isAdmin(identity)) && !((await isStaff(identity)) && !(await isPhlebotomist(identity)))) {
           if (body.patientId) {
             const patient = await patientRepo.getById(body.patientId);
             if (patient && !(await canAccessPatient(identity, patient))) {
@@ -151,7 +151,7 @@ exports.handler = async (event) => {
           items,
           ownerSub: identity.sub,
           patientId: body.patientId || identity.primaryPatientId,
-          paymentStatus: body.paymentStatus === 'Paid' && (isAdmin(identity) || isStaff(identity)) ? 'Paid' : 'Pending',
+          paymentStatus: body.paymentStatus === 'Paid' && ((await isAdmin(identity)) || (await isStaff(identity))) ? 'Paid' : 'Pending',
           createdAt: body.createdAt || new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -178,7 +178,7 @@ exports.handler = async (event) => {
           const nextStatus = updateBody.status;
 
           // Regular patients and phlebotomists cannot directly change paymentStatus
-          if (!isAdmin(identity) && !(isStaff(identity) && !isPhlebotomist(identity))) {
+          if (!(await isAdmin(identity)) && !((await isStaff(identity)) && !(await isPhlebotomist(identity)))) {
             return error.forbidden('Access denied: Only authorized staff or payment recording can update invoice payment status.');
           } else {
             // Staff RBAC check for editing invoices

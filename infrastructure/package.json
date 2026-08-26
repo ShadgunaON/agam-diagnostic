@@ -12,6 +12,7 @@
   "type": "commonjs",
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1111.0",
+    "@aws-sdk/client-ssm": "^3.1118.0",
     "@aws-sdk/lib-dynamodb": "^3.1111.0"
   },
   "devDependencies": {

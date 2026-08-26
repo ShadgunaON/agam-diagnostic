@@ -34,7 +34,7 @@ exports.handler = async (event) => {
           if (!(await canAccessBooking(identity, booking, patient))) {
             // Verify if phlebotomist is assigned to a collection for this booking
             let hasPhlebAccess = false;
-            if (isPhlebotomist(identity)) {
+            if (await isPhlebotomist(identity)) {
               const collectionRepo = require('../repositories/dynamo-collection');
               const collections = await collectionRepo.getByPatientId(booking.patientId);
               hasPhlebAccess = collections.some(c => 
@@ -56,7 +56,7 @@ exports.handler = async (event) => {
 
         // Handle /api/bookings?patientId={patientId}
         if (patientId) {
-          if (!isAdmin(identity) && !isStaff(identity)) {
+          if (!(await isAdmin(identity)) && !(await isStaff(identity))) {
             const patient = await patientRepo.getById(patientId);
             if (patient && !(await canAccessPatient(identity, patient))) {
               return error.forbidden('Access denied: You are not authorized to view bookings for this patient.');
@@ -76,7 +76,7 @@ exports.handler = async (event) => {
         }
 
         // Handle /api/bookings (list)
-        if (isAdmin(identity) || (isStaff(identity) && !isPhlebotomist(identity))) {
+        if ((await isAdmin(identity)) || ((await isStaff(identity)) && !(await isPhlebotomist(identity)))) {
           if (!(await hasPermission(identity, 'orders', 'view'))) {
             return error.forbidden('Access denied: Missing orders.view permission');
           }
@@ -88,7 +88,7 @@ exports.handler = async (event) => {
             return dateB - dateA;
           });
           return success(bookings);
-        } else if (isPhlebotomist(identity)) {
+        } else if (await isPhlebotomist(identity)) {
           // Phlebotomists don't have broad booking list access
           return success([]);
         } else {
@@ -118,7 +118,7 @@ exports.handler = async (event) => {
         const body = JSON.parse(event.body || '{}');
 
         // RBAC Check for staff creating bookings
-        if (isStaff(identity) && !(await hasPermission(identity, 'orders', 'create'))) {
+        if (await (await isStaff(identity)) && !(await hasPermission(identity, 'orders', 'create'))) {
           // Note: Patients can create their own bookings (self-service).
           // We distinguish by checking if they are acting as staff.
           return error.forbidden('Access denied: Missing orders.create permission');
@@ -155,7 +155,7 @@ exports.handler = async (event) => {
         const updateBody = JSON.parse(event.body || '{}');
 
         // RBAC on updates: Patients can only cancel their own booking
-        if (!isAdmin(identity) && !isStaff(identity)) {
+        if (!(await isAdmin(identity)) && !(await isStaff(identity))) {
           if (updateBody.status && updateBody.status !== 'Cancelled') {
             return error.forbidden('Patients are only permitted to cancel pending bookings.');
           }

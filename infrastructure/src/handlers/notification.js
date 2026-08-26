@@ -38,7 +38,7 @@ exports.handler = async (event) => {
         let targetUserId = identity.sub;
 
         if (requestedUserId) {
-          if (isAdmin(identity) || isStaff(identity)) {
+          if ((await isAdmin(identity)) || (await isStaff(identity))) {
             const { hasPermission } = require('../shared/auth');
             if (!(await hasPermission(identity, 'notifications', 'view'))) {
               return error.forbidden('Access denied: Missing notifications.view permission');

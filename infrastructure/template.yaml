@@ -16,7 +16,7 @@ Globals:
         DYNAMODB_TABLE_NAME: !Ref AgamDynamoDBTable
         S3_BUCKET_NAME: !Ref AgamStorageBucket
         CORS_ORIGIN: "*"
-        SUPER_ADMIN_SUB: !Ref SuperAdminSub
+        SUPER_ADMIN_SSM_PATH: /agam/SuperAdminSub
 
 Parameters:
   Environment:
@@ -27,12 +27,6 @@ Parameters:
       - uat
       - prod
     Description: Deployment environment
-
-  SuperAdminSub:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: /agam/SuperAdminSub
-    NoEcho: true
-    Description: Canonical Cognito Sub UUID of the permanent immutable root Super Admin.
 
 Resources:
   # ==========================================================
@@ -272,6 +266,14 @@ Resources:
                   - s3:GetObject
                   - s3:DeleteObject
                 Resource: !Sub "${AgamStorageBucket.Arn}/*"
+        - PolicyName: AgamSSMAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/agam/SuperAdminSub"
         - PolicyName: AgamCognitoAdminAccess
           PolicyDocument:
             Version: '2012-10-17'

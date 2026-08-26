@@ -52,7 +52,7 @@ exports.handler = async (event) => {
 
         // 2. Query by patientId: GET /api/collections?patientId={patientId}
         if (patientId) {
-          if (!isAdmin(identity) && !isStaff(identity)) {
+          if (!(await isAdmin(identity)) && !(await isStaff(identity))) {
             const patient = await patientRepo.getById(patientId);
             if (patient && !(await canAccessPatient(identity, patient))) {
               return error.forbidden('Access denied: You are not authorized to view collections for this patient.');
@@ -71,14 +71,14 @@ exports.handler = async (event) => {
         }
 
         // 3. List collections: GET /api/collections
-        if (isAdmin(identity) || (isStaff(identity) && !isPhlebotomist(identity))) {
+        if ((await isAdmin(identity)) || ((await isStaff(identity)) && !(await isPhlebotomist(identity)))) {
           if (!(await hasPermission(identity, 'collections', 'view'))) {
             return error.forbidden('Access denied: Missing collections.view permission');
           }
           // Admin & general staff (Doctor, Lab Tech): return all collections
           const collections = await collectionRepo.getAll();
           return success(collections);
-        } else if (isPhlebotomist(identity)) {
+        } else if (await isPhlebotomist(identity)) {
           if (!(await hasPermission(identity, 'collections', 'view'))) {
             return error.forbidden('Access denied: Missing collections.view permission');
           }
@@ -110,7 +110,7 @@ exports.handler = async (event) => {
         const body = JSON.parse(event.body || '{}');
 
         // Patient authorization check
-        if (!isAdmin(identity) && !isStaff(identity)) {
+        if (!(await isAdmin(identity)) && !(await isStaff(identity))) {
           if (body.patientId) {
             const patient = await patientRepo.getById(body.patientId);
             if (patient && !(await canAccessPatient(identity, patient))) {
@@ -128,7 +128,7 @@ exports.handler = async (event) => {
         }
 
         const collectionId = body.id || `COL-${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-        const initialStatus = (!isAdmin(identity) && !isStaff(identity))
+        const initialStatus = (!(await isAdmin(identity)) && !(await isStaff(identity)))
           ? (body.type === 'Lab Visit' ? 'Pending' : 'Unassigned')
           : (body.status || (body.type === 'Lab Visit' ? 'Pending' : 'Unassigned'));
 
@@ -139,8 +139,8 @@ exports.handler = async (event) => {
           patientId: body.patientId || identity.primaryPatientId,
           status: initialStatus,
           // Prevent patients from assigning staff during creation
-          assignedTo: (!isAdmin(identity) && !isStaff(identity)) ? 'Unassigned' : (body.assignedTo || 'Unassigned'),
-          phlebotomistId: (!isAdmin(identity) && !isStaff(identity)) ? undefined : body.phlebotomistId,
+          assignedTo: (!(await isAdmin(identity)) && !(await isStaff(identity))) ? 'Unassigned' : (body.assignedTo || 'Unassigned'),
+          phlebotomistId: (!(await isAdmin(identity)) && !(await isStaff(identity))) ? undefined : body.phlebotomistId,
         };
 
         const newCollection = await collectionRepo.create(taskData, identity.sub);
@@ -172,7 +172,7 @@ exports.handler = async (event) => {
         }
 
         // Detailed RBAC Check for Staff/Admin
-        if (isStaff(identity)) {
+        if (await isStaff(identity)) {
           // If trying to assign/reassign
           if (updateBody.assignedTo !== undefined || updateBody.phlebotomistId !== undefined) {
              if (!(await hasPermission(identity, 'collections', 'assign'))) {
