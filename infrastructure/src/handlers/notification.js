@@ -1,4 +1,4 @@
-const { extractIdentity, isAdmin, canAccessNotification, canCreateNotification } = require('../shared/auth');
+const { extractIdentity, isAdmin, isStaff, canAccessNotification, canCreateNotification } = require('../shared/auth');
 const { success, error } = require('../shared/response');
 const { logger } = require('../shared/logger');
 const notificationRepo = require('../repositories/dynamo-notification');
