@@ -36,11 +36,32 @@ async function getRBACMatrix() {
   }
 }
 
+function isSuperAdmin(identity) {
+  if (!identity) return false;
+  
+  // 1. Immutable Infrastructure Root Authority
+  const rootSub = process.env.SUPER_ADMIN_SUB;
+  if (rootSub && identity.sub === rootSub) {
+    return true;
+  }
+
+  // 2. Cognito Group Authority
+  if (identity.groups?.some(g => g.toLowerCase() === 'superadmin' || g.toLowerCase() === 'super_admin')) {
+    return true;
+  }
+
+  // 3. Custom Role Authority (Protected at creation time in staff.js)
+  const role = (identity.role || '').toLowerCase();
+  return role === 'super_admin' || role === 'superadmin';
+}
+
 /**
  * Evaluates whether an authenticated identity is permitted to perform a given action on a module.
  * FAIL-CLOSED: Any failure to load or parse permissions results in denial.
  */
 async function hasPermission(identity, moduleId, action) {
+  if (isSuperAdmin(identity)) return true; // Super Admin is the permanent root authority
+
   if (!isStaff(identity)) return false; // Non-staff are immediately rejected from staff matrix actions
 
   const matrix = await getRBACMatrix();
@@ -107,6 +128,7 @@ function extractIdentity(event) {
     role,
     groups,
     primaryPatientId: `pat_${claims.sub}`,
+    staffId: claims['custom:staff_id'] || (role !== 'patient' ? claims.sub : undefined),
   };
 }
 
@@ -116,6 +138,7 @@ function extractAuthContext(event) {
 
 function isAdmin(identity) {
   if (!identity) return false;
+  if (isSuperAdmin(identity)) return true;
   const role = (identity.role || '').toLowerCase();
   return (
     role === 'admin' ||
@@ -146,47 +169,29 @@ function isPhlebotomist(identity) {
 
 /**
  * Validates whether the authenticated identity is authorized to access a Patient record.
- * Allowed if:
- * 1. Caller is Admin or Staff
- * 2. Caller is the account owner (patient.ownerSub === identity.sub)
- * 3. Patient ID matches caller sub or primaryPatientId
  */
-function canAccessPatient(identity, patient) {
+async function canAccessPatient(identity, patient) {
   if (!identity || !patient) return false;
-  if (isAdmin(identity)) return true;
-  if (isStaff(identity) && !isPhlebotomist(identity)) return true;
   if (patient.ownerSub && patient.ownerSub === identity.sub) return true;
   if (patient.id === identity.sub || patient.id === `pat_${identity.sub}`) return true;
-  return false;
+  return hasPermission(identity, 'patients', 'view');
 }
 
 /**
  * Validates whether the authenticated identity is authorized to access a Booking record.
- * Allowed if:
- * 1. Caller is Admin or Staff
- * 2. Caller is the booking owner (booking.ownerSub === identity.sub)
- * 3. Linked patient belongs to the caller
  */
-function canAccessBooking(identity, booking, patient) {
+async function canAccessBooking(identity, booking, patient) {
   if (!identity || !booking) return false;
-  if (isAdmin(identity)) return true;
-  if (isStaff(identity) && !isPhlebotomist(identity)) return true;
   if (booking.ownerSub && booking.ownerSub === identity.sub) return true;
-  if (patient && canAccessPatient(identity, patient)) return true;
-  return false;
+  if (patient && await canAccessPatient(identity, patient)) return true;
+  return hasPermission(identity, 'orders', 'view');
 }
 
 /**
  * Validates whether the authenticated identity is authorized to access a Collection record.
- * Allowed if:
- * 1. Caller is Admin or General Staff (Doctor, Lab Tech)
- * 2. Caller is Phlebotomist assigned to the collection or viewing unassigned tasks
- * 3. Caller is the Patient/Account owner
  */
-function canAccessCollection(identity, collection, patient) {
+async function canAccessCollection(identity, collection, patient) {
   if (!identity || !collection) return false;
-  if (isAdmin(identity)) return true;
-  if (isStaff(identity) && !isPhlebotomist(identity)) return true;
 
   if (isPhlebotomist(identity)) {
     if (
@@ -200,13 +205,13 @@ function canAccessCollection(identity, collection, patient) {
     if (collection.status === 'Unassigned' || collection.status === 'Pending') {
       return true;
     }
-    return false;
   }
 
   if (collection.ownerSub && collection.ownerSub === identity.sub) return true;
-  if (patient && canAccessPatient(identity, patient)) return true;
+  if (patient && await canAccessPatient(identity, patient)) return true;
   if (collection.patientId === identity.sub || collection.patientId === identity.primaryPatientId) return true;
-  return false;
+
+  return hasPermission(identity, 'collections', 'view');
 }
 
 const ALLOWED_COLLECTION_TRANSITIONS = {
@@ -228,10 +233,8 @@ function isValidCollectionTransition(currentStatus, nextStatus) {
   return allowed ? allowed.includes(nextStatus) : false;
 }
 
-function canModifyCollection(identity, collection, updateData) {
+async function canModifyCollection(identity, collection, updateData) {
   if (!identity || !collection) return false;
-  if (isAdmin(identity)) return true;
-  if (isStaff(identity) && !isPhlebotomist(identity)) return true;
 
   if (isPhlebotomist(identity)) {
     const isAssigned = (
@@ -249,22 +252,16 @@ function canModifyCollection(identity, collection, updateData) {
     return true;
   }
 
-  return false;
+  return hasPermission(identity, 'collections', 'edit');
 }
 
 /**
  * Validates whether the authenticated identity is authorized to access / download a Document record.
- * Allowed if:
- * 1. Caller is Admin or Staff
- * 2. Caller is the document owner (document.ownerSub === identity.sub)
- * 3. Document belongs to a patient authorized for the caller (patient.ownerSub === identity.sub or matching primary)
  */
-function canAccessDocument(identity, document, patient) {
+async function canAccessDocument(identity, document, patient) {
   if (!identity || !document) return false;
-  if (isAdmin(identity)) return true;
-  if (isStaff(identity) && !isPhlebotomist(identity)) return true;
   if (document.ownerSub && document.ownerSub === identity.sub) return true;
-  if (patient && canAccessPatient(identity, patient)) return true;
+  if (patient && await canAccessPatient(identity, patient)) return true;
   if (
     document.patientId === identity.sub ||
     document.patientId === identity.primaryPatientId ||
@@ -272,20 +269,32 @@ function canAccessDocument(identity, document, patient) {
   ) {
     return true;
   }
-  return false;
+  return hasPermission(identity, 'reports', 'view');
+}
+
+/**
+ * Validates whether the authenticated identity is authorized to modify a Document record.
+ */
+async function canModifyDocument(identity, document, patient) {
+  if (!identity || !document) return false;
+  if (document.ownerSub && document.ownerSub === identity.sub) return true;
+  if (patient && await canAccessPatient(identity, patient)) return true;
+  if (
+    document.patientId === identity.sub ||
+    document.patientId === identity.primaryPatientId ||
+    document.patientId === `pat_${identity.sub}`
+  ) {
+    return true;
+  }
+  return hasPermission(identity, 'reports', 'edit');
 }
 
 /**
  * Validates whether the authenticated identity is authorized to upload a Document for a target patient.
- * Allowed if:
- * 1. Caller is Admin or Staff
- * 2. Target patient belongs to caller (patient.ownerSub === identity.sub or matching primary)
  */
-function canUploadDocument(identity, patientId, patient) {
+async function canUploadDocument(identity, patientId, patient) {
   if (!identity) return false;
-  if (isAdmin(identity)) return true;
-  if (isStaff(identity) && !isPhlebotomist(identity)) return true;
-  if (patient && canAccessPatient(identity, patient)) return true;
+  if (patient && await canAccessPatient(identity, patient)) return true;
   if (
     patientId === identity.sub ||
     patientId === identity.primaryPatientId ||
@@ -293,22 +302,16 @@ function canUploadDocument(identity, patientId, patient) {
   ) {
     return true;
   }
-  return false;
+  return hasPermission(identity, 'reports', 'create');
 }
 
 /**
  * Validates whether the authenticated identity is authorized to access an Invoice record.
- * Allowed if:
- * 1. Caller is Admin or Staff
- * 2. Caller is the account owner (invoice.ownerSub === identity.sub)
- * 3. Invoice belongs to a patient authorized for the caller (patient.ownerSub === identity.sub or matching primary)
  */
-function canAccessInvoice(identity, invoice, patient) {
+async function canAccessInvoice(identity, invoice, patient) {
   if (!identity || !invoice) return false;
-  if (isAdmin(identity)) return true;
-  if (isStaff(identity) && !isPhlebotomist(identity)) return true;
   if (invoice.ownerSub && invoice.ownerSub === identity.sub) return true;
-  if (patient && canAccessPatient(identity, patient)) return true;
+  if (patient && await canAccessPatient(identity, patient)) return true;
   if (
     invoice.patientId === identity.sub ||
     invoice.patientId === identity.primaryPatientId ||
@@ -316,7 +319,7 @@ function canAccessInvoice(identity, invoice, patient) {
   ) {
     return true;
   }
-  return false;
+  return hasPermission(identity, 'invoices', 'view');
 }
 
 const ALLOWED_INVOICE_TRANSITIONS = {
@@ -333,22 +336,20 @@ function isValidInvoiceTransition(currentStatus, nextStatus) {
   return allowed ? allowed.includes(nextStatus) : false;
 }
 
-function canModifyInvoice(identity, invoice, updateData) {
+async function canModifyInvoice(identity, invoice, updateData) {
   if (!identity || !invoice) return false;
-  if (isAdmin(identity)) return true;
-  if (isStaff(identity) && !isPhlebotomist(identity)) {
+  
+  if (await hasPermission(identity, 'invoices', 'edit')) {
     // Staff can record payment, update notes, or assign receiver
     const forbiddenForStaff = ['id', 'PK', 'SK', 'GSI1PK', 'GSI1SK', 'GSI2PK', 'GSI2SK', 'subtotal', 'total', 'patientId', 'ownerSub', 'bookingId'];
     const hasForbiddenKey = Object.keys(updateData || {}).some(k => forbiddenForStaff.includes(k));
     return !hasForbiddenKey;
   }
-  // Regular patients cannot modify invoices directly
   return false;
 }
 
-function canAccessNotification(identity, notification) {
+async function canAccessNotification(identity, notification) {
   if (!identity || !notification) return false;
-  if (isAdmin(identity)) return true;
 
   const targetUserId = notification.userId;
   const ownerSub = notification.ownerSub;
@@ -356,26 +357,26 @@ function canAccessNotification(identity, notification) {
   if (identity.sub && (targetUserId === identity.sub || ownerSub === identity.sub)) {
     return true;
   }
-
   if (identity.primaryPatientId && targetUserId === identity.primaryPatientId) {
     return true;
   }
-
   if (identity.username && targetUserId === identity.username) {
     return true;
   }
-
   if (targetUserId === `pat_${identity.sub}`) {
     return true;
   }
 
+  // Fallback to see if they can view notifications generically (assuming it's a module, but it's not in the matrix)
+  // We'll allow it if they are staff and it passes through. Actually, the user asked to strictly follow matrix.
+  // We will preserve the identity logic and remove the bypass. 
+  // Wait, I removed the `isAdmin` bypass here, so now only the owner can see their notification.
+  // Is there a 'notifications' module? No.
   return false;
 }
 
-function canCreateNotification(identity, notificationData) {
+async function canCreateNotification(identity, notificationData) {
   if (!identity || !notificationData) return false;
-  if (isAdmin(identity)) return true;
-  if (isStaff(identity)) return true;
 
   const targetUserId = notificationData.userId;
   if (
@@ -385,18 +386,16 @@ function canCreateNotification(identity, notificationData) {
   ) {
     return true;
   }
-
+  
+  // No module for notifications. Usually staff create them system-side. We rely on the handlers for top-level guard.
   return false;
 }
 
-function canAccessReview(identity, review) {
+async function canAccessReview(identity, review) {
   if (!review) return false;
-  // Approved reviews are publicly readable
   if (review.status === 'Approved') return true;
 
-  // Pending/Rejected reviews require authentication
   if (!identity) return false;
-  if (isAdmin(identity) || isStaff(identity)) return true;
 
   if (identity.sub && (review.ownerSub === identity.sub || review.patientId === identity.sub)) {
     return true;
@@ -407,10 +406,10 @@ function canAccessReview(identity, review) {
   if (review.patientId === `pat_${identity.sub}`) {
     return true;
   }
-  return false;
+  return hasPermission(identity, 'reviews', 'view');
 }
 
-function canCreateReview(identity, reviewData, booking) {
+async function canCreateReview(identity, reviewData, booking) {
   if (!identity || !booking) return false;
   if (booking.status !== 'Completed') return false;
 
@@ -426,9 +425,9 @@ function canCreateReview(identity, reviewData, booking) {
   return false;
 }
 
-function canModerateReview(identity) {
+async function canModerateReview(identity) {
   if (!identity) return false;
-  return isAdmin(identity) || isStaff(identity);
+  return hasPermission(identity, 'reviews', 'edit');
 }
 
 async function canAccessBlog(identity, blog) {
@@ -443,12 +442,14 @@ module.exports = {
   isAdmin,
   isStaff,
   isPhlebotomist,
+  isSuperAdmin,
   canAccessPatient,
   canAccessBooking,
   canAccessCollection,
   canModifyCollection,
   isValidCollectionTransition,
   canAccessDocument,
+  canModifyDocument,
   canUploadDocument,
   canAccessInvoice,
   canModifyInvoice,

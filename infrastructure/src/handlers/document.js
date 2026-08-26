@@ -1,4 +1,4 @@
-const { extractIdentity, isAdmin, isStaff, canAccessDocument, canUploadDocument, canAccessPatient } = require('../shared/auth');
+const { extractIdentity, isAdmin, isStaff, isPhlebotomist, canAccessDocument, canUploadDocument, canModifyDocument, canAccessPatient, hasPermission } = require('../shared/auth');
 const { success, error } = require('../shared/response');
 const { logger } = require('../shared/logger');
 const documentRepo = require('../repositories/dynamo-document');
@@ -88,17 +88,15 @@ async function handleInitiateUpload(event, identity) {
   }
 
   // Verify upload authorization for the target patient
-  if (!isAdmin(identity) && !(isStaff(identity) && !isPhlebotomist(identity))) {
-    let patient = null;
-    try {
-      patient = await patientRepo.getById(patientId);
-    } catch (e) {
-      logger.warn(`Could not fetch patient ${patientId} for upload authorization check`);
-    }
+  let patient = null;
+  try {
+    patient = await patientRepo.getById(patientId);
+  } catch (e) {
+    logger.warn(`Could not fetch patient ${patientId} for upload authorization check`);
+  }
 
-    if (!canUploadDocument(identity, patientId, patient)) {
-      return error(403, 'FORBIDDEN', 'Access denied: You are not authorized to upload documents for this patient.');
-    }
+  if (!(await canUploadDocument(identity, patientId, patient))) {
+    return error(403, 'FORBIDDEN', 'Access denied: You are not authorized to upload documents for this patient.');
   }
 
   const documentId = `DOC-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
@@ -137,19 +135,16 @@ async function handleCompleteUpload(documentId, identity) {
     return error(404, 'NOT_FOUND', `Document ${documentId} not found`);
   }
 
-  // Authorize caller against document
-  if (!isAdmin(identity) && !(isStaff(identity) && !isPhlebotomist(identity))) {
-    let patient = null;
-    if (doc.patientId) {
-      try {
-        patient = await patientRepo.getById(doc.patientId);
-      } catch (e) {
-        logger.warn(`Could not fetch patient ${doc.patientId} for document complete check`);
-      }
+  let patient = null;
+  if (doc.patientId) {
+    try {
+      patient = await patientRepo.getById(doc.patientId);
+    } catch (e) {
+      logger.warn(`Could not fetch patient ${doc.patientId} for document complete check`);
     }
-    if (!canAccessDocument(identity, doc, patient)) {
-      return error(403, 'FORBIDDEN', 'Access denied: You do not have permission to modify this document.');
-    }
+  }
+  if (!(await canModifyDocument(identity, doc, patient))) {
+    return error(403, 'FORBIDDEN', 'Access denied: You do not have permission to modify this document.');
   }
 
   if (doc.status !== 'PENDING') {
@@ -168,19 +163,16 @@ async function handleGetDownloadUrl(documentId, identity) {
     return error(404, 'NOT_FOUND', `Document ${documentId} not found`);
   }
 
-  // Authorize caller against document before generating presigned download URL
-  if (!isAdmin(identity) && !(isStaff(identity) && !isPhlebotomist(identity))) {
-    let patient = null;
-    if (doc.patientId) {
-      try {
-        patient = await patientRepo.getById(doc.patientId);
-      } catch (e) {
-        logger.warn(`Could not fetch patient ${doc.patientId} for download URL check`);
-      }
+  let patient = null;
+  if (doc.patientId) {
+    try {
+      patient = await patientRepo.getById(doc.patientId);
+    } catch (e) {
+      logger.warn(`Could not fetch patient ${doc.patientId} for download URL check`);
     }
-    if (!canAccessDocument(identity, doc, patient)) {
-      return error(403, 'FORBIDDEN', 'Access denied: You do not have permission to download this document.');
-    }
+  }
+  if (!(await canAccessDocument(identity, doc, patient))) {
+    return error(403, 'FORBIDDEN', 'Access denied: You do not have permission to download this document.');
   }
 
   if (doc.status !== 'UPLOADED') {
@@ -199,19 +191,16 @@ async function handleGetMetadata(documentId, identity) {
     return error(404, 'NOT_FOUND', `Document ${documentId} not found`);
   }
 
-  // Authorize caller against document metadata
-  if (!isAdmin(identity) && !(isStaff(identity) && !isPhlebotomist(identity))) {
-    let patient = null;
-    if (doc.patientId) {
-      try {
-        patient = await patientRepo.getById(doc.patientId);
-      } catch (e) {
-        logger.warn(`Could not fetch patient ${doc.patientId} for metadata check`);
-      }
+  let patient = null;
+  if (doc.patientId) {
+    try {
+      patient = await patientRepo.getById(doc.patientId);
+    } catch (e) {
+      logger.warn(`Could not fetch patient ${doc.patientId} for metadata check`);
     }
-    if (!canAccessDocument(identity, doc, patient)) {
-      return error(403, 'FORBIDDEN', 'Access denied: You do not have permission to view this document.');
-    }
+  }
+  if (!(await canAccessDocument(identity, doc, patient))) {
+    return error(403, 'FORBIDDEN', 'Access denied: You do not have permission to view this document.');
   }
 
   return success(doc);
@@ -223,16 +212,20 @@ async function handleListDocuments(event, identity) {
 
   // 1. Patient-specific query
   if (patientId) {
-    if (!isAdmin(identity) && !(isStaff(identity) && !isPhlebotomist(identity))) {
-      let patient = null;
-      try {
-        patient = await patientRepo.getById(patientId);
-      } catch (e) {
-        logger.warn(`Could not fetch patient ${patientId} for list query check`);
-      }
+    let patient = null;
+    try {
+      patient = await patientRepo.getById(patientId);
+    } catch (e) {
+      logger.warn(`Could not fetch patient ${patientId} for list query check`);
+    }
 
-      if (!canAccessPatient(identity, patient) && patientId !== identity.sub && patientId !== identity.primaryPatientId) {
+    if (!isAdmin(identity) && !(isStaff(identity) && !isPhlebotomist(identity))) {
+      if (!(await canAccessPatient(identity, patient)) && patientId !== identity.sub && patientId !== identity.primaryPatientId) {
         return error(403, 'FORBIDDEN', 'Access denied: Unauthorized patient document query.');
+      }
+    } else {
+      if (!(await hasPermission(identity, 'reports', 'view'))) {
+        return error(403, 'FORBIDDEN', 'Access denied: Missing reports.view permission');
       }
     }
 
@@ -263,9 +256,12 @@ async function handleListDocuments(event, identity) {
         (d) => allowedPatientIds.has(d.patientId) || d.ownerSub === identity.sub
       );
       return success(filtered);
+    } else {
+      if (!(await hasPermission(identity, 'reports', 'view'))) {
+        return error(403, 'FORBIDDEN', 'Access denied: Missing reports.view permission');
+      }
+      return success(documents);
     }
-
-    return success(documents);
   }
 
   // 3. General list for Patient (resolve authorized patient records)
@@ -306,10 +302,13 @@ async function handleListDocuments(event, identity) {
     );
 
     return success(uniqueDocs);
+  } else {
+    // 4. Admin / Staff general listing
+    if (!(await hasPermission(identity, 'reports', 'view'))) {
+      return error(403, 'FORBIDDEN', 'Access denied: Missing reports.view permission');
+    }
+    // Return empty array or entity query if no filter provided
+    return success([]);
   }
-
-  // 4. Admin / Staff general listing
-  // Return empty array or entity query if no filter provided
-  return success([]);
 }
 

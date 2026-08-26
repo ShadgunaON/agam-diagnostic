@@ -71,7 +71,7 @@ exports.handler = async (event) => {
         if (requestedBookingId) {
           const review = await reviewRepo.getByBookingId(requestedBookingId);
           if (!review) return success(null);
-          if (!canAccessReview(identity, review)) {
+          if (!(await canAccessReview(identity, review))) {
             return error.forbidden('Access denied to this review');
           }
           return success(review);
@@ -107,12 +107,13 @@ exports.handler = async (event) => {
         return error.notFound('Review not found');
       }
 
-      if (!canAccessReview(identity, review)) {
+      if (!(await canAccessReview(identity, review))) {
         return error.forbidden('Access denied to this review');
       }
 
-      // If approved and unauthenticated or regular non-admin user, sanitize
-      if (review.status === 'Approved' && (!identity || (!isAdmin(identity) && !isStaff(identity) && review.ownerSub !== identity.sub))) {
+      // If approved and unauthenticated or regular user without review view permission, sanitize
+      const canViewFull = identity && (review.ownerSub === identity.sub || await hasPermission(identity, 'reviews', 'view'));
+      if (review.status === 'Approved' && !canViewFull) {
         return success(sanitizePublicReview(review));
       }
 
@@ -150,7 +151,7 @@ exports.handler = async (event) => {
         return error.badRequest('Reviews can only be submitted for completed services.');
       }
 
-      if (!canCreateReview(identity, body, booking)) {
+      if (!(await canCreateReview(identity, body, booking))) {
         return error.forbidden('You are not authorized to review this booking.');
       }
 

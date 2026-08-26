@@ -16,6 +16,7 @@ Globals:
         DYNAMODB_TABLE_NAME: !Ref AgamDynamoDBTable
         S3_BUCKET_NAME: !Ref AgamStorageBucket
         CORS_ORIGIN: "*"
+        SUPER_ADMIN_SUB: !Ref SuperAdminSub
 
 Parameters:
   Environment:
@@ -26,6 +27,11 @@ Parameters:
       - uat
       - prod
     Description: Deployment environment
+
+  SuperAdminSub:
+    Type: String
+    Default: ""
+    Description: Canonical Cognito Sub UUID of the permanent immutable root Super Admin.
 
 Resources:
   # ==========================================================

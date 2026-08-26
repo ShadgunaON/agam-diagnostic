@@ -198,6 +198,7 @@ export class ApiAuthRepository implements IAuthRepository {
     let sub = `usr_${cleanEmail.replace(/[^a-zA-Z0-9]/g, '_')}`;
     let mobile = '';
     let resolvedEmail = cleanEmail;
+    let staffId: string | undefined = undefined;
 
     if (authResult.IdToken) {
       try {
@@ -212,6 +213,7 @@ export class ApiAuthRepository implements IAuthRepository {
           if (payload.name) fullName = payload.name;
           if (payload.email) resolvedEmail = payload.email;
           if (payload.phone_number) mobile = payload.phone_number;
+          if (payload['custom:staff_id']) staffId = payload['custom:staff_id'];
 
           const rawGroups = payload['cognito:groups'];
           const groups = Array.isArray(rawGroups)
@@ -252,7 +254,7 @@ export class ApiAuthRepository implements IAuthRepository {
       mobile,
       role: role as UserProfile['role'],
       isProfileComplete: true,
-      staffId: role !== 'patient' ? sub : undefined,
+      staffId: staffId || (role !== 'patient' ? sub : undefined),
       savedPatients: [
         {
           id: `pat_${sub}`,

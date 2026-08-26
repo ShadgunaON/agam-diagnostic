@@ -31,7 +31,7 @@ exports.handler = async (event) => {
             patient = await patientRepo.getById(booking.patientId);
           }
 
-          if (!canAccessBooking(identity, booking, patient)) {
+          if (!(await canAccessBooking(identity, booking, patient))) {
             // Verify if phlebotomist is assigned to a collection for this booking
             let hasPhlebAccess = false;
             if (isPhlebotomist(identity)) {
@@ -58,11 +58,16 @@ exports.handler = async (event) => {
         if (patientId) {
           if (!isAdmin(identity) && !isStaff(identity)) {
             const patient = await patientRepo.getById(patientId);
-            if (patient && !canAccessPatient(identity, patient)) {
+            if (patient && !(await canAccessPatient(identity, patient))) {
               return error.forbidden('Access denied: You are not authorized to view bookings for this patient.');
             }
             if (!patient && patientId !== identity.primaryPatientId && patientId !== identity.sub) {
               return error.forbidden('Access denied: Unauthorized patient query.');
+            }
+          } else {
+            const { hasPermission } = require('../shared/auth');
+            if (!(await hasPermission(identity, 'orders', 'view'))) {
+              return error.forbidden('Access denied: Missing orders.view permission');
             }
           }
 
@@ -143,7 +148,7 @@ exports.handler = async (event) => {
           patient = await patientRepo.getById(existingBooking.patientId);
         }
 
-        if (!canAccessBooking(identity, existingBooking, patient)) {
+        if (!(await canAccessBooking(identity, existingBooking, patient))) {
           return error.forbidden('Access denied: You are not authorized to modify this booking.');
         }
 

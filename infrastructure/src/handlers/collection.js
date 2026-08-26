@@ -43,7 +43,7 @@ exports.handler = async (event) => {
             patient = await patientRepo.getById(collection.patientId);
           }
 
-          if (!canAccessCollection(identity, collection, patient)) {
+          if (!(await canAccessCollection(identity, collection, patient))) {
             return error.forbidden('Access denied: You are not authorized to view this collection task.');
           }
 
@@ -54,11 +54,15 @@ exports.handler = async (event) => {
         if (patientId) {
           if (!isAdmin(identity) && !isStaff(identity)) {
             const patient = await patientRepo.getById(patientId);
-            if (patient && !canAccessPatient(identity, patient)) {
+            if (patient && !(await canAccessPatient(identity, patient))) {
               return error.forbidden('Access denied: You are not authorized to view collections for this patient.');
             }
             if (!patient && patientId !== identity.primaryPatientId && patientId !== identity.sub) {
               return error.forbidden('Access denied: Unauthorized patient query.');
+            }
+          } else {
+            if (!(await hasPermission(identity, 'collections', 'view'))) {
+              return error.forbidden('Access denied: Missing collections.view permission');
             }
           }
 
@@ -109,7 +113,7 @@ exports.handler = async (event) => {
         if (!isAdmin(identity) && !isStaff(identity)) {
           if (body.patientId) {
             const patient = await patientRepo.getById(body.patientId);
-            if (patient && !canAccessPatient(identity, patient)) {
+            if (patient && !(await canAccessPatient(identity, patient))) {
               return error.forbidden('Access denied: You cannot create a collection for this patient.');
             }
             if (!patient && body.patientId !== identity.primaryPatientId && body.patientId !== identity.sub) {
@@ -156,14 +160,14 @@ exports.handler = async (event) => {
           patient = await patientRepo.getById(existingCollection.patientId);
         }
 
-        if (!canAccessCollection(identity, existingCollection, patient)) {
+        if (!(await canAccessCollection(identity, existingCollection, patient))) {
           return error.forbidden('Access denied: You are not authorized to modify this collection task.');
         }
 
         const updateBody = JSON.parse(event.body || '{}');
 
         // Check modification permissions (ownership / basic rule boundary)
-        if (!canModifyCollection(identity, existingCollection, updateBody)) {
+        if (!(await canModifyCollection(identity, existingCollection, updateBody))) {
           return error.forbidden('Access denied: You do not have permission to modify these collection fields.');
         }
 

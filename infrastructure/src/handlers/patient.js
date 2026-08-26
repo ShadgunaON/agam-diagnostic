@@ -41,7 +41,7 @@ exports.handler = async (event) => {
           const patient = await patientRepo.getById(rawPatientId);
           if (!patient) return error.notFound('Patient not found');
 
-          if (!canAccessPatient(identity, patient)) {
+          if (!(await canAccessPatient(identity, patient))) {
             // Verify if phlebotomist is assigned to a collection for this patient
             let hasPhlebAccess = false;
             if (isPhlebotomist(identity)) {
@@ -134,7 +134,7 @@ exports.handler = async (event) => {
           return success(created);
         }
 
-        if (!canAccessPatient(identity, existingPatient)) {
+        if (!(await canAccessPatient(identity, existingPatient))) {
           return error.forbidden('Access denied: You are not authorized to update this patient record.');
         }
 

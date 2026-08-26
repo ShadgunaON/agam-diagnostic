@@ -27,7 +27,7 @@ exports.handler = async (event) => {
           if (!notification) {
             return error.notFound('Notification not found');
           }
-          if (!canAccessNotification(identity, notification)) {
+          if (!(await canAccessNotification(identity, notification))) {
             return error.forbidden('Access denied: Cannot view foreign notification.');
           }
           return success(notification);
@@ -38,7 +38,11 @@ exports.handler = async (event) => {
         let targetUserId = identity.sub;
 
         if (requestedUserId) {
-          if (isAdmin(identity)) {
+          if (isAdmin(identity) || isStaff(identity)) {
+            const { hasPermission } = require('../shared/auth');
+            if (!(await hasPermission(identity, 'notifications', 'view'))) {
+              return error.forbidden('Access denied: Missing notifications.view permission');
+            }
             targetUserId = requestedUserId;
           } else {
             // Check if requested userId belongs to caller
@@ -65,7 +69,7 @@ exports.handler = async (event) => {
       case 'POST': {
         const body = JSON.parse(event.body || '{}');
 
-        if (!canCreateNotification(identity, body)) {
+        if (!(await canCreateNotification(identity, body))) {
           return error.forbidden('Access denied: Unauthorized to create notifications for target recipient.');
         }
 
@@ -90,7 +94,7 @@ exports.handler = async (event) => {
           return error.notFound('Notification not found');
         }
 
-        if (!canAccessNotification(identity, existingNotification)) {
+        if (!(await canAccessNotification(identity, existingNotification))) {
           return error.forbidden('Access denied: Cannot modify foreign notification.');
         }
 

@@ -42,7 +42,7 @@ exports.handler = async (event) => {
             patient = await patientRepo.getById(invoice.patientId);
           }
 
-          if (!canAccessInvoice(identity, invoice, patient)) {
+          if (!(await canAccessInvoice(identity, invoice, patient))) {
             return error.forbidden('Access denied: You are not authorized to view this invoice.');
           }
 
@@ -53,11 +53,16 @@ exports.handler = async (event) => {
         if (patientId) {
           if (!isAdmin(identity) && !(isStaff(identity) && !isPhlebotomist(identity))) {
             const patient = await patientRepo.getById(patientId);
-            if (patient && !canAccessPatient(identity, patient)) {
+            if (patient && !(await canAccessPatient(identity, patient))) {
               return error.forbidden('Access denied: You are not authorized to view invoices for this patient.');
             }
             if (!patient && patientId !== identity.primaryPatientId && patientId !== identity.sub) {
               return error.forbidden('Access denied: Unauthorized patient query.');
+            }
+          } else {
+            const { hasPermission } = require('../shared/auth');
+            if (!(await hasPermission(identity, 'invoices', 'view'))) {
+              return error.forbidden('Access denied: Missing invoices.view permission');
             }
           }
 
@@ -114,7 +119,7 @@ exports.handler = async (event) => {
         if (!isAdmin(identity) && !(isStaff(identity) && !isPhlebotomist(identity))) {
           if (body.patientId) {
             const patient = await patientRepo.getById(body.patientId);
-            if (patient && !canAccessPatient(identity, patient)) {
+            if (patient && !(await canAccessPatient(identity, patient))) {
               return error.forbidden('Access denied: Cannot create invoice for unauthorized patient.');
             }
           }
@@ -202,7 +207,7 @@ exports.handler = async (event) => {
 
 
         // General update
-        if (!canModifyInvoice(identity, existingInvoice, updateBody)) {
+        if (!(await canModifyInvoice(identity, existingInvoice, updateBody))) {
           return error.forbidden('Access denied: You do not have permission to modify this invoice.');
         }
 

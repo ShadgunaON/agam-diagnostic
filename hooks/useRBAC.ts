@@ -82,8 +82,15 @@ export function useRBAC(): RBACState {
         if (staffRes.isSuccess) {
           setStaff(staffRes.value);
         } else if (staffRes.isFailure) {
+          const errorName = staffRes.error?.name || '';
           const errMsg = staffRes.error?.message || 'Failed to fetch staff';
-          setError(prev => prev ? `${prev} | ${errMsg}` : errMsg);
+          
+          // Gracefully handle missing staff profile (e.g. 404 Not Found)
+          if (errorName === 'NotFoundError' || errMsg.includes('404') || errMsg.toLowerCase().includes('not found')) {
+            setStaff(null);
+          } else {
+            setError(prev => prev ? `${prev} | ${errMsg}` : errMsg);
+          }
         }
       } else if (user?.role === 'admin') {
         // Admin users without explicit staffId still get full access
@@ -96,7 +103,7 @@ export function useRBAC(): RBACState {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.staffId, user?.role, authState]);
+  }, [user, authState]);
 
   useEffect(() => {
     let cancelled = false;

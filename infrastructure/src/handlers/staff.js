@@ -104,6 +104,11 @@ async function handleCreateStaff(event, identity) {
     });
   }
 
+  const roleStr = role.toLowerCase();
+  if (roleStr === 'super_admin' || roleStr === 'superadmin') {
+    return respond(403, { error: 'Access denied: Cannot assign Super Admin role.' });
+  }
+
   const cleanEmail = email.trim().toLowerCase();
   const cleanPhone = phone.trim().startsWith('+') ? phone.trim() : `+91${phone.trim()}`;
   const cleanName = name.trim();
@@ -261,6 +266,11 @@ async function handleUpdateStaff(staffId, event, identity) {
         error: `Invalid role. Must be one of: ${validRoles.join(', ')}`,
       });
     }
+
+    const roleStr = body.role.toLowerCase();
+    if (roleStr === 'super_admin' || roleStr === 'superadmin') {
+      return respond(403, { error: 'Access denied: Cannot assign Super Admin role.' });
+    }
   }
 
   // Block sensitive field modifications
@@ -312,6 +322,9 @@ async function handleCreateRole(event, identity) {
   if (!isAdmin(identity)) {
     return respond(403, { error: 'Only administrators can create custom roles.' });
   }
+  if (!(await hasPermission(identity, 'staff', 'create'))) {
+    return respond(403, { error: 'Access denied: Missing staff.create permission' });
+  }
 
   let body;
   try {
@@ -328,6 +341,11 @@ async function handleCreateRole(event, identity) {
   // System roles boundary check
   if (VALID_STAFF_ROLES.includes(id)) {
     return respond(400, { error: 'Cannot override system roles.' });
+  }
+
+  const idStr = id.toLowerCase();
+  if (idStr === 'super_admin' || idStr === 'superadmin') {
+    return respond(403, { error: 'Access denied: Cannot create a role with Super Admin privileges.' });
   }
 
   try {
@@ -429,6 +447,9 @@ async function handleGetPermissions(identity) {
 async function handleUpdatePermissions(event, identity) {
   if (!isAdmin(identity)) {
     return respond(403, { error: 'Only administrators can modify permissions.' });
+  }
+  if (!(await hasPermission(identity, 'staff', 'edit'))) {
+    return respond(403, { error: 'Access denied: Missing staff.edit permission' });
   }
   
   let body;

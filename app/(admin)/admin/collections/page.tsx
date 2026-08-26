@@ -162,11 +162,11 @@ export default function CollectionsPage() {
   const unassignedTasks = homeTasks.filter(t => t.status === 'Unassigned').length;
 
   // Can the logged-in user assign phlebotomists? Requires collections.assign permission
-  const canAssign = isAdmin || hasPermission('collections', 'assign');
+  const canAssign = hasPermission('collections', 'assign');
   // Can the logged-in user edit collection status?
-  const canEditStatus = isAdmin || hasPermission('collections', 'edit');
+  const canEditStatus = hasPermission('collections', 'edit');
   // Can the logged-in user record payments?
-  const canRecordPayment = isAdmin || hasPermission('invoices', 'edit');
+  const canRecordPayment = hasPermission('invoices', 'edit');
 
   const refreshTasks = async () => {
     const updateRes = await collectionService.getAll();
@@ -351,7 +351,7 @@ export default function CollectionsPage() {
               <AdminIcon name="calendar" style={{ width: '16px', height: '16px' }} />
               Today, Aug 6
             </button>
-            {(isAdmin || hasPermission('collections', 'create')) && (
+            {hasPermission('collections', 'create') && (
               <button 
                 onMouseEnter={() => setHoverNew(true)}
                 onMouseLeave={() => setHoverNew(false)}
