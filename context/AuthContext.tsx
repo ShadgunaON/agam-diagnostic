@@ -7,8 +7,11 @@ import { authService, patientService } from '@/services';
 import { SessionStorageAdapter } from '@/lib/storage/SessionStorageAdapter';
 import { env } from '@/config/env';
 
+export type AuthState = 'LOADING' | 'AUTHENTICATED' | 'UNAUTHENTICATED' | 'SESSION_EXPIRED';
+
 interface AuthContextType {
   user: UserProfile | null;
+  authState: AuthState;
   isAuthenticated: boolean;
   isProfileComplete: boolean;
   isLoading: boolean;
@@ -37,6 +40,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [authState, setAuthState] = useState<AuthState>('LOADING');
   const [isLoading, setIsLoading] = useState(true);
   const storageAdapter = React.useMemo(() => new SessionStorageAdapter<UserProfile>('agam_auth_user'), []);
 
@@ -44,8 +48,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(userData);
     if (userData) {
       storageAdapter.save(userData);
+      setAuthState('AUTHENTICATED');
     } else {
       storageAdapter.clear();
+      setAuthState('UNAUTHENTICATED');
       if (typeof window !== 'undefined') {
         sessionStorage.removeItem('cognito_access_token');
         sessionStorage.removeItem('cognito_id_token');
@@ -125,17 +131,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const savedUser = storageAdapter.load();
         if (savedUser) {
           setUser(savedUser);
+          setAuthState('AUTHENTICATED');
           if (!env.useMockData) {
             await syncPatientData(savedUser);
           }
+        } else {
+          setAuthState('UNAUTHENTICATED');
         }
       } catch (e) {
         console.error('Failed to load auth state from storage', e);
+        setAuthState('UNAUTHENTICATED');
       } finally {
         setIsLoading(false);
       }
     });
   }, [storageAdapter, syncPatientData]);
+
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setAuthState('SESSION_EXPIRED');
+      setUser(null);
+      storageAdapter.clear();
+      setIsLoading(false);
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('session_expired', handleSessionExpired);
+      return () => {
+        window.removeEventListener('session_expired', handleSessionExpired);
+      };
+    }
+  }, [storageAdapter]);
 
   const signInWithPassword = async (email: string, password: string): Promise<{ success: boolean; user?: UserProfile; error?: string; needsNewPassword?: boolean; session?: string; challengeEmail?: string }> => {
     const result = await authService.signInWithPassword(email, password);
@@ -395,6 +421,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         user,
+        authState,
         isAuthenticated: !!user,
         isProfileComplete: !!user?.isProfileComplete,
         isLoading,

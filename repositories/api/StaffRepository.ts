@@ -81,7 +81,7 @@ export class ApiStaffRepository implements IStaffRepository {
   async getAllRoles(): Promise<Result<RoleModel[]>> {
     const result = await toResult(this.apiClient.get<RoleModel[]>('/api/staff/roles'));
     if (result.isSuccess) {
-      return success(result.value || mockRoles);
+      return success(result.value || []);
     }
     return failure(result.error);
   }
@@ -106,17 +106,8 @@ export class ApiStaffRepository implements IStaffRepository {
     const map: Record<string, ModuleDataModel[]> = {};
 
     for (const r of records) {
-      if (!r.modules || r.modules.length === 0) {
-        map[r.roleId] = (mockPermissionsMap[r.roleId] as ModuleDataModel[]) || createRolePerms({});
-      } else {
+      if (r.modules && r.modules.length > 0) {
         map[r.roleId] = r.modules;
-      }
-    }
-
-    // Ensure all default roles are present even if not yet in storage
-    for (const roleId of Object.keys(mockPermissionsMap)) {
-      if (!map[roleId] || map[roleId].length === 0) {
-        map[roleId] = mockPermissionsMap[roleId] as ModuleDataModel[];
       }
     }
 

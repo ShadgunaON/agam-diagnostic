@@ -14,7 +14,6 @@ import {
   reviewRepository,
   notificationRepository
 } from '@/repositories/registry';
-import { MockReportsRepository } from '@/repositories/mock/ReportsRepository';
 import { BlogService } from './BlogService';
 import { ServiceCatalogService } from './ServiceCatalogService';
 import { PackageService } from './PackageService';
@@ -35,8 +34,6 @@ import { GlobalSearchService } from './GlobalSearchService';
 import { NotificationService } from './NotificationService';
 import { PaymentService, MockPaymentProvider } from './PaymentService';
 
-const reportsRepo = new MockReportsRepository();
-
 export const blogService = new BlogService(blogRepository);
 export const serviceCatalogService = new ServiceCatalogService(serviceRepository);
 export const packageService = new PackageService(packageRepository);
@@ -46,7 +43,7 @@ export const bookingService = new BookingService(bookingRepository, invoiceServi
 invoiceService.setBookingService(bookingService);
 export const reviewService = new ReviewService(reviewRepository, bookingRepository);
 
-export const reportsService = new ReportsService(reportsRepo);
+export const reportsService = new ReportsService(reportsRepository);
 export const notificationService = new NotificationService(notificationRepository);
 export const testCatalogService = new TestCatalogService(testRepository);
 export const collectionService = new CollectionService(collectionRepository);

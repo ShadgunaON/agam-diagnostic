@@ -21,44 +21,45 @@ import { getDefaultRoute } from '@/lib/rbac/routePermissions';
  *   - Authenticated staff but no permission for this route → first accessible route
  */
 export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const { isLoading: rbacLoading, hasPermission, accessibleModules, isStaff } = useRBAC();
+  const { user, authState, isLoading: authLoading } = useAuth();
+  const { isLoading: rbacLoading, error: rbacError, refetch: refetchRBAC, hasPermission, accessibleModules, isStaff } = useRBAC();
   const router = useRouter();
   const pathname = usePathname();
 
-  const isLoading = authLoading || rbacLoading;
+  const isLoading = authLoading || (rbacLoading && authState === 'AUTHENTICATED');
 
   React.useEffect(() => {
     if (isLoading) return;
 
-    // Gate 1: Not authenticated → login
-    if (!isAuthenticated || !user) {
+    if (authState === 'UNAUTHENTICATED') {
       router.replace('/login?returnUrl=' + encodeURIComponent(pathname));
       return;
     }
 
-    // Gate 2: Not a staff user → public site
-    if (!isStaff) {
-      router.replace('/');
-      return;
-    }
+    if (authState === 'AUTHENTICATED') {
+      // Not a staff user → public site
+      if (!isStaff && !rbacError && !rbacLoading) {
+        router.replace('/');
+        return;
+      }
 
-    // Gate 3: Check route-level permissions
-    const routePerm = getRoutePermission(pathname);
-    if (routePerm) {
-      const hasAccess = hasPermission(routePerm.moduleId, routePerm.action);
-      if (!hasAccess) {
-        // Redirect to first accessible route
-        const defaultRoute = getDefaultRoute(accessibleModules);
-        if (defaultRoute !== pathname) {
-          router.replace(defaultRoute);
+      // Check route-level permissions if loaded and no error
+      if (!rbacError && !rbacLoading) {
+        const routePerm = getRoutePermission(pathname);
+        if (routePerm) {
+          const hasAccess = hasPermission(routePerm.moduleId, routePerm.action);
+          if (!hasAccess && accessibleModules.length > 0) {
+            // Redirect to first accessible route
+            const defaultRoute = getDefaultRoute(accessibleModules);
+            if (defaultRoute !== pathname) {
+              router.replace(defaultRoute);
+            }
+          }
         }
       }
     }
-    // If no routePermission mapping exists, allow access (page handles its own checks)
-  }, [isLoading, isAuthenticated, user, isStaff, pathname, hasPermission, accessibleModules, router]);
+  }, [isLoading, authState, user, isStaff, rbacError, rbacLoading, pathname, hasPermission, accessibleModules, router]);
 
-  // Show loading state while auth/RBAC resolves
   if (isLoading) {
     return (
       <div style={{
@@ -78,8 +79,58 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Don't render children if not authorized
-  if (!isAuthenticated || !isStaff) {
+  if (authState === 'SESSION_EXPIRED') {
+    return (
+      <div style={{
+        position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: '#0f172a', zIndex: 9999,
+      }}>
+        <div style={{ textAlign: 'center', maxWidth: '400px', padding: '24px', background: '#1e293b', borderRadius: '12px', border: '1px solid #334155' }}>
+          <h2 style={{ color: '#f8fafc', fontSize: '20px', fontWeight: 600, marginBottom: '12px' }}>Session Expired</h2>
+          <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px', lineHeight: 1.5 }}>
+            For your security, your session has expired. Please log in again to continue working.
+          </p>
+          <button 
+            onClick={() => router.push('/login?returnUrl=' + encodeURIComponent(pathname))}
+            style={{
+              background: '#3b82f6', color: '#fff', border: 'none', padding: '10px 20px', 
+              borderRadius: '6px', fontWeight: 500, cursor: 'pointer', width: '100%'
+            }}
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (rbacError) {
+    return (
+      <div style={{
+        position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: '#0f172a', zIndex: 9999,
+      }}>
+        <div style={{ textAlign: 'center', maxWidth: '400px', padding: '24px', background: '#1e293b', borderRadius: '12px', border: '1px solid #334155' }}>
+          <h2 style={{ color: '#f8fafc', fontSize: '20px', fontWeight: 600, marginBottom: '12px' }}>Access Error</h2>
+          <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px', lineHeight: 1.5 }}>
+            We encountered a problem loading your permissions. <br/> {rbacError}
+          </p>
+          <button 
+            onClick={() => refetchRBAC()}
+            style={{
+              background: '#3b82f6', color: '#fff', border: 'none', padding: '10px 20px', 
+              borderRadius: '6px', fontWeight: 500, cursor: 'pointer', width: '100%'
+            }}
+          >
+            Retry Loading
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render children if not fully authorized and no clear error state
+  if (authState !== 'AUTHENTICATED' || !isStaff) {
     return null;
   }
 

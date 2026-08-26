@@ -9,6 +9,8 @@ import { PermissionEvaluator, PermissionAction } from '@/lib/rbac/PermissionEval
 export interface RBACState {
   /** Whether RBAC data is still loading */
   isLoading: boolean;
+  /** Error message if RBAC failed to load */
+  error: string | null;
   /** The resolved StaffModel (null if not a staff user) */
   staff: StaffModel | null;
   /** The resolved RoleModel (null if not a staff user) */
@@ -25,6 +27,8 @@ export interface RBACState {
   isAdmin: boolean;
   /** Whether the user is any staff role (admin, op, path, phleb, etc.) */
   isStaff: boolean;
+  /** Manually trigger a reload of roles and permissions */
+  refetch: () => Promise<void>;
 }
 
 /**
@@ -39,34 +43,47 @@ export interface RBACState {
  * This hook does NOT contain role-ID-specific authorization logic.
  */
 export function useRBAC(): RBACState {
-  const { user } = useAuth();
+  const { user, authState } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [staff, setStaff] = useState<StaffModel | null>(null);
   const [roles, setRoles] = useState<RoleModel[]>([]);
   const [permissionsMap, setPermissionsMap] = useState<Record<string, ModuleDataModel[]>>({});
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadRBACData = useCallback(async () => {
+    // If not authenticated or session expired, don't attempt to fetch
+    if (authState === 'UNAUTHENTICATED' || authState === 'SESSION_EXPIRED') {
+      setIsLoading(false);
+      return;
+    }
 
-    const loadRBACData = async () => {
-      setIsLoading(true);
+    setIsLoading(true);
+    setError(null);
 
+    try {
       // Always load roles and permissions for admin sidebar filtering
       const [rolesRes, permsRes] = await Promise.all([
         staffService.getAllRoles(),
         staffService.getAllPermissionsMap(),
       ]);
 
-      if (cancelled) return;
-
-      if (rolesRes.isSuccess) setRoles(rolesRes.value);
-      if (permsRes.isSuccess) setPermissionsMap(permsRes.value);
+      if (rolesRes.isFailure) {
+        setError(rolesRes.error?.message || 'Failed to fetch roles');
+      } else if (permsRes.isFailure) {
+        setError(permsRes.error?.message || 'Failed to fetch permissions');
+      } else {
+        setRoles(rolesRes.value);
+        setPermissionsMap(permsRes.value);
+      }
 
       // Resolve staff from user session
       if (user?.staffId) {
         const staffRes = await staffService.getStaffById(user.staffId);
-        if (!cancelled && staffRes.isSuccess) {
+        if (staffRes.isSuccess) {
           setStaff(staffRes.value);
+        } else if (staffRes.isFailure) {
+          const errMsg = staffRes.error?.message || 'Failed to fetch staff';
+          setError(prev => prev ? `${prev} | ${errMsg}` : errMsg);
         }
       } else if (user?.role === 'admin') {
         // Admin users without explicit staffId still get full access
@@ -74,14 +91,24 @@ export function useRBAC(): RBACState {
       } else {
         setStaff(null);
       }
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred loading RBAC');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.staffId, user?.role, authState]);
 
-      if (!cancelled) setIsLoading(false);
-    };
-
-    loadRBACData();
+  useEffect(() => {
+    let cancelled = false;
+    
+    // Using an IIFE to handle the promise inside useEffect while respecting cancellation
+    (async () => {
+      await loadRBACData();
+      if (cancelled) return;
+    })();
 
     return () => { cancelled = true; };
-  }, [user?.staffId, user?.role]);
+  }, [loadRBACData]);
 
   // Derive the role from either the staff record or the user session
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
@@ -127,6 +154,7 @@ export function useRBAC(): RBACState {
 
   return {
     isLoading,
+    error,
     staff,
     role,
     permissionsMap,
@@ -135,5 +163,6 @@ export function useRBAC(): RBACState {
     accessibleModules,
     isAdmin,
     isStaff,
+    refetch: loadRBACData,
   };
 }
