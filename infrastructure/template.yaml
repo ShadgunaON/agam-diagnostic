@@ -29,8 +29,8 @@ Parameters:
     Description: Deployment environment
 
   SuperAdminSub:
-    Type: String
-    Default: '{{resolve:ssm:/agam/SuperAdminSub}}'
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /agam/SuperAdminSub
     NoEcho: true
     Description: Canonical Cognito Sub UUID of the permanent immutable root Super Admin.
 
