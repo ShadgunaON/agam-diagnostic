@@ -179,7 +179,23 @@ export class ApiClient implements IApiClient {
         if (response.status === 401) {
            throw new NetworkError('Unauthorized');
         }
-        throw new NetworkError(data?.error?.message || data?.message || 'API request failed');
+        
+        let errorMessage = 'API request failed';
+        if (data) {
+          if (typeof data.error === 'string') {
+            errorMessage = data.error;
+          } else if (data.error?.message) {
+            errorMessage = data.error.message;
+          } else if (typeof data.message === 'string') {
+            errorMessage = data.message;
+          }
+        }
+        
+        if (response.status === 404 && !errorMessage.includes('not found')) {
+          errorMessage = '404 Not Found';
+        }
+
+        throw new NetworkError(errorMessage);
       }
 
       const responseHeaders: Record<string, string> = {};

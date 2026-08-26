@@ -45,14 +45,7 @@ function isSuperAdmin(identity) {
     return true;
   }
 
-  // 2. Cognito Group Authority
-  if (identity.groups?.some(g => g.toLowerCase() === 'superadmin' || g.toLowerCase() === 'super_admin')) {
-    return true;
-  }
-
-  // 3. Custom Role Authority (Protected at creation time in staff.js)
-  const role = (identity.role || '').toLowerCase();
-  return role === 'super_admin' || role === 'superadmin';
+  return false;
 }
 
 /**

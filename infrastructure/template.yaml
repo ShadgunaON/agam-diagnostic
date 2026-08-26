@@ -30,7 +30,8 @@ Parameters:
 
   SuperAdminSub:
     Type: String
-    Default: ""
+    Default: '{{resolve:ssm:/agam/SuperAdminSub}}'
+    NoEcho: true
     Description: Canonical Cognito Sub UUID of the permanent immutable root Super Admin.
 
 Resources:
