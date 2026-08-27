@@ -656,6 +656,67 @@ Resources:
             Auth:
               Authorizer: NONE
 
+  ServiceFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        EntryPoints:
+          - src/handlers/service.js
+    Properties:
+      CodeUri: .
+      Handler: src/handlers/service.handler
+      Role: !GetAtt AgamLambdaExecutionRole.Arn
+      Events:
+        PublicServices:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AgamApi
+            Path: /api/services
+            Method: get
+            Auth:
+              Authorizer: NONE
+        PublicServiceSlug:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AgamApi
+            Path: /api/services/{proxy+}
+            Method: get
+            Auth:
+              Authorizer: NONE
+
+  PackageFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        EntryPoints:
+          - src/handlers/package.js
+    Properties:
+      CodeUri: .
+      Handler: src/handlers/package.handler
+      Role: !GetAtt AgamLambdaExecutionRole.Arn
+      Events:
+        PublicPackages:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AgamApi
+            Path: /api/packages
+            Method: get
+            Auth:
+              Authorizer: NONE
+        PublicPackageSlug:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AgamApi
+            Path: /api/packages/{proxy+}
+            Method: get
+            Auth:
+              Authorizer: NONE
 
   StaffFunction:
     Type: AWS::Serverless::Function

@@ -161,7 +161,8 @@ export default function AdminCreateBookingPage() {
         ]
       };
 
-      const bookingRes = await bookingService.createBooking(bookingPayload);
+      const idempotencyKey = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      const bookingRes = await bookingService.createBooking(bookingPayload, { idempotencyKey });
       if (bookingRes.isSuccess && bookingRes.value) {
         setSuccessBooking(bookingRes.value);
         toast({ title: 'Success', description: 'Booking created successfully.', variant: 'success' });

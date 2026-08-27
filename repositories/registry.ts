@@ -112,13 +112,6 @@ export const reportsRepository: IReportsRepository = env.useMockData
   ? new MockReportsRepository()
   : new ApiReportsRepository(apiClient);
 
-// ==========================================================
-// CONTENT-CATALOG REPOSITORIES (No backend Lambda exists yet)
-// These always use local data repositories in ALL modes.
-// Their "API" implementations are stubs that return failure.
-// When backend endpoints are built, move them to the section above.
-// ==========================================================
-
 export const serviceRepository: IServicesRepository = env.useMockData
   ? new MockServiceRepository()
   : new ApiServiceRepository(apiClient);
@@ -130,6 +123,13 @@ export const packageRepository: IPackagesRepository = env.useMockData
 export const testRepository: ITestsRepository = env.useMockData
   ? new MockTestRepository()
   : new ApiTestRepository(apiClient);
+
+// ==========================================================
+// CONTENT-CATALOG REPOSITORIES (No backend Lambda exists yet)
+// These always use local data repositories in ALL modes.
+// Their "API" implementations are stubs that return failure.
+// When backend endpoints are built, move them to the section above.
+// ==========================================================
 
 export const staffRepository: IStaffRepository = env.useMockData
   ? new MockStaffRepository()

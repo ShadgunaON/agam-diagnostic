@@ -1,0 +1,120 @@
+2026-08-27T11:35:10.745Z [INFO]: # Build environment configured with Standard build compute type: 8GiB Memory, 4vCPUs, 128GB Disk Space
+2026-08-27T11:35:11.265Z [INFO]: # Cloning repository: git@github.com:ShadgunaON/agam-diagnostic.git
+2026-08-27T11:35:12.622Z [INFO]: 
+2026-08-27T11:35:12.623Z [INFO]: Cloning into 'agam-diagnostic'...
+2026-08-27T11:35:12.624Z [INFO]: # Checking for Git submodules at: /codebuild/output/src784462204/src/agam-diagnostic/.gitmodules
+2026-08-27T11:35:12.632Z [INFO]: # Retrieving environment cache...
+2026-08-27T11:35:12.681Z [WARNING]: ! Unable to write cache: {"code":"ERR_BAD_REQUEST","message":"Request failed with status code 404"})}
+2026-08-27T11:35:12.682Z [INFO]: ---- Setting Up SSM Secrets ----
+2026-08-27T11:35:12.682Z [INFO]: SSM params {"Path":"/amplify/d1cyj9bls517ho/main/","WithDecryption":true}
+2026-08-27T11:35:12.735Z [WARNING]: !Failed to set up process.env.secrets
+2026-08-27T11:35:14.140Z [INFO]: # No package override configuration found.
+2026-08-27T11:35:14.251Z [INFO]: # Retrieving cache...
+2026-08-27T11:35:16.510Z [INFO]: # Extracting cache...
+2026-08-27T11:35:17.137Z [INFO]: # Extraction completed
+2026-08-27T11:35:17.153Z [INFO]: # Retrieved cache
+2026-08-27T11:35:24.511Z [INFO]: ## Starting Backend Build
+                                 ## Checking for associated backend environment...
+                                 ## No backend environment association found, continuing...
+                                 ## Completed Backend Build
+2026-08-27T11:35:24.516Z [INFO]: {"backendDuration": 0}
+                                 ## Starting Frontend Build
+                                 # Starting phase: preBuild
+                                 # Executing command: npm ci --cache .npm --prefer-offline
+2026-08-27T11:36:15.224Z [INFO]: added 448 packages, and audited 449 packages in 41s
+2026-08-27T11:36:15.236Z [INFO]: 156 packages are looking for funding
+                                 run `npm fund` for details
+2026-08-27T11:36:15.285Z [INFO]: 6 high severity vulnerabilities
+                                 To address issues that do not require attention, run:
+                                 npm audit fix
+                                 To address all issues, run:
+                                 npm audit fix --force
+                                 Run `npm audit` for details.
+2026-08-27T11:36:15.319Z [INFO]: # Completed phase: preBuild
+                                 # Starting phase: build
+                                 # Executing command: rm -rf .next/cache
+2026-08-27T11:36:15.321Z [INFO]: # Executing command: npm run build
+2026-08-27T11:36:15.436Z [INFO]: > agam-diagnostics-next@0.1.0 build
+                                 > next build
+2026-08-27T11:36:15.899Z [INFO]: ⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+2026-08-27T11:36:15.909Z [INFO]: Attention: Next.js now collects completely anonymous telemetry regarding usage.
+2026-08-27T11:36:15.909Z [INFO]: This information is used to shape Next.js' roadmap and prioritize features.
+                                 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+                                 https://nextjs.org/telemetry
+2026-08-27T11:36:15.924Z [INFO]: ▲ Next.js 16.2.12 (Turbopack)
+2026-08-27T11:36:15.924Z [INFO]: 
+2026-08-27T11:36:16.031Z [INFO]: Creating an optimized production build ...
+2026-08-27T11:36:28.098Z [INFO]: ✓ Compiled successfully in 11.8s
+2026-08-27T11:36:28.112Z [INFO]: Running TypeScript ...
+2026-08-27T11:36:39.301Z [INFO]: Finished TypeScript in 11.2s ...
+2026-08-27T11:36:39.308Z [INFO]: Collecting page data using 3 workers ...
+2026-08-27T11:36:41.205Z [INFO]: Generating static pages using 3 workers (0/38) ...
+2026-08-27T11:36:41.644Z [INFO]: Generating static pages using 3 workers (9/38)
+2026-08-27T11:36:41.711Z [INFO]: Generating static pages using 3 workers (18/38)
+2026-08-27T11:36:41.790Z [INFO]: Generating static pages using 3 workers (28/38)
+2026-08-27T11:36:41.937Z [INFO]: ✓ Generating static pages using 3 workers (38/38) in 733ms
+2026-08-27T11:36:41.948Z [INFO]: Finalizing page optimization ...
+2026-08-27T11:36:42.225Z [INFO]: 
+2026-08-27T11:36:42.229Z [INFO]: Route (app)
+                                 ┌ ○ /
+                                 ├ ○ /_not-found
+                                 ├ ○ /about
+                                 ├ ○ /admin
+                                 ├ ○ /admin/analytics
+                                 ├ ○ /admin/blogs
+                                 ├ ○ /admin/bookings
+                                 ├ ○ /admin/bookings/create
+                                 ├ ○ /admin/collections
+                                 ├ ○ /admin/invoices
+                                 ├ ƒ /admin/invoices/[invoiceId]
+                                 ├ ○ /admin/newsletter
+                                 ├ ○ /admin/patients
+                                 ├ ƒ /admin/patients/[patientId]
+                                 ├ ○ /admin/profile
+                                 ├ ○ /admin/reports
+                                 ├ ○ /admin/reviews
+                                 ├ ○ /admin/settings
+                                 ├ ○ /admin/staff
+                                 ├ ƒ /admin/staff/[staffId]
+                                 ├ ○ /blog
+                                 ├ ● /blog/[slug]
+                                 ├ ○ /book
+                                 ├ ƒ /book/success/[id]
+                                 ├ ○ /bookings
+                                 ├ ƒ /bookings/[bookingId]/receipt
+                                 ├ ○ /genetic-tests
+                                 ├ ○ /health-packages
+                                 ├ ● /health-packages/[slug]
+                                 ├ ○ /help
+                                 ├ ○ /lifestyle-health
+                                 ├ ○ /login
+                                 ├ ○ /men-health
+                                 ├ ƒ /payment/[invoiceId]
+                                 ├ ○ /privacy-policy
+                                 ├ ○ /profile
+                                 ├ ○ /reports
+                                 ├ ○ /reviews
+                                 ├ ƒ /reviews/new/[bookingId]
+                                 ├ ○ /robots.txt
+                                 ├ ○ /services
+                                 ├ ● /services/[slug]
+                                 ├ ○ /sitemap.xml
+                                 ├ ○ /terms
+                                 ├ ○ /tests
+                                 ├ ● /tests/[slug]
+                                 └ ○ /women-health
+2026-08-27T11:36:42.229Z [INFO]: ○  (Static)   prerendered as static content
+                                 ●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+                                 ƒ  (Dynamic)  server-rendered on demand
+2026-08-27T11:36:42.307Z [INFO]: # Completed phase: build
+                                 ## Completed Frontend Build
+2026-08-27T11:36:42.318Z [INFO]: ## Build completed successfully
+2026-08-27T11:36:42.318Z [INFO]: # Starting caching...
+2026-08-27T11:36:42.325Z [INFO]: # Creating cache artifact...
+2026-08-27T11:36:43.165Z [INFO]: # Created cache artifact
+2026-08-27T11:36:43.291Z [INFO]: # Uploading cache artifact...
+2026-08-27T11:36:44.739Z [INFO]: # Uploaded cache artifact
+2026-08-27T11:36:44.739Z [INFO]: # Caching completed
+2026-08-27T11:37:11.003Z [INFO]: # Starting environment caching...
+2026-08-27T11:37:11.101Z [INFO]: # Environment caching completed
+
