@@ -106,7 +106,7 @@ export default function AdminCreateBookingPage() {
         const createRes = await patientService.create({
           name: newPatientData.name,
           phone: newPatientData.phone,
-          ...(newPatientData.email ? { email: newPatientData.email } : {}),
+          email: newPatientData.email || '',
           age: newPatientData.age,
           gender: newPatientData.gender,
           bloodGroup: newPatientData.bloodGroup,
