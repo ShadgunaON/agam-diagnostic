@@ -3,6 +3,8 @@ const { success, error } = require('../shared/response');
 const { logger } = require('../shared/logger');
 const reviewRepo = require('../repositories/dynamo-review');
 const bookingRepo = require('../repositories/dynamo-booking');
+const notificationRepo = require('../repositories/dynamo-notification');
+const staffRepo = require('../repositories/dynamo-staff');
 
 function sanitizePublicReview(review) {
   if (!review) return null;
@@ -187,6 +189,25 @@ exports.handler = async (event) => {
 
       try {
         const createdReview = await reviewRepo.create(reviewPayload);
+
+        // Notify Admins
+        try {
+          const allStaff = await staffRepo.getAllStaff();
+          const admins = allStaff.filter(s => s.role === 'admin' || s.role === 'superadmin');
+          
+          for (const admin of admins) {
+            await notificationRepo.create({
+              userId: admin.id,
+              title: 'New Patient Review',
+              message: `A new ${rating}-star review for booking ${booking.id} requires moderation.`,
+              type: 'system',
+              link: '/admin/reviews',
+            });
+          }
+        } catch (notifErr) {
+          logger.error('Failed to send review notifications to admins', { error: notifErr.message });
+        }
+
         return success(createdReview, 201);
       } catch (createErr) {
         if (createErr.code === 'DUPLICATE_REVIEW' || createErr.statusCode === 409) {

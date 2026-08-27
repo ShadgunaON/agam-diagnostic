@@ -230,8 +230,9 @@ export default function BookingsPage() {
                           View Receipt
                         </Link>
                       )}
-                      {booking.status === 'Completed' && (
-                        <>
+                      {/* Review Section */}
+                      {(booking.status === 'Completed' || review) && (
+                        <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
                           {!review ? (
                             <Link href={`/reviews/new/${booking.id}`} className="w-full text-center py-2 px-4 bg-blue-50 border border-blue-200 text-blue-700 text-sm font-bold rounded-full hover:bg-blue-100 transition-colors">
                               Write a Review
@@ -239,12 +240,12 @@ export default function BookingsPage() {
                           ) : (
                             <span className={`w-full text-center py-2 px-4 border text-sm font-bold rounded-full ${review.status === 'Approved' ? 'bg-green-50 border-green-200 text-green-700' :
                                 review.status === 'Pending' ? 'bg-orange-50 border-orange-200 text-orange-700' :
-                                  'bg-red-50 border-red-200 text-red-700'
+                                  'bg-slate-50 border-slate-200 text-slate-700'
                               }`}>
                               Review {review.status}
                             </span>
                           )}
-                        </>
+                        </div>
                       )}
                     </div>
                   </div>

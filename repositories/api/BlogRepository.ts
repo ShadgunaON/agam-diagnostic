@@ -48,7 +48,24 @@ export class ApiBlogRepository implements IBlogRepository {
   }
 
   async getPopularReads(): Promise<Result<PopularRead[]>> {
-    return success(blogData.popularReads);
+    const res = await this.getArticles(1, 50);
+    if (res.isFailure) {
+      return failure(res.error);
+    }
+    
+    const published = res.value.data.filter((a) => a.status === 'Published');
+    const popular = published
+      .sort((a, b) => (b.views || 0) - (a.views || 0))
+      .slice(0, 5)
+      .map(article => ({
+        title: article.title,
+        imageUrl: article.imageUrl || article.image || '/assets/images/placeholder.jpg',
+        date: article.date,
+        icon: article.icon || 'DocumentTextIcon',
+        slug: article.slug
+      }));
+      
+    return success(popular);
   }
 
   async getHeroData(): Promise<Result<BlogHero>> {
