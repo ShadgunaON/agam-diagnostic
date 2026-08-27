@@ -13,7 +13,11 @@ interface TestDetailPageProps {
 
 export async function generateStaticParams() {
   const result = await testCatalogService.getCatalog(1, 100);
-  if (result.isFailure) return [];
+  if (result.isFailure) {
+    console.error("CRITICAL BUILD ERROR in tests/generateStaticParams:", result.error);
+    throw new Error(`Failed to fetch catalog: ${result.error?.message || result.error || 'Unknown error'}`);
+  }
+  
   return result.value.data.map((test) => ({
     slug: test.slug,
   }));

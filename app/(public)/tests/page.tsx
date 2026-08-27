@@ -19,6 +19,10 @@ export default async function TestsPage() {
   ]);
 
   if (heroResult.isFailure || categoriesResult.isFailure || catalogResult.isFailure) {
+    console.error("CRITICAL BUILD ERROR in tests/page.tsx:");
+    if (heroResult.isFailure) console.error("heroResult:", heroResult.error);
+    if (categoriesResult.isFailure) console.error("categoriesResult:", categoriesResult.error);
+    if (catalogResult.isFailure) console.error("catalogResult:", catalogResult.error);
     return <ErrorState title="Failed to load tests" description="We couldn't load the tests right now. Please try again later." />;
   }
 
