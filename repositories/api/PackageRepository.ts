@@ -1,5 +1,5 @@
 import { IPackagesRepository } from '@/domains/packages/repository';
-import { PackageItem, PackageDetailData, PackagesHero, PackageBenefit, PackageProcessStep } from '@/domains/packages/model';
+import { PackageItem, PackageDetailData, PackagesHero, Benefit, ProcessStep, FeaturedPackage } from '@/domains/packages/model';
 import { Result, success, failure } from '@/shared/result';
 import { PaginatedResponse } from '@/lib/api/types';
 import { IApiClient } from '@/lib/api/client';
@@ -16,8 +16,8 @@ export class ApiPackageRepository implements IPackagesRepository {
     );
   }
 
-  async getFeaturedPackages(): Promise<Result<PackageItem[]>> {
-    const res = await toResult(this.apiClient.get<PackageItem[]>(`/api/packages/featured`));
+  async getFeaturedPackages(): Promise<Result<FeaturedPackage[]>> {
+    const res = await toResult(this.apiClient.get<FeaturedPackage[]>(`/api/packages/featured`));
     if (res.isSuccess) {
       return success(res.value || []);
     }
@@ -29,19 +29,20 @@ export class ApiPackageRepository implements IPackagesRepository {
       title: 'Comprehensive Health Packages',
       description: 'Proactive health monitoring with our carefully designed full-body checkups and specialized wellness packages.',
       image: '/images/hero_packages_visual.png',
+      pill: 'Preventive Healthcare'
     });
   }
 
-  async getBenefits(): Promise<Result<PackageBenefit[]>> {
-    const res = await toResult(this.apiClient.get<PackageBenefit[]>(`/api/packages/benefits`));
+  async getBenefits(): Promise<Result<Benefit[]>> {
+    const res = await toResult(this.apiClient.get<Benefit[]>(`/api/packages/benefits`));
     if (res.isSuccess) {
       return success(res.value || []);
     }
     return failure(res.error);
   }
 
-  async getProcessSteps(): Promise<Result<PackageProcessStep[]>> {
-    const res = await toResult(this.apiClient.get<PackageProcessStep[]>(`/api/packages/process`));
+  async getProcessSteps(): Promise<Result<ProcessStep[]>> {
+    const res = await toResult(this.apiClient.get<ProcessStep[]>(`/api/packages/process`));
     if (res.isSuccess) {
       return success(res.value || []);
     }
