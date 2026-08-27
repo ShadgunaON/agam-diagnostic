@@ -1,6 +1,6 @@
 import { IServicesRepository } from '@/domains/services/repository';
 import { ServiceItem, ServiceDetailData, ServicesHero } from '@/domains/services/model';
-import { Result } from '@/shared/result';
+import { Result, success } from '@/shared/result';
 import { PaginatedResponse } from '@/lib/api/types';
 import { IApiClient } from '@/lib/api/client';
 import { toResult } from '@/lib/api/utils';
@@ -24,13 +24,10 @@ export class ApiServiceRepository implements IServicesRepository {
     // Actually, in Phase 2.4, we didn't expose getHeroData via API Gateway for tests!
     // We just return a static fallback if the API doesn't have it.
     // Let's check TestRepository to see what it did.
-    return {
-      isSuccess: true,
-      value: {
-        title: 'Our Medical Services',
-        description: 'Comprehensive diagnostic services delivering accurate results with state-of-the-art technology and expert care.',
-        image: '/images/hero_services_visual.png',
-      }
-    };
+    return success({
+      title: 'Our Medical Services',
+      description: 'We offer a wide range of medical services to ensure your health and well-being.',
+      image: '/images/services_hero_visual.png'
+    });
   }
 }
