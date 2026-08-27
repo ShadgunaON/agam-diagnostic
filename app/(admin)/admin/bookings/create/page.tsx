@@ -106,7 +106,7 @@ export default function AdminCreateBookingPage() {
         const createRes = await patientService.create({
           name: newPatientData.name,
           phone: newPatientData.phone,
-          email: newPatientData.email || 'no-email@example.com',
+          ...(newPatientData.email ? { email: newPatientData.email } : {}),
           age: newPatientData.age,
           gender: newPatientData.gender,
           bloodGroup: newPatientData.bloodGroup,
@@ -116,7 +116,7 @@ export default function AdminCreateBookingPage() {
         });
 
         if (!createRes.isSuccess || !createRes.value) {
-          throw new Error('Failed to create patient');
+          throw new Error(createRes.error?.message || 'Failed to create patient');
         }
         finalPatient = createRes.value;
       }
