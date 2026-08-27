@@ -40,7 +40,9 @@ class DynamoBlogRepository {
 
     const response = await docClient.send(new QueryCommand(params));
     if (!response.Items || response.Items.length === 0) return null;
-    return this._mapFromDb(response.Items[0]);
+    
+    const published = response.Items.find(i => i.status === 'Published');
+    return this._mapFromDb(published || response.Items[0]);
   }
 
   async getPublicPublished(limit = 100) {
