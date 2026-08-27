@@ -8,7 +8,7 @@ import { Drawer } from '@/components/ui/Drawer';
 import { blogService } from '@/services';
 import { BlogArticle } from '@/domains/blog/model';
 import { useRBAC } from '@/hooks/useRBAC';
-import { createBlogArticleAction, updateBlogArticleAction, deleteBlogArticleAction } from './actions';
+import { revalidateBlogCache } from './actions';
 
 export default function AdminBlogsPage() {
   const [mounted, setMounted] = useState(false);
@@ -87,11 +87,12 @@ export default function AdminBlogsPage() {
         date: newDate,
       };
       
-      const result = await updateBlogArticleAction(editingArticleId, updates);
-      if (result.success && result.data) {
-        setArticles(articles.map(a => a.id === editingArticleId ? result.data! : a));
+      const result = await blogService.updateArticle(editingArticleId, updates);
+      if (result.isSuccess && result.value) {
+        setArticles(articles.map(a => a.id === editingArticleId ? result.value! : a));
         setIsEditorOpen(false);
         toast({ title: 'Article Updated', description: 'Your changes have been saved.', variant: 'success' });
+        await revalidateBlogCache(editingArticleId);
       } else {
         error('Update Failed', 'Could not update the article at this time.');
       }
@@ -114,12 +115,13 @@ export default function AdminBlogsPage() {
         image: newImageUrl
       };
       
-      const result = await createBlogArticleAction(newArticleData);
+      const result = await blogService.createArticle(newArticleData);
       
-      if (result.success && result.data) {
-        setArticles([result.data, ...articles]);
+      if (result.isSuccess && result.value) {
+        setArticles([result.value, ...articles]);
         setIsEditorOpen(false);
         toast({ title: 'Post Published', description: 'Your blog article is now live.', variant: 'success' });
+        await revalidateBlogCache();
       } else {
         error('Publishing Failed', 'Could not create the article at this time.');
       }
@@ -128,10 +130,11 @@ export default function AdminBlogsPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this article?')) return;
-    const result = await deleteBlogArticleAction(id);
-    if (result.success) {
+    const result = await blogService.deleteArticle(id);
+    if (result.isSuccess) {
       setArticles(articles.filter(a => a.id !== id));
       toast({ title: 'Article Deleted', description: 'The article has been removed.', variant: 'success' });
+      await revalidateBlogCache();
     } else {
       error('Delete Failed', 'Could not delete the article.');
     }
