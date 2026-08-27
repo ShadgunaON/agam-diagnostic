@@ -289,7 +289,7 @@ Resources:
                   - cognito-idp:AdminCreateUser
                   - cognito-idp:AdminAddUserToGroup
                   - cognito-idp:AdminGetUser
-                Resource: !GetAtt AgamUserPool.Arn
+                Resource: !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/*"
 
   HealthCheckFunction:
     Type: AWS::Serverless::Function
@@ -624,6 +624,38 @@ Resources:
             RestApiId: !Ref AgamApi
             Path: /api/newsletter/subscribers
             Method: get
+
+  TestFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        EntryPoints:
+          - src/handlers/test.js
+    Properties:
+      CodeUri: .
+      Handler: src/handlers/test.handler
+      Role: !GetAtt AgamLambdaExecutionRole.Arn
+      Events:
+        PublicTests:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AgamApi
+            Path: /api/tests
+            Method: get
+            Auth:
+              Authorizer: NONE
+        PublicTestSlug:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AgamApi
+            Path: /api/tests/{proxy+}
+            Method: get
+            Auth:
+              Authorizer: NONE
+
 
   StaffFunction:
     Type: AWS::Serverless::Function
