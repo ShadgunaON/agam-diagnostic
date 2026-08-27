@@ -115,8 +115,11 @@ export default function AdminCreateBookingPage() {
           updatedAt: new Date().toISOString()
         });
 
-        if (!createRes.isSuccess || !createRes.value) {
+        if (!createRes.isSuccess) {
           throw new Error(createRes.error?.message || 'Failed to create patient');
+        }
+        if (!createRes.value) {
+          throw new Error('Failed to create patient: Missing response data');
         }
         finalPatient = createRes.value;
       }
