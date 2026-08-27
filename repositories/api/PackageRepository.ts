@@ -17,9 +17,10 @@ export class ApiPackageRepository implements IPackagesRepository {
   }
 
   async getFeaturedPackages(): Promise<Result<FeaturedPackage[]>> {
-    const res = await toResult(this.apiClient.get<FeaturedPackage[]>(`/api/packages/featured`));
+    const res = await toResult(this.apiClient.get<any>(`/api/packages/featured`));
     if (res.isSuccess) {
-      return success(res.value || []);
+      const arr = Array.isArray(res.value) ? res.value : (res.value?.data || []);
+      return success(Array.isArray(arr) ? arr : []);
     }
     return failure(res.error);
   }
@@ -34,26 +35,38 @@ export class ApiPackageRepository implements IPackagesRepository {
   }
 
   async getBenefits(): Promise<Result<Benefit[]>> {
-    const res = await toResult(this.apiClient.get<Benefit[]>(`/api/packages/benefits`));
+    const res = await toResult(this.apiClient.get<any>(`/api/packages/benefits`));
     if (res.isSuccess) {
-      return success(res.value || []);
+      const arr = Array.isArray(res.value) ? res.value : (res.value?.data || []);
+      return success(Array.isArray(arr) ? arr : []);
     }
     return failure(res.error);
   }
 
   async getProcessSteps(): Promise<Result<ProcessStep[]>> {
-    const res = await toResult(this.apiClient.get<ProcessStep[]>(`/api/packages/process`));
+    const res = await toResult(this.apiClient.get<any>(`/api/packages/process`));
     if (res.isSuccess) {
-      return success(res.value || []);
+      const arr = Array.isArray(res.value) ? res.value : (res.value?.data || []);
+      return success(Array.isArray(arr) ? arr : []);
     }
     return failure(res.error);
   }
 
   async getPackageBySlug(slug: string): Promise<Result<PackageDetailData>> {
-    return toResult(
-      this.apiClient.get<PackageDetailData>(
-        `/api/packages/${encodeURIComponent(slug)}`
-      )
-    );
+    const res = await toResult(this.apiClient.get<any>(`/api/packages/${encodeURIComponent(slug)}`));
+    if (res.isFailure) return failure(res.error);
+    
+    // Fill in missing details since DynamoDB only contains basic catalog info right now
+    const enriched: PackageDetailData = {
+      ...res.value,
+      includes: res.value.includes || ["Comprehensive testing parameters"],
+      whoShouldGet: res.value.whoShouldGet || "Anyone looking for a comprehensive health checkup.",
+      preparation: res.value.preparation || "Fasting for 9-12 hours is recommended.",
+      relatedPackages: res.value.relatedPackages || [],
+      highlights: res.value.highlights || ["Reports in 12-24 hrs", "Free Home Collection", "NABL Accredited"],
+      includedTests: res.value.includedTests || []
+    };
+    
+    return success(enriched);
   }
 }
