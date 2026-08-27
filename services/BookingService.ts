@@ -41,36 +41,15 @@ export class BookingService {
     return this.repository.getRecent(limit);
   }
 
-  async createBooking(booking: Omit<import('@/domains/booking/model').BookingModel, 'id' | 'createdAt' | 'status'>): Promise<Result<BookingCreateResult>> {
-    const res = await this.repository.create(booking);
-    if (res.isSuccess) {
-      let invoiceId: string | undefined;
-      if (this.invoiceService) {
-        const invRes = await this.invoiceService.generateFromBooking(res.value);
-        if (invRes.isSuccess) {
-          invoiceId = invRes.value.id;
-        }
-      }
-      if (this.collectionService) {
-        await this.collectionService.createFromBooking(res.value);
-      }
-      return resultSuccess({ ...res.value, invoiceId });
-    }
+  async createBooking(booking: Omit<import('@/domains/booking/model').BookingModel, 'id' | 'createdAt' | 'status'>, options?: { idempotencyKey?: string }): Promise<Result<BookingCreateResult>> {
+    const res = await this.repository.create(booking, options);
+    // Note: The backend now atomicially creates the booking, invoice, and collection task in a single DynamoDB transaction.
+    // The orchestration code here has been removed.
     return res;
   }
 
   async updateBookingStatus(id: string, status: import('@/domains/booking/model').BookingModel['status']) {
-    const res = await this.repository.updateStatus(id, status);
-    if (res.isSuccess && status === 'Completed' && this.collectionService) {
-      const collectionsRes = await this.collectionService.getAll();
-      if (collectionsRes.isSuccess) {
-        const matchingTask = collectionsRes.value.find(t => t.bookingId === id);
-        if (matchingTask) {
-          await this.collectionService.updateTask(matchingTask.id, { status: 'Completed' });
-        }
-      }
-    }
-    return res;
+    return this.repository.updateStatus(id, status);
   }
 
   async updatePaymentStatus(id: string, status: import('@/domains/booking/model').BookingModel['payment']['status']) {

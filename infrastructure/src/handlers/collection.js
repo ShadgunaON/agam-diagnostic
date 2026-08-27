@@ -13,6 +13,8 @@ const { success, error } = require('../shared/response');
 const { logger } = require('../shared/logger');
 const collectionRepo = require('../repositories/dynamo-collection');
 const patientRepo = require('../repositories/dynamo-patient');
+const bookingRepo = require('../repositories/dynamo-booking');
+const reportRepo = require('../repositories/dynamo-report');
 
 exports.handler = async (event) => {
   logger.info(`Incoming collection request: ${event.httpMethod} ${event.path}`);
@@ -198,6 +200,46 @@ exports.handler = async (event) => {
         }
 
         const updatedCollection = await collectionRepo.update(rawCollectionId, updateBody);
+
+        // --- BACKEND AUTHORITATIVE LIFECYCLE SYNC ---
+        // If collection status changed, propagate authoritative state to Booking and Reports
+        if (updateBody.status && updateBody.status !== existingCollection.status && existingCollection.bookingId) {
+          const bookingId = existingCollection.bookingId;
+          const statusMap = {
+            'Assigned': 'Assigned',
+            'Sample Collected': 'Sample Collected',
+            'Completed': 'Completed'
+          };
+          
+          if (statusMap[updateBody.status]) {
+            try {
+              await bookingRepo.updateStatus(bookingId, statusMap[updateBody.status]);
+            } catch (syncErr) {
+              logger.warn(`Failed to sync booking ${bookingId} status to ${statusMap[updateBody.status]}`, syncErr);
+            }
+          }
+
+          // If sample is collected, automatically instantiate a Report task
+          if (updateBody.status === 'Sample Collected') {
+            try {
+              const existingReports = await reportRepo.getByPatientId(existingCollection.patientId);
+              const alreadyExists = existingReports.some(r => r.bookingId === bookingId);
+              
+              if (!alreadyExists) {
+                await reportRepo.create({
+                  id: `REP-${bookingId.replace('bk_', '')}`,
+                  patientId: existingCollection.patientId,
+                  bookingId: bookingId,
+                  tests: existingCollection.tests || [],
+                  status: 'Pending',
+                  generatedAt: new Date().toISOString()
+                });
+              }
+            } catch (repErr) {
+              logger.warn(`Failed to generate report task for booking ${bookingId}`, repErr);
+            }
+          }
+        }
 
         // Server-authoritative assignment notification for phlebotomist
         const newPhlebId = updateBody.phlebotomistId || updateBody.assignedTo;

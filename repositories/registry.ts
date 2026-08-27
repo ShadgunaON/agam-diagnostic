@@ -48,6 +48,7 @@ import { MockStaffRepository } from './mock/StaffRepository';
 import { ApiStaffRepository } from './api/StaffRepository';
 import { IActivityRepository } from '@/domains/activity/repository';
 import { MockActivityRepository } from './mock/ActivityRepository';
+import { ApiActivityRepository } from './api/ActivityRepository';
 
 import { IPatientRepository } from '@/domains/patient/repository';
 import { MockPatientRepository } from './mock/PatientRepository';
@@ -118,10 +119,22 @@ export const reportsRepository: IReportsRepository = env.useMockData
 // When backend endpoints are built, move them to the section above.
 // ==========================================================
 
-export const serviceRepository: IServicesRepository = new MockServiceRepository();
-export const packageRepository: IPackagesRepository = new MockPackageRepository();
-export const testRepository: ITestsRepository = new MockTestRepository();
+export const serviceRepository: IServicesRepository = env.useMockData
+  ? new MockServiceRepository()
+  : new ApiServiceRepository(apiClient);
+
+export const packageRepository: IPackagesRepository = env.useMockData
+  ? new MockPackageRepository()
+  : new ApiPackageRepository(apiClient);
+
+export const testRepository: ITestsRepository = env.useMockData
+  ? new MockTestRepository()
+  : new ApiTestRepository(apiClient);
+
 export const staffRepository: IStaffRepository = env.useMockData
   ? new MockStaffRepository()
   : new ApiStaffRepository(apiClient);
-export const activityRepository: IActivityRepository = new MockActivityRepository();
+
+export const activityRepository: IActivityRepository = env.useMockData
+  ? new MockActivityRepository()
+  : new ApiActivityRepository(apiClient);

@@ -117,8 +117,9 @@ export class ApiBookingRepository implements IBookingRepository {
     return res;
   }
 
-  async create(bookingParams: Omit<BookingModel, 'id' | 'createdAt' | 'status'>): Promise<Result<BookingModel>> {
-    const res = await toResult(this.apiClient.post<BookingModel>('/api/bookings', bookingParams));
+  async create(bookingParams: Omit<BookingModel, 'id' | 'createdAt' | 'status'>, options?: { idempotencyKey?: string }): Promise<Result<BookingModel>> {
+    const apiOptions = options?.idempotencyKey ? { headers: { 'Idempotency-Key': options.idempotencyKey } } : undefined;
+    const res = await toResult(this.apiClient.post<BookingModel>('/api/bookings', bookingParams, apiOptions));
     if (res.isSuccess && res.value) {
       return success(normalizeBooking(res.value));
     }

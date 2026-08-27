@@ -3,6 +3,8 @@ const { success, error } = require('../shared/response');
 const { logger } = require('../shared/logger');
 const reportRepo = require('../repositories/dynamo-report');
 const patientRepo = require('../repositories/dynamo-patient');
+const bookingRepo = require('../repositories/dynamo-booking');
+const collectionRepo = require('../repositories/dynamo-collection');
 
 exports.handler = async (event) => {
   logger.info(`Incoming report request: ${event.httpMethod} ${event.path}`);
@@ -147,9 +149,23 @@ exports.handler = async (event) => {
 
         const updatedReport = await reportRepo.updateStatus(rawReportId, nextStatus);
 
-        // Note: The parent booking transition (to 'Completed') is currently handled
-        // in reportsService.updateStatus on the frontend/service layer, 
-        // per the audit and user instruction: "Do NOT duplicate that business rule inside the Lambda if it already belongs to ReportsService."
+        // --- BACKEND AUTHORITATIVE LIFECYCLE SYNC ---
+        if (nextStatus === 'Published' && updatedReport.bookingId) {
+          try {
+            await bookingRepo.updateStatus(updatedReport.bookingId, 'Completed');
+            
+            // Also mark associated collection task as Completed
+            if (updatedReport.patientId) {
+              const collections = await collectionRepo.getByPatientId(updatedReport.patientId);
+              const matchingTask = collections.find(c => c.bookingId === updatedReport.bookingId);
+              if (matchingTask && matchingTask.status !== 'Completed') {
+                await collectionRepo.update(matchingTask.id, { status: 'Completed' });
+              }
+            }
+          } catch (syncErr) {
+            logger.warn(`Failed to sync booking/collection for published report ${rawReportId}`, syncErr);
+          }
+        }
 
         return success(updatedReport);
       }

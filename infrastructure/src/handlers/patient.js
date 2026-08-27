@@ -1,7 +1,13 @@
-const { extractIdentity, isAdmin, isStaff, canAccessPatient, hasPermission } = require('../shared/auth');
+const { extractIdentity, isAdmin, isStaff, canAccessPatient, hasPermission, isPhlebotomist } = require('../shared/auth');
 const { success, error } = require('../shared/response');
 const { logger } = require('../shared/logger');
 const patientRepo = require('../repositories/dynamo-patient');
+const { CognitoIdentityProviderClient, AdminCreateUserCommand } = require('@aws-sdk/client-cognito-identity-provider');
+
+const cognitoClient = new CognitoIdentityProviderClient({
+  region: process.env.AWS_REGION || 'us-east-1',
+});
+const USER_POOL_ID = process.env.USER_POOL_ID;
 
 exports.handler = async (event) => {
   logger.info(`Incoming patient request: ${event.httpMethod} ${event.path}`);
@@ -82,25 +88,61 @@ exports.handler = async (event) => {
       case 'POST': {
         const body = JSON.parse(event.body || '{}');
         
+        const isStaffUser = await isStaff(identity);
         // RBAC Check for staff creating patients
-        if ((await isStaff(identity)) && !(await hasPermission(identity, 'patients', 'create'))) {
+        if (isStaffUser && !(await hasPermission(identity, 'patients', 'create'))) {
           // Note: Patients can create their own profile/family during signup (self-service).
           // We distinguish by checking if they are acting as staff.
           return error.forbidden('Access denied: Missing patients.create permission');
         }
 
-        const patientId = body.id || `pat_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        let patientId = body.id || `pat_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        let ownerSub = identity.sub;
+
+        // If staff is creating a patient and an email is provided, provision a Cognito account
+        if (isStaffUser && body.email && typeof body.email === 'string') {
+          const cleanEmail = body.email.trim().toLowerCase();
+          const cleanPhone = body.phone ? (body.phone.trim().startsWith('+') ? body.phone.trim() : `+91${body.phone.trim()}`) : '';
+          const cleanName = body.name ? body.name.trim() : 'Patient';
+
+          try {
+            const createCommand = new AdminCreateUserCommand({
+              UserPoolId: USER_POOL_ID,
+              Username: cleanEmail,
+              DesiredDeliveryMediums: ['EMAIL'],
+              UserAttributes: [
+                { Name: 'email', Value: cleanEmail },
+                { Name: 'email_verified', Value: 'true' },
+                ...(cleanPhone ? [{ Name: 'phone_number', Value: cleanPhone }] : []),
+                { Name: 'name', Value: cleanName },
+                { Name: 'custom:role', Value: 'patient' },
+              ],
+            });
+            const createResult = await cognitoClient.send(createCommand);
+            const cognitoSub = createResult.User?.Attributes?.find(a => a.Name === 'sub')?.Value;
+            if (cognitoSub) {
+              patientId = `pat_${cognitoSub}`;
+              ownerSub = cognitoSub;
+            }
+          } catch (err) {
+            if (err.name === 'UsernameExistsException') {
+              return error.badRequest('A patient with this email already exists. Please search for the existing patient instead of creating a new one.');
+            }
+            logger.error('Failed to provision Cognito account for new patient', err);
+            return error.serverError('Failed to provision patient account.');
+          }
+        }
         
         const newPatientData = {
           ...body,
           id: patientId,
-          ownerSub: identity.sub,
+          ownerSub: ownerSub,
           phone: body.phone || identity.phone,
           email: body.email || identity.email,
           status: body.status || 'Active',
         };
 
-        const createdPatient = await patientRepo.create(newPatientData, identity.sub);
+        const createdPatient = await patientRepo.create(newPatientData, ownerSub);
         return success(createdPatient, 201);
       }
 

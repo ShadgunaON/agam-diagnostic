@@ -42,10 +42,6 @@ export class ReportsService {
   }
 
   async updateStatus(id: string, status: ReportTaskModel['status']) {
-    const res = await this.repository.updateStatus(id, status);
-    if (res.isSuccess && status === 'Published' && this.bookingService && res.value.bookingId) {
-      await this.bookingService.updateBookingStatus(res.value.bookingId, 'Completed');
-    }
-    return res;
+    return this.repository.updateStatus(id, status);
   }
 }

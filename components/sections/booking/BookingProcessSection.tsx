@@ -28,6 +28,14 @@ export function BookingProcessSection({ className = '' }: BookingProcessSectionP
   const { user, isAuthenticated, updateProfile, addPatient, addAddress } = useAuth();
   const searchParams = useSearchParams();
 
+  // Idempotency key for safe retries
+  const idempotencyKeyRef = React.useRef<string>('');
+  React.useEffect(() => {
+    if (!idempotencyKeyRef.current) {
+      idempotencyKeyRef.current = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    }
+  }, []);
+
   // Core Booking State
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [collectionType, setCollectionType] = useState<'home' | 'lab'>('home');
@@ -165,17 +173,17 @@ export function BookingProcessSection({ className = '' }: BookingProcessSectionP
         })),
         payment: {
           total: totalAmount,
-          status: 'Pending',
+          status: paymentMethod === 'cash' ? 'Pending' : 'Paid',
           method: paymentMethod === 'upi' ? 'UPI' : paymentMethod === 'card' ? 'Credit Card' : 'Cash'
         },
         timeline: []
-      });
+      }, { idempotencyKey: idempotencyKeyRef.current });
 
       if (result.isSuccess) {
         clearCart();
         router.push(`/book/success/${result.value.id}`);
       } else {
-        setCheckoutError(result.error?.message || 'Failed to create booking.');
+        setCheckoutError(result.error?.message || 'Failed to complete checkout');
         setIsSubmitting(false);
       }
     } catch (e) {

@@ -212,7 +212,7 @@ async function canAccessBooking(identity, booking, patient) {
 async function canAccessCollection(identity, collection, patient) {
   if (!identity || !collection) return false;
 
-  if (isPhlebotomist(identity)) {
+  if (await isPhlebotomist(identity)) {
     if (
       collection.phlebotomistId === identity.sub ||
       collection.phlebotomistId === identity.username ||
@@ -255,7 +255,7 @@ function isValidCollectionTransition(currentStatus, nextStatus) {
 async function canModifyCollection(identity, collection, updateData) {
   if (!identity || !collection) return false;
 
-  if (isPhlebotomist(identity)) {
+  if (await isPhlebotomist(identity)) {
     const isAssigned = (
       collection.phlebotomistId === identity.sub ||
       collection.phlebotomistId === identity.username ||

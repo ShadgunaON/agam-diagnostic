@@ -28,6 +28,14 @@ export function ProgressiveBookingFlow() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Idempotency key for safe retries
+  const idempotencyKeyRef = React.useRef<string>('');
+  React.useEffect(() => {
+    if (!idempotencyKeyRef.current) {
+      idempotencyKeyRef.current = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    }
+  }, []);
 
   // Empty cart search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -92,18 +100,17 @@ export function ProgressiveBookingFlow() {
       timeline: []
     };
 
-    const result = await bookingService.createBooking(bookingPayload);
+    const result = await bookingService.createBooking(bookingPayload, { idempotencyKey: idempotencyKeyRef.current });
     setIsSubmitting(false);
 
-    if (result.isSuccess && result.value) {
+    if (result.isSuccess) {
       clearCart();
       // Bypass the simulated payment page as per user request to remove the extra transition.
       // The booking will remain in 'Pending' payment state, and payment will be collected
       // offline (at lab or home collection) in this demo.
       router.push(`/book/success/${result.value.id}`);
     } else {
-      const errorMsg = !result.isSuccess ? result.error?.message : "Failed to create booking.";
-      setError(errorMsg || "Failed to create booking. Please try again.");
+      setError(result.error?.message || "Failed to create booking. Please try again.");
     }
   };
 

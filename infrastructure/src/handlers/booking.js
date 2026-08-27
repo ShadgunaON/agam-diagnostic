@@ -3,6 +3,7 @@ const { success, error } = require('../shared/response');
 const { logger } = require('../shared/logger');
 const bookingRepo = require('../repositories/dynamo-booking');
 const patientRepo = require('../repositories/dynamo-patient');
+const collectionRepo = require('../repositories/dynamo-collection');
 
 exports.handler = async (event) => {
   logger.info(`Incoming booking request: ${event.httpMethod} ${event.path}`);
@@ -117,6 +118,14 @@ exports.handler = async (event) => {
       case 'POST': {
         const body = JSON.parse(event.body || '{}');
 
+        // Extract Idempotency Key
+        const headers = event.headers || {};
+        const idempotencyKey = headers['idempotency-key'] || headers['Idempotency-Key'];
+        
+        if (!idempotencyKey) {
+          return error.badRequest('Idempotency-Key header is required');
+        }
+
         // RBAC Check for staff creating bookings
         if (await (await isStaff(identity)) && !(await hasPermission(identity, 'orders', 'create'))) {
           // Note: Patients can create their own bookings (self-service).
@@ -133,8 +142,60 @@ exports.handler = async (event) => {
           status: body.status || 'Pending',
         };
 
-        const createdBooking = await bookingRepo.create(newBookingData, identity.sub);
-        return success(createdBooking, 201);
+        // Construct Invoice
+        const invoiceItems = (newBookingData.items || []).map((item, index) => ({
+          id: `ITEM-${index}-${Date.now()}`,
+          name: item.name,
+          type: item.type === 'Package' ? 'Package' : 'Test',
+          price: item.price
+        }));
+        const subtotal = invoiceItems.reduce((sum, item) => sum + item.price, 0);
+        const tax = subtotal * 0.05;
+        const total = newBookingData.payment?.total || 0;
+        
+        const invoiceData = {
+          id: `inv_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          bookingId: bookingId,
+          patientId: newBookingData.patientId || newBookingData.patient?.phone || newBookingData.patient?.email || 'GENERAL',
+          items: invoiceItems,
+          subtotal,
+          discount: 0,
+          tax,
+          total,
+          paymentStatus: newBookingData.payment?.status === 'Paid' ? 'Paid' : 'Pending',
+          createdAt: new Date().toISOString()
+        };
+
+        // Construct CollectionTask
+        const collectionData = {
+          id: `COL-${bookingId.replace('bk_', '')}`,
+          type: newBookingData.collection?.type || 'Home Collection',
+          patientId: newBookingData.patientId,
+          bookingId: bookingId,
+          time: newBookingData.collection?.timeSlot || 'Flexible',
+          date: newBookingData.collection?.date || new Date().toISOString().split('T')[0],
+          patient: newBookingData.patient?.name || 'Unknown Patient',
+          address: newBookingData.collection?.address,
+          tests: (newBookingData.items || []).map(i => i.name),
+          assignedTo: newBookingData.collection?.assignedPhlebotomist || 'Unassigned',
+          status: newBookingData.collection?.type === 'Lab Visit' ? 'Pending' : 'Unassigned',
+          createdAt: new Date().toISOString()
+        };
+
+        try {
+          const result = await bookingRepo.createAggregate({
+            booking: newBookingData,
+            invoice: invoiceData,
+            collectionTask: collectionData,
+            idempotencyKey,
+            ownerSub: identity.sub
+          });
+          
+          return success(result.booking, result.isDuplicate ? 200 : 201);
+        } catch (aggError) {
+          logger.error('Failed to create booking aggregate', aggError);
+          return error.serverError('Failed to create booking aggregate. Please try again.');
+        }
       }
 
       case 'PUT': {
@@ -172,6 +233,22 @@ exports.handler = async (event) => {
         let updatedBooking;
         if (updateBody.status) {
           updatedBooking = await bookingRepo.updateStatus(rawBookingId, updateBody.status);
+          
+          // --- BACKEND AUTHORITATIVE LIFECYCLE SYNC ---
+          if (updateBody.status === 'Completed' || updateBody.status === 'Cancelled') {
+             try {
+               const pId = existingBooking.patientId;
+               if (pId) {
+                 const collections = await collectionRepo.getByPatientId(pId);
+                 const matchingTask = collections.find(c => c.bookingId === rawBookingId);
+                 if (matchingTask && matchingTask.status !== updateBody.status) {
+                   await collectionRepo.update(matchingTask.id, { status: updateBody.status });
+                 }
+               }
+             } catch (syncErr) {
+               logger.warn(`Failed to sync collection task for booking ${rawBookingId}`, syncErr);
+             }
+          }
         } else if (updateBody.paymentStatus) {
           updatedBooking = await bookingRepo.updatePaymentStatus(rawBookingId, updateBody.paymentStatus);
         } else {

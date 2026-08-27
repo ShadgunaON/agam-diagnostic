@@ -63,17 +63,11 @@ export class CollectionService {
    * Also updates the linked booking status.
    */
   async assignPhlebotomist(taskId: string, staffId: string, staffName: string): Promise<Result<CollectionTaskModel>> {
-    const res = await this.repository.update(taskId, {
+    return this.repository.update(taskId, {
       phlebotomistId: staffId,
       assignedTo: staffName,
       status: 'Assigned',
     });
-
-    if (res.isSuccess && res.value.bookingId && this.bookingService) {
-      await this.bookingService.updateBookingStatus(res.value.bookingId, 'Assigned');
-    }
-
-    return res;
   }
 
   /**
@@ -86,21 +80,11 @@ export class CollectionService {
   }
 
   async recordSampleCollected(id: string, staffId: string): Promise<Result<CollectionTaskModel>> {
-    const res = await this.repository.update(id, {
+    return this.repository.update(id, {
       status: 'Sample Collected',
       collectedBy: staffId,
       collectedAt: new Date().toISOString()
     });
-    
-    if (res.isSuccess) {
-      if (this.bookingService && res.value.bookingId) {
-        await this.bookingService.updateBookingStatus(res.value.bookingId, 'Sample Collected');
-      }
-      if (this.reportsService) {
-        await this.reportsService.createFromCollection(res.value);
-      }
-    }
-    return res;
   }
 
   async recordCheckIn(id: string): Promise<Result<CollectionTaskModel>> {
