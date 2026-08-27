@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { FormField } from '@/components/ui/FormField';
 import { useAsyncAction } from '@/hooks/useAsyncAction';
 import { env } from '@/config/env';
+import { OTPInput } from '@/components/ui/OTPInput';
 
 type AuthMode =
   | 'signin'
@@ -574,17 +575,10 @@ export function ProgressiveSignupForm() {
         {mode === 'confirm_signup' && (
           <form onSubmit={handleConfirmSignUp} noValidate>
             <div style={{ marginBottom: '24px' }}>
-              <FormField label="Enter Confirmation Code" htmlFor="confirm-code" required>
-                <input
-                  id="confirm-code"
-                  type="text"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="123456"
-                  style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '20px', letterSpacing: '6px', textAlign: 'center', outline: 'none' }}
-                  required
-                />
-              </FormField>
+              <div style={{ marginBottom: '8px', fontSize: '14px', fontWeight: 600, color: 'var(--color-dark)' }}>
+                Enter Confirmation Code
+              </div>
+              <OTPInput value={code} onChange={setCode} length={6} />
             </div>
 
             <button
@@ -678,17 +672,12 @@ export function ProgressiveSignupForm() {
           <form onSubmit={handleConfirmForgotPassword} noValidate>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
               
-              <FormField label="Reset Code" htmlFor="reset-code" required>
-                <input
-                  id="reset-code"
-                  type="text"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="123456"
-                  style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.2)', fontSize: '15px', outline: 'none' }}
-                  required
-                />
-              </FormField>
+              <div>
+                <div style={{ marginBottom: '8px', fontSize: '14px', fontWeight: 600, color: 'var(--color-dark)' }}>
+                  Reset Code
+                </div>
+                <OTPInput value={code} onChange={setCode} length={6} />
+              </div>
 
               <FormField label="New Password" htmlFor="reset-newpassword" required>
                 <div style={{ position: 'relative' }}>
