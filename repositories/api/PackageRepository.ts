@@ -29,7 +29,7 @@ export class ApiPackageRepository implements IPackagesRepository {
     return success({
       title: 'Comprehensive Health Packages',
       description: 'Proactive health monitoring with our carefully designed full-body checkups and specialized wellness packages.',
-      image: '/images/hero_packages_visual.png',
+      image: '/images/lifestyle_hero.png',
       pill: 'Preventive Healthcare'
     });
   }

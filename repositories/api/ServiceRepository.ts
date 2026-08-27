@@ -55,7 +55,7 @@ export class ApiServiceRepository implements IServicesRepository {
     return success({
       title: 'Our Medical Services',
       description: 'We offer a wide range of medical services to ensure your health and well-being.',
-      image: '/images/services_hero_visual.png'
+      image: '/images/services_hero_pic.png'
     });
   }
 }
