@@ -7,6 +7,8 @@ import { BlogDetailContent, BlogSidebar } from '@/components/sections/blog';
 import { buildMetadata } from '@/config/metadata';
 import { StructuredData, generateArticleSchema, generateBreadcrumbSchema } from '@/components/common/StructuredData';
 
+export const revalidate = 10; // Revalidate every 10 seconds
+
 interface BlogDetailPageProps {
   params: Promise<{ slug: string }>;
 }

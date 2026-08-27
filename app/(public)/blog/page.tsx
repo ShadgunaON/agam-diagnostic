@@ -10,6 +10,8 @@ import {
 } from '@/components/sections/blog';
 import { ErrorState, EmptyState } from '@/components/common';
 
+export const revalidate = 10; // Revalidate every 10 seconds
+
 export const metadata: Metadata = {
   title: `Health Insights & Articles | ${siteConfig.name}`,
   description: 'Expert advice, research updates, and wellness tips from our medical professionals.',
