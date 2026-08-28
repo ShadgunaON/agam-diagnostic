@@ -6,6 +6,8 @@ import { PackagesFeaturedSection } from '@/components/sections/packages';
 import { siteConfig } from '@/config/site';
 import { packageService } from '@/services';
 
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: `Women's Health Packages — Preventive Care for Women | ${siteConfig.name}`,
   description: "Specialized health packages for women including hormonal profiling, thyroid screening, PCOS evaluation, pregnancy care, and comprehensive women's wellness checkups.",

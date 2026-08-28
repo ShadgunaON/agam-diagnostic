@@ -6,6 +6,8 @@ import { PackagesFeaturedSection } from '@/components/sections/packages';
 import { siteConfig } from '@/config/site';
 import { packageService } from '@/services';
 
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: `Men's Health Packages — Executive & Preventive Checkups | ${siteConfig.name}`,
   description: "Specialized health packages for men including cardiac risk assessment, executive health profiles, liver & kidney screening, prostate health, and metabolic panels.",

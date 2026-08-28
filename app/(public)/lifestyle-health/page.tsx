@@ -6,6 +6,8 @@ import { PackagesFeaturedSection } from '@/components/sections/packages';
 import { siteConfig } from '@/config/site';
 import { packageService } from '@/services';
 
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: `Lifestyle Health Packages — Diabetes, Stress & Wellness Checkups | ${siteConfig.name}`,
   description: "Lifestyle health packages for diabetes screening, obesity risk profiling, stress monitoring, vitamin deficiency panels, corporate wellness, and fitness evaluations.",

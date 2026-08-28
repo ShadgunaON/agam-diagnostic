@@ -8,6 +8,8 @@ import { CTASection, ErrorState, EmptyState } from '@/components/common';
 import { TestsCatalogSection } from '@/components/sections/tests';
 import { TrustBarSection } from '@/components/sections/about/TrustBarSection';
 
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: `Genetic Tests | ${siteConfig.name}`,
   description: 'Advanced genetic testing and molecular diagnostics. NABL-accredited precision medicine with expert counseling.',
