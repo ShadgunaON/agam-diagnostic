@@ -6,8 +6,9 @@ import Link from 'next/link';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
 import { useToast } from '@/components/admin/feedback/Toast';
-import { invoiceService } from '@/services';
+import { invoiceService, bookingService } from '@/services';
 import { InvoiceModel } from '@/domains/invoice/model';
+import { BookingModel } from '@/domains/booking/model';
 
 export default function AdminInvoiceDetailPage() {
   const params = useParams();
@@ -17,13 +18,20 @@ export default function AdminInvoiceDetailPage() {
 
   const [mounted, setMounted] = useState(false);
   const [invoice, setInvoice] = useState<InvoiceModel | null>(null);
+  const [booking, setBooking] = useState<BookingModel | null>(null);
 
   useEffect(() => {
     setMounted(true);
     const loadData = async () => {
       const res = await invoiceService.getById(invoiceId);
-      if (res.isSuccess) {
+      if (res.isSuccess && res.value) {
         setInvoice(res.value);
+        if (res.value.bookingId) {
+          const bookingRes = await bookingService.getById(res.value.bookingId);
+          if (bookingRes.isSuccess) {
+            setBooking(bookingRes.value);
+          }
+        }
       }
     };
     loadData();
@@ -87,23 +95,24 @@ export default function AdminInvoiceDetailPage() {
           <div className="p-6 lg:p-8 border-b border-slate-100 grid grid-cols-2 lg:grid-cols-4 gap-6">
             <div>
               <div className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-1">Billed To</div>
-              <div className="text-[15px] font-bold text-slate-900">{invoice.patientId || 'Guest'}</div>
+              <div className="text-[15px] font-bold text-slate-900 truncate" title={booking?.patient?.name || invoice.patientId}>{booking?.patient?.name || invoice.patientId || 'Guest'}</div>
+              <div className="text-[13px] font-medium text-slate-500 mt-0.5 truncate">{booking?.patient?.phone || ''}</div>
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-1">Related Booking</div>
-              <Link href={`/admin/bookings`} className="text-[15px] font-bold text-blue-600 hover:underline">
+              <Link href={`/admin/bookings`} className="text-[15px] font-bold text-blue-600 hover:underline truncate block" title={invoice.bookingId}>
                 {invoice.bookingId || 'N/A'}
               </Link>
             </div>
             {invoice.paymentStatus === 'Paid' && (
               <>
-                <div>
+                <div className="min-w-0">
                   <div className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-1">Payment Method</div>
-                  <div className="text-[15px] font-bold text-slate-900">{invoice.paymentMethod || 'N/A'}</div>
+                  <div className="text-[15px] font-bold text-slate-900 truncate" title={invoice.paymentMethod}>{invoice.paymentMethod || 'N/A'}</div>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-1">Received By</div>
-                  <div className="text-[15px] font-bold text-slate-900">{invoice.receivedBy || 'System'}</div>
+                  <div className="text-[15px] font-bold text-slate-900 truncate" title={invoice.receivedBy}>{invoice.receivedBy || 'System'}</div>
                 </div>
               </>
             )}
