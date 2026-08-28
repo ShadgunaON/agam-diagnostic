@@ -230,8 +230,16 @@ exports.handler = async (event) => {
                   id: `REP-${bookingId.replace('bk_', '')}`,
                   patientId: existingCollection.patientId,
                   bookingId: bookingId,
+                  patient: patient ? {
+                    name: patient.name || 'Unknown',
+                    age: patient.age || 0,
+                    gender: patient.gender || 'Unknown',
+                    id: patient.id || existingCollection.patientId
+                  } : undefined,
                   tests: existingCollection.tests || [],
-                  status: 'Pending',
+                  testType: (existingCollection.tests || []).join(', '),
+                  status: 'Processing', // Changed from Pending to match frontend model
+                  priority: 'Routine',
                   generatedAt: new Date().toISOString()
                 });
               }
