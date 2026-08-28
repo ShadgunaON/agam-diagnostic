@@ -54,7 +54,7 @@ export function BookingConfirmation({ className = '', bookingConfirmation, confi
             <span className="text-xs font-bold text-foreground max-w-[220px] text-right truncate">{bookingConfirmation.addressOrLab}</span>
           </div>
           <div className="flex justify-between pt-1">
-            <span className="text-xs font-bold text-foreground">Total Payable Amount</span>
+            <span className="text-xs font-bold text-foreground">Amount Paid / Payable</span>
             <span className="text-sm font-extrabold text-primary">₹{bookingConfirmation.totalPayable}</span>
           </div>
         </div>
@@ -71,7 +71,7 @@ export function BookingConfirmation({ className = '', bookingConfirmation, confi
                     }`}>
                       {item.type === 'package' ? 'PKG' : 'TEST'}
                     </span>
-                    <span className="text-xs text-foreground font-medium">{item.title}</span>
+                    <span className="text-xs text-foreground font-medium">{item.title} <span className="text-muted-foreground ml-1 font-bold">x {item.quantity}</span></span>
                   </div>
                   <span className="text-xs font-bold text-foreground">₹{item.price * item.quantity}</span>
                 </div>

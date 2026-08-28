@@ -43,6 +43,17 @@ export function BookingSummarySidebar({
 
       <Card.Content>
         <div className="space-y-6 text-[15px] text-muted-foreground mt-6">
+          <div className="space-y-3 pb-4 border-b border-border/40">
+            {items.map(item => (
+              <div key={item.id} className="flex justify-between items-start text-sm">
+                <div className="flex-1 pr-3">
+                  <span className="font-medium text-foreground line-clamp-2">{item.title}</span>
+                  <span className="text-xs font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded mt-1 inline-block">Qty: {item.quantity}</span>
+                </div>
+                <span className="font-bold text-foreground shrink-0 mt-0.5">₹{item.price * item.quantity}</span>
+              </div>
+            ))}
+          </div>
           <div className="flex justify-between items-center">
             <span>Tests Subtotal</span>
             <span className="font-semibold text-foreground text-base">₹{subtotal}</span>
