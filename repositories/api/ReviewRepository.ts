@@ -32,6 +32,6 @@ export class ApiReviewRepository implements IReviewRepository {
   }
 
   async getApproved(): Promise<Result<ReviewModel[]>> {
-    return toResult(this.apiClient.get<ReviewModel[]>('/api/reviews?status=Approved'));
+    return toResult(this.apiClient.get<ReviewModel[]>('/api/reviews/public'));
   }
 }

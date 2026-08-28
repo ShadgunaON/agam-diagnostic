@@ -367,7 +367,6 @@ Resources:
       Environment:
         Variables:
           USER_POOL_ID: !Ref AgamUserPool
-          DYNAMODB_TABLE_NAME: !Ref AgamDynamoDBTable
       Events:
         Api:
           Type: Api
@@ -565,10 +564,16 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref AgamApi
-            Path: /api/reviews
+            Path: /api/reviews/public
             Method: get
             Auth:
               Authorizer: NONE
+        ApiGetAuth:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AgamApi
+            Path: /api/reviews
+            Method: get
         ApiPost:
           Type: Api
           Properties:

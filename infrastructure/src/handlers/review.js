@@ -36,6 +36,13 @@ exports.handler = async (event) => {
     if (method === 'GET') {
       const pathParts = path.split('/').filter(Boolean);
       const isCollectionPath = pathParts.length === 2 && pathParts[0] === 'api' && pathParts[1] === 'reviews';
+      const isPublicPath = pathParts.length === 3 && pathParts[0] === 'api' && pathParts[1] === 'reviews' && pathParts[2] === 'public';
+
+      // 0. GET /api/reviews/public
+      if (isPublicPath) {
+        const approved = await reviewRepo.getPublicApproved();
+        return success(approved.map(sanitizePublicReview));
+      }
 
       // 1. GET /api/reviews
       if (isCollectionPath) {
@@ -44,10 +51,9 @@ exports.handler = async (event) => {
         const requestedPatientId = queryParams.patientId;
         const requestedBookingId = queryParams.bookingId;
 
-        // Public / Unauthenticated access -> Always return approved reviews only
+        // API requires authentication
         if (!identity) {
-          const approved = await reviewRepo.getPublicApproved();
-          return success(approved.map(sanitizePublicReview));
+          return error.unauthorized('Authentication required to view reviews');
         }
 
         // Admin & Staff can query all, by status, or by patient

@@ -50,10 +50,10 @@ export default function AdminReviewsPage() {
     if (search) {
       const q = search.toLowerCase();
       filtered = filtered.filter(r => 
-        r.id.toLowerCase().includes(q) ||
-        r.displayName.toLowerCase().includes(q) ||
-        r.bookingId.toLowerCase().includes(q) ||
-        r.comment.toLowerCase().includes(q)
+        r.id?.toLowerCase().includes(q) ||
+        r.displayName?.toLowerCase().includes(q) ||
+        r.bookingId?.toLowerCase().includes(q) ||
+        r.comment?.toLowerCase().includes(q)
       );
     }
 
