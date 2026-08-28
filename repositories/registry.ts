@@ -131,6 +131,10 @@ export const testRepository: ITestsRepository = env.useMockData
 // When backend endpoints are built, move them to the section above.
 // ==========================================================
 
-export const staffRepository: IStaffRepository = new MockStaffRepository();
+export const staffRepository: IStaffRepository = env.useMockData
+  ? new MockStaffRepository()
+  : new ApiStaffRepository(apiClient);
 
-export const activityRepository: IActivityRepository = new MockActivityRepository();
+export const activityRepository: IActivityRepository = env.useMockData
+  ? new MockActivityRepository()
+  : new ApiActivityRepository(apiClient);
