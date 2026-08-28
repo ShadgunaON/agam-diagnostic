@@ -29,6 +29,10 @@ export default function GlassProfilePage() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
 
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
   useEffect(() => {
     if (user) {
       const parts = user.fullName?.split(' ') || [];
@@ -55,6 +59,26 @@ export default function GlassProfilePage() {
     }
 
     toast({ title: 'Profile Updated', description: 'Your personal details have been saved.', variant: 'success' });
+  };
+
+  const handleUpdatePassword = () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast({ title: 'Validation Error', description: 'Please fill in all password fields.', variant: 'danger' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast({ title: 'Validation Error', description: 'New password and confirm password do not match.', variant: 'danger' });
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast({ title: 'Validation Error', description: 'Password must be at least 8 characters long.', variant: 'danger' });
+      return;
+    }
+    
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    toast({ title: 'Password Updated', description: 'Your security password has been changed.', variant: 'success' });
   };
 
   useEffect(() => { setMounted(true); }, []);
@@ -157,15 +181,19 @@ export default function GlassProfilePage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 800, color: '#334155' }}>Current Password</label>
-                    <input type="password" style={{ height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid rgba(226, 232, 240, 0.8)', backgroundColor: 'rgba(255,255,255,0.5)', fontSize: '14px', outline: 'none' }} />
+                    <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} style={{ height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid rgba(226, 232, 240, 0.8)', backgroundColor: 'rgba(255,255,255,0.5)', fontSize: '14px', outline: 'none' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 800, color: '#334155' }}>New Password</label>
-                    <input type="password" style={{ height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid rgba(226, 232, 240, 0.8)', backgroundColor: 'rgba(255,255,255,0.5)', fontSize: '14px', outline: 'none' }} />
+                    <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} style={{ height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid rgba(226, 232, 240, 0.8)', backgroundColor: 'rgba(255,255,255,0.5)', fontSize: '14px', outline: 'none' }} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: 800, color: '#334155' }}>Confirm New Password</label>
+                    <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} style={{ height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid rgba(226, 232, 240, 0.8)', backgroundColor: 'rgba(255,255,255,0.5)', fontSize: '14px', outline: 'none' }} />
                   </div>
                 </div>
                 <div className="flex justify-start sm:justify-end pt-4">
-                  <button onClick={() => toast({ title: 'Password Updated', description: 'Your security password has been changed.', variant: 'success' })} className="w-full sm:w-auto h-12 px-8 rounded-xl text-white text-[14px] font-bold cursor-pointer" style={{ border: 'none', background: 'linear-gradient(135deg, #0f172a, #334155)', boxShadow: '0 4px 15px rgba(15, 23, 42, 0.15)' }}>Update Password</button>
+                  <button onClick={handleUpdatePassword} className="w-full sm:w-auto h-12 px-8 rounded-xl text-white text-[14px] font-bold cursor-pointer" style={{ border: 'none', background: 'linear-gradient(135deg, #0f172a, #334155)', boxShadow: '0 4px 15px rgba(15, 23, 42, 0.15)' }}>Update Password</button>
                 </div>
               </>
             )}

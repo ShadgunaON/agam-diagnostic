@@ -367,6 +367,7 @@ Resources:
       Environment:
         Variables:
           USER_POOL_ID: !Ref AgamUserPool
+          DYNAMODB_TABLE_NAME: !Ref AgamDynamoDBTable
       Events:
         Api:
           Type: Api
@@ -749,6 +750,7 @@ Resources:
       Environment:
         Variables:
           USER_POOL_ID: !Ref AgamUserPool
+          DYNAMODB_TABLE_NAME: !Ref AgamDynamoDBTable
       Events:
         Api:
           Type: Api
