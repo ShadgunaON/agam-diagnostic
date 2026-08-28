@@ -235,12 +235,12 @@ async function canAccessCollection(identity, collection, patient) {
 
 const ALLOWED_COLLECTION_TRANSITIONS = {
   'Unassigned': ['Assigned', 'Pending', 'Cancelled'],
-  'Pending': ['Assigned', 'In Progress', 'En Route', 'Cancelled'],
+  'Pending': ['Assigned', 'In Progress', 'En Route', 'Checked In', 'Cancelled'],
   'Assigned': ['En Route', 'In Progress', 'Unassigned', 'Cancelled'],
   'En Route': ['In Progress', 'Sample Collected', 'Assigned', 'Cancelled'],
   'In Progress': ['Sample Collected', 'En Route', 'Assigned', 'Cancelled'],
   'Sample Collected': ['Checked In', 'Completed'],
-  'Checked In': ['Completed'],
+  'Checked In': ['Sample Collected', 'Completed'],
   'Completed': [],
   'Cancelled': [],
 };

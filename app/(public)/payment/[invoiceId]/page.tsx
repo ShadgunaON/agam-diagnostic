@@ -51,13 +51,25 @@ export default function DemoPaymentPage() {
     setErrorMsg('');
     
     try {
-      const result = await paymentService.processOnlinePayment(invoiceId, invoice?.total || 0, paymentMethod, shouldSucceed);
-      
-      if (result.isSuccess) {
-        router.push(`/book/success/${invoice?.bookingId}`);
+      if (paymentMethod === 'Cash') {
+        // Offline payment selected
+        const result = await invoiceService.setPaymentMethod(invoiceId, 'Cash');
+        if (result.isSuccess) {
+          router.push(`/book/success/${invoice?.bookingId}`);
+        } else {
+          setErrorMsg(result.error?.message || 'Failed to select payment method.');
+          setIsProcessing(false);
+        }
       } else {
-        setErrorMsg(result.error?.message || 'Payment failed. Please try again.');
-        setIsProcessing(false);
+        // Online payment selected
+        const result = await paymentService.processOnlinePayment(invoiceId, invoice?.total || 0, paymentMethod, shouldSucceed);
+        
+        if (result.isSuccess) {
+          router.push(`/book/success/${invoice?.bookingId}`);
+        } else {
+          setErrorMsg(result.error?.message || 'Payment failed. Please try again.');
+          setIsProcessing(false);
+        }
       }
     } catch (e) {
       setErrorMsg('An unexpected error occurred during processing.');
@@ -151,20 +163,29 @@ export default function DemoPaymentPage() {
 
                 <div>
                   <label className="block text-sm font-semibold text-foreground mb-3">Select Payment Method</label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     <label className={`border rounded-xl p-4 cursor-pointer flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'UPI' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border hover:border-primary/50'}`}>
                       <input type="radio" name="payment_method" className="sr-only" checked={paymentMethod === 'UPI'} onChange={() => setPaymentMethod('UPI')} />
                       <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><rect x="3" y="5" width="18" height="14" rx="2" ry="2"/><line x1="12" y1="12" x2="12" y2="12.01"/></svg>
                       </div>
-                      <span className="font-bold text-sm">UPI / QR</span>
+                      <span className="font-bold text-sm text-center">UPI / QR</span>
                     </label>
                     <label className={`border rounded-xl p-4 cursor-pointer flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'Credit Card' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border hover:border-primary/50'}`}>
                       <input type="radio" name="payment_method" className="sr-only" checked={paymentMethod === 'Credit Card'} onChange={() => setPaymentMethod('Credit Card')} />
                       <div className="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                       </div>
-                      <span className="font-bold text-sm">Cards</span>
+                      <span className="font-bold text-sm text-center">Cards</span>
+                    </label>
+                    <label className={`border rounded-xl p-4 cursor-pointer flex flex-col items-center justify-center gap-2 transition-all ${paymentMethod === 'Cash' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border hover:border-primary/50'}`}>
+                      <input type="radio" name="payment_method" className="sr-only" checked={paymentMethod === 'Cash'} onChange={() => setPaymentMethod('Cash')} />
+                      <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01"/><path d="M17 12h.01"/><path d="M7 12h.01"/></svg>
+                      </div>
+                      <span className="font-bold text-sm text-center">
+                        {booking.collection.type === 'Home Collection' ? 'Pay at Collection' : 'Pay at Lab'}
+                      </span>
                     </label>
                   </div>
                 </div>
@@ -179,7 +200,7 @@ export default function DemoPaymentPage() {
                         onClick={() => handlePayment(true)}
                         disabled={isProcessing}
                       >
-                        {isProcessing ? 'Processing...' : `Simulate Successful Payment (₹${invoice.total})`}
+                        {isProcessing ? 'Processing...' : paymentMethod === 'Cash' ? 'Confirm Booking' : `Simulate Successful Payment (₹${invoice.total})`}
                       </Button>
                       <Button 
                         variant="outline" 

@@ -173,6 +173,35 @@ exports.handler = async (event) => {
 
         const updateBody = JSON.parse(event.body || '{}');
 
+        // Patient-initiated payment method selection (e.g. Pay at Lab)
+        if (action === 'payment-method') {
+          if (!updateBody.paymentMethod) {
+            return error.badRequest('Missing paymentMethod');
+          }
+          const allowedMethods = ['UPI', 'Card', 'Online', 'Cash'];
+          if (!allowedMethods.includes(updateBody.paymentMethod)) {
+            return error.badRequest(`Invalid paymentMethod. Allowed: ${allowedMethods.join(', ')}`);
+          }
+          if (existingInvoice.paymentStatus === 'Paid') {
+            return error.badRequest('Cannot change payment method after invoice is paid');
+          }
+          if (
+            !(await isAdmin(identity)) && 
+            !(await isStaff(identity)) && 
+            existingInvoice.ownerSub !== identity.sub && 
+            existingInvoice.patientId !== identity.primaryPatientId &&
+            existingInvoice.patientId !== identity.sub &&
+            existingInvoice.patientId !== `pat_${identity.sub}`
+          ) {
+            return error.forbidden('Access denied: You do not have permission to modify this invoice.');
+          }
+
+          const updatedInvoice = await invoiceRepo.update(invoiceId, {
+            paymentMethod: updateBody.paymentMethod
+          });
+          return success(updatedInvoice);
+        }
+
         // Status update / Payment recording
         if (action === 'status' || updateBody.status) {
           const nextStatus = updateBody.status;

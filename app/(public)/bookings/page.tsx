@@ -171,23 +171,51 @@ export default function BookingsPage() {
               const report = reports[booking.id];
 
               const isHome = booking.collection.type === 'Home Collection';
+              const isPaid = invoice?.paymentStatus === 'Paid';
+              const isCOD = invoice?.paymentStatus === 'Pending';
+              
+              const isAssigned = collection?.assignedTo && collection.assignedTo !== 'Unassigned';
+              const isCheckedIn = ['Checked In', 'Sample Collected', 'Completed'].includes(collection?.status || '');
+              const isEnRoute = ['En Route', 'Sample Collected', 'Completed'].includes(collection?.status || '');
+              const isSampleCollected = ['Sample Collected', 'Completed'].includes(collection?.status || '');
+              const isProcessing = ['Processing', 'Generated', 'Awaiting Verification', 'Published'].includes(report?.status || '');
+              const isReportReady = report?.status === 'Published';
+              const isCompleted = booking.status === 'Completed';
+
+              // Enforce chronological visual invariants: a step is completed only if it is completed AND its logical predecessor is completed.
+              const stepAssigned = isHome ? isAssigned : isCheckedIn;
+              const stepEnRoute = isHome ? (isAssigned && isEnRoute) : false;
+              const stepSampleCollected = isHome ? (stepEnRoute && isSampleCollected) : (stepAssigned && isSampleCollected);
+              
+              // Payment node placement differs
+              // If Paid Online: Confirmed -> Payment -> Assigned/Check-In ...
+              // If COD/Cash: Confirmed -> Assigned/Check-In ... -> Sample Collected -> Payment -> Processing ...
+              const stepPaymentOnline = isPaid; // If online, it's paid immediately.
+              const stepPaymentCOD = isCOD && stepSampleCollected && isPaid; // If COD, payment is only "completed" if it actually gets paid after sample collection (which turns it Paid, making isPaid true, but conceptually this was a COD flow. Wait, if it becomes Paid, isCOD is false. So we just use isPaid as the completion status, but position it based on paymentMethod or if it's currently unpaid).
+
+              // To reliably position payment: if it's Paid BEFORE sample collected, it was likely an online upfront payment.
+              // We can just rely on `invoice.paymentMethod === 'Cash'` to place it late, or `invoice.paymentStatus === 'Pending'` to place it late.
+              const isLatePayment = invoice?.paymentStatus === 'Pending' || invoice?.paymentMethod === 'Cash';
+
               const steps = isHome ? [
                 { label: 'Confirmed', completed: true },
-                { label: 'Assigned', completed: collection?.assignedTo && collection.assignedTo !== 'Unassigned' },
-                { label: 'On the Way', completed: ['En Route', 'Sample Collected', 'Completed'].includes(collection?.status || '') },
-                { label: 'Sample Collected', completed: ['Sample Collected', 'Completed'].includes(collection?.status || '') },
-                { label: 'Payment', completed: invoice?.paymentStatus === 'Paid' },
-                { label: 'Processing', completed: ['Processing', 'Generated', 'Awaiting Verification', 'Published'].includes(report?.status || '') },
-                { label: 'Report Ready', completed: report?.status === 'Published' },
-                { label: 'Completed', completed: booking.status === 'Completed' }
+                ...(isLatePayment ? [] : [{ label: 'Payment', completed: true }]),
+                { label: 'Assigned', completed: stepAssigned && (!isLatePayment ? stepPaymentOnline : true) },
+                { label: 'On the Way', completed: stepEnRoute && (!isLatePayment ? stepPaymentOnline : true) },
+                { label: 'Sample Collected', completed: stepSampleCollected && (!isLatePayment ? stepPaymentOnline : true) },
+                ...(isLatePayment ? [{ label: 'Payment', completed: isPaid && stepSampleCollected }] : []),
+                { label: 'Processing', completed: isProcessing && stepSampleCollected && isPaid },
+                { label: 'Report Ready', completed: isReportReady && isProcessing && isPaid },
+                { label: 'Completed', completed: isCompleted }
               ] : [
                 { label: 'Confirmed', completed: true },
-                { label: 'Check-In', completed: ['Checked In', 'Sample Collected', 'Completed'].includes(collection?.status || '') },
-                { label: 'Sample Collected', completed: ['Sample Collected', 'Completed'].includes(collection?.status || '') },
-                { label: 'Payment', completed: invoice?.paymentStatus === 'Paid' },
-                { label: 'Processing', completed: ['Processing', 'Generated', 'Awaiting Verification', 'Published'].includes(report?.status || '') },
-                { label: 'Report Ready', completed: report?.status === 'Published' },
-                { label: 'Completed', completed: booking.status === 'Completed' }
+                ...(isLatePayment ? [] : [{ label: 'Payment', completed: true }]),
+                { label: 'Check-In', completed: stepAssigned && (!isLatePayment ? stepPaymentOnline : true) },
+                { label: 'Sample Collected', completed: stepSampleCollected && (!isLatePayment ? stepPaymentOnline : true) },
+                ...(isLatePayment ? [{ label: 'Payment', completed: isPaid && stepSampleCollected }] : []),
+                { label: 'Processing', completed: isProcessing && stepSampleCollected && isPaid },
+                { label: 'Report Ready', completed: isReportReady && isProcessing && isPaid },
+                { label: 'Completed', completed: isCompleted }
               ];
 
               return (

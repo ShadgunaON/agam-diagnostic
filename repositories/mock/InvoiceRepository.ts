@@ -41,19 +41,11 @@ export class MockInvoiceRepository implements IInvoiceRepository {
   }
 
   async updateStatus(id: string, status: InvoiceModel['paymentStatus']): Promise<Result<InvoiceModel>> {
-    const invoices = (await this.adapter.load()) || [];
-    const index = invoices.findIndex((i: InvoiceModel) => i.id === id);
-    if (index === -1) return failure(new Error('Invoice not found'));
-    
-    const updated = {
-      ...invoices[index],
-      paymentStatus: status,
-      updatedAt: new Date().toISOString()
-    };
-    
-    invoices[index] = updated;
-    await this.adapter.save(invoices);
-    return success(updated);
+    return this.update(id, { paymentStatus: status });
+  }
+
+  async updatePaymentMethod(id: string, method: string): Promise<Result<InvoiceModel>> {
+    return this.update(id, { paymentMethod: method });
   }
 
   async update(id: string, updates: Partial<InvoiceModel>): Promise<Result<InvoiceModel>> {

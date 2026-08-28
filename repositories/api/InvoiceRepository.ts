@@ -23,6 +23,10 @@ export class ApiInvoiceRepository implements IInvoiceRepository {
     return toResult(this.apiClient.put<InvoiceModel>(`/api/invoices/${id}/status`, { status }));
   }
 
+  async updatePaymentMethod(id: string, method: string): Promise<Result<InvoiceModel>> {
+    return toResult(this.apiClient.put<InvoiceModel>(`/api/invoices/${id}/payment-method`, { paymentMethod: method }));
+  }
+
   async update(id: string, updates: Partial<InvoiceModel>): Promise<Result<InvoiceModel>> {
     return toResult(this.apiClient.put<InvoiceModel>(`/api/invoices/${id}`, updates));
   }
