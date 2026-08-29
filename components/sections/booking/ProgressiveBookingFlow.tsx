@@ -105,10 +105,12 @@ export function ProgressiveBookingFlow() {
 
     if (result.isSuccess) {
       clearCart();
-      // Bypass the simulated payment page as per user request to remove the extra transition.
-      // The booking will remain in 'Pending' payment state, and payment will be collected
-      // offline (at lab or home collection) in this demo.
-      router.push(`/book/success/${result.value.id}`);
+      // Redirect to the payment gateway to allow the user to select 'Pay Online' or 'Pay at Lab'
+      if (result.value.invoiceId) {
+        router.push(`/payment/${result.value.invoiceId}`);
+      } else {
+        router.push(`/book/success/${result.value.id}`);
+      }
     } else {
       setError(result.error?.message || "Failed to create booking. Please try again.");
     }

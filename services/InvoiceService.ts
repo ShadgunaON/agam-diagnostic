@@ -88,6 +88,6 @@ export class InvoiceService {
 
   async setPaymentMethod(invoiceId: string, method: string): Promise<Result<InvoiceModel>> {
     // We expect the repository to handle hitting /api/invoices/{id}/payment-method
-    return this.repository.update(invoiceId, { paymentMethod: method }, 'payment-method');
+    return this.repository.updatePaymentMethod(invoiceId, method);
   }
 }

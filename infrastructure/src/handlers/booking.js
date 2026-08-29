@@ -191,7 +191,10 @@ exports.handler = async (event) => {
             ownerSub: identity.sub
           });
           
-          return success(result.booking, result.isDuplicate ? 200 : 201);
+          return success({
+            ...result.booking,
+            invoiceId: invoiceData.id
+          }, result.isDuplicate ? 200 : 201);
         } catch (aggError) {
           logger.error('Failed to create booking aggregate', aggError);
           return error.serverError('Failed to create booking aggregate. Please try again.');

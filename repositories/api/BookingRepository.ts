@@ -76,6 +76,7 @@ export function normalizeBooking(raw: any): BookingModel {
     timeline,
     createdAt: raw.createdAt || new Date().toISOString(),
     trustFeatures: Array.isArray(raw.trustFeatures) ? raw.trustFeatures : undefined,
+    invoiceId: raw.invoiceId || undefined,
   };
 }
 

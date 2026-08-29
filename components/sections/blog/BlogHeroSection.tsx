@@ -21,11 +21,11 @@ export function BlogHeroSection({ title, description, className = '' }: BlogHero
           <span className="breadcrumb__current text-foreground">Blog</span>
         </div>
         
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-foreground tracking-tight max-w-3xl">
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-6 text-foreground tracking-tight max-w-3xl">
           {title}
         </h1>
         
-        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10 leading-relaxed">
+        <p className="text-base text-muted-foreground max-w-2xl mb-10 leading-relaxed">
           {description}
         </p>
 

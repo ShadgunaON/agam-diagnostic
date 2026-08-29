@@ -41,4 +41,5 @@ export interface BookingModel {
   trustFeatures?: Array<{
     title: string;
   }>;
+  invoiceId?: string;
 }

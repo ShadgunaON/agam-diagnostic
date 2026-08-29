@@ -433,7 +433,7 @@
 }
 
 .hero-premium__title {
-  font-size: clamp(2rem, 3.5vw, 2.75rem);
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
   font-weight: 800;
   line-height: 1.1;
   color: var(--color-primary);
@@ -446,7 +446,7 @@
 }
 
 .hero-premium__desc {
-  font-size: var(--fs-lg);
+  font-size: var(--fs-base);
   color: var(--color-text);
   margin-bottom: var(--sp-8);
   max-width: 500px;

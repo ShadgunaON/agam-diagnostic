@@ -240,6 +240,8 @@ export default function CollectionsPage() {
       if (res.isSuccess) {
         toast({ title: 'Sample Collected', description: 'Sample collection recorded successfully.', variant: 'success' });
         await refreshTasks();
+      } else {
+        toast({ title: 'Action Failed', description: res.error?.message || 'Failed to record sample collection.', variant: 'danger' });
       }
     });
   };
@@ -290,6 +292,8 @@ export default function CollectionsPage() {
       if (res.isSuccess) {
         toast({ title: 'Checked In', description: 'Patient checked in successfully.', variant: 'success' });
         await refreshTasks();
+      } else {
+        toast({ title: 'Check In Failed', description: res.error?.message || 'Failed to check in patient.', variant: 'danger' });
       }
     });
   };

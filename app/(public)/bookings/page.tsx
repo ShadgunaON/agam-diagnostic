@@ -187,34 +187,27 @@ export default function BookingsPage() {
               const stepEnRoute = isHome ? (isAssigned && isEnRoute) : false;
               const stepSampleCollected = isHome ? (stepEnRoute && isSampleCollected) : (stepAssigned && isSampleCollected);
               
-              // Payment node placement differs
-              // If Paid Online: Confirmed -> Payment -> Assigned/Check-In ...
-              // If COD/Cash: Confirmed -> Assigned/Check-In ... -> Sample Collected -> Payment -> Processing ...
-              const stepPaymentOnline = isPaid; // If online, it's paid immediately.
-              const stepPaymentCOD = isCOD && stepSampleCollected && isPaid; // If COD, payment is only "completed" if it actually gets paid after sample collection (which turns it Paid, making isPaid true, but conceptually this was a COD flow. Wait, if it becomes Paid, isCOD is false. So we just use isPaid as the completion status, but position it based on paymentMethod or if it's currently unpaid).
-
-              // To reliably position payment: if it's Paid BEFORE sample collected, it was likely an online upfront payment.
-              // We can just rely on `invoice.paymentMethod === 'Cash'` to place it late, or `invoice.paymentStatus === 'Pending'` to place it late.
-              const isLatePayment = invoice?.paymentStatus === 'Pending' || invoice?.paymentMethod === 'Cash';
+              const isLatePayment = invoice?.paymentMethod === 'Cash' || invoice?.paymentMethod === 'COD';
+              const paymentNodeLabel = isLatePayment ? 'Payment Collected' : 'Payment';
 
               const steps = isHome ? [
                 { label: 'Confirmed', completed: true },
-                ...(isLatePayment ? [] : [{ label: 'Payment', completed: true }]),
-                { label: 'Assigned', completed: stepAssigned && (!isLatePayment ? stepPaymentOnline : true) },
-                { label: 'On the Way', completed: stepEnRoute && (!isLatePayment ? stepPaymentOnline : true) },
-                { label: 'Sample Collected', completed: stepSampleCollected && (!isLatePayment ? stepPaymentOnline : true) },
-                ...(isLatePayment ? [{ label: 'Payment', completed: isPaid && stepSampleCollected }] : []),
-                { label: 'Processing', completed: isProcessing && stepSampleCollected && isPaid },
-                { label: 'Report Ready', completed: isReportReady && isProcessing && isPaid },
+                ...(isLatePayment ? [] : [{ label: paymentNodeLabel, completed: isPaid }]),
+                { label: 'Assigned', completed: stepAssigned },
+                { label: 'On the Way', completed: stepEnRoute },
+                { label: 'Sample Collected', completed: stepSampleCollected },
+                ...(isLatePayment ? [{ label: paymentNodeLabel, completed: isPaid }] : []),
+                { label: 'Processing', completed: isProcessing },
+                { label: 'Report Ready', completed: isReportReady },
                 { label: 'Completed', completed: isCompleted }
               ] : [
                 { label: 'Confirmed', completed: true },
-                ...(isLatePayment ? [] : [{ label: 'Payment', completed: true }]),
-                { label: 'Check-In', completed: stepAssigned && (!isLatePayment ? stepPaymentOnline : true) },
-                { label: 'Sample Collected', completed: stepSampleCollected && (!isLatePayment ? stepPaymentOnline : true) },
-                ...(isLatePayment ? [{ label: 'Payment', completed: isPaid && stepSampleCollected }] : []),
-                { label: 'Processing', completed: isProcessing && stepSampleCollected && isPaid },
-                { label: 'Report Ready', completed: isReportReady && isProcessing && isPaid },
+                ...(isLatePayment ? [] : [{ label: paymentNodeLabel, completed: isPaid }]),
+                { label: 'Check-In', completed: stepAssigned },
+                { label: 'Sample Collected', completed: stepSampleCollected },
+                ...(isLatePayment ? [{ label: paymentNodeLabel, completed: isPaid }] : []),
+                { label: 'Processing', completed: isProcessing },
+                { label: 'Report Ready', completed: isReportReady },
                 { label: 'Completed', completed: isCompleted }
               ];
 

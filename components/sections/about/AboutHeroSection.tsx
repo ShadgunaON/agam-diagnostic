@@ -23,8 +23,8 @@ export function AboutHeroSection({ data, className = '' }: AboutHeroSectionProps
           <div className="breadcrumb" style={{ marginBottom: 'var(--sp-4)' }}>
             <Link href="/">Home</Link><span className="breadcrumb__sep">›</span><span className="breadcrumb__current">About Us</span>
           </div>
-          <h1 className="hero-premium__title" style={{ fontSize: 'var(--fs-4xl)', marginBottom: 'var(--sp-4)' }}>{data.title}</h1>
-          <p className="hero-premium__desc" style={{ fontSize: 'var(--fs-lg)', color: 'var(--color-text)', marginBottom: 'var(--sp-6)', lineHeight: 'var(--lh-relaxed)', maxWidth: '480px' }}>
+          <h1 className="hero-premium__title" style={{ fontSize: 'clamp(1.5rem, 3vw, 2.25rem)', marginBottom: 'var(--sp-4)' }}>{data.title}</h1>
+          <p className="hero-premium__desc" style={{ fontSize: 'var(--fs-base)', color: 'var(--color-text)', marginBottom: 'var(--sp-6)', lineHeight: 'var(--lh-relaxed)', maxWidth: '480px' }}>
             {data.description}
           </p>
           
