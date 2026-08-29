@@ -235,7 +235,12 @@ exports.handler = async (event) => {
                     age: patient.age || 0,
                     gender: patient.gender || 'Unknown',
                     id: patient.id || existingCollection.patientId
-                  } : undefined,
+                  } : {
+                    name: typeof existingCollection.patient === 'string' ? existingCollection.patient : existingCollection.patient?.name || 'Unknown',
+                    age: 0,
+                    gender: 'Unknown',
+                    id: existingCollection.patientId
+                  },
                   tests: existingCollection.tests || [],
                   testType: (existingCollection.tests || []).join(', '),
                   status: 'Processing', // Changed from Pending to match frontend model

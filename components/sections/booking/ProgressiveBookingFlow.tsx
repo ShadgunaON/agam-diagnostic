@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { bookingService } from '@/services';
+import { bookingService, paymentService, invoiceService } from '@/services';
 import { performGlobalSearch, SearchResultItem } from '@/app/actions/globalSearch';
 
 type BookingStep = 1 | 2 | 3 | 4;
@@ -23,6 +23,7 @@ export function ProgressiveBookingFlow() {
   const [address, setAddress] = useState('');
   const [date, setDate] = useState('');
   const [timeSlot, setTimeSlot] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'Credit Card' | 'Cash'>('UPI');
   
   const { user } = useAuth();
   const router = useRouter();
@@ -95,25 +96,34 @@ export function ProgressiveBookingFlow() {
       payment: {
         total: locationType === 'home' ? totalAmount : totalAmount - collectionFee,
         status: 'Pending' as const,
-        method: 'Online Secure'
+        method: paymentMethod === 'Cash' ? 'Cash' : 'Online Secure'
       },
       timeline: []
     };
 
     const result = await bookingService.createBooking(bookingPayload, { idempotencyKey: idempotencyKeyRef.current });
-    setIsSubmitting(false);
-
-    if (result.isSuccess) {
-      clearCart();
-      // Redirect to the payment gateway to allow the user to select 'Pay Online' or 'Pay at Lab'
-      if (result.value.invoiceId) {
-        router.push(`/payment/${result.value.invoiceId}`);
-      } else {
+    
+    if (result.isSuccess && result.value.invoiceId) {
+      try {
+        if (paymentMethod === 'Cash') {
+          await invoiceService.setPaymentMethod(result.value.invoiceId, 'Cash');
+        } else {
+          await paymentService.processOnlinePayment(result.value.invoiceId, finalTotal, paymentMethod, true);
+        }
+        clearCart();
         router.push(`/book/success/${result.value.id}`);
+      } catch (err) {
+        setError("Booking created, but payment processing failed. Please check your bookings page.");
+        router.push(`/bookings`);
       }
+    } else if (result.isSuccess) {
+      clearCart();
+      router.push(`/book/success/${result.value.id}`);
     } else {
       setError(result.error?.message || "Failed to create booking. Please try again.");
     }
+    
+    setIsSubmitting(false);
   };
 
   const handleNext = () => {
@@ -503,10 +513,37 @@ export function ProgressiveBookingFlow() {
                   </div>
                   
                   {error && (
-                    <div style={{ padding: '12px', background: '#fef2f2', border: '1px solid #fecaca', color: '#ef4444', borderRadius: '8px', fontSize: '14px', textAlign: 'center' }}>
+                    <div style={{ padding: '12px', background: '#fef2f2', border: '1px solid #fecaca', color: '#ef4444', borderRadius: '8px', fontSize: '14px', textAlign: 'center', marginBottom: '24px' }}>
                       {error}
                     </div>
                   )}
+
+                  <div style={{ marginBottom: '32px' }}>
+                    <h3 style={{ fontSize: '18px', color: 'var(--color-dark)', marginBottom: '16px' }}>Select Payment Method</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                      <label style={{ border: `1px solid ${paymentMethod === 'UPI' ? 'var(--color-primary)' : 'var(--color-border)'}`, background: paymentMethod === 'UPI' ? 'rgba(14,165,233,0.05)' : '#fff', borderRadius: '12px', padding: '16px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }}>
+                        <input type="radio" name="payment" checked={paymentMethod === 'UPI'} onChange={() => setPaymentMethod('UPI')} style={{ display: 'none' }} />
+                        <div style={{ width: '32px', height: '32px', background: '#e0f2fe', color: '#0ea5e9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '16px' }}><rect x="3" y="5" width="18" height="14" rx="2" ry="2"/><line x1="12" y1="12" x2="12" y2="12.01"/></svg>
+                        </div>
+                        <span style={{ fontSize: '13px', fontWeight: 600 }}>UPI / QR</span>
+                      </label>
+                      <label style={{ border: `1px solid ${paymentMethod === 'Credit Card' ? 'var(--color-primary)' : 'var(--color-border)'}`, background: paymentMethod === 'Credit Card' ? 'rgba(14,165,233,0.05)' : '#fff', borderRadius: '12px', padding: '16px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }}>
+                        <input type="radio" name="payment" checked={paymentMethod === 'Credit Card'} onChange={() => setPaymentMethod('Credit Card')} style={{ display: 'none' }} />
+                        <div style={{ width: '32px', height: '32px', background: '#f3e8ff', color: '#a855f7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '16px' }}><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                        </div>
+                        <span style={{ fontSize: '13px', fontWeight: 600 }}>Cards</span>
+                      </label>
+                      <label style={{ border: `1px solid ${paymentMethod === 'Cash' ? 'var(--color-primary)' : 'var(--color-border)'}`, background: paymentMethod === 'Cash' ? 'rgba(14,165,233,0.05)' : '#fff', borderRadius: '12px', padding: '16px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', transition: 'all 0.2s', textAlign: 'center' }}>
+                        <input type="radio" name="payment" checked={paymentMethod === 'Cash'} onChange={() => setPaymentMethod('Cash')} style={{ display: 'none' }} />
+                        <div style={{ width: '32px', height: '32px', background: '#d1fae5', color: '#10b981', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '16px' }}><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01"/><path d="M17 12h.01"/><path d="M7 12h.01"/></svg>
+                        </div>
+                        <span style={{ fontSize: '13px', fontWeight: 600, lineHeight: 1.2 }}>{locationType === 'home' ? 'Pay at Collection' : 'Pay at Lab'}</span>
+                      </label>
+                    </div>
+                  </div>
 
                   <button 
                     type="button"

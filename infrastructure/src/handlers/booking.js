@@ -191,6 +191,29 @@ exports.handler = async (event) => {
             ownerSub: identity.sub
           });
           
+          // Auto-register guest patients to ensure they appear in Admin dashboards
+          if (newBookingData.patient) {
+            const resolvedPatientId = invoiceData.patientId;
+            if (resolvedPatientId && resolvedPatientId !== 'GENERAL') {
+              try {
+                const existingPatient = await patientRepo.getById(resolvedPatientId);
+                if (!existingPatient) {
+                  await patientRepo.create({
+                    id: resolvedPatientId,
+                    name: newBookingData.patient.name || 'Unknown Patient',
+                    phone: newBookingData.patient.phone,
+                    email: newBookingData.patient.email,
+                    age: newBookingData.patient.age || 0,
+                    gender: newBookingData.patient.gender || 'Unknown'
+                  }, identity.sub);
+                  logger.info(`Auto-registered guest patient ${resolvedPatientId}`);
+                }
+              } catch (patErr) {
+                logger.warn(`Failed to auto-register patient ${resolvedPatientId}`, patErr);
+              }
+            }
+          }
+          
           return success({
             ...result.booking,
             invoiceId: invoiceData.id
