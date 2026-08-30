@@ -21,6 +21,9 @@ export default function PatientsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [genderFilter, setGenderFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('newest');
   const [kpis, setKpis] = useState({ totalPatients: 0, newThisMonth: 0, activeBookings: 0, retentionRate: 0 });
   
   const [patients, setPatients] = useState<PatientModel[]>([]);
@@ -40,21 +43,93 @@ export default function PatientsPage() {
     loadPatients();
   }, []);
 
-  const filteredPatients = React.useMemo(() => {
-    if (!searchQuery) return patients;
-    const query = searchQuery.toLowerCase();
-    return patients.filter(p => 
-      p.name.toLowerCase().includes(query) ||
-      p.id.toLowerCase().includes(query) ||
-      p.phone.includes(query) ||
-      p.email.toLowerCase().includes(query)
-    );
-  }, [patients, searchQuery]);
+  const filteredAndSortedPatients = React.useMemo(() => {
+    let result = [...patients];
+
+    if (genderFilter !== 'All') {
+      result = result.filter(p => {
+        if (genderFilter === 'Unknown/Unspecified') {
+          return !p.gender;
+        }
+        return p.gender === genderFilter;
+      });
+    }
+
+    if (statusFilter !== 'All') {
+      result = result.filter(p => p.status === statusFilter);
+    }
+
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(p => 
+        (p.name?.toLowerCase() || '').includes(query) ||
+        (p.id?.toLowerCase() || '').includes(query) ||
+        (p.phone || '').includes(query) ||
+        (p.email?.toLowerCase() || '').includes(query)
+      );
+    }
+
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case 'name-asc':
+          return (a.name || '').localeCompare(b.name || '');
+        case 'name-desc':
+          return (b.name || '').localeCompare(a.name || '');
+        case 'oldest':
+          return (a.createdAt || '').localeCompare(b.createdAt || '');
+        case 'newest':
+        default:
+          return (b.createdAt || '').localeCompare(a.createdAt || '');
+      }
+    });
+
+    return result;
+  }, [patients, genderFilter, statusFilter, searchQuery, sortBy]);
 
   const paginatedData = React.useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
-    return filteredPatients.slice(start, start + itemsPerPage);
-  }, [filteredPatients, currentPage, itemsPerPage]);
+    return filteredAndSortedPatients.slice(start, start + itemsPerPage);
+  }, [filteredAndSortedPatients, currentPage, itemsPerPage]);
+
+  const handleExportCSV = () => {
+    if (filteredAndSortedPatients.length === 0) {
+      toast({ title: 'No Data', description: 'No patients match the current filters to export.', variant: 'warning' });
+      return;
+    }
+
+    const headers = ['Patient ID', 'Name', 'Phone', 'Email', 'Age', 'Gender', 'Blood Group', 'Status', 'Registered At'];
+    
+    const escapeCSV = (value: any) => {
+      if (value === null || value === undefined) return '""';
+      const str = String(value);
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const rows = filteredAndSortedPatients.map(p => [
+      escapeCSV(p.id),
+      escapeCSV(p.name),
+      escapeCSV(p.phone),
+      escapeCSV(p.email),
+      escapeCSV(p.age),
+      escapeCSV(p.gender),
+      escapeCSV(p.bloodGroup),
+      escapeCSV(p.status),
+      escapeCSV(p.createdAt)
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'patients_export.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
 
   const kpiSection = (
@@ -110,23 +185,44 @@ export default function PatientsPage() {
           </div>
           
           {/* Custom Filter Dropdowns */}
-          <AdminButton variant="secondary" size="sm" className="gap-1.5 text-[11px]" onClick={() => alert('Opening Gender Filter dropdown...')} style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0' }}>
-            <span>Any Gender</span>
-            <AdminIcon name="chevronDown" className="w-3 h-3 text-slate-400" strokeWidth={2} />
-          </AdminButton>
+          <select 
+            value={genderFilter} 
+            onChange={(e) => setGenderFilter(e.target.value)}
+            className="h-8 px-2 text-[11px] font-medium bg-white border border-slate-200 rounded-md text-slate-700 outline-none focus:ring-1 focus:ring-slate-300 cursor-pointer"
+            aria-label="Filter by Gender"
+          >
+            <option value="All">Any Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+            <option value="Unknown/Unspecified">Unknown/Unspecified</option>
+          </select>
 
-          <AdminButton variant="secondary" size="sm" className="gap-1.5 text-[11px]" onClick={() => alert('Opening Status Filter dropdown...')} style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0' }}>
-            <span>Any Status</span>
-            <AdminIcon name="chevronDown" className="w-3 h-3 text-slate-400" strokeWidth={2} />
-          </AdminButton>
+          <select 
+            value={statusFilter} 
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="h-8 px-2 text-[11px] font-medium bg-white border border-slate-200 rounded-md text-slate-700 outline-none focus:ring-1 focus:ring-slate-300 cursor-pointer"
+            aria-label="Filter by Status"
+          >
+            <option value="All">Any Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <AdminButton variant="secondary" size="sm" className="gap-1.5 text-[11px]" onClick={() => alert('Opening Advanced Filters pane...')} style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0' }}>
-            <AdminIcon name="filter" className="w-3 h-3 text-slate-400" strokeWidth={2} />
-            Filters
-          </AdminButton>
-          <AdminButton variant="secondary" size="sm" className="gap-1.5 text-[11px]" onClick={() => alert('Exporting patient list to CSV...')} style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0' }}>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0 w-full sm:w-auto">
+          <select 
+            value={sortBy} 
+            onChange={(e) => setSortBy(e.target.value)}
+            className="h-8 px-2 text-[11px] font-medium bg-white border border-slate-200 rounded-md text-slate-700 outline-none focus:ring-1 focus:ring-slate-300 cursor-pointer"
+            aria-label="Sort By"
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="name-asc">Name: A → Z</option>
+            <option value="name-desc">Name: Z → A</option>
+          </select>
+          <AdminButton variant="secondary" size="sm" className="gap-1.5 text-[11px]" onClick={handleExportCSV} style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0' }}>
             <AdminIcon name="download" className="w-3 h-3 text-slate-400" strokeWidth={2} />
             Export
           </AdminButton>
@@ -213,8 +309,8 @@ export default function PatientsPage() {
             onRowClick={(row) => router.push(`/admin/patients/${row.id}`)}
             pagination={{
               currentPage,
-              totalPages: Math.ceil(filteredPatients.length / itemsPerPage),
-              totalItems: filteredPatients.length,
+              totalPages: Math.max(1, Math.ceil(filteredAndSortedPatients.length / itemsPerPage)),
+              totalItems: filteredAndSortedPatients.length,
               itemsPerPage,
               onPageChange: setCurrentPage,
               onItemsPerPageChange: (items: number) => {
