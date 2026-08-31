@@ -21,7 +21,7 @@ export function ServicesHeroSection({ data, className = '' }: ServicesHeroSectio
       <div className="grid grid-cols-1 md:grid-cols-[45%_55%] items-stretch">
         
         {/* Content Left */}
-        <div className="flex flex-col justify-center relative z-10 px-6 py-6 md:py-8 md:pl-[max(1.5rem,calc((100vw-var(--max-width))/2+1.5rem))] md:pr-8">
+        <div className="flex flex-col justify-center relative z-10 px-6 py-4 md:py-6 md:pl-[max(1.5rem,calc((100vw-var(--max-width))/2+1.5rem))] md:pr-8">
           <div className="breadcrumb" style={{ marginBottom: 'var(--sp-3)' }}>
             <Link href="/">Home</Link><span className="breadcrumb__sep">›</span><span className="breadcrumb__current">Diagnostic Services</span>
           </div>
@@ -32,7 +32,7 @@ export function ServicesHeroSection({ data, className = '' }: ServicesHeroSectio
         </div>
 
         {/* Image Right */}
-        <div className="relative w-full aspect-video md:aspect-auto md:h-full md:min-h-[400px] flex items-center justify-center overflow-hidden">
+        <div className="relative w-full aspect-video md:aspect-auto md:h-full md:min-h-[300px] flex items-center justify-center overflow-hidden">
           {/* Organic white gradient overlay to blend left and right (hidden on mobile) */}
           <div className="hidden md:block absolute inset-0 z-10" style={{ background: 'linear-gradient(to right, var(--color-bg-alt) 0%, transparent 15%)' }}></div>
           <img src={data.image} alt="Diagnostic Services" className="w-full h-full object-cover object-top md:object-[20%_center] lg:object-center" />

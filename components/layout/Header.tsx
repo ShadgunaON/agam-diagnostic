@@ -61,7 +61,7 @@ export function Header({ className = '' }: HeaderProps) {
         </Container>
       </div>
 
-      <nav className="nav-main sticky top-0 z-[1000] min-h-[60px] md:static md:min-h-auto" id="nav-main">
+      <nav className="nav-main sticky top-0 z-[1000] min-h-[60px] bg-white border-b border-border/50" id="nav-main">
         <Container className="flex justify-between items-center w-full">
           <Link href="/" className="nav-logo shrink-0">
             <img loading="lazy" src="https://www.agamdiagnostics.com/wp-content/uploads/2023/08/agam-site-logo.webp" alt="Agam Diagnostics" width="184" height="63" className="w-[130px] sm:w-[150px] lg:w-[160px] xl:w-[184px] h-auto transition-all" />

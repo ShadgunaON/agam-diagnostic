@@ -80,9 +80,7 @@
 }
 
 .nav-main {
-  background: var(--bg-glass);
-  backdrop-filter: var(--blur-glass);
-  -webkit-backdrop-filter: var(--blur-glass);
+  background: var(--color-background);
   height: var(--nav-height);
   display: flex;
   align-items: center;
@@ -94,9 +92,7 @@
 }
 
 .nav-main.is-scrolled {
-  background: var(--bg-glass);
-  backdrop-filter: var(--blur-glass);
-  -webkit-backdrop-filter: var(--blur-glass);
+  background: var(--color-background);
   box-shadow: var(--shadow-ambient);
   border-bottom: 1px solid var(--border-glass);
 }

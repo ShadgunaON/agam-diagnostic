@@ -14,7 +14,7 @@ export function TestsHeroSection({ data, className = '' }: TestsHeroSectionProps
   return (
     <section className={`hero-premium section !p-0 overflow-hidden relative ${className}`.trim()} style={{ background: 'var(--color-bg-alt)' }}>
       <div className="flex flex-col lg:grid lg:grid-cols-[45%_55%] xl:grid-cols-[40%_60%] items-stretch">
-        <div className="flex flex-col justify-center relative z-10 px-6 py-6 lg:py-8 lg:pl-[max(1.5rem,calc((100vw-var(--max-width))/2+1.5rem))] lg:pr-8">
+        <div className="flex flex-col justify-center relative z-10 px-6 py-4 lg:py-6 lg:pl-[max(1.5rem,calc((100vw-var(--max-width))/2+1.5rem))] lg:pr-8">
           <div className="breadcrumb" style={{ marginBottom: 'var(--sp-4)' }}>
             <Link href="/">Home</Link>
             <span className="breadcrumb__sep">›</span>
@@ -36,7 +36,7 @@ export function TestsHeroSection({ data, className = '' }: TestsHeroSectionProps
           </div>
         </div>
         
-        <div className="relative w-full aspect-[4/3] sm:aspect-video lg:aspect-auto lg:h-full lg:min-h-[500px] flex items-center justify-center overflow-hidden">
+        <div className="relative w-full aspect-[4/3] sm:aspect-video lg:aspect-auto lg:h-full lg:min-h-[350px] flex items-center justify-center overflow-hidden">
           <div className="hidden lg:block absolute inset-0 z-10" style={{ background: 'linear-gradient(to right, var(--color-bg-alt) 0%, transparent 15%)' }}></div>
           <img 
             src="/images/indian_lab_technician_tests.png" 
