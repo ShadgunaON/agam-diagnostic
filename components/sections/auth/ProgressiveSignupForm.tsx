@@ -74,7 +74,7 @@ export function ProgressiveSignupForm() {
       const destination = queryString ? `${returnUrl}?${queryString}` : returnUrl;
       router.push(destination);
     } else {
-      router.push('/');
+      router.push('/dashboard');
     }
   };
 
