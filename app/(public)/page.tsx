@@ -27,6 +27,8 @@ import {
 
 import { CTASection } from '@/components/common';
 
+import { HomeRedirect } from '@/components/auth/HomeRedirect';
+
 export const metadata: Metadata = {
   title: siteConfig.name,
   description: siteConfig.description,
@@ -51,6 +53,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <>
+      <HomeRedirect />
       <HeroSection data={heroData} />
       <StatisticsSection data={statisticsData} />
       <ServicesSection data={servicesData} />

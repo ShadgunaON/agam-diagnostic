@@ -90,13 +90,7 @@ export function AdminSidebar(props: { isCollapsed?: boolean, setIsCollapsed?: (v
             <span className="font-bold tracking-tight whitespace-nowrap" style={{ fontSize: '15px' }}>AGAM Admin</span>
           </Link>
         )}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute bg-white border border-slate-200 flex items-center justify-center shadow-sm text-slate-400 hover:text-slate-700 z-50"
-          style={{ right: '-12px', top: '24px', width: '24px', height: '24px', borderRadius: '50%' }}
-        >
-          <AdminIcon name={isCollapsed ? "chevronRight" : "chevronDown"} style={{ width: '14px', height: '14px' }} />
-        </button>
+
       </div>
 
       <div

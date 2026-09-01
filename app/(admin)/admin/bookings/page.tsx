@@ -155,7 +155,7 @@ export default function GlassBookingsPage() {
           {/* Table Header */}
           <div className="admin-table-row admin-hide-table-header grid grid-cols-[1.2fr_2fr_1.5fr_1.5fr_1fr_1fr] px-4 lg:px-6 pb-4 mb-4 border-b border-slate-200/80">
             <div style={{ fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Order ID</div>
-            <div style={{ fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Patient Details</div>
+            <div style={{ fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>Patient Details</div>
             <div style={{ fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Schedule</div>
             <div style={{ fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tests</div>
             <div style={{ fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</div>
@@ -231,7 +231,7 @@ export default function GlassBookingsPage() {
                       <div style={{ fontSize: '12px', fontWeight: 700, color: isHome ? '#3b82f6' : '#8b5cf6', backgroundColor: isHome ? '#eff6ff' : '#f3e8ff', display: 'inline-flex', padding: '2px 8px', borderRadius: '12px', alignSelf: 'flex-start' }}>{booking.collection?.type || 'Home Collection'}</div>
                     </div>
                     
-                    <div data-label="Patient Details">
+                    <div data-label="Patient Details" style={{ textAlign: 'center' }}>
                       <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>{booking.patient?.name || 'Unknown Patient'}</div>
                       <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>{booking.patient?.phone || 'N/A'}</div>
                     </div>
