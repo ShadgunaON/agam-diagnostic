@@ -32,7 +32,9 @@ import { InvoiceService } from './InvoiceService';
 
 import { GlobalSearchService } from './GlobalSearchService';
 import { NotificationService } from './NotificationService';
-import { PaymentService, MockPaymentProvider } from './PaymentService';
+import { PaymentService, MockPaymentProvider, ApiPaymentProvider } from './PaymentService';
+import { env } from '@/config/env';
+import { apiClient } from '@/repositories/registry';
 
 export const blogService = new BlogService(blogRepository);
 export const serviceCatalogService = new ServiceCatalogService(serviceRepository);
@@ -74,7 +76,7 @@ export const globalSearchService = new GlobalSearchService(
 );
 
 // Payment Architecture
-const mockPaymentProvider = new MockPaymentProvider();
-export const paymentService = new PaymentService(mockPaymentProvider, invoiceService);
+const paymentProvider = env.useMockData ? new MockPaymentProvider() : new ApiPaymentProvider(apiClient);
+export const paymentService = new PaymentService(paymentProvider, invoiceService);
 
 

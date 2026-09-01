@@ -65,7 +65,7 @@ import { IDocumentRepository } from '@/domains/document/repository';
 import { MockDocumentRepository } from './mock/DocumentRepository';
 import { ApiDocumentRepository } from './api/DocumentRepository';
 
-const apiClient = new ApiClient();
+export const apiClient = new ApiClient();
 
 // ==========================================================
 // REPOSITORIES WITH REAL BACKEND API (Lambda endpoints exist)

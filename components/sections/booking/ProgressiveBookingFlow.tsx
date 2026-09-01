@@ -107,14 +107,28 @@ export function ProgressiveBookingFlow() {
       try {
         if (paymentMethod === 'Cash') {
           await invoiceService.setPaymentMethod(result.value.invoiceId, 'Cash');
+          clearCart();
+          router.push(`/book/success/${result.value.id}`);
         } else {
-          await paymentService.processOnlinePayment(result.value.invoiceId, finalTotal, paymentMethod, true);
+          const payRes = await paymentService.processOnlinePayment(result.value.invoiceId, finalTotal, paymentMethod, true);
+          if (payRes.isSuccess && 'redirectUrl' in payRes.value && payRes.value.redirectUrl) {
+            clearCart();
+            window.location.href = payRes.value.redirectUrl;
+            return;
+          } else {
+            // Payment initialization failed!
+            const errMsg = !payRes.isSuccess && payRes.error ? payRes.error.message : "Failed to initialize payment gateway. Please try paying from your bookings page.";
+            setError(errMsg);
+            clearCart();
+            router.push(`/bookings`);
+            return;
+          }
         }
-        clearCart();
-        router.push(`/book/success/${result.value.id}`);
       } catch (err) {
         setError("Booking created, but payment processing failed. Please check your bookings page.");
+        clearCart();
         router.push(`/bookings`);
+        return;
       }
     } else if (result.isSuccess) {
       clearCart();

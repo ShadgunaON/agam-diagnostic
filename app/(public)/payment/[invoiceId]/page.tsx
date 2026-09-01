@@ -46,7 +46,7 @@ export default function DemoPaymentPage() {
     fetchData();
   }, [invoiceId]);
 
-  const handlePayment = async (shouldSucceed: boolean) => {
+  const handlePayment = async () => {
     setIsProcessing(true);
     setErrorMsg('');
     
@@ -62,12 +62,18 @@ export default function DemoPaymentPage() {
         }
       } else {
         // Online payment selected
-        const result = await paymentService.processOnlinePayment(invoiceId, invoice?.total || 0, paymentMethod, shouldSucceed);
+        const result = await paymentService.processOnlinePayment(invoiceId, invoice?.total || 0, paymentMethod, true);
         
         if (result.isSuccess) {
-          router.push(`/book/success/${invoice?.bookingId}`);
+          if ('redirectUrl' in result.value && result.value.redirectUrl) {
+            // PG integration (PhonePe) -> Redirect browser
+            window.location.href = result.value.redirectUrl;
+          } else {
+            // Fallback mock logic if env.useMockData is still active
+            router.push(`/book/success/${invoice?.bookingId}`);
+          }
         } else {
-          setErrorMsg(result.error?.message || 'Payment failed. Please try again.');
+          setErrorMsg(result.error?.message || 'Payment initialization failed. Please try again.');
           setIsProcessing(false);
         }
       }
@@ -112,9 +118,9 @@ export default function DemoPaymentPage() {
     <div className="bg-bg-alt py-12 min-h-[calc(100vh-80px)]">
       <Container className="max-w-3xl">
         <div className="mb-6 text-center">
-          <span className="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full tracking-widest uppercase mb-3 inline-block">Demo Payment Gateway</span>
+          <span className="bg-primary/10 text-primary text-xs font-bold px-3 py-1 rounded-full tracking-widest uppercase mb-3 inline-block">Secure Checkout</span>
           <h1 className="text-3xl font-extrabold text-foreground">Complete Your Payment</h1>
-          <p className="text-muted-foreground mt-2">Secure online payment simulation for Agam Diagnostics.</p>
+          <p className="text-muted-foreground mt-2">Choose your preferred payment method to complete the booking.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
@@ -191,29 +197,19 @@ export default function DemoPaymentPage() {
                 </div>
 
                 <div className="pt-4 border-t border-border">
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-4">
-                    <p className="text-xs text-slate-500 mb-2 font-medium">DEMO ENVIRONMENT CONTROLS</p>
-                    <div className="flex flex-col gap-2">
-                      <Button 
-                        variant="primary" 
-                        className="w-full justify-center" 
-                        onClick={() => handlePayment(true)}
-                        disabled={isProcessing}
-                      >
-                        {isProcessing ? 'Processing...' : paymentMethod === 'Cash' ? 'Confirm Booking' : `Simulate Successful Payment (₹${invoice.total})`}
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-center text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 hover:text-red-700" 
-                        onClick={() => handlePayment(false)}
-                        disabled={isProcessing}
-                      >
-                        Simulate Failed Payment
-                      </Button>
-                    </div>
+                  <div className="flex flex-col gap-2 mt-2">
+                    <Button 
+                      variant="primary" 
+                      className="w-full justify-center text-lg py-6 shadow-md" 
+                      onClick={handlePayment}
+                      disabled={isProcessing}
+                    >
+                      {isProcessing ? 'Processing...' : paymentMethod === 'Cash' ? 'Confirm Pay at Lab Booking' : `Pay ₹${invoice.total} Securely`}
+                    </Button>
                   </div>
-                  <p className="text-center text-[10px] text-muted-foreground">
-                    This is a simulation. No real money will be transferred.
+                  <p className="text-center text-xs text-muted-foreground mt-4 flex items-center justify-center gap-1">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    Payments are 100% secure and encrypted.
                   </p>
                 </div>
                 
