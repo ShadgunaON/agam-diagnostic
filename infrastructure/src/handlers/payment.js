@@ -119,9 +119,9 @@ exports.handler = async (event) => {
 
       try {
         const statusResponse = await client.getOrderStatus(invoiceId);
-        if (statusResponse && statusResponse.code === 'PAYMENT_SUCCESS') {
-           const providerTxnId = statusResponse.data?.transactionId || statusResponse.data?.paymentDetails?.[0]?.transactionId;
-           await markInvoicePaid(invoiceId, providerTxnId, statusResponse.data?.paymentDetails?.[0]?.paymentInstrument?.type || 'Online');
+        if (statusResponse && statusResponse.state === 'COMPLETED') {
+           const providerTxnId = statusResponse.paymentDetails?.[0]?.transactionId || statusResponse.orderId;
+           await markInvoicePaid(invoiceId, providerTxnId, statusResponse.paymentDetails?.[0]?.paymentMode || 'Online');
            
            // Fetch updated invoice
            const updatedInvoice = await invoiceRepo.getById(invoiceId);
@@ -131,7 +131,7 @@ exports.handler = async (event) => {
         // If not success, we can return the PhonePe status for the frontend
         return success({
           ...invoice,
-          phonePeStatus: statusResponse?.code
+          phonePeStatus: statusResponse?.state
         });
       } catch (err) {
         logger.error(`Error fetching order status for invoice ${invoiceId}`, err.message || err);
