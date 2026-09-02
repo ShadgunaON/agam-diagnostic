@@ -11,6 +11,13 @@ import { TestItem } from '@/domains/tests/model';
 import { ServiceItem } from '@/domains/services/model';
 import { PackageItem } from '@/domains/packages/model';
 
+const normalizeCategory = (rawCategory: unknown): string => {
+  if (!rawCategory) return '';
+  if (typeof rawCategory === 'string') return rawCategory;
+  if (Array.isArray(rawCategory) && rawCategory.length > 0) return String(rawCategory[0]);
+  return String(rawCategory);
+};
+
 export default function AdminCatalogPage() {
   const { hasPermission } = useRBAC();
   const [mounted, setMounted] = useState(false);
@@ -80,17 +87,13 @@ export default function AdminCatalogPage() {
   // Extract unique categories based on current items safely
   const categories = ['all', ...Array.from(new Set(
     currentItems
-      .map(item => {
-        if (typeof item.category === 'string') return item.category;
-        if (Array.isArray(item.category) && item.category.length > 0) return String(item.category[0]);
-        return '';
-      })
+      .map(item => normalizeCategory(item.category))
       .filter(Boolean)
   ))];
   
   const filteredItems = activeCategory === 'all' 
     ? currentItems 
-    : currentItems.filter(item => item.category === activeCategory);
+    : currentItems.filter(item => normalizeCategory(item.category) === activeCategory);
 
   return (
     <AdminPageTemplate
@@ -189,7 +192,7 @@ function CatalogRow({ item, type, toggleStatus, hasEdit }: { item: any, type: 't
   const title = typeof item.title === 'string' ? item.title : String(item.title || 'Untitled');
   const id = typeof item.id === 'string' ? item.id : String(item.id || '');
   const slug = typeof item.slug === 'string' ? item.slug : String(item.slug || '');
-  const category = typeof item.category === 'string' ? item.category : String(item.category || 'General');
+  const category = normalizeCategory(item.category) || 'General';
   
   // Safely parse price
   let price = 0;

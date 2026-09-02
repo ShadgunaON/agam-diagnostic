@@ -486,3 +486,9 @@ Status: **Completed**
 Scope/Objective: Ensure the backend is the sole monetary authority. Remove frontend trust for booking and invoice totals.
 Major Changes: Updated `booking.js` lambda to resolve authoritative pricing from DynamoDB. Implemented 0% tax and conditional ₹150 collection fee. PhonePe integration confirmed to use server invoice total.
 Associated Commit: `124041a`
+
+### Critical Bug Fixes
+- **Date**: 2026-09-02
+- **Issue**: Admin Catalog crash on edit (`Array.isArray(item.category)` causing `never` type error during build, blocking previous fixes from deploying).
+- **Fix**: Implemented `normalizeCategory` helper to safely parse `unknown` to `string` in `AdminCatalogPage`, satisfying strict TS checks and preventing `.charAt(0)` runtime crashes.
+- **Commit**: `ad4710e` (fix(catalog): fix category normalization build failure)
