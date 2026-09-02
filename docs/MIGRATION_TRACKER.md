@@ -458,3 +458,31 @@ Status: **Completed**
 - [x] Extract `AddAddressModal.tsx`
 - [x] Extract `AddFamilyModal.tsx`
 - [x] Refactor `BookingProcessSection.tsx` as orchestrator
+
+## Unified Catalog & Pricing Architecture
+
+This section tracks the migration to a unified, authoritative catalog model, removing frontend-driven pricing logic.
+
+### Phase 1: Unified Domain Models and Backend Repositories
+Status: **Completed**
+Scope/Objective: Unify Test, Service, and Package models into a shared domain architecture. Centralize DynamoDB access patterns.
+Major Changes: Created mapping layers, domain models, and updated DynamoDB repositories.
+Associated Commit: `aeab498`
+
+### Phase 2: Catalog Management UI
+Status: **Completed**
+Scope/Objective: Build Admin UI pages to view and manage Tests, Services, and Packages.
+Major Changes: Created `/admin/catalog/*` routes and updated RBAC permissions for the catalog module.
+Associated Commit: `24f1d0e`
+
+### Phase 3: Public UI Consumes Authoritative Models
+Status: **Completed**
+Scope/Objective: Refactor public catalog pages to consume the new unified models instead of legacy structures.
+Major Changes: Updated `TestDetailContent`, `PackageDetailContent`, `ServiceDetailContent`, and catalog sections.
+Associated Commit: `33a852f`
+
+### Phase 4: Backend Authoritative Pricing
+Status: **Completed**
+Scope/Objective: Ensure the backend is the sole monetary authority. Remove frontend trust for booking and invoice totals.
+Major Changes: Updated `booking.js` lambda to resolve authoritative pricing from DynamoDB. Implemented 0% tax and conditional ₹150 collection fee. PhonePe integration confirmed to use server invoice total.
+Associated Commit: `124041a`
