@@ -74,7 +74,7 @@ export default function AdminCatalogPage() {
       description="Manage your Tests, Services, and Packages"
       headerActions={
         hasPermission('catalog', 'create') ? (
-          <Link href={`/admin/catalog/${activeTab === 'packages' ? 'packages' : activeTab + 's'}/new`} className="btn btn-primary">
+          <Link href={`/admin/catalog/${activeTab}/new`} className="btn btn-primary">
             <AdminIcon name="plus" width={16} height={16} className="mr-2" />
             Add New {activeTab === 'packages' ? 'Package' : activeTab.slice(0, -1)}
           </Link>
