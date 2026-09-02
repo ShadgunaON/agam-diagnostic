@@ -89,9 +89,11 @@ export function ProgressiveBookingFlow() {
         address: locationType === 'home' ? address : 'Agam Diagnostics Centre'
       },
       items: items.map(item => ({
+        id: item.id,
+        slug: item.slug,
         name: item.title,
         type: item.type === 'package' ? 'Package' as const : 'Test' as const,
-        price: item.price
+        price: item.price // Note: Backend ignores this and resolves authoritative price
       })),
       payment: {
         total: locationType === 'home' ? totalAmount : totalAmount - collectionFee,

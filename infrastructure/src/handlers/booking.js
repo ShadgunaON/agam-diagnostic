@@ -4,6 +4,9 @@ const { logger } = require('../shared/logger');
 const bookingRepo = require('../repositories/dynamo-booking');
 const patientRepo = require('../repositories/dynamo-patient');
 const collectionRepo = require('../repositories/dynamo-collection');
+const testRepo = require('../repositories/dynamo-test');
+const packageRepo = require('../repositories/dynamo-package');
+const serviceRepo = require('../repositories/dynamo-service');
 
 exports.handler = async (event) => {
   logger.info(`Incoming booking request: ${event.httpMethod} ${event.path}`);
@@ -142,25 +145,66 @@ exports.handler = async (event) => {
           status: body.status || 'Pending',
         };
 
-        // Construct Invoice
-        const invoiceItems = (newBookingData.items || []).map((item, index) => ({
-          id: `ITEM-${index}-${Date.now()}`,
-          name: item.name,
-          type: item.type === 'Package' ? 'Package' : 'Test',
-          price: item.price
-        }));
+        // Resolve authoritative pricing from DynamoDB
+        const invoiceItems = [];
+        for (let i = 0; i < (newBookingData.items || []).length; i++) {
+          const item = newBookingData.items[i];
+          let authoritativePrice = 0;
+          
+          if (item.type === 'Package') {
+            const pkg = await packageRepo.getBySlug(item.slug || item.id);
+            if (!pkg || pkg.status !== 'ACTIVE') {
+              return error.badRequest(`Package ${item.name} is unavailable or invalid`);
+            }
+            authoritativePrice = parseFloat(pkg.price || pkg.packagePrice || '0');
+          } else {
+            const test = await testRepo.getBySlug(item.slug || item.id);
+            if (!test || test.status !== 'ACTIVE') {
+              // Try service repo if not found in test
+              const service = await serviceRepo.getBySlug(item.slug || item.id);
+              if (!service || service.status !== 'ACTIVE') {
+                 return error.badRequest(`Item ${item.name} is unavailable or invalid`);
+              } else {
+                 authoritativePrice = parseFloat(service.price || '0');
+              }
+            } else {
+              authoritativePrice = parseFloat(test.price || '0');
+            }
+          }
+          
+          if (isNaN(authoritativePrice)) authoritativePrice = 0;
+
+          invoiceItems.push({
+            id: `ITEM-${i}-${Date.now()}`,
+            name: item.name,
+            type: item.type === 'Package' ? 'Package' : 'Test',
+            price: authoritativePrice
+          });
+          
+          // Overwrite the booking payload item price with authoritative price so it's snapped in the booking as well
+          item.price = authoritativePrice;
+        }
+
         const subtotal = invoiceItems.reduce((sum, item) => sum + item.price, 0);
-        const tax = subtotal * 0.05;
-        const total = newBookingData.payment?.total || 0;
+        const tax = 0; // 0% tax per instructions
+        const discount = 0; // Discounts not currently applied via backend flow
+        const collectionFee = (newBookingData.collection?.type === 'Home Collection' && subtotal < 500) ? 150 : 0;
         
+        const total = subtotal + tax + collectionFee - discount;
+        
+        // Overwrite the client's payload with authoritative total
+        if (!newBookingData.payment) newBookingData.payment = {};
+        newBookingData.payment.total = total;
+
         const invoiceData = {
           id: `inv_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
           bookingId: bookingId,
           patientId: newBookingData.patientId || newBookingData.patient?.phone || newBookingData.patient?.email || 'GENERAL',
           items: invoiceItems,
           subtotal,
-          discount: 0,
+          discount,
           tax,
+          collectionFee,
           total,
           paymentStatus: newBookingData.payment?.status === 'Paid' ? 'Paid' : 'Pending',
           createdAt: new Date().toISOString()
