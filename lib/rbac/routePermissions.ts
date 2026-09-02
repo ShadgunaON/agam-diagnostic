@@ -28,6 +28,7 @@ export const routePermissions: Record<string, RoutePermission> = {
   '/admin/blogs': { moduleId: 'blogs', action: 'view' },
   '/admin/newsletter': { moduleId: 'newsletter', action: 'view' },
   '/admin/settings': { moduleId: 'settings', action: 'view' },
+  '/admin/catalog': { moduleId: 'catalog', action: 'view' },
 };
 
 /**
@@ -68,6 +69,7 @@ export const sidebarModuleMap: Record<string, string> = {
   '/admin/blogs': 'blogs',
   '/admin/newsletter': 'newsletter',
   '/admin/settings': 'settings',
+  '/admin/catalog': 'catalog',
 };
 
 /**
@@ -84,6 +86,7 @@ export function getDefaultRoute(accessibleModules: string[]): string {
     { moduleId: 'reports', route: '/admin/reports' },
     { moduleId: 'invoices', route: '/admin/invoices' },
     { moduleId: 'reviews', route: '/admin/reviews' },
+    { moduleId: 'catalog', route: '/admin/catalog' },
     { moduleId: 'staff', route: '/admin/staff' },
     { moduleId: 'blogs', route: '/admin/blogs' },
     { moduleId: 'settings', route: '/admin/settings' },
