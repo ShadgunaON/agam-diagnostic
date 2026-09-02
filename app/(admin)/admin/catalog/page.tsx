@@ -183,7 +183,20 @@ export default function AdminCatalogPage() {
 }
 
 function CatalogRow({ item, type, toggleStatus, hasEdit }: { item: any, type: 'test' | 'service' | 'package', toggleStatus: any, hasEdit: boolean }) {
-  const status = item.status || 'ACTIVE';
+  if (!item) return null;
+  
+  const status = typeof item.status === 'string' ? item.status : 'ACTIVE';
+  const title = typeof item.title === 'string' ? item.title : String(item.title || 'Untitled');
+  const id = typeof item.id === 'string' ? item.id : String(item.id || '');
+  const slug = typeof item.slug === 'string' ? item.slug : String(item.slug || '');
+  const category = typeof item.category === 'string' ? item.category : String(item.category || 'General');
+  
+  // Safely parse price
+  let price = 0;
+  if (item.price != null) price = Number(item.price);
+  else if (item.packagePrice != null) price = Number(item.packagePrice);
+  else if (item.basePrice != null) price = Number(item.basePrice);
+  if (isNaN(price)) price = 0;
   
   return (
     <tr className="hover:bg-gray-50/50 transition-colors group">
@@ -194,25 +207,25 @@ function CatalogRow({ item, type, toggleStatus, hasEdit }: { item: any, type: 't
           </div>
           <div>
             <div className="font-semibold text-gray-900 group-hover:text-primary transition-colors">
-              {item.title}
+              {title}
             </div>
             <div className="text-xs text-gray-500 truncate max-w-[300px]">
-              ID: {item.id} • Slug: {item.slug}
+              ID: {id} • Slug: {slug}
             </div>
           </div>
         </div>
       </td>
       <td className="py-4 px-6">
         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 capitalize">
-          {item.category || 'General'}
+          {category}
         </span>
       </td>
       <td className="py-4 px-6 font-medium text-gray-900">
-        ₹{item.price || item.packagePrice || item.basePrice || 0}
+        ₹{price}
       </td>
       <td className="py-4 px-6">
         <button
-          onClick={() => hasEdit && toggleStatus(type, item.id, status)}
+          onClick={() => hasEdit && toggleStatus(type, id, status)}
           disabled={!hasEdit}
           className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
             status === 'ACTIVE' 
@@ -227,7 +240,7 @@ function CatalogRow({ item, type, toggleStatus, hasEdit }: { item: any, type: 't
       <td className="py-4 px-6 text-right">
         {hasEdit ? (
           <Link
-            href={`/admin/catalog/${type}s/${encodeURIComponent(item.id)}`}
+            href={`/admin/catalog/${type}s/${encodeURIComponent(id)}`}
             className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-50 text-gray-500 hover:bg-primary/10 hover:text-primary transition-colors"
           >
             <AdminIcon name="edit" width={16} height={16} />
