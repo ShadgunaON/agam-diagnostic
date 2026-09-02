@@ -34,7 +34,7 @@ export function Footer({ className = '' }: FooterProps) {
           <div className="footer__grid flex flex-col md:grid md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.5fr] gap-6 md:gap-8">
             <div className="footer__about">
               <div className="footer__logo">
-                <img loading="lazy" src="https://www.agamdiagnostics.com/wp-content/uploads/2023/08/agam-site-logo.webp" alt="Agam Diagnostics" width="184" height="63" style={{ filter: 'brightness(0) invert(1)' }} />
+                <img loading="lazy" src="https://www.agamdiagnostics.com/wp-content/uploads/2023/08/agam-site-logo.webp" alt="Agam Diagnostics" width="184" height="63" style={{ filter: 'invert(1)', mixBlendMode: 'screen' }} />
               </div>
               <p>Agam Diagnostics is Madurai&apos;s most trusted and advanced Medical lab, offering comprehensive diagnostic services with cutting-edge automation and international standards.</p>
             </div>
@@ -84,7 +84,7 @@ export function Footer({ className = '' }: FooterProps) {
           <div className="footer__bottom">
             <span style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               © 2026 
-              <img loading="lazy" src="https://www.agamdiagnostics.com/wp-content/uploads/2023/08/agam-site-logo.webp" alt="Agam Diagnostics" width="80" height="27" style={{ filter: 'brightness(0) invert(1)', opacity: 0.9 }} /> 
+              <img loading="lazy" src="https://www.agamdiagnostics.com/wp-content/uploads/2023/08/agam-site-logo.webp" alt="Agam Diagnostics" width="80" height="27" style={{ filter: 'invert(1)', mixBlendMode: 'screen', opacity: 0.9 }} /> 
               | All rights reserved
             </span>
             <div className="footer__bottom-links">

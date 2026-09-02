@@ -37,7 +37,24 @@ export default function PatientsPage() {
     const loadPatients = async () => {
       const result = await patientService.getAll(1, 1000); // load all for client-side search in mock
       if (result.isSuccess && result.value) {
-        setPatients(result.value.data);
+        const uniquePatientsMap = new Map<string, PatientModel>();
+        
+        result.value.data.forEach(patient => {
+          // Use phone, email, or name as unique identifier
+          const key = patient.phone || patient.email || patient.name || patient.id;
+          
+          if (!uniquePatientsMap.has(key)) {
+            uniquePatientsMap.set(key, patient);
+          } else {
+            // If duplicate exists, keep the most recently updated one
+            const existing = uniquePatientsMap.get(key)!;
+            if (new Date(patient.createdAt || 0) > new Date(existing.createdAt || 0)) {
+              uniquePatientsMap.set(key, patient);
+            }
+          }
+        });
+        
+        setPatients(Array.from(uniquePatientsMap.values()));
       }
     };
     loadPatients();
