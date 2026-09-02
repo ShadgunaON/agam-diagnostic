@@ -37,9 +37,9 @@ export default function AdminCatalogPage() {
         packageService.getCatalog(1, 1000)
       ]);
       
-      if (testsRes.isSuccess) setTests(testsRes.value.data);
-      if (servicesRes.isSuccess) setServices(servicesRes.value.data);
-      if (packagesRes.isSuccess) setPackages(packagesRes.value.data);
+      if (testsRes.isSuccess) setTests(testsRes.value?.data || []);
+      if (servicesRes.isSuccess) setServices(servicesRes.value?.data || []);
+      if (packagesRes.isSuccess) setPackages(packagesRes.value?.data || []);
     } catch (error) {
       toast.error('Error', 'Failed to load catalog data');
     } finally {
@@ -77,8 +77,16 @@ export default function AdminCatalogPage() {
 
   const currentItems = activeTab === 'tests' ? tests : activeTab === 'services' ? services : packages;
   
-  // Extract unique categories based on current items
-  const categories = ['all', ...Array.from(new Set(currentItems.map(item => item.category).filter(Boolean)))];
+  // Extract unique categories based on current items safely
+  const categories = ['all', ...Array.from(new Set(
+    currentItems
+      .map(item => {
+        if (typeof item.category === 'string') return item.category;
+        if (Array.isArray(item.category) && item.category.length > 0) return String(item.category[0]);
+        return '';
+      })
+      .filter(Boolean)
+  ))];
   
   const filteredItems = activeCategory === 'all' 
     ? currentItems 
@@ -124,11 +132,11 @@ export default function AdminCatalogPage() {
         <div className="flex flex-wrap gap-2">
           {categories.map((category) => (
             <button
-              key={category}
-              onClick={() => setActiveCategory(category)}
+              key={String(category)}
+              onClick={() => setActiveCategory(String(category))}
               className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${activeCategory === category ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
             >
-              {category === 'all' ? 'All Items' : category.charAt(0).toUpperCase() + category.slice(1)}
+              {category === 'all' ? 'All Items' : String(category).charAt(0).toUpperCase() + String(category).slice(1)}
             </button>
           ))}
         </div>
