@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { TestDetailData } from '@/data/tests';
+import { TestItem as TestDetailData } from '@/domains/tests/model';
 import { PremiumDetailLayout } from '../shared/PremiumDetailLayout';
 
 export interface TestDetailContentProps {
@@ -20,7 +20,7 @@ export function TestDetailContent({ data, className = '' }: TestDetailContentPro
     price: data.price || 150,
     badges: [
       {
-        title: data.turnaroundTime,
+        title: data.turnaroundTime || 'Standard Turnaround',
         icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '12px', height: '12px' }}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
       }
     ]
@@ -42,7 +42,7 @@ export function TestDetailContent({ data, className = '' }: TestDetailContentPro
       title: 'Who Should Get This Test?',
       content: (
         <p style={{ fontSize: '14px', lineHeight: 1.6, color: 'var(--color-text)' }}>
-          {data.whoShouldGet}
+          {data.whoShouldGet || data.whatItChecks || 'This test helps provide clinical insights for your health.'}
         </p>
       )
     },
@@ -54,7 +54,7 @@ export function TestDetailContent({ data, className = '' }: TestDetailContentPro
           <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" style={{ width: '20px', height: '20px', flexShrink: 0, marginTop: '2px' }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           <div>
             <h4 style={{ color: 'var(--color-text)', fontSize: '14px', marginBottom: '4px' }}>Important Instructions</h4>
-            <p style={{ fontSize: '13px', color: 'var(--color-text-light)', margin: 0, lineHeight: 1.5 }}>{data.preparation}</p>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-light)', margin: 0, lineHeight: 1.5 }}>{data.preparation || data.preparationRequired || 'No specific preparation required.'}</p>
           </div>
         </div>
       )
@@ -64,7 +64,7 @@ export function TestDetailContent({ data, className = '' }: TestDetailContentPro
       title: 'Frequently Asked Questions',
       content: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {data.faqs.map((faq, idx) => (
+          {(data.faqs || []).map((faq, idx) => (
             <div key={idx} style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
               <button 
                 onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
@@ -88,7 +88,7 @@ export function TestDetailContent({ data, className = '' }: TestDetailContentPro
       title: 'Related Tests',
       content: (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
-          {data.relatedTests.map((test, idx) => (
+          {(data.relatedTests || []).map((test, idx) => (
             <Link key={idx} href={`/tests/${test.slug}`} className="card fade-in is-visible" style={{ textDecoration: 'none', padding: '12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
               <div>
                 <span className="card__tag" style={{ display: 'inline-block', marginBottom: '8px' }}>{test.category}</span>

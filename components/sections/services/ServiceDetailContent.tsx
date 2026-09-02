@@ -30,9 +30,9 @@ export function ServiceDetailContent({ data, className = '' }: ServiceDetailCont
   const headerProps = {
     title: data.title,
     category: data.category,
-    description: data.shortDescription,
+    description: data.shortDescription || data.description || '',
     price: data.price || 1999,
-    badges: data.valueProps.map((prop, idx) => ({
+    badges: (data.valueProps || []).map((prop, idx) => ({
       title: prop.title,
       icon: getPropIcon(idx)
     }))
@@ -44,8 +44,8 @@ export function ServiceDetailContent({ data, className = '' }: ServiceDetailCont
     title: data.title,
     type: 'service' as const,
     category: data.category,
-    price: data.price || 1999,
-    originalPrice: Math.round((data.price || 1999) * 1.35),
+    price: parseInt(data.price || '1999', 10),
+    originalPrice: Math.round(parseInt(data.price || '1999', 10) * 1.35),
   };
 
   const sections = [
@@ -54,12 +54,12 @@ export function ServiceDetailContent({ data, className = '' }: ServiceDetailCont
       title: 'About This Service',
       content: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div dangerouslySetInnerHTML={{ __html: data.aboutHtml }} style={{ fontSize: '14px', lineHeight: 1.6 }} />
+          <div dangerouslySetInnerHTML={{ __html: data.aboutHtml || data.overview || '' }} style={{ fontSize: '14px', lineHeight: 1.6 }} />
           
           <div style={{ padding: '12px', background: 'var(--color-bg-alt)', borderRadius: 'var(--radius-sm)' }}>
             <h4 style={{ marginBottom: '8px', fontSize: '13px' }}>Ideal For:</h4>
             <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px' }}>
-              {data.whoShouldUse.map((item, idx) => (
+              {(data.whoShouldUse || []).map((item, idx) => (
                 <li key={idx} style={{ marginBottom: '4px' }}>{item}</li>
               ))}
             </ul>
@@ -68,8 +68,8 @@ export function ServiceDetailContent({ data, className = '' }: ServiceDetailCont
           <div style={{ background: '#fff', border: '1px solid var(--color-border)', padding: '12px', borderRadius: 'var(--radius-sm)', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" style={{ width: '18px', height: '18px', flexShrink: 0, marginTop: '2px' }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             <div>
-              <h4 style={{ color: 'var(--color-text)', fontSize: '13px', marginBottom: '2px' }}>{data.preparation.title}</h4>
-              <p style={{ fontSize: '12px', color: 'var(--color-text-light)', margin: 0 }}>{data.preparation.description}</p>
+              <h4 style={{ color: 'var(--color-text)', fontSize: '13px', marginBottom: '2px' }}>{data.preparation?.title || 'Instructions'}</h4>
+              <p style={{ fontSize: '12px', color: 'var(--color-text-light)', margin: 0 }}>{data.preparation?.description || data.preparationRequired || 'No specific preparation required.'}</p>
             </div>
           </div>
         </div>
@@ -80,7 +80,7 @@ export function ServiceDetailContent({ data, className = '' }: ServiceDetailCont
       title: 'Process Overview',
       content: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {data.process.map((step, idx) => (
+          {(data.process || []).map((step, idx) => (
             <div key={idx} style={{ display: 'flex', gap: '12px' }}>
               <div style={{ width: '24px', height: '24px', borderRadius: '12px', background: 'var(--color-primary-light)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', flexShrink: 0 }}>
                 {idx + 1}
@@ -99,7 +99,7 @@ export function ServiceDetailContent({ data, className = '' }: ServiceDetailCont
       title: 'Related Tests',
       content: (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
-          {data.relatedTests.map((test, idx) => (
+          {(data.relatedTests || []).map((test, idx) => (
             <Link key={idx} href={`/tests/${test.slug}`} className="card fade-in is-visible" style={{ textDecoration: 'none', padding: '12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
               <div>
                 <span className="card__tag" style={{ display: 'inline-block', marginBottom: '8px' }}>{test.category}</span>
@@ -116,7 +116,7 @@ export function ServiceDetailContent({ data, className = '' }: ServiceDetailCont
       title: 'Frequently Asked Questions',
       content: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {data.faqs.map((faq, idx) => (
+          {(data.faqs || []).map((faq, idx) => (
             <div key={idx} style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
               <button 
                 onClick={() => setOpenFaq(openFaq === idx ? null : idx)}

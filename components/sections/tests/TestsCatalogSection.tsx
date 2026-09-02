@@ -120,19 +120,15 @@ export function TestsCatalogSection({ categories, catalog, className = '' }: Tes
                       <p className="text-[13px] text-slate-200 font-medium leading-snug line-clamp-2 mb-3 m-0">{test.description}</p>
                       
                       <div className="mt-auto pt-3 border-t border-slate-700 flex flex-col gap-1.5">
-                        {/* @ts-expect-error - In case model adds these fields later */}
-                        {test.sample && (
+                        {test.sampleType && (
                           <div className="flex justify-between items-center text-[12px]">
                             <span className="text-slate-400 font-medium">Sample:</span>
-                            {/* @ts-expect-error - optional field */}
-                            <span className="text-slate-200 font-bold">{test.sample}</span>
+                            <span className="text-slate-200 font-bold">{test.sampleType}</span>
                           </div>
                         )}
-                        {/* @ts-expect-error - optional field */}
                         {test.turnaroundTime && (
                           <div className="flex justify-between items-center text-[12px]">
                             <span className="text-slate-400 font-medium">TAT:</span>
-                            {/* @ts-expect-error - optional field */}
                             <span className="text-slate-200 font-bold">{test.turnaroundTime}</span>
                           </div>
                         )}

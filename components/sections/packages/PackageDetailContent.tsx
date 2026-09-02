@@ -16,7 +16,7 @@ export function PackageDetailContent({ data, className = '' }: PackageDetailCont
     category: data.category,
     description: data.description,
     price: data.price || 1999, // Fallback if missing
-    badges: data.highlights.map(highlight => ({
+    badges: (data.highlights || []).map(highlight => ({
       title: highlight,
       icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '12px', height: '12px' }}><polyline points="20 6 9 17 4 12" /></svg>
     }))
@@ -41,7 +41,7 @@ export function PackageDetailContent({ data, className = '' }: PackageDetailCont
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ padding: '16px', background: 'var(--color-bg-alt)', borderRadius: 'var(--radius-sm)' }}>
             <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '14px', lineHeight: 1.8 }}>
-              {data.includes.map((item, idx) => (
+              {(data.includes || []).map((item, idx) => (
                 <li key={idx}>{item}</li>
               ))}
             </ul>
@@ -54,7 +54,7 @@ export function PackageDetailContent({ data, className = '' }: PackageDetailCont
       title: 'Who Should Get This Package?',
       content: (
         <p style={{ fontSize: '14px', lineHeight: 1.6, color: 'var(--color-text)' }}>
-          {data.whoShouldGet}
+          {data.whoShouldConsider || 'This package is designed to provide comprehensive health insights.'}
         </p>
       )
     },
@@ -76,7 +76,7 @@ export function PackageDetailContent({ data, className = '' }: PackageDetailCont
       title: 'Related Packages',
       content: (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
-          {data.relatedPackages.map((pkg, idx) => (
+          {(data.relatedPackages || []).map((pkg, idx) => (
             <Link key={idx} href={`/health-packages/${pkg.slug}`} className="card fade-in is-visible" style={{ textDecoration: 'none', padding: '12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
               <div>
                 <span className="card__tag" style={{ display: 'inline-block', marginBottom: '8px' }}>{pkg.category}</span>
