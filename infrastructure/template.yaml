@@ -737,17 +737,29 @@ Resources:
           Properties:
             RestApiId: !Ref AgamApi
             Path: /api/tests
-            Method: any
+            Method: get
             Auth:
               Authorizer: NONE
+        AdminTests:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AgamApi
+            Path: /api/tests
+            Method: any
         PublicTestSlug:
           Type: Api
           Properties:
             RestApiId: !Ref AgamApi
             Path: /api/tests/{proxy+}
-            Method: any
+            Method: get
             Auth:
               Authorizer: NONE
+        AdminTestSlug:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AgamApi
+            Path: /api/tests/{proxy+}
+            Method: any
 
   ServiceFunction:
     Type: AWS::Serverless::Function
@@ -768,17 +780,29 @@ Resources:
           Properties:
             RestApiId: !Ref AgamApi
             Path: /api/services
-            Method: any
+            Method: get
             Auth:
               Authorizer: NONE
+        AdminServices:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AgamApi
+            Path: /api/services
+            Method: any
         PublicServiceSlug:
           Type: Api
           Properties:
             RestApiId: !Ref AgamApi
             Path: /api/services/{proxy+}
-            Method: any
+            Method: get
             Auth:
               Authorizer: NONE
+        AdminServiceSlug:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AgamApi
+            Path: /api/services/{proxy+}
+            Method: any
 
   PackageFunction:
     Type: AWS::Serverless::Function
@@ -799,17 +823,29 @@ Resources:
           Properties:
             RestApiId: !Ref AgamApi
             Path: /api/packages
-            Method: any
+            Method: get
             Auth:
               Authorizer: NONE
+        AdminPackages:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AgamApi
+            Path: /api/packages
+            Method: any
         PublicPackageSlug:
           Type: Api
           Properties:
             RestApiId: !Ref AgamApi
             Path: /api/packages/{proxy+}
-            Method: any
+            Method: get
             Auth:
               Authorizer: NONE
+        AdminPackageSlug:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AgamApi
+            Path: /api/packages/{proxy+}
+            Method: any
 
   StaffFunction:
     Type: AWS::Serverless::Function

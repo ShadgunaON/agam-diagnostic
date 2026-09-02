@@ -68,6 +68,22 @@ export default function AdminCatalogPage() {
 
   if (!mounted) return null;
 
+  const [activeCategory, setActiveCategory] = useState<string>('all');
+
+  // Reset category filter when switching main tabs
+  useEffect(() => {
+    setActiveCategory('all');
+  }, [activeTab]);
+
+  const currentItems = activeTab === 'tests' ? tests : activeTab === 'services' ? services : packages;
+  
+  // Extract unique categories based on current items
+  const categories = ['all', ...Array.from(new Set(currentItems.map(item => item.category).filter(Boolean)))];
+  
+  const filteredItems = activeCategory === 'all' 
+    ? currentItems 
+    : currentItems.filter(item => item.category === activeCategory);
+
   return (
     <AdminPageTemplate
       title="Catalog Management"
@@ -104,6 +120,20 @@ export default function AdminCatalogPage() {
         </div>
       </div>
 
+      <div className="bg-white rounded-xl shadow-premium border border-gray-100 overflow-hidden mb-6 p-4">
+        <div className="flex flex-wrap gap-2">
+          {categories.map((category) => (
+            <button
+              key={category}
+              onClick={() => setActiveCategory(category)}
+              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${activeCategory === category ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            >
+              {category === 'all' ? 'All Items' : category.charAt(0).toUpperCase() + category.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="bg-white rounded-xl shadow-premium border border-gray-100 overflow-hidden">
         {isLoading ? (
           <div className="p-12 text-center text-gray-500">Loading catalog...</div>
@@ -119,22 +149,20 @@ export default function AdminCatalogPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {activeTab === 'tests' && tests.map(item => (
-                <CatalogRow key={item.id} item={item} type="test" toggleStatus={toggleStatus} hasEdit={hasPermission('catalog', 'edit')} />
-              ))}
-              {activeTab === 'services' && services.map(item => (
-                <CatalogRow key={item.id} item={item} type="service" toggleStatus={toggleStatus} hasEdit={hasPermission('catalog', 'edit')} />
-              ))}
-              {activeTab === 'packages' && packages.map(item => (
-                <CatalogRow key={item.id} item={item} type="package" toggleStatus={toggleStatus} hasEdit={hasPermission('catalog', 'edit')} />
+              {filteredItems.map(item => (
+                <CatalogRow 
+                  key={item.id} 
+                  item={item} 
+                  type={activeTab === 'packages' ? 'package' : activeTab === 'services' ? 'service' : 'test'} 
+                  toggleStatus={toggleStatus} 
+                  hasEdit={hasPermission('catalog', 'edit')} 
+                />
               ))}
               
-              {((activeTab === 'tests' && tests.length === 0) || 
-                (activeTab === 'services' && services.length === 0) || 
-                (activeTab === 'packages' && packages.length === 0)) && (
+              {filteredItems.length === 0 && (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-gray-500">
-                    No items found.
+                    No items found in this category.
                   </td>
                 </tr>
               )}

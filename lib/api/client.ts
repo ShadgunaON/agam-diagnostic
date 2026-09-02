@@ -151,7 +151,7 @@ export class ApiClient implements IApiClient {
     }
 
     if (token) {
-      headers.set('Authorization', token);
+      headers.set('Authorization', `Bearer ${token}`);
     }
 
     try {
