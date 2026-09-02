@@ -14,7 +14,7 @@ import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 export default function EditPackagePage() {
   const { id } = useParams() as { id: string };
   const router = useRouter();
-  const { hasPermission } = useRBAC();
+  const { hasPermission, isLoading: rbacLoading } = useRBAC();
   const toast = useToast();
   
   const isNew = id === 'new';
@@ -37,6 +37,8 @@ export default function EditPackagePage() {
   });
 
   useEffect(() => {
+    if (rbacLoading) return;
+    
     if (!hasPermission('catalog', isNew ? 'create' : 'edit')) {
       toast.error('Access Denied', 'You do not have permission to access this page.');
       router.push('/admin/catalog');
@@ -47,7 +49,7 @@ export default function EditPackagePage() {
     if (!isNew) {
       loadPackage();
     }
-  }, [id, isNew]);
+  }, [id, isNew, rbacLoading, hasPermission]);
 
   const loadTests = async () => {
     try {

@@ -12,7 +12,7 @@ import Link from 'next/link';
 export default function EditServicePage() {
   const { id } = useParams() as { id: string };
   const router = useRouter();
-  const { hasPermission } = useRBAC();
+  const { hasPermission, isLoading: rbacLoading } = useRBAC();
   const toast = useToast();
   
   const isNew = id === 'new';
@@ -36,6 +36,8 @@ export default function EditServicePage() {
   });
 
   useEffect(() => {
+    if (rbacLoading) return;
+    
     if (!hasPermission('catalog', isNew ? 'create' : 'edit')) {
       toast.error('Access Denied', 'You do not have permission to access this page.');
       router.push('/admin/catalog');
@@ -45,7 +47,7 @@ export default function EditServicePage() {
     if (!isNew) {
       loadService();
     }
-  }, [id, isNew]);
+  }, [id, isNew, rbacLoading, hasPermission]);
 
   const loadService = async () => {
     try {
