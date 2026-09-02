@@ -5,24 +5,34 @@ export interface PackageItem {
   category: string;
   description: string;
   price: string;
+  packagePrice?: number;
+  individualValue?: number;
   icon: string;
+  testIds?: string[];
+  status?: 'DRAFT' | 'ACTIVE' | 'INACTIVE';
+  sortOrder?: number;
+  
+  // Detail Page Information
+  overview?: string;
+  whoShouldConsider?: string;
+  preparation?: string;
+  fastingRequirements?: string;
+  precautions?: string;
+  reportTurnaround?: string;
+  additionalInstructions?: string;
+  
+  // Legacy detail data fields, will be deprecated/migrated
+  includes?: string[];
+  relatedPackages?: Array<{ title: string; category: string; description: string; slug: string }>;
+  highlights?: string[];
   includedTests?: string[];
+  
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export interface PackageDetailData {
-  id: string;
-  slug: string;
-  category: string;
-  title: string;
-  description: string;
-  price: string;
-  icon: string;
-  includes: string[];
-  whoShouldGet: string;
-  preparation: string;
-  relatedPackages: Array<{ title: string; category: string; description: string; slug: string }>;
-  highlights: string[];
-  includedTests?: string[];
+// Deprecated: use PackageItem for all details now
+export interface PackageDetailData extends PackageItem {
 }
 
 export interface PackagesHero {

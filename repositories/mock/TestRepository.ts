@@ -40,7 +40,7 @@ export class MockTestRepository implements ITestsRepository {
     if (!test) {
       return failure(new Error('Test not found'));
     }
-    return success(test);
+    return success({ ...test, id: `test-${test.slug}` } as TestDetailData);
   }
 
   async searchTests(query: string): Promise<Result<TestItem[]>> {

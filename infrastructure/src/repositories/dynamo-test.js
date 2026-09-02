@@ -186,12 +186,40 @@ class DynamoTestRepository {
       categoryLabel: testData.categoryLabel || testData.category || 'Blood Tests',
       tag: testData.tag || '',
       description: testData.description || '',
+      
+      // Pricing
       price: testData.price || null,
+      basePrice: testData.basePrice ?? null,
+      salePrice: testData.salePrice ?? null,
+      
+      // Status & Sorting
+      status: testData.status || 'ACTIVE',
+      sortOrder: testData.sortOrder || 0,
+      
+      // Medical Information
+      sampleType: testData.sampleType || null,
+      sampleVolume: testData.sampleVolume || null,
+      turnaroundTime: testData.turnaroundTime || null,
+      fastingRequired: testData.fastingRequired || false,
+      homeCollectionAvailable: testData.homeCollectionAvailable ?? true,
+      labCollectionAvailable: testData.labCollectionAvailable ?? true,
+      
+      // Detail Page Information
+      overview: testData.overview || null,
+      whatItChecks: testData.whatItChecks || null,
+      whyPerformed: testData.whyPerformed || null,
+      preparationRequired: testData.preparationRequired || null,
+      precautions: testData.precautions || null,
+      sampleInfo: testData.sampleInfo || null,
+      reportTiming: testData.reportTiming || null,
+      additionalInstructions: testData.additionalInstructions || null,
+      
+      // Legacy fields
       whoShouldGet: testData.whoShouldGet || null,
       preparation: testData.preparation || null,
-      turnaroundTime: testData.turnaroundTime || null,
       faqs: testData.faqs || [],
       relatedTests: testData.relatedTests || [],
+      
       createdAt: testData.createdAt || now,
       updatedAt: now,
     };
@@ -202,6 +230,35 @@ class DynamoTestRepository {
     }));
 
     return this._mapFromDb(item);
+  }
+
+  /**
+   * Update an existing test entity.
+   */
+  async update(id, testData) {
+    const existing = await this.getById(id);
+    if (!existing) throw new Error('Test not found');
+
+    const updated = {
+      ...existing,
+      ...testData,
+      id: existing.id,
+      slug: testData.slug || existing.slug,
+      createdAt: existing.createdAt,
+    };
+
+    return this.upsert(updated);
+  }
+
+  /**
+   * Update status only (e.g. deactivate).
+   */
+  async updateStatus(id, status) {
+    const existing = await this.getById(id);
+    if (!existing) throw new Error('Test not found');
+    
+    existing.status = status;
+    await this.upsert(existing);
   }
 
   /**

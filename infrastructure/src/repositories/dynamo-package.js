@@ -154,9 +154,41 @@ class DynamoPackageRepository {
       GSI1SK: `PACKAGE#${packageData.createdAt || now}#${id}`,
       GSI2PK: `PACKAGESLUG#${slug}`,
       GSI2SK: 'METADATA',
-      ...packageData,
+      
       id,
       slug,
+      title: packageData.title || 'Untitled Package',
+      category: packageData.category || 'general',
+      description: packageData.description || '',
+      icon: packageData.icon || 'default-icon',
+      
+      // Pricing
+      price: packageData.price || null,
+      packagePrice: packageData.packagePrice ?? null,
+      individualValue: packageData.individualValue ?? null,
+      
+      // References
+      testIds: packageData.testIds || [],
+      
+      // Status & Sorting
+      status: packageData.status || 'ACTIVE',
+      sortOrder: packageData.sortOrder || 0,
+      
+      // Detail Page Information
+      overview: packageData.overview || null,
+      whoShouldConsider: packageData.whoShouldConsider || null,
+      preparation: packageData.preparation || null,
+      fastingRequirements: packageData.fastingRequirements || null,
+      precautions: packageData.precautions || null,
+      reportTurnaround: packageData.reportTurnaround || null,
+      additionalInstructions: packageData.additionalInstructions || null,
+      
+      // Legacy detail data fields, will be deprecated/migrated
+      includes: packageData.includes || [],
+      relatedPackages: packageData.relatedPackages || [],
+      highlights: packageData.highlights || [],
+      includedTests: packageData.includedTests || [],
+      
       createdAt: packageData.createdAt || now,
       updatedAt: now,
     };
@@ -167,6 +199,29 @@ class DynamoPackageRepository {
     }));
 
     return this._mapFromDb(item);
+  }
+
+  async update(id, packageData) {
+    const existing = await this.getById(id);
+    if (!existing) throw new Error('Package not found');
+
+    const updated = {
+      ...existing,
+      ...packageData,
+      id: existing.id,
+      slug: packageData.slug || existing.slug,
+      createdAt: existing.createdAt,
+    };
+
+    return this.upsert(updated);
+  }
+
+  async updateStatus(id, status) {
+    const existing = await this.getById(id);
+    if (!existing) throw new Error('Package not found');
+    
+    existing.status = status;
+    await this.upsert(existing);
   }
 
   async upsertConfig(key, data) {

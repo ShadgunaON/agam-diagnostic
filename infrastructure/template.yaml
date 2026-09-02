@@ -737,7 +737,7 @@ Resources:
           Properties:
             RestApiId: !Ref AgamApi
             Path: /api/tests
-            Method: get
+            Method: any
             Auth:
               Authorizer: NONE
         PublicTestSlug:
@@ -745,7 +745,7 @@ Resources:
           Properties:
             RestApiId: !Ref AgamApi
             Path: /api/tests/{proxy+}
-            Method: get
+            Method: any
             Auth:
               Authorizer: NONE
 
@@ -768,7 +768,7 @@ Resources:
           Properties:
             RestApiId: !Ref AgamApi
             Path: /api/services
-            Method: get
+            Method: any
             Auth:
               Authorizer: NONE
         PublicServiceSlug:
@@ -776,7 +776,7 @@ Resources:
           Properties:
             RestApiId: !Ref AgamApi
             Path: /api/services/{proxy+}
-            Method: get
+            Method: any
             Auth:
               Authorizer: NONE
 
@@ -799,7 +799,7 @@ Resources:
           Properties:
             RestApiId: !Ref AgamApi
             Path: /api/packages
-            Method: get
+            Method: any
             Auth:
               Authorizer: NONE
         PublicPackageSlug:
@@ -807,7 +807,7 @@ Resources:
           Properties:
             RestApiId: !Ref AgamApi
             Path: /api/packages/{proxy+}
-            Method: get
+            Method: any
             Auth:
               Authorizer: NONE
 

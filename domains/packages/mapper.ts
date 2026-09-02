@@ -24,7 +24,7 @@ export function mapPackageDetailDtoToModel(dto: PackageDetailDto): PackageDetail
     price: dto.cost || '0',
     icon: dto.icon_name,
     includes: dto.included_tests,
-    whoShouldGet: dto.target_demographic,
+    whoShouldConsider: dto.target_demographic,
     preparation: dto.prep_instructions,
     relatedPackages: dto.related_packs.map(rp => ({ title: rp.name, category: rp.category, description: rp.desc, slug: rp.url_slug })),
     highlights: dto.key_highlights,

@@ -45,17 +45,35 @@ export class ApiServiceRepository implements IServicesRepository {
   }
 
   async getHeroData(): Promise<Result<ServicesHero>> {
-    // Wait, the API doesn't expose a specific /hero endpoint, but the mock did?
-    // Let's assume the mock just returned static data. If the backend doesn't expose /hero,
-    // we can either add it to the backend or just return static fallback here for now,
-    // or fetch from a config API.
-    // Actually, in Phase 2.4, we didn't expose getHeroData via API Gateway for tests!
-    // We just return a static fallback if the API doesn't have it.
-    // Let's check TestRepository to see what it did.
     return success({
       title: 'Our Medical Services',
       description: 'We offer a wide range of medical services to ensure your health and well-being.',
       image: '/images/services_hero_pic.png'
     });
+  }
+
+  // Admin CRUD methods
+  async getById(id: string): Promise<Result<ServiceItem>> {
+    return toResult(
+      this.apiClient.get<ServiceItem>(`/api/services/${encodeURIComponent(id)}`)
+    );
+  }
+
+  async create(serviceData: Omit<ServiceItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<Result<ServiceItem>> {
+    return toResult(
+      this.apiClient.post<ServiceItem>('/api/services', serviceData)
+    );
+  }
+
+  async update(id: string, serviceData: Partial<ServiceItem>): Promise<Result<ServiceItem>> {
+    return toResult(
+      this.apiClient.put<ServiceItem>(`/api/services/${encodeURIComponent(id)}`, serviceData)
+    );
+  }
+
+  async updateStatus(id: string, status: 'DRAFT' | 'ACTIVE' | 'INACTIVE'): Promise<Result<void>> {
+    return toResult(
+      this.apiClient.patch<void>(`/api/services/${encodeURIComponent(id)}/status`, { status })
+    );
   }
 }

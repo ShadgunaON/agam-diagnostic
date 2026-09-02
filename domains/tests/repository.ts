@@ -8,4 +8,10 @@ export interface ITestsRepository {
   getHeroData(): Promise<Result<TestsHero>>;
   getTestBySlug(slug: string): Promise<Result<TestDetailData>>;
   searchTests(query: string): Promise<Result<TestItem[]>>;
+  
+  // Admin CRUD methods
+  getById?(id: string): Promise<Result<TestItem>>;
+  create?(testData: Omit<TestItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<Result<TestItem>>;
+  update?(id: string, testData: Partial<TestItem>): Promise<Result<TestItem>>;
+  updateStatus?(id: string, status: 'DRAFT' | 'ACTIVE' | 'INACTIVE'): Promise<Result<void>>;
 }

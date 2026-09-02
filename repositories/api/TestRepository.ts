@@ -84,10 +84,39 @@ export class ApiTestRepository implements ITestsRepository {
       if (catalogResult.isFailure) return failure(catalogResult.error);
       return success(catalogResult.value.data);
     }
-    return toResult(
-      this.apiClient.get<TestItem[]>(
+    
+    // The backend returns paginated response, we need to extract data
+    const result = await toResult(
+      this.apiClient.get<PaginatedResponse<TestItem>>(
         `/api/tests?q=${encodeURIComponent(query.trim())}`
       )
+    );
+    if (result.isFailure) return failure(result.error);
+    return success(result.value.data);
+  }
+
+  // Admin CRUD methods
+  async getById(id: string): Promise<Result<TestItem>> {
+    return toResult(
+      this.apiClient.get<TestItem>(`/api/tests/${encodeURIComponent(id)}`)
+    );
+  }
+
+  async create(testData: Omit<TestItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<Result<TestItem>> {
+    return toResult(
+      this.apiClient.post<TestItem>('/api/tests', testData)
+    );
+  }
+
+  async update(id: string, testData: Partial<TestItem>): Promise<Result<TestItem>> {
+    return toResult(
+      this.apiClient.put<TestItem>(`/api/tests/${encodeURIComponent(id)}`, testData)
+    );
+  }
+
+  async updateStatus(id: string, status: 'DRAFT' | 'ACTIVE' | 'INACTIVE'): Promise<Result<void>> {
+    return toResult(
+      this.apiClient.patch<void>(`/api/tests/${encodeURIComponent(id)}/status`, { status })
     );
   }
 }

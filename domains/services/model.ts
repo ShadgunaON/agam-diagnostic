@@ -4,28 +4,44 @@ export interface ServiceItem {
   title: string;
   category: string;
   description: string;
+  shortDescription?: string;
   price: string;
+  basePrice?: number;
+  salePrice?: number;
   icon: string;
   color: 'blue' | 'green' | 'orange' | 'purple' | 'red';
+  status?: 'DRAFT' | 'ACTIVE' | 'INACTIVE';
+  sortOrder?: number;
+  
+  // Medical & Detail Page Information
+  estimatedDuration?: string;
+  homeAvailable?: boolean;
+  labAvailable?: boolean;
+  overview?: string;
+  whatIncludes?: string;
+  whoItIsFor?: string;
+  preparationRequired?: string;
+  precautions?: string;
+  whatToExpect?: string;
+  additionalInstructions?: string;
+
+  // Legacy detail data fields, will be deprecated/migrated
+  valueProps?: Array<{ title: string; icon: string }>;
+  aboutHtml?: string;
+  whoShouldUse?: string[];
+  process?: Array<{ title: string; description: string }>;
+  preparation?: { title: string; description: string; icon: string };
+  faqs?: Array<{ question: string; answer: string }>;
+  relatedTests?: Array<{ title: string; category: string; description: string; slug: string }>;
+  otherServices?: Array<{ title: string; slug: string }>;
+  
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export interface ServiceDetailData {
-  id: string;
-  slug: string;
-  category: string;
-  title: string;
-  shortDescription: string;
-  price: number;
+// Deprecated: use ServiceItem for all details now
+export interface ServiceDetailData extends ServiceItem {
   originalPrice?: number;
-  icon: string;
-  valueProps: Array<{ title: string; icon: string }>;
-  aboutHtml: string;
-  whoShouldUse: string[];
-  process: Array<{ title: string; description: string }>;
-  preparation: { title: string; description: string; icon: string };
-  faqs: Array<{ question: string; answer: string }>;
-  relatedTests: Array<{ title: string; category: string; description: string; slug: string }>;
-  otherServices: Array<{ title: string; slug: string }>;
 }
 
 export interface ServicesHero {

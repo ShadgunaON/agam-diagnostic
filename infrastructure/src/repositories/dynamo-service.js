@@ -109,9 +109,49 @@ class DynamoServiceRepository {
       GSI1SK: `SERVICE#${serviceData.createdAt || now}#${id}`,
       GSI2PK: `SERVICESLUG#${slug}`,
       GSI2SK: 'METADATA',
-      ...serviceData,
+      
       id,
       slug,
+      title: serviceData.title || 'Untitled Service',
+      category: serviceData.category || 'general',
+      description: serviceData.description || '',
+      shortDescription: serviceData.shortDescription || '',
+      icon: serviceData.icon || 'default-icon',
+      color: serviceData.color || 'blue',
+      
+      // Pricing
+      price: serviceData.price || null,
+      basePrice: serviceData.basePrice ?? null,
+      salePrice: serviceData.salePrice ?? null,
+      
+      // Status & Sorting
+      status: serviceData.status || 'ACTIVE',
+      sortOrder: serviceData.sortOrder || 0,
+      
+      // Medical Information
+      estimatedDuration: serviceData.estimatedDuration || null,
+      homeAvailable: serviceData.homeAvailable ?? false,
+      labAvailable: serviceData.labAvailable ?? true,
+      
+      // Detail Page Information
+      overview: serviceData.overview || null,
+      whatIncludes: serviceData.whatIncludes || null,
+      whoItIsFor: serviceData.whoItIsFor || null,
+      preparationRequired: serviceData.preparationRequired || null,
+      precautions: serviceData.precautions || null,
+      whatToExpect: serviceData.whatToExpect || null,
+      additionalInstructions: serviceData.additionalInstructions || null,
+      
+      // Legacy detail data fields, will be deprecated/migrated
+      valueProps: serviceData.valueProps || [],
+      aboutHtml: serviceData.aboutHtml || '',
+      whoShouldUse: serviceData.whoShouldUse || [],
+      process: serviceData.process || [],
+      preparation: serviceData.preparation || null,
+      faqs: serviceData.faqs || [],
+      relatedTests: serviceData.relatedTests || [],
+      otherServices: serviceData.otherServices || [],
+      
       createdAt: serviceData.createdAt || now,
       updatedAt: now,
     };
@@ -122,6 +162,29 @@ class DynamoServiceRepository {
     }));
 
     return this._mapFromDb(item);
+  }
+
+  async update(id, serviceData) {
+    const existing = await this.getById(id);
+    if (!existing) throw new Error('Service not found');
+
+    const updated = {
+      ...existing,
+      ...serviceData,
+      id: existing.id,
+      slug: serviceData.slug || existing.slug,
+      createdAt: existing.createdAt,
+    };
+
+    return this.upsert(updated);
+  }
+
+  async updateStatus(id, status) {
+    const existing = await this.getById(id);
+    if (!existing) throw new Error('Service not found');
+    
+    existing.status = status;
+    await this.upsert(existing);
   }
 
   async upsertHeroData(heroData) {

@@ -69,4 +69,29 @@ export class ApiPackageRepository implements IPackagesRepository {
     
     return success(enriched);
   }
+
+  // Admin CRUD methods
+  async getById(id: string): Promise<Result<PackageItem>> {
+    return toResult(
+      this.apiClient.get<PackageItem>(`/api/packages/${encodeURIComponent(id)}`)
+    );
+  }
+
+  async create(packageData: Omit<PackageItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<Result<PackageItem>> {
+    return toResult(
+      this.apiClient.post<PackageItem>('/api/packages', packageData)
+    );
+  }
+
+  async update(id: string, packageData: Partial<PackageItem>): Promise<Result<PackageItem>> {
+    return toResult(
+      this.apiClient.put<PackageItem>(`/api/packages/${encodeURIComponent(id)}`, packageData)
+    );
+  }
+
+  async updateStatus(id: string, status: 'DRAFT' | 'ACTIVE' | 'INACTIVE'): Promise<Result<void>> {
+    return toResult(
+      this.apiClient.patch<void>(`/api/packages/${encodeURIComponent(id)}/status`, { status })
+    );
+  }
 }

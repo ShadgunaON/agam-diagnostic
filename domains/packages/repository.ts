@@ -9,4 +9,10 @@ export interface IPackagesRepository {
   getBenefits(): Promise<Result<Benefit[]>>;
   getProcessSteps(): Promise<Result<ProcessStep[]>>;
   getFeaturedPackages(): Promise<Result<FeaturedPackage[]>>;
+  
+  // Admin CRUD methods
+  getById?(id: string): Promise<Result<PackageItem>>;
+  create?(packageData: Omit<PackageItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<Result<PackageItem>>;
+  update?(id: string, packageData: Partial<PackageItem>): Promise<Result<PackageItem>>;
+  updateStatus?(id: string, status: 'DRAFT' | 'ACTIVE' | 'INACTIVE'): Promise<Result<void>>;
 }
