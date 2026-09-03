@@ -138,10 +138,12 @@ export function useRBAC(): RBACState {
 
   const hasPermission = useCallback(
     (moduleId: string, action: PermissionAction): boolean => {
+      // Admin users have immutable full access — bypass matrix check
+      if (user?.role === 'admin' || roleId === 'admin') return true;
       if (!roleId) return false;
       return PermissionEvaluator.hasPermission(roleId, moduleId, action, permissionsMap);
     },
-    [roleId, permissionsMap]
+    [roleId, permissionsMap, user?.role]
   );
 
   const accessibleModules = useMemo(() => {

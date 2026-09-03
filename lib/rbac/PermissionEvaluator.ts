@@ -22,6 +22,9 @@ export class PermissionEvaluator {
     action: PermissionAction,
     permissionsMap: Record<string, ModuleDataModel[]>
   ): boolean {
+    // 'admin' role has immutable full access — no matrix lookup needed
+    if (roleId === 'admin') return true;
+
     const modules = permissionsMap[roleId];
     if (!modules) return false;
 
