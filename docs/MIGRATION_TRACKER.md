@@ -63,6 +63,52 @@
 - TypeScript: ✅ 0 errors after fixing `'delete'` → `'del'` permission string
 - Deployment platform agnostic: ✅ (no platform-specific imports added)
 
+### Sprint 6D — Addendum: Related Tests Picker (Admin)
+
+**Completed:** 2026-09-03  
+**Scope:** Manually curated Related Tests picker in the Admin test editor.
+
+#### Data Model Decision
+Retained existing `relatedTests?: Array<{title, category, description, slug, status?}>` snapshot shape.  
+**Rationale:** Resolves display data once at write time (admin save). Zero extra requests per public page load.  
+`relatedTestIds` was rejected — it would require N `GetItem` calls or a catalog-wide fetch at every public page render.
+
+#### INACTIVE Related Tests Handling
+- Admin picker enforces ACTIVE-only selection (filters `status === 'ACTIVE'` from catalog response).
+- `status` is snapshotted in the stored entry at curation time.
+- Public renderer (`TestDetailContent`) filters out entries where `status` is present and not `'ACTIVE'`.
+- **Known limitation:** If a related test is deactivated after curation, the snapshot status remains stale. Re-saving the parent test refreshes the list.
+- No extra network requests introduced on the public path.
+
+#### Caching Verification
+API client (`lib/api/client.ts`) uses plain `fetch()` — **no in-memory or HTTP cache** for catalog responses.  
+The picker uses a React `ref` (`pickerLoaded`) to ensure the catalog is fetched **at most once per page session** regardless of how many times the picker is opened.
+
+#### Files Modified
+| File | Change |
+|---|---|
+| `domains/tests/model.ts` | Added `status?` field to `relatedTests[]` item type; added documentation comment |
+| `components/sections/tests/TestDetailContent.tsx` | Added `.filter(test => !test.status \|\| test.status === 'ACTIVE')` to related tests renderer |
+| `app/(admin)/admin/catalog/tests/[id]/page.tsx` | Full Related Tests picker UI: lazy-load, search, chips, ACTIVE-only, self-exclusion, duplicate guard, save payload |
+| `docs/MIGRATION_TRACKER.md` | This entry |
+
+#### Request / Network Behavior
+| Event | Requests |
+|---|---|
+| Admin opens test edit page | `GET /api/tests/{id}` (1 — unchanged) |
+| Admin opens picker (first time) | `GET /api/tests?page=1&limit=200` (1 — lazy, only on first open) |
+| Admin types in picker search | 0 — client-side filter |
+| Admin saves | `PUT /api/tests/{id}` with `relatedTests[]` in body |
+| Public test detail page | `GET /api/tests/{slug}` (1 — unchanged, includes relatedTests in response) |
+| Public renderer | 0 extra requests |
+
+#### Catalog Size
+11 tests in seed file. API `limit` cap: 200. Well within safe range.
+
+#### Architecture Decision
+- Snapshot over FK — avoids N+1 resolution on every public page
+- `status` in snapshot — zero-cost client-side stale filtering
+- No backend changes — existing `upsert()` stores any field passed via spread
 
 
 ## Sprint 2 Checklist

@@ -122,7 +122,11 @@ export function TestDetailContent({ data, className = '' }: TestDetailContentPro
       title: 'Related Tests',
       content: (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
-          {(data.relatedTests || []).map((test, idx) => (
+          {(data.relatedTests || [])
+            // Filter: omit entries whose snapshotted status is explicitly non-ACTIVE.
+            // Entries without a status field (legacy seed data) are treated as active.
+            .filter(test => !test.status || test.status === 'ACTIVE')
+            .map((test, idx) => (
             <Link key={idx} href={`/tests/${test.slug}`} className="card fade-in is-visible" style={{ textDecoration: 'none', padding: '12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
               <div>
                 <span className="card__tag" style={{ display: 'inline-block', marginBottom: '8px' }}>{test.category}</span>

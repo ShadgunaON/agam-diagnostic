@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+
 import { useParams, useRouter } from 'next/navigation';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
 import { useToast } from '@/components/admin/feedback/Toast';
@@ -37,6 +38,17 @@ export default function EditTestPage() {
   });
   const [faqs, setFaqs] = useState<Array<{ question: string; answer: string }>>([]);
 
+  // Related Tests picker state
+  type RelatedTestSnapshot = { title: string; category: string; description: string; slug: string; status: string };
+  const [relatedTests, setRelatedTests] = useState<RelatedTestSnapshot[]>([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerQuery, setPickerQuery] = useState('');
+  const [allCatalog, setAllCatalog] = useState<TestItem[]>([]);
+  const [pickerLoading, setPickerLoading] = useState(false);
+  const pickerLoaded = useRef(false);
+  const pickerInputRef = useRef<HTMLInputElement>(null);
+
+
 
   useEffect(() => {
     if (rbacLoading) return;
@@ -58,6 +70,15 @@ export default function EditTestPage() {
       if (res.isSuccess) {
         setFormData(res.value);
         setFaqs(res.value.faqs || []);
+        // Restore saved related tests selections
+        setRelatedTests((res.value.relatedTests || []).map(rt => ({
+          title: rt.title,
+          category: rt.category,
+          description: rt.description,
+          slug: rt.slug,
+          status: rt.status || 'ACTIVE',
+        })));
+
       } else {
         toast.error('Error', 'Test not found');
         router.push('/admin/catalog');
@@ -89,7 +110,8 @@ export default function EditTestPage() {
     e.preventDefault();
     setIsSaving(true);
     
-    const payload = { ...formData, faqs };
+    const payload = { ...formData, faqs, relatedTests };
+
     
     try {
       if (isNew) {
@@ -125,6 +147,66 @@ export default function EditTestPage() {
   const removeFaq = (idx: number) => setFaqs(prev => prev.filter((_, i) => i !== idx));
   const updateFaq = (idx: number, field: 'question' | 'answer', value: string) =>
     setFaqs(prev => prev.map((faq, i) => i === idx ? { ...faq, [field]: value } : faq));
+
+  // ---- Related Tests Picker logic ----------------------------------------
+  const loadCatalogForPicker = useCallback(async () => {
+    if (pickerLoaded.current) return; // Only fetch once per page session
+    setPickerLoading(true);
+    try {
+      const res = await testCatalogService.getCatalog(1, 200);
+      if (res.isSuccess) {
+        // Only ACTIVE tests; exclude any test that is not status ACTIVE
+        setAllCatalog(res.value.data.filter(t => !t.status || t.status === 'ACTIVE'));
+        pickerLoaded.current = true;
+      }
+    } finally {
+      setPickerLoading(false);
+    }
+  }, []);
+
+  const openPicker = () => {
+    setPickerOpen(true);
+    setPickerQuery('');
+    loadCatalogForPicker();
+    setTimeout(() => pickerInputRef.current?.focus(), 50);
+  };
+
+  const closePicker = () => {
+    setPickerOpen(false);
+    setPickerQuery('');
+  };
+
+  const addRelatedTest = (test: TestItem) => {
+    // Prevent self-selection
+    if (test.slug === formData.slug) return;
+    // Prevent duplicates
+    if (relatedTests.some(rt => rt.slug === test.slug)) return;
+    setRelatedTests(prev => [...prev, {
+      title: test.title,
+      category: test.category,
+      description: test.description || '',
+      slug: test.slug,
+      status: test.status || 'ACTIVE',
+    }]);
+  };
+
+  const removeRelatedTest = (slug: string) => {
+    setRelatedTests(prev => prev.filter(rt => rt.slug !== slug));
+  };
+
+  // Filtered picker results: exclude current test + already selected + apply search
+  const pickerResults = allCatalog.filter(t => {
+    if (t.slug === formData.slug) return false;
+    if (relatedTests.some(rt => rt.slug === t.slug)) return false;
+    if (!pickerQuery.trim()) return true;
+    const q = pickerQuery.toLowerCase();
+    return (
+      (t.title || '').toLowerCase().includes(q) ||
+      (t.category || '').toLowerCase().includes(q) ||
+      (t.description || '').toLowerCase().includes(q)
+    );
+  });
+
 
   if (isLoading) {
     return (
@@ -301,7 +383,109 @@ export default function EditTestPage() {
           ))}
         </div>
 
+        {/* ── Related Tests ─────────────────────────────────────────────────── */}
+        <div className="bg-white rounded-xl shadow-premium border border-gray-100 p-6 space-y-4">
+          <div className="flex justify-between items-center border-b pb-2">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Related Tests</h2>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Only ACTIVE tests. Titles are snapshotted — if you rename a test, re-save this page to refresh.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={openPicker}
+              className="btn btn-secondary text-sm px-4 py-2"
+            >
+              + Add Related Test
+            </button>
+          </div>
+
+          {/* Selected chips */}
+          {relatedTests.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-4">
+              No related tests selected. Click &quot;Add Related Test&quot; to curate.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {relatedTests.map(rt => (
+                <span
+                  key={rt.slug}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium"
+                >
+                  <span>{rt.title}</span>
+                  <span className="text-xs text-primary/60">({rt.category})</span>
+                  <button
+                    type="button"
+                    onClick={() => removeRelatedTest(rt.slug)}
+                    className="ml-1 w-4 h-4 flex items-center justify-center rounded-full hover:bg-primary/20 transition-colors text-xs leading-none"
+                    aria-label={`Remove ${rt.title}`}
+                  >
+                    ✕
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Picker dropdown */}
+          {pickerOpen && (
+            <div className="border border-gray-200 rounded-xl overflow-hidden shadow-lg">
+              <div className="p-3 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-gray-400 flex-shrink-0">
+                  <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input
+                  ref={pickerInputRef}
+                  type="text"
+                  value={pickerQuery}
+                  onChange={e => setPickerQuery(e.target.value)}
+                  placeholder="Search tests by name, category..."
+                  className="flex-1 bg-transparent text-sm outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={closePicker}
+                  className="text-gray-400 hover:text-gray-600 ml-2 text-xs"
+                >
+                  ✕ Close
+                </button>
+              </div>
+
+              <div className="max-h-64 overflow-y-auto">
+                {pickerLoading && (
+                  <div className="p-4 text-center text-sm text-gray-400">Loading tests...</div>
+                )}
+                {!pickerLoading && pickerResults.length === 0 && (
+                  <div className="p-4 text-center text-sm text-gray-400">
+                    {pickerQuery ? `No active tests matching "${pickerQuery}"` : 'No available tests to add.'}
+                  </div>
+                )}
+                {!pickerLoading && pickerResults.map(test => (
+                  <button
+                    key={test.slug}
+                    type="button"
+                    onClick={() => addRelatedTest(test)}
+                    className="w-full text-left px-4 py-3 hover:bg-primary/5 transition-colors border-b border-gray-50 last:border-0"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">{test.title}</p>
+                        <p className="text-xs text-gray-400 truncate">{test.category}{test.price ? ` · ₹${test.price}` : ''}</p>
+                      </div>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-primary flex-shrink-0">
+                        <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                      </svg>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="flex justify-end gap-4 pb-12">
+
           <Link href="/admin/catalog" className="btn btn-secondary">
             Cancel
           </Link>

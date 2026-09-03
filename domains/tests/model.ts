@@ -33,7 +33,12 @@ export interface TestItem {
   whoShouldGet?: string;
   preparation?: string;
   faqs?: Array<{ question: string; answer: string }>;
-  relatedTests?: Array<{ title: string; category: string; description: string; slug: string }>;
+  /**
+   * Manually curated related tests — stored as a display snapshot.
+   * status is snapshotted at curation time (always 'ACTIVE' from the picker).
+   * If a related test is later deactivated, re-save this test to refresh the list.
+   */
+  relatedTests?: Array<{ title: string; category: string; description: string; slug: string; status?: string }>;
 
   createdAt?: string;
   updatedAt?: string;
