@@ -37,6 +37,7 @@ export default function EditTestPage() {
     labCollectionAvailable: true,
   });
   const [faqs, setFaqs] = useState<Array<{ question: string; answer: string }>>([]);
+  const [isCustomSampleType, setIsCustomSampleType] = useState(false);
 
   // Related Tests picker state
   type RelatedTestSnapshot = { title: string; category: string; description: string; slug: string; status: string };
@@ -78,6 +79,12 @@ export default function EditTestPage() {
           slug: rt.slug,
           status: rt.status || 'ACTIVE',
         })));
+
+        // Check if sample type is custom
+        const loadedSampleType = res.value.sampleType || '';
+        if (loadedSampleType && !["Blood", "Urine", "Stool", "Sputum", "Saliva", "Swab", "Tissue", "Semen", "CSF", "CSF (Cerebrospinal Fluid)"].includes(loadedSampleType)) {
+          setIsCustomSampleType(true);
+        }
 
       } else {
         toast.error('Error', 'Test not found');
@@ -288,18 +295,55 @@ export default function EditTestPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Sample Type</label>
-              <input type="text" list="sample-types" name="sampleType" value={formData.sampleType || ''} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg" placeholder="e.g. Blood, Urine" />
-              <datalist id="sample-types">
-                <option value="Blood" />
-                <option value="Urine" />
-                <option value="Stool" />
-                <option value="Sputum" />
-                <option value="Saliva" />
-                <option value="Swab" />
-                <option value="Tissue" />
-                <option value="Semen" />
-                <option value="CSF" />
-              </datalist>
+              {isCustomSampleType ? (
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    name="sampleType" 
+                    value={formData.sampleType || ''} 
+                    onChange={handleChange} 
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none" 
+                    placeholder="Enter custom sample type" 
+                    autoFocus
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setIsCustomSampleType(false);
+                      setFormData(prev => ({ ...prev, sampleType: '' }));
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <select 
+                  name="sampleType" 
+                  value={formData.sampleType || ''} 
+                  onChange={(e) => {
+                    if (e.target.value === 'other') {
+                      setIsCustomSampleType(true);
+                      setFormData(prev => ({ ...prev, sampleType: '' }));
+                    } else {
+                      handleChange(e);
+                    }
+                  }} 
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none bg-white"
+                >
+                  <option value="">Select Sample Type</option>
+                  <option value="Blood">Blood</option>
+                  <option value="Urine">Urine</option>
+                  <option value="Stool">Stool</option>
+                  <option value="Sputum">Sputum</option>
+                  <option value="Saliva">Saliva</option>
+                  <option value="Swab">Swab</option>
+                  <option value="Tissue">Tissue</option>
+                  <option value="Semen">Semen</option>
+                  <option value="CSF">CSF (Cerebrospinal Fluid)</option>
+                  <option value="other">+ Add Custom Type...</option>
+                </select>
+              )}
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Turnaround Time</label>
