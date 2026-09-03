@@ -288,7 +288,18 @@ export default function EditTestPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Sample Type</label>
-              <input type="text" name="sampleType" value={formData.sampleType || ''} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg" placeholder="e.g. Blood, Urine" />
+              <input type="text" list="sample-types" name="sampleType" value={formData.sampleType || ''} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg" placeholder="e.g. Blood, Urine" />
+              <datalist id="sample-types">
+                <option value="Blood" />
+                <option value="Urine" />
+                <option value="Stool" />
+                <option value="Sputum" />
+                <option value="Saliva" />
+                <option value="Swab" />
+                <option value="Tissue" />
+                <option value="Semen" />
+                <option value="CSF" />
+              </datalist>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Turnaround Time</label>
