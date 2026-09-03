@@ -25,9 +25,31 @@ export function AdminPageTemplate({
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar bg-transparent w-full">
         <div className="mx-auto w-full max-w-[1440px]">
+          {/* Header Section */}
+          {(title || description || headerActions) && (
+            <div className="pt-8 pb-6 px-4 md:px-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                {title && <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{title}</h1>}
+                {description && <p className="text-sm text-slate-500 mt-1">{description}</p>}
+              </div>
+              {headerActions && (
+                <div className="flex items-center gap-3 shrink-0">
+                  {headerActions}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Toolbar */}
+          {toolbar && (
+            <div className="px-4 md:px-6 pb-6">
+              {toolbar}
+            </div>
+          )}
+
           {/* KPI Section */}
           {kpiSection && (
-            <div className="pt-6 md:pt-12 pb-6 md:pb-8 shrink-0 px-4 md:px-6">
+            <div className="pt-2 pb-6 md:pb-8 shrink-0 px-4 md:px-6">
               {kpiSection}
             </div>
           )}
