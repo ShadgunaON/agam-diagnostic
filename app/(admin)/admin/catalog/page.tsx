@@ -77,20 +77,30 @@ export default function AdminCatalogPage() {
     if (!window.confirm(`Permanently delete "${title}"? This cannot be undone.`)) return;
     try {
       if (type === 'test') {
-        await testCatalogService.delete(id);
+        const res = await testCatalogService.delete(id);
+        if (res && 'isFailure' in res && res.isFailure) {
+          throw new Error((res as any).error?.message || 'Delete failed');
+        }
         setTests(prev => prev.filter(t => t.id !== id));
       } else if (type === 'service') {
-        await serviceCatalogService.delete(id);
+        const res = await serviceCatalogService.delete(id);
+        if (res && 'isFailure' in res && res.isFailure) {
+          throw new Error((res as any).error?.message || 'Delete failed');
+        }
         setServices(prev => prev.filter(s => s.id !== id));
       } else if (type === 'package') {
-        await packageService.delete(id);
+        const res = await packageService.delete(id);
+        if (res && 'isFailure' in res && res.isFailure) {
+          throw new Error((res as any).error?.message || 'Delete failed');
+        }
         setPackages(prev => prev.filter(p => p.id !== id));
       }
       toast.success('Deleted', `"${title}" has been permanently deleted.`);
-    } catch (error) {
-      toast.error('Error', 'Failed to delete item. Please try again.');
+    } catch (error: any) {
+      toast.error('Error', error?.message || 'Failed to delete item. Please try again.');
     }
   };
+
 
   const [activeCategory, setActiveCategory] = useState<string>('all');
 
