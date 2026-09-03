@@ -12,6 +12,10 @@ export const metadata: Metadata = {
   description: 'Explore our comprehensive range of clinical and diagnostic services.',
 };
 
+// Revalidate every 60 s so admin catalog changes appear without a full redeploy
+export const revalidate = 60;
+
+
 const trustBarData = [
   { title: "NABL Accredited", description: "Highest quality standards", icon: "shield" },
   { title: "Fastest Reports", description: "Same day delivery online", icon: "clock" },

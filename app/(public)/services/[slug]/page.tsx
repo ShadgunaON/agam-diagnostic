@@ -8,16 +8,26 @@ import { ServiceDetailContent } from '@/components/sections/services';
 import { serviceCatalogService } from '@/services';
 import { siteConfig } from '@/config/site';
 
+// Revalidate every 60 s so admin edits appear without a full redeploy
+export const revalidate = 60;
+// Allow paths not pre-rendered at build time to be served on demand
+export const dynamicParams = true;
+
 interface ServiceDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
+
 export async function generateStaticParams() {
-  const result = await serviceCatalogService.getCatalog(1, 100);
-  if (result.isFailure) return [];
-  return result.value.data.map((service) => ({
-    slug: service.slug,
-  }));
+  try {
+    const result = await serviceCatalogService.getCatalog(1, 100);
+    if (result.isFailure) return [];
+    return result.value.data.map((service) => ({
+      slug: service.slug,
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: ServiceDetailPageProps): Promise<Metadata> {

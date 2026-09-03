@@ -7,20 +7,27 @@ import { TestDetailContent } from '@/components/sections/tests';
 import { testCatalogService } from '@/services';
 import { siteConfig } from '@/config/site';
 
+// Revalidate every 60 s so admin edits appear without a full redeploy
+export const revalidate = 60;
+// Allow paths not pre-rendered at build time to be served on demand
+export const dynamicParams = true;
+
 interface TestDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
+
 export async function generateStaticParams() {
-  const result = await testCatalogService.getCatalog(1, 100);
-  if (result.isFailure) {
-    console.error("CRITICAL BUILD ERROR in tests/generateStaticParams:", result.error);
-    throw new Error(`Failed to fetch catalog: ${result.error?.message || result.error || 'Unknown error'}`);
+  try {
+    const result = await testCatalogService.getCatalog(1, 100);
+    if (result.isFailure) return [];
+    return result.value.data.map((test) => ({
+      slug: test.slug,
+    }));
+  } catch {
+    // API not reachable at build time — ISR will serve paths on demand
+    return [];
   }
-  
-  return result.value.data.map((test) => ({
-    slug: test.slug,
-  }));
 }
 
 export async function generateMetadata({ params }: TestDetailPageProps): Promise<Metadata> {

@@ -7,16 +7,26 @@ import { PackageDetailContent } from '@/components/sections/packages';
 import { packageService } from '@/services';
 import { siteConfig } from '@/config/site';
 
+// Revalidate every 60 s so admin edits appear without a full redeploy
+export const revalidate = 60;
+// Allow paths not pre-rendered at build time to be served on demand
+export const dynamicParams = true;
+
 interface PackageDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
+
 export async function generateStaticParams() {
-  const result = await packageService.getCatalog(1, 100);
-  if (result.isFailure) return [];
-  return result.value.data.map((pkg) => ({
-    slug: pkg.slug,
-  }));
+  try {
+    const result = await packageService.getCatalog(1, 100);
+    if (result.isFailure) return [];
+    return result.value.data.map((pkg) => ({
+      slug: pkg.slug,
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: PackageDetailPageProps): Promise<Metadata> {

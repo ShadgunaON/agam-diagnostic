@@ -11,6 +11,10 @@ export const metadata: Metadata = {
   description: 'Book reliable blood tests and health checkups. NABL-accredited results with free home collection across Madurai.',
 };
 
+// Revalidate every 60 s so admin catalog changes appear without a full redeploy
+export const revalidate = 60;
+
+
 export default async function TestsPage() {
   const [heroResult, categoriesResult, catalogResult] = await Promise.all([
     testCatalogService.getHeroData(),

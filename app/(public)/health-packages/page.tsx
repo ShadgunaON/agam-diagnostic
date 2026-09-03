@@ -17,6 +17,10 @@ export const metadata: Metadata = {
   description: 'Explore NABL-accredited health packages at Agam Diagnostics, Madurai. Comprehensive checkups for women, men & lifestyle wellness with free home collection.',
 };
 
+// Revalidate every 60 s so admin catalog changes appear without a full redeploy
+export const revalidate = 60;
+
+
 export default async function HealthPackagesPage() {
   const [heroResult, benefitsResult, processResult, featuredResult] = await Promise.all([
     packageService.getHeroData(),
