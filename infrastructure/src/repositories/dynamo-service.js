@@ -1,5 +1,6 @@
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, PutCommand, QueryCommand, GetCommand } = require('@aws-sdk/lib-dynamodb');
+const { DynamoDBDocumentClient, PutCommand, QueryCommand, GetCommand, DeleteCommand } = require('@aws-sdk/lib-dynamodb');
+
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
@@ -185,6 +186,21 @@ class DynamoServiceRepository {
     
     existing.status = status;
     await this.upsert(existing);
+  }
+
+  /**
+   * Permanently delete a service by its ID.
+   * This is irreversible. Use updateStatus('INACTIVE') for soft removal.
+   */
+  async delete(id) {
+    if (!id) throw new Error('Service ID is required for deletion');
+    await docClient.send(new DeleteCommand({
+      TableName: TABLE_NAME,
+      Key: {
+        PK: `SERVICE#${id}`,
+        SK: 'METADATA',
+      },
+    }));
   }
 
   async upsertHeroData(heroData) {

@@ -91,6 +91,33 @@ exports.handler = async (event) => {
     }
 
     // ----------------------------------------------------------------
+    // DELETE OPERATION - Requires Authentication & RBAC
+    // ----------------------------------------------------------------
+    if (method === 'DELETE') {
+      const identity = extractIdentity(event);
+      if (!identity) {
+        return error.unauthorized('Missing or invalid authentication token');
+      }
+
+      const isAdmin = await isSuperAdmin(identity);
+      if (!isAdmin && !(await hasPermission(identity, 'catalog', 'delete'))) {
+        return error.forbidden('Access denied: Requires catalog delete permission');
+      }
+
+      if (!slugOrId) return error.badRequest('Missing test ID');
+
+      try {
+        const existing = await testRepo.getById(slugOrId) || await testRepo.getBySlug(slugOrId);
+        if (!existing) return error.notFound('Test not found');
+        await testRepo.delete(existing.id);
+        return success({ success: true, message: 'Test deleted' });
+      } catch (err) {
+        logger.error('Delete test error', { error: err.message });
+        return error.serverError('Failed to delete test');
+      }
+    }
+
+    // ----------------------------------------------------------------
     // READ OPERATIONS (GET) - Public or Admin
     // ----------------------------------------------------------------
     if (method === 'GET') {

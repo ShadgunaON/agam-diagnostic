@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { PackageDetailData } from '@/domains/packages/model';
 import { PremiumDetailLayout } from '../shared/PremiumDetailLayout';
@@ -11,6 +11,8 @@ export interface PackageDetailContentProps {
 }
 
 export function PackageDetailContent({ data, className = '' }: PackageDetailContentProps) {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
   const headerProps = {
     title: data.title,
     category: data.category,
@@ -33,7 +35,19 @@ export function PackageDetailContent({ data, className = '' }: PackageDetailCont
     includedTests: data.includedTests,
   };
 
-  const sections = [
+  const sections = [];
+  
+  if (data.overview) {
+    sections.push({
+      id: 'overview',
+      title: 'Overview',
+      content: (
+        <div dangerouslySetInnerHTML={{ __html: data.overview }} style={{ fontSize: '14px', lineHeight: 1.6, color: 'var(--color-text)' }} />
+      )
+    });
+  }
+
+  sections.push(
     {
       id: 'includes',
       title: 'What\'s Included',
@@ -66,7 +80,7 @@ export function PackageDetailContent({ data, className = '' }: PackageDetailCont
           <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" style={{ width: '20px', height: '20px', flexShrink: 0, marginTop: '2px' }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           <div>
             <h4 style={{ color: 'var(--color-text)', fontSize: '14px', marginBottom: '4px' }}>Important Instructions</h4>
-            <p style={{ fontSize: '13px', color: 'var(--color-text-light)', margin: 0, lineHeight: 1.5 }}>{data.preparation}</p>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-light)', margin: 0, lineHeight: 1.5 }}>{data.preparation || 'No specific preparation required.'}</p>
           </div>
         </div>
       )
@@ -88,7 +102,35 @@ export function PackageDetailContent({ data, className = '' }: PackageDetailCont
         </div>
       )
     }
-  ];
+  );
+
+  const packageFaqs = (data as any).faqs as Array<{ question: string; answer: string }> | undefined;
+  if (packageFaqs && packageFaqs.length > 0) {
+    sections.push({
+      id: 'faqs',
+      title: 'Frequently Asked Questions',
+      content: (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {packageFaqs.map((faq, idx) => (
+            <div key={idx} style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
+              <button
+                onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', background: 'var(--color-bg-alt)', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+              >
+                <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--color-text)' }}>{faq.question}</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '16px', height: '16px', transition: 'transform 0.2s', transform: openFaq === idx ? 'rotate(180deg)' : 'rotate(0deg)' }}><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              {openFaq === idx && (
+                <div style={{ padding: '0 16px 16px 16px', background: 'var(--color-bg-alt)' }}>
+                  <p style={{ fontSize: '13px', color: 'var(--color-text-light)', margin: 0, lineHeight: 1.5 }}>{faq.answer}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )
+    });
+  }
 
   return (
     <PremiumDetailLayout 

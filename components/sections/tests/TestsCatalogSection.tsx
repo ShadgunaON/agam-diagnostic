@@ -77,7 +77,7 @@ export function TestsCatalogSection({ categories, catalog, className = '' }: Tes
                     {/* Subtle Background Overlay on Hover - Soft Cyan for Tests */}
                     <div className="absolute inset-0 bg-teal-50/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-0"></div>
 
-                    <div className="relative z-10 flex flex-col h-full p-6 w-full">
+                    <div className="relative z-10 flex flex-col h-full min-h-[200px] p-6 w-full">
                       <span className="inline-block px-2.5 py-1 bg-slate-100 text-slate-600 text-[11px] font-bold uppercase tracking-wider rounded-md w-fit mb-4">{test.tag || test.category || 'Lab Test'}</span>
                       
                       <h3 className="text-lg font-extrabold text-slate-900 leading-tight mb-2 group-hover:text-teal-900 transition-colors">
@@ -117,7 +117,7 @@ export function TestsCatalogSection({ categories, catalog, className = '' }: Tes
                   <div className="absolute left-1/2 -translate-x-1/2 bottom-[calc(100%+16px)] w-[280px] bg-slate-900 text-slate-100 p-4 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none transition-all duration-300 z-50 transform translate-y-4 group-hover:translate-y-0">
                     <div className="flex flex-col h-full justify-start w-full">
                       <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Purpose</h4>
-                      <p className="text-[13px] text-slate-200 font-medium leading-snug line-clamp-2 mb-3 m-0">{test.description}</p>
+                      <p className="text-[13px] text-slate-200 font-medium leading-snug line-clamp-2 mb-3 m-0">{test.description || 'A diagnostic test to help monitor and manage your health.'}</p>
                       
                       <div className="mt-auto pt-3 border-t border-slate-700 flex flex-col gap-1.5">
                         {test.sampleType && (
@@ -134,11 +134,22 @@ export function TestsCatalogSection({ categories, catalog, className = '' }: Tes
                         )}
                         <div className="flex justify-between items-center text-[12px]">
                           <span className="text-slate-400 font-medium">Home Collection:</span>
-                          <span className="text-emerald-400 font-bold flex items-center gap-1">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" strokeWidth="3"/></svg>
-                            Available
+                          <span className={`font-bold flex items-center gap-1 ${
+                            test.homeCollectionAvailable !== false ? 'text-emerald-400' : 'text-slate-400'
+                          }`}>
+                            {test.homeCollectionAvailable !== false ? (
+                              <><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" strokeWidth="3"/></svg>Available</>
+                            ) : 'Not Available'}
                           </span>
                         </div>
+                        {test.fastingRequired !== undefined && (
+                          <div className="flex justify-between items-center text-[12px]">
+                            <span className="text-slate-400 font-medium">Fasting:</span>
+                            <span className={`font-bold ${test.fastingRequired ? 'text-orange-400' : 'text-emerald-400'}`}>
+                              {test.fastingRequired ? 'Required' : 'Not Required'}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     {/* Tooltip Arrow */}

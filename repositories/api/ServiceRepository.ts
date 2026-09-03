@@ -76,4 +76,10 @@ export class ApiServiceRepository implements IServicesRepository {
       this.apiClient.patch<void>(`/api/services/${encodeURIComponent(id)}/status`, { status })
     );
   }
+
+  async delete(id: string): Promise<Result<void>> {
+    return toResult(
+      this.apiClient.delete<void>(`/api/services/${encodeURIComponent(id)}`)
+    );
+  }
 }

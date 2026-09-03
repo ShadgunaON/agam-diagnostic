@@ -15,4 +15,5 @@ export interface IPackagesRepository {
   create?(packageData: Omit<PackageItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<Result<PackageItem>>;
   update?(id: string, packageData: Partial<PackageItem>): Promise<Result<PackageItem>>;
   updateStatus?(id: string, status: 'DRAFT' | 'ACTIVE' | 'INACTIVE'): Promise<Result<void>>;
+  delete?(id: string): Promise<Result<void>>;
 }

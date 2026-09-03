@@ -86,6 +86,33 @@ exports.handler = async (event) => {
       return error(405, 'METHOD_NOT_ALLOWED', 'Method Not Allowed');
     }
 
+    // ----------------------------------------------------------------
+    // DELETE OPERATION - Requires Authentication & RBAC
+    // ----------------------------------------------------------------
+    if (method === 'DELETE') {
+      const identity = extractIdentity(event);
+      if (!identity) {
+        return error.unauthorized('Missing or invalid authentication token');
+      }
+
+      const isAdmin = await isSuperAdmin(identity);
+      if (!isAdmin && !(await hasPermission(identity, 'catalog', 'delete'))) {
+        return error.forbidden('Access denied: Requires catalog delete permission');
+      }
+
+      if (!slugOrId) return error.badRequest('Missing package ID');
+
+      try {
+        const existing = await packageRepo.getBySlug(slugOrId) || await packageRepo.getById(slugOrId);
+        if (!existing) return error.notFound('Package not found');
+        await packageRepo.delete(existing.id);
+        return success({ success: true, message: 'Package deleted' });
+      } catch (err) {
+        logger.error('Delete package error', { error: err.message });
+        return error.serverError('Failed to delete package');
+      }
+    }
+
     if (method === 'GET') {
       const queryParams = event.queryStringParameters || {};
       

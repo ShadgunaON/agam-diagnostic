@@ -12,4 +12,5 @@ export interface IServicesRepository {
   create?(serviceData: Omit<ServiceItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<Result<ServiceItem>>;
   update?(id: string, serviceData: Partial<ServiceItem>): Promise<Result<ServiceItem>>;
   updateStatus?(id: string, status: 'DRAFT' | 'ACTIVE' | 'INACTIVE'): Promise<Result<void>>;
+  delete?(id: string): Promise<Result<void>>;
 }

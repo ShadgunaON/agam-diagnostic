@@ -10,6 +10,7 @@
 - [x] Sprint 6A - Core Marketing Pages (About, Contact, FAQ, Legal)
 - [x] Sprint 6B - Services, Tests, Packages
 - [x] Sprint 6C - Blog, Book Test, Login, Reports
+- [x] Sprint 6D - Catalog Data Reflection & Admin Enhancements
 - [ ] Sprint 7 - Forms & User Flows
 - [ ] Sprint 8 - Accessibility
 - [ ] Sprint 9 - Performance Optimization
@@ -17,6 +18,52 @@
 - [ ] Sprint 11 - Final QA & Production Readiness
 
 ---
+
+## Sprint 6D — Catalog Data Reflection & Admin Enhancements
+
+**Completed:** 2026-09-03  
+**Scope:** Fasting requirement public reflection, FAQ editing in Admin, permanent delete end-to-end, card grid alignment.
+
+### Files Modified
+
+| File | Change |
+|---|---|
+| `components/sections/tests/TestDetailContent.tsx` | Added fasting badge (Required / No Fasting) to hero header |
+| `components/sections/tests/TestsCatalogSection.tsx` | Added fasting row to hover tooltip; added description fallback; added `min-h-[200px]` for card alignment |
+| `components/sections/packages/PackageDetailContent.tsx` | Added FAQ accordion section; fixed preparation field fallback |
+| `app/(admin)/admin/catalog/tests/[id]/page.tsx` | Added FAQ editor (add/remove/update), merged `faqs` into submit payload |
+| `app/(admin)/admin/catalog/services/[id]/page.tsx` | Added FAQ editor, merged `faqs` into submit payload |
+| `app/(admin)/admin/catalog/packages/[id]/page.tsx` | Added FAQ editor, merged `faqs` into submit payload |
+| `app/(admin)/admin/catalog/page.tsx` | Added `deleteItem` function; added trash button per row; uses `'del'` permission |
+| `components/admin/navigation/AdminIcons.tsx` | Added `'trash'` icon name and SVG |
+| `infrastructure/src/repositories/dynamo-test.js` | Added `delete(id)` using `DeleteCommand` |
+| `infrastructure/src/repositories/dynamo-service.js` | Added `delete(id)` using `DeleteCommand` |
+| `infrastructure/src/repositories/dynamo-package.js` | Added `delete(id)` using `DeleteCommand` |
+| `infrastructure/src/handlers/test.js` | Added `DELETE` HTTP handler with `catalog:delete` RBAC check |
+| `infrastructure/src/handlers/service.js` | Added `DELETE` HTTP handler |
+| `infrastructure/src/handlers/package.js` | Added `DELETE` HTTP handler |
+| `domains/tests/repository.ts` | Added `delete?` to `ITestsRepository` |
+| `domains/services/repository.ts` | Added `delete?` to `IServicesRepository` |
+| `domains/packages/repository.ts` | Added `delete?` to `IPackagesRepository` |
+| `repositories/api/TestRepository.ts` | Implemented `delete()` calling `apiClient.delete` |
+| `repositories/api/ServiceRepository.ts` | Implemented `delete()` |
+| `repositories/api/PackageRepository.ts` | Implemented `delete()` |
+| `services/TestCatalogService.ts` | Exposed `delete()` |
+| `services/ServiceCatalogService.ts` | Exposed `delete()` |
+| `services/PackageService.ts` | Exposed `delete()` |
+
+### Architecture Decisions
+- **Hard delete** selected over soft delete at user's discretion. Admins are reminded via `window.confirm()` that the action is permanent.
+- **Permission:** Uses the existing `'del'` `PermissionAction` value rather than introducing a new string.
+- **FAQs on Packages:** Added FAQ accordion to `PackageDetailContent` — the model already supported it, the public page simply did not render it.
+- **Fasting on Tests:** Shows always on the detail page hero; shows conditionally in the card tooltip only when the field is present (safe for legacy seeded data).
+- **No mock data introduced** — all fields are read from the backend.
+
+### Build Verification
+- TypeScript: ✅ 0 errors after fixing `'delete'` → `'del'` permission string
+- Deployment platform agnostic: ✅ (no platform-specific imports added)
+
+
 
 ## Sprint 2 Checklist
 
@@ -492,3 +539,7 @@ Associated Commit: `124041a`
 - **Issue**: Admin Catalog crash on edit (`Array.isArray(item.category)` causing `never` type error during build, blocking previous fixes from deploying).
 - **Fix**: Implemented `normalizeCategory` helper to safely parse `unknown` to `string` in `AdminCatalogPage`, satisfying strict TS checks and preventing `.charAt(0)` runtime crashes.
 - **Commit**: `ad4710e` (fix(catalog): fix category normalization build failure)
+
+- **Date**: 2026-09-03
+- **Issue**: Admin Catalog page throwing "reload error" due to a React Rules of Hooks violation (`useState` and `useEffect` called after an early return `if (!mounted)`).
+- **Fix**: Moved `activeCategory` state and its related `useEffect` before the early return in `AdminCatalogPage` to ensure hooks are called in the exact same order on every render.

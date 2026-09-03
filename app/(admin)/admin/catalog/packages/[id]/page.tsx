@@ -35,6 +35,8 @@ export default function EditPackagePage() {
     sortOrder: 0,
     testIds: [],
   });
+  const [faqs, setFaqs] = useState<Array<{ question: string; answer: string }>>([]);
+
 
   useEffect(() => {
     if (rbacLoading) return;
@@ -69,6 +71,7 @@ export default function EditPackagePage() {
       const res = await packageService.getById(id);
       if (res.isSuccess) {
         setFormData(res.value);
+        setFaqs((res.value as any).faqs || []);
       } else {
         toast.error('Error', 'Package not found');
         router.push('/admin/catalog');
@@ -121,6 +124,8 @@ export default function EditPackagePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
+
+    const payload = { ...formData, faqs };
     
     try {
       if (isNew) {
@@ -129,7 +134,7 @@ export default function EditPackagePage() {
           setIsSaving(false);
           return;
         }
-        const res = await packageService.create(formData);
+        const res = await packageService.create(payload);
         if (res.isSuccess) {
           toast.success('Success', 'Package created successfully');
           router.push('/admin/catalog');
@@ -137,7 +142,7 @@ export default function EditPackagePage() {
           toast.error('Error', res.error?.message || 'Failed to create package');
         }
       } else {
-        const res = await packageService.update(id, formData);
+        const res = await packageService.update(id, payload);
         if (res.isSuccess) {
           toast.success('Success', 'Package updated successfully');
           router.push('/admin/catalog');
@@ -151,6 +156,11 @@ export default function EditPackagePage() {
       setIsSaving(false);
     }
   };
+
+  const addFaq = () => setFaqs(prev => [...prev, { question: '', answer: '' }]);
+  const removeFaq = (idx: number) => setFaqs(prev => prev.filter((_, i) => i !== idx));
+  const updateFaq = (idx: number, field: 'question' | 'answer', value: string) =>
+    setFaqs(prev => prev.map((faq, i) => i === idx ? { ...faq, [field]: value } : faq));
 
   if (isLoading || isTestsLoading) {
     return (
@@ -306,6 +316,51 @@ export default function EditPackagePage() {
               <textarea name="preparation" value={formData.preparation || ''} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg min-h-[80px]" />
             </div>
           </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-premium border border-gray-100 p-6 space-y-6">
+          <div className="flex justify-between items-center border-b pb-2">
+            <h2 className="text-lg font-semibold text-gray-900">Frequently Asked Questions</h2>
+            <button type="button" onClick={addFaq} className="btn btn-secondary text-sm px-4 py-2">
+              + Add FAQ
+            </button>
+          </div>
+
+          {faqs.length === 0 && (
+            <p className="text-sm text-gray-400 text-center py-4">No FAQs yet. Click &quot;Add FAQ&quot; to add one.</p>
+          )}
+
+          {faqs.map((faq, idx) => (
+            <div key={idx} className="space-y-3 p-4 bg-gray-50 rounded-lg border border-gray-100 relative">
+              <button
+                type="button"
+                onClick={() => removeFaq(idx)}
+                className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                aria-label="Remove FAQ"
+              >
+                ✕
+              </button>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Question</label>
+                <input
+                  type="text"
+                  value={faq.question}
+                  onChange={e => updateFaq(idx, 'question', e.target.value)}
+                  className="w-full px-4 py-2 border rounded-lg text-sm"
+                  placeholder="e.g. What is included in this package?"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Answer</label>
+                <textarea
+                  value={faq.answer}
+                  onChange={e => updateFaq(idx, 'answer', e.target.value)}
+                  className="w-full px-4 py-2 border rounded-lg text-sm min-h-[80px]"
+                  placeholder="Provide a clear, helpful answer..."
+                />
+              </div>
+            </div>
+          ))}
         </div>
 
         <div className="flex justify-end gap-4 pb-12">

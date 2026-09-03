@@ -14,4 +14,5 @@ export interface ITestsRepository {
   create?(testData: Omit<TestItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<Result<TestItem>>;
   update?(id: string, testData: Partial<TestItem>): Promise<Result<TestItem>>;
   updateStatus?(id: string, status: 'DRAFT' | 'ACTIVE' | 'INACTIVE'): Promise<Result<void>>;
+  delete?(id: string): Promise<Result<void>>;
 }

@@ -94,4 +94,10 @@ export class ApiPackageRepository implements IPackagesRepository {
       this.apiClient.patch<void>(`/api/packages/${encodeURIComponent(id)}/status`, { status })
     );
   }
+
+  async delete(id: string): Promise<Result<void>> {
+    return toResult(
+      this.apiClient.delete<void>(`/api/packages/${encodeURIComponent(id)}`)
+    );
+  }
 }

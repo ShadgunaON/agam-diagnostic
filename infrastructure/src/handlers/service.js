@@ -86,6 +86,33 @@ exports.handler = async (event) => {
       return error(405, 'METHOD_NOT_ALLOWED', 'Method Not Allowed');
     }
 
+    // ----------------------------------------------------------------
+    // DELETE OPERATION - Requires Authentication & RBAC
+    // ----------------------------------------------------------------
+    if (method === 'DELETE') {
+      const identity = extractIdentity(event);
+      if (!identity) {
+        return error.unauthorized('Missing or invalid authentication token');
+      }
+
+      const isAdmin = await isSuperAdmin(identity);
+      if (!isAdmin && !(await hasPermission(identity, 'catalog', 'delete'))) {
+        return error.forbidden('Access denied: Requires catalog delete permission');
+      }
+
+      if (!slugOrId) return error.badRequest('Missing service ID');
+
+      try {
+        const existing = await serviceRepo.getBySlug(slugOrId) || await serviceRepo.getById(slugOrId);
+        if (!existing) return error.notFound('Service not found');
+        await serviceRepo.delete(existing.id);
+        return success({ success: true, message: 'Service deleted' });
+      } catch (err) {
+        logger.error('Delete service error', { error: err.message });
+        return error.serverError('Failed to delete service');
+      }
+    }
+
     if (method === 'GET') {
       const queryParams = event.queryStringParameters || {};
       

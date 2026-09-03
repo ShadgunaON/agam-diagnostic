@@ -73,7 +73,24 @@ export default function AdminCatalogPage() {
     }
   };
 
-  if (!mounted) return null;
+  const deleteItem = async (type: 'test' | 'service' | 'package', id: string, title: string) => {
+    if (!window.confirm(`Permanently delete "${title}"? This cannot be undone.`)) return;
+    try {
+      if (type === 'test') {
+        await testCatalogService.delete(id);
+        setTests(prev => prev.filter(t => t.id !== id));
+      } else if (type === 'service') {
+        await serviceCatalogService.delete(id);
+        setServices(prev => prev.filter(s => s.id !== id));
+      } else if (type === 'package') {
+        await packageService.delete(id);
+        setPackages(prev => prev.filter(p => p.id !== id));
+      }
+      toast.success('Deleted', `"${title}" has been permanently deleted.`);
+    } catch (error) {
+      toast.error('Error', 'Failed to delete item. Please try again.');
+    }
+  };
 
   const [activeCategory, setActiveCategory] = useState<string>('all');
 
@@ -81,6 +98,8 @@ export default function AdminCatalogPage() {
   useEffect(() => {
     setActiveCategory('all');
   }, [activeTab]);
+
+  if (!mounted) return null;
 
   const currentItems = activeTab === 'tests' ? tests : activeTab === 'services' ? services : packages;
   
@@ -162,12 +181,15 @@ export default function AdminCatalogPage() {
             <tbody className="divide-y divide-gray-100">
               {filteredItems.map(item => (
                 <CatalogRow 
-                  key={item.id} 
-                  item={item} 
-                  type={activeTab === 'packages' ? 'package' : activeTab === 'services' ? 'service' : 'test'} 
-                  toggleStatus={toggleStatus} 
-                  hasEdit={hasPermission('catalog', 'edit')} 
-                />
+                key={item.id} 
+                item={item} 
+                type={activeTab === 'packages' ? 'package' : activeTab === 'services' ? 'service' : 'test'} 
+                toggleStatus={toggleStatus}
+                deleteItem={deleteItem}
+                hasEdit={hasPermission('catalog', 'edit')}
+                hasDelete={hasPermission('catalog', 'del')}
+
+              />
               ))}
               
               {filteredItems.length === 0 && (
@@ -185,7 +207,7 @@ export default function AdminCatalogPage() {
   );
 }
 
-function CatalogRow({ item, type, toggleStatus, hasEdit }: { item: any, type: 'test' | 'service' | 'package', toggleStatus: any, hasEdit: boolean }) {
+function CatalogRow({ item, type, toggleStatus, deleteItem, hasEdit, hasDelete }: { item: any, type: 'test' | 'service' | 'package', toggleStatus: any, deleteItem: any, hasEdit: boolean, hasDelete: boolean }) {
   if (!item) return null;
   
   const status = typeof item.status === 'string' ? item.status : 'ACTIVE';
@@ -241,16 +263,29 @@ function CatalogRow({ item, type, toggleStatus, hasEdit }: { item: any, type: 't
         </button>
       </td>
       <td className="py-4 px-6 text-right">
-        {hasEdit ? (
-          <Link
-            href={`/admin/catalog/${type}s/${encodeURIComponent(id)}`}
-            className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-50 text-gray-500 hover:bg-primary/10 hover:text-primary transition-colors"
-          >
-            <AdminIcon name="edit" width={16} height={16} />
-          </Link>
-        ) : (
-          <span className="text-gray-300">-</span>
-        )}
+        <div className="flex items-center justify-end gap-2">
+          {hasEdit ? (
+            <Link
+              href={`/admin/catalog/${type}s/${encodeURIComponent(id)}`}
+              className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-50 text-gray-500 hover:bg-primary/10 hover:text-primary transition-colors"
+              title="Edit"
+            >
+              <AdminIcon name="edit" width={16} height={16} />
+            </Link>
+          ) : (
+            <span className="w-8 h-8" />
+          )}
+          {hasDelete && (
+            <button
+              type="button"
+              onClick={() => deleteItem(type, id, title)}
+              className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+              title="Delete permanently"
+            >
+              <AdminIcon name="trash" width={16} height={16} />
+            </button>
+          )}
+        </div>
       </td>
     </tr>
   );

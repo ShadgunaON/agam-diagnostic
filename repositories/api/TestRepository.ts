@@ -119,4 +119,10 @@ export class ApiTestRepository implements ITestsRepository {
       this.apiClient.patch<void>(`/api/tests/${encodeURIComponent(id)}/status`, { status })
     );
   }
+
+  async delete(id: string): Promise<Result<void>> {
+    return toResult(
+      this.apiClient.delete<void>(`/api/tests/${encodeURIComponent(id)}`)
+    );
+  }
 }

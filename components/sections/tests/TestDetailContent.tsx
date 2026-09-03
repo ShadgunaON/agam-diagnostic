@@ -22,7 +22,16 @@ export function TestDetailContent({ data, className = '' }: TestDetailContentPro
       {
         title: data.turnaroundTime || 'Standard Turnaround',
         icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '12px', height: '12px' }}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-      }
+      },
+      data.fastingRequired
+        ? {
+            title: 'Fasting Required',
+            icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '12px', height: '12px' }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          }
+        : {
+            title: 'No Fasting',
+            icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '12px', height: '12px' }}><polyline points="20 6 9 17 4 12" /></svg>
+          }
     ]
   };
 
@@ -36,16 +45,41 @@ export function TestDetailContent({ data, className = '' }: TestDetailContentPro
     originalPrice: Math.round(parseInt(data.price || '150', 10) * 1.35),
   };
 
-  const sections = [
+  const sections = [];
+  
+  if (data.overview) {
+    sections.push({
+      id: 'overview',
+      title: 'Overview',
+      content: (
+        <div dangerouslySetInnerHTML={{ __html: data.overview }} style={{ fontSize: '14px', lineHeight: 1.6, color: 'var(--color-text)' }} />
+      )
+    });
+  }
+
+  sections.push(
     {
       id: 'who',
       title: 'Who Should Get This Test?',
       content: (
         <p style={{ fontSize: '14px', lineHeight: 1.6, color: 'var(--color-text)' }}>
-          {data.whoShouldGet || data.whatItChecks || 'This test helps provide clinical insights for your health.'}
+          {data.whatItChecks || data.whoShouldGet || 'This test helps provide clinical insights for your health.'}
         </p>
       )
-    },
+    }
+  );
+
+  if (data.whyPerformed) {
+    sections.push({
+      id: 'why',
+      title: 'Why is it Performed?',
+      content: (
+        <div dangerouslySetInnerHTML={{ __html: data.whyPerformed }} style={{ fontSize: '14px', lineHeight: 1.6, color: 'var(--color-text)' }} />
+      )
+    });
+  }
+
+  sections.push(
     {
       id: 'preparation',
       title: 'Preparation Required',
@@ -54,7 +88,7 @@ export function TestDetailContent({ data, className = '' }: TestDetailContentPro
           <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" style={{ width: '20px', height: '20px', flexShrink: 0, marginTop: '2px' }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           <div>
             <h4 style={{ color: 'var(--color-text)', fontSize: '14px', marginBottom: '4px' }}>Important Instructions</h4>
-            <p style={{ fontSize: '13px', color: 'var(--color-text-light)', margin: 0, lineHeight: 1.5 }}>{data.preparation || data.preparationRequired || 'No specific preparation required.'}</p>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-light)', margin: 0, lineHeight: 1.5 }}>{data.preparationRequired || data.preparation || 'No specific preparation required.'}</p>
           </div>
         </div>
       )
@@ -100,7 +134,7 @@ export function TestDetailContent({ data, className = '' }: TestDetailContentPro
         </div>
       )
     }
-  ];
+  );
 
   return (
     <PremiumDetailLayout 

@@ -49,7 +49,9 @@ export type AdminIconName =
   | 'flask'
   | 'logOut'
   | 'mail'
-  | 'save';
+  | 'save'
+  | 'trash';
+
 
 interface AdminIconProps extends React.SVGProps<SVGSVGElement> {
   name: AdminIconName;
@@ -59,6 +61,16 @@ export function AdminIcon({ name, className = '', ...props }: AdminIconProps) {
   const baseClass = `shrink-0 ${className}`;
 
   switch (name) {
+    case 'trash':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={baseClass} {...props}>
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+          <path d="M10 11v6"></path>
+          <path d="M14 11v6"></path>
+          <path d="M9 6V4h6v2"></path>
+        </svg>
+      );
     case 'mail':
       return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={baseClass} {...props}>

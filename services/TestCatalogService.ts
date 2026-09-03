@@ -51,4 +51,11 @@ export class TestCatalogService {
     }
     throw new Error('Method not implemented in repository');
   }
+
+  async delete(id: string) {
+    if (this.repository.delete) {
+      return this.repository.delete(id);
+    }
+    throw new Error('Method not implemented in repository');
+  }
 }

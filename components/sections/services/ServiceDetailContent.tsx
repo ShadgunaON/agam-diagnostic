@@ -54,22 +54,36 @@ export function ServiceDetailContent({ data, className = '' }: ServiceDetailCont
       title: 'About This Service',
       content: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div dangerouslySetInnerHTML={{ __html: data.aboutHtml || data.overview || '' }} style={{ fontSize: '14px', lineHeight: 1.6 }} />
+          <div dangerouslySetInnerHTML={{ __html: data.overview || data.aboutHtml || '' }} style={{ fontSize: '14px', lineHeight: 1.6 }} />
           
-          <div style={{ padding: '12px', background: 'var(--color-bg-alt)', borderRadius: 'var(--radius-sm)' }}>
-            <h4 style={{ marginBottom: '8px', fontSize: '13px' }}>Ideal For:</h4>
-            <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px' }}>
-              {(data.whoShouldUse || []).map((item, idx) => (
-                <li key={idx} style={{ marginBottom: '4px' }}>{item}</li>
-              ))}
-            </ul>
-          </div>
+          {data.whoItIsFor ? (
+            <div style={{ padding: '12px', background: 'var(--color-bg-alt)', borderRadius: 'var(--radius-sm)' }}>
+              <h4 style={{ marginBottom: '8px', fontSize: '13px' }}>Who is it For?</h4>
+              <div dangerouslySetInnerHTML={{ __html: data.whoItIsFor }} style={{ fontSize: '13px', lineHeight: 1.6 }} />
+            </div>
+          ) : (data.whoShouldUse && data.whoShouldUse.length > 0) ? (
+            <div style={{ padding: '12px', background: 'var(--color-bg-alt)', borderRadius: 'var(--radius-sm)' }}>
+              <h4 style={{ marginBottom: '8px', fontSize: '13px' }}>Ideal For:</h4>
+              <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px' }}>
+                {data.whoShouldUse.map((item, idx) => (
+                  <li key={idx} style={{ marginBottom: '4px' }}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {data.whatIncludes && (
+            <div style={{ padding: '12px', background: 'var(--color-bg-alt)', borderRadius: 'var(--radius-sm)' }}>
+              <h4 style={{ marginBottom: '8px', fontSize: '13px' }}>What it Includes</h4>
+              <div dangerouslySetInnerHTML={{ __html: data.whatIncludes }} style={{ fontSize: '13px', lineHeight: 1.6 }} />
+            </div>
+          )}
 
           <div style={{ background: '#fff', border: '1px solid var(--color-border)', padding: '12px', borderRadius: 'var(--radius-sm)', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" style={{ width: '18px', height: '18px', flexShrink: 0, marginTop: '2px' }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             <div>
               <h4 style={{ color: 'var(--color-text)', fontSize: '13px', marginBottom: '2px' }}>{data.preparation?.title || 'Instructions'}</h4>
-              <p style={{ fontSize: '12px', color: 'var(--color-text-light)', margin: 0 }}>{data.preparation?.description || data.preparationRequired || 'No specific preparation required.'}</p>
+              <p style={{ fontSize: '12px', color: 'var(--color-text-light)', margin: 0 }}>{data.preparationRequired || data.preparation?.description || 'No specific preparation required.'}</p>
             </div>
           </div>
         </div>
