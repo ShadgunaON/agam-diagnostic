@@ -387,11 +387,21 @@ Resources:
     Properties:
       Name: !Sub "agam-graphql-${Environment}"
       AuthenticationType: AMAZON_COGNITO_USER_POOLS
+      AdditionalAuthenticationProviders:
+        - AuthenticationType: API_KEY
       UserPoolConfig:
         UserPoolId: !Ref AgamUserPool
         AwsRegion: !Ref "AWS::Region"
         DefaultAction: ALLOW
 
+
+  GraphQLApiKey:
+    Type: AWS::AppSync::ApiKey
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      Description: "Public API Key for unauthenticated catalog/blog queries"
+      # Valid for 365 days (from Sept 2026)
+      Expires: 1820244064
   GraphQLSchema:
     Type: AWS::AppSync::GraphQLSchema
     Properties:
@@ -476,6 +486,718 @@ Resources:
       FieldName: invoices
       DataSourceName: !GetAtt GraphQLDataSource.Name
 
+
+  GraphQLResolverQueryCatalogTests:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: catalogTests
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryCatalogPackages:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: catalogPackages
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryCatalogServices:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: catalogServices
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryTestBySlug:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: testBySlug
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryPackageBySlug:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: packageBySlug
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryServiceBySlug:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: serviceBySlug
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryBlogs:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: blogs
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryBlogById:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: blogById
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryMePatient:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: mePatient
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryPatientById:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: patientById
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryPatients:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: patients
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryBookingsByPatient:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: bookingsByPatient
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryRecentBookings:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: recentBookings
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryCollectionById:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: collectionById
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryCollectionsByPatient:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: collectionsByPatient
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryCollections:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: collections
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryReportById:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: reportById
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryReportsByPatient:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: reportsByPatient
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryInvoicesByPatient:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: invoicesByPatient
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryDocuments:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: documents
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryDocumentById:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: documentById
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryDocumentDownloadUrl:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: documentDownloadUrl
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryReviewById:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: reviewById
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryReviewsByPatient:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: reviewsByPatient
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryReviewByBooking:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: reviewByBooking
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryPublicReviews:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: publicReviews
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryAllReviews:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: allReviews
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryNewsletterSubscribers:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: newsletterSubscribers
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryBookingById:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: bookingById
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryInvoiceById:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: invoiceById
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryTestById:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: testById
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryPackageById:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: packageById
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryServiceById:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: serviceById
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryMyBookings:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: myBookings
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryMyNotifications:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: myNotifications
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryAnalyticsCharts:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: analyticsCharts
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryPatientStats:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: patientStats
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryReviewStats:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: reviewStats
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryAdminBookingsWorkspace:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: adminBookingsWorkspace
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryAdminInvoicesWorkspace:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: adminInvoicesWorkspace
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryAdminReviewsWorkspace:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: adminReviewsWorkspace
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryAdminCollectionsWorkspace:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: adminCollectionsWorkspace
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryAdminReportsWorkspace:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: adminReportsWorkspace
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryAdminCatalogWorkspace:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: adminCatalogWorkspace
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryMyPortal:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: myPortal
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryAdminStaffWorkspace:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: adminStaffWorkspace
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryStaffById:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: staffById
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryAdminRoles:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: adminRoles
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryAdminPermissionsMap:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: adminPermissionsMap
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationCreateCatalogTest:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: createCatalogTest
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationUpdateCatalogTest:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: updateCatalogTest
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationUpdateCatalogTestStatus:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: updateCatalogTestStatus
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationDeleteCatalogTest:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: deleteCatalogTest
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationCreateCatalogPackage:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: createCatalogPackage
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationUpdateCatalogPackage:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: updateCatalogPackage
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationUpdateCatalogPackageStatus:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: updateCatalogPackageStatus
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationDeleteCatalogPackage:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: deleteCatalogPackage
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationCreateCatalogService:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: createCatalogService
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationUpdateCatalogService:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: updateCatalogService
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationUpdateCatalogServiceStatus:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: updateCatalogServiceStatus
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationDeleteCatalogService:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: deleteCatalogService
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationCreateBlog:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: createBlog
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationUpdateBlog:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: updateBlog
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationDeleteBlog:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: deleteBlog
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationCreatePatient:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: createPatient
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationUpdatePatient:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: updatePatient
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationCreateBooking:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: createBooking
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationUpdateBookingStatus:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: updateBookingStatus
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationUpdateBookingPaymentStatus:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: updateBookingPaymentStatus
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationCreateCollection:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: createCollection
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationUpdateCollection:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: updateCollection
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationCreateReportTask:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: createReportTask
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationUpdateReportStatus:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: updateReportStatus
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationCreateInvoice:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: createInvoice
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationUpdateInvoiceStatus:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: updateInvoiceStatus
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationUpdateInvoicePaymentMethod:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: updateInvoicePaymentMethod
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationUpdateInvoice:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: updateInvoice
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationInitiateDocumentUpload:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: initiateDocumentUpload
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationCompleteDocumentUpload:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: completeDocumentUpload
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationCreateReview:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: createReview
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationModerateReview:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: moderateReview
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationNewsletterSubscribe:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: newsletterSubscribe
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationMarkNotificationRead:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: markNotificationRead
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationCreatePaymentOrder:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: createPaymentOrder
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationPaymentStatus:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: paymentStatus
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationCreateStaff:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: createStaff
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationUpdateStaff:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: updateStaff
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationCreateRole:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: createRole
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationUpdatePermissions:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: updatePermissions
+      DataSourceName: !GetAtt GraphQLDataSource.Name
 Outputs:
   CognitoUserPoolId:
     Description: "Cognito User Pool ID"
@@ -496,3 +1218,8 @@ Outputs:
   AppSyncEndpoint:
     Description: "GraphQL AppSync API Endpoint — the sole application API surface"
     Value: !GetAtt GraphQLApi.GraphQLUrl
+
+
+  AppSyncApiKey:
+    Description: "Public API Key"
+    Value: !GetAtt GraphQLApiKey.ApiKey

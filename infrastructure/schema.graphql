@@ -4,6 +4,55 @@ schema {
 }
 
 type Query {
+
+  # Catalog Queries
+  catalogTests(page: Int, limit: Int, q: String): CatalogTestsConnection! @aws_api_key @aws_cognito_user_pools
+  catalogPackages(page: Int, limit: Int, q: String): CatalogPackagesConnection! @aws_api_key @aws_cognito_user_pools
+  catalogServices(page: Int, limit: Int, q: String): CatalogServicesConnection! @aws_api_key @aws_cognito_user_pools
+  testBySlug(slug: String!): TestItem @aws_api_key @aws_cognito_user_pools
+  packageBySlug(slug: String!): PackageItem @aws_api_key @aws_cognito_user_pools
+  serviceBySlug(slug: String!): ServiceItem @aws_api_key @aws_cognito_user_pools
+  
+  # Blog Queries
+  blogs(page: Int, limit: Int, status: String): BlogConnection! @aws_api_key @aws_cognito_user_pools
+  blogById(id: String!): BlogItem @aws_api_key @aws_cognito_user_pools
+  
+  # Patient Queries
+  mePatient: Patient
+  patientById(id: ID!): Patient
+  patients(limit: Int, cursor: String, search: String): PatientConnection!
+  
+  # Booking Queries
+  bookingsByPatient(patientId: ID!): [Booking!]!
+  recentBookings(limit: Int): [Booking!]!
+  
+  # Collection Queries
+  collectionById(id: ID!): CollectionTask
+  collectionsByPatient(patientId: ID!): [CollectionTask!]!
+  collections(limit: Int, cursor: String, status: String, search: String): CollectionConnection!
+  
+  # Report Queries
+  reportById(id: ID!): Report
+  reportsByPatient(patientId: ID!): [Report!]!
+  
+  # Invoice Queries
+  invoicesByPatient(patientId: ID!): [Invoice!]!
+  
+  # Document Queries
+  documents(entityType: String, entityId: ID): [DocumentItem!]!
+  documentById(id: ID!): DocumentItem
+  documentDownloadUrl(id: ID!): String!
+  
+  # Review Queries
+  reviewById(id: ID!): Review
+  reviewsByPatient(patientId: ID!): [Review!]!
+  reviewByBooking(bookingId: ID!): Review
+  publicReviews(limit: Int): [Review!]! @aws_api_key @aws_cognito_user_pools
+  allReviews(limit: Int, cursor: String): ReviewConnection!
+  
+  # Newsletter
+  newsletterSubscribers(limit: Int, cursor: String): SubscriberConnection!
+
   # Direct Lookup
   patient(id: ID!): Patient
 
@@ -21,7 +70,7 @@ type Query {
   myNotifications: [Notification!]!
 
   # Aggregated Search
-  globalSearch(query: String!, limit: Int): [GlobalSearchResult!]!
+  globalSearch(query: String!, limit: Int): [GlobalSearchResult!]! @aws_api_key @aws_cognito_user_pools
   
   # Admin Dashboard
   dashboardStats: DashboardMetrics!
@@ -59,11 +108,67 @@ type Query {
   # Staff Management
   adminStaffWorkspace: [Staff!]!
   staffById(id: ID!): Staff
-  adminRoles: [Role!]!
+  adminRoles: [Role!]! @aws_cognito_user_pools
   adminPermissionsMap: String!
 }
 
 type Mutation {
+
+  # Catalog Mutations
+  createCatalogTest(input: String!): TestItem!
+  updateCatalogTest(id: ID!, input: String!): TestItem!
+  updateCatalogTestStatus(id: ID!, status: String!): Boolean!
+  deleteCatalogTest(id: ID!): Boolean!
+  
+  createCatalogPackage(input: String!): PackageItem!
+  updateCatalogPackage(id: ID!, input: String!): PackageItem!
+  updateCatalogPackageStatus(id: ID!, status: String!): Boolean!
+  deleteCatalogPackage(id: ID!): Boolean!
+  
+  createCatalogService(input: String!): ServiceItem!
+  updateCatalogService(id: ID!, input: String!): ServiceItem!
+  updateCatalogServiceStatus(id: ID!, status: String!): Boolean!
+  deleteCatalogService(id: ID!): Boolean!
+  
+  # Blog Mutations
+  createBlog(input: String!): BlogItem!
+  updateBlog(id: ID!, input: String!): BlogItem!
+  deleteBlog(id: ID!): Boolean!
+  
+  # Patient Mutations
+  createPatient(input: String!): Patient!
+  updatePatient(id: ID!, input: String!): Patient!
+  
+  # Booking Mutations
+  createBooking(input: String!): Booking!
+  updateBookingStatus(id: ID!, status: String!): Boolean!
+  updateBookingPaymentStatus(id: ID!, status: String!): Boolean!
+  
+  # Collection Mutations
+  createCollection(input: String!): CollectionTask!
+  updateCollection(id: ID!, input: String!): CollectionTask!
+  
+  # Report Mutations
+  createReportTask(input: String!): Report!
+  updateReportStatus(id: ID!, status: String!, results: String): Boolean!
+  
+  # Invoice Mutations
+  createInvoice(input: String!): Invoice!
+  updateInvoiceStatus(id: ID!, status: String!): Boolean!
+  updateInvoicePaymentMethod(id: ID!, method: String!): Boolean!
+  updateInvoice(id: ID!, input: String!): Invoice!
+  
+  # Document Mutations
+  initiateDocumentUpload(input: String!): DocumentUploadResponse!
+  completeDocumentUpload(id: ID!): DocumentItem!
+  
+  # Review Mutations
+  createReview(input: String!): Review!
+  moderateReview(id: ID!, status: String!): Boolean!
+  
+  # Newsletter Mutations
+  newsletterSubscribe(email: String!): Boolean!
+
   # Mark a notification as read (replaces REST PUT /api/notifications/:id/read)
   markNotificationRead(id: ID!): Boolean!
 
@@ -212,7 +317,7 @@ type Invoice {
   createdAt: String!
 }
 
-type TestItem {
+type TestItem @aws_api_key @aws_cognito_user_pools {
   id: ID!
   title: String!
   slug: String!
@@ -232,7 +337,7 @@ type TestItem {
   labCollectionAvailable: Boolean
 }
 
-type PackageItem {
+type PackageItem @aws_api_key @aws_cognito_user_pools {
   id: ID!
   title: String!
   slug: String!
@@ -247,7 +352,7 @@ type PackageItem {
   faqs: [FaqItem!]
 }
 
-type ServiceItem {
+type ServiceItem @aws_api_key @aws_cognito_user_pools {
   id: ID!
   title: String!
   slug: String!
@@ -278,7 +383,7 @@ type RelatedTest {
   status: String
 }
 
-type Review {
+type Review @aws_api_key @aws_cognito_user_pools {
   id: ID!
   patientId: ID
   bookingId: ID!
@@ -447,4 +552,50 @@ type AdminReportsWorkspaceData {
   queue: [Report!]!
   nextCursor: String
   pendingCount: Int
+}
+
+
+type CatalogTestsConnection @aws_api_key @aws_cognito_user_pools { data: [TestItem!]!, meta: PaginationMeta! }
+type CatalogPackagesConnection @aws_api_key @aws_cognito_user_pools { data: [PackageItem!]!, meta: PaginationMeta! }
+type CatalogServicesConnection @aws_api_key @aws_cognito_user_pools { data: [ServiceItem!]!, meta: PaginationMeta! }
+type BlogConnection @aws_api_key @aws_cognito_user_pools { data: [BlogItem!]!, meta: PaginationMeta! }
+type PatientConnection { data: [Patient!]!, meta: PaginationMeta! }
+type ReviewConnection @aws_api_key @aws_cognito_user_pools { data: [Review!]!, meta: PaginationMeta! }
+type SubscriberConnection @aws_api_key @aws_cognito_user_pools { data: [Subscriber!]!, meta: PaginationMeta! }
+
+type PaginationMeta @aws_api_key @aws_cognito_user_pools { total: Int!, page: Int!, limit: Int!, totalPages: Int! }
+
+type BlogItem @aws_api_key @aws_cognito_user_pools {
+  id: ID!
+  slug: String!
+  title: String!
+  excerpt: String
+  content: String
+  author: String
+  status: String!
+  createdAt: String
+  updatedAt: String
+  coverImage: String
+}
+
+type DocumentItem {
+  id: ID!
+  entityType: String!
+  entityId: ID!
+  title: String!
+  type: String!
+  url: String!
+  createdAt: String
+  uploadedBy: String
+}
+
+type DocumentUploadResponse {
+  id: ID!
+  uploadUrl: String!
+}
+
+type Subscriber {
+  email: String!
+  subscribedAt: String!
+  status: String
 }

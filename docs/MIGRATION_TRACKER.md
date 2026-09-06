@@ -1081,3 +1081,10 @@ No API Gateway exists in the deployed infrastructure. The `AppSyncEndpoint` outp
 ### Migration Tracker — Overall Status
 
 This module closes the REST→GraphQL migration. All application communication now goes through AppSync/GraphQL. The frontend, service layer, and repository layer contain zero internal REST API calls.
+
+
+## AppSync Public Auth & Schema Fix
+- Added API Key authentication to AppSync backend.
+- Injected 90+ missing schema fields and updated dminRoles with strict RBAC enforcement.
+- Deployed backend updates via AWS SAM successfully.
+- Verified AppSync API Key access to public queries (catalog/blogs) works properly.

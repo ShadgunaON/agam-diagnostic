@@ -6,14 +6,26 @@ export async function POST(request: Request) {
     const body = await request.json();
     const token = request.headers.get('authorization');
     
-    const apiUrl = env.graphqlUrl;
+    // Explicit API key fallback for public queries (catalog, blogs, etc.)
+    const apiKey = process.env.APPSYNC_API_KEY || '';
     
+    const apiUrl = process.env.NEXT_PUBLIC_GRAPHQL_URL || env.graphqlUrl;
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    // If authenticated via Cognito, pass the token.
+    // If unauthenticated (public query), pass the API key so AppSync accepts it.
+    if (token) {
+      headers['Authorization'] = token;
+    } else if (apiKey) {
+      headers['x-api-key'] = apiKey;
+    }
+
     const response = await fetch(apiUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: token } : {}),
-      },
+      headers,
       body: JSON.stringify(body)
     });
     

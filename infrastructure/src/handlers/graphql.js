@@ -95,11 +95,18 @@ exports.handler = async (event) => {
     username: event.identity?.username || event.identity?.claims?.email
   };
   
-  if (!identity.sub) {
+  const PUBLIC_FIELDS = new Set([
+    'catalogTests', 'catalogPackages', 'catalogServices',
+    'testBySlug', 'packageBySlug', 'serviceBySlug',
+    'blogs', 'blogById', 'publicReviews', 'globalSearch'
+  ]);
+
+  const { fieldName } = event.info;
+
+  if (!identity.sub && !PUBLIC_FIELDS.has(fieldName)) {
     throw new Error("Unauthorized: Missing authentication context");
   }
 
-  const { fieldName } = event.info;
   const { arguments: args, source } = event;
 
   try {
@@ -628,6 +635,12 @@ exports.handler = async (event) => {
       }
 
       case 'adminRoles': {
+        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const { isAdmin } = require('../shared/auth');
+        if (!(await isAdmin(identityForCheck))) {
+          throw new Error('Access denied: Admin only');
+        }
+        
         let roles = await rbacRepo.getRoles();
         if (!roles) {
           roles = [
