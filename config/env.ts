@@ -9,6 +9,7 @@ export const env = {
   isTest: process.env.NODE_ENV === 'test',
   
   apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://35ea31w6qf.execute-api.us-east-1.amazonaws.com/dev',
+  graphqlUrl: process.env.NEXT_PUBLIC_GRAPHQL_URL || 'https://cihtpsxiibcb5bewwzxibt2l3i.appsync-api.us-east-1.amazonaws.com/graphql',
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
   useMockData: process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true',
 
