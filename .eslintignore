@@ -1,0 +1,11 @@
+.aws-sam
+infrastructure
+node_modules
+.next
+*.js
+!app/**/*.ts
+!app/**/*.tsx
+!components/**/*.ts
+!components/**/*.tsx
+!services/**/*.ts
+!domains/**/*.ts
