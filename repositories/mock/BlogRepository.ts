@@ -132,24 +132,6 @@ export class MockBlogRepository implements IBlogRepository {
       const sub = { id: Date.now().toString(), email, status: 'Active', subscribedAt: new Date().toISOString() };
       this.subscribers.push(sub);
       
-      try {
-        // Dispatch notification to mock admin to mirror backend behavior
-        const { notificationService } = await import('@/services');
-        const { PRESEEDED_EXISTING_USER, ADMIN_USER } = await import('@/repositories/mock/AuthRepository');
-        
-        await notificationService.create({
-          userId: ADMIN_USER.staffId || ADMIN_USER.id,
-          title: 'New Newsletter Subscriber',
-          message: `${email} has subscribed to the newsletter.`,
-          type: 'success',
-          link: '/admin/newsletter',
-          ownerSub: PRESEEDED_EXISTING_USER.id, // Just a placeholder owner
-          createdBy: 'system'
-        });
-      } catch (err) {
-        console.warn('Failed to dispatch mock newsletter notification', err);
-      }
-      
       return success({ message: 'Subscribed successfully', subscriber: sub });
     }
     return success({ message: 'Subscribed successfully', subscriber: existing });

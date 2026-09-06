@@ -42,6 +42,11 @@ export class MockCollectionRepository implements ICollectionRepository {
     return success(await this.getData());
   }
 
+  async getByPatientId(patientId: string): Promise<Result<CollectionTaskModel[]>> {
+    const data = await this.getData();
+    return success(data.filter(c => c.patientId === patientId));
+  }
+
   async create(task: CollectionTaskModel): Promise<Result<CollectionTaskModel>> {
     const current = await this.getData();
     const updated = [task, ...current];

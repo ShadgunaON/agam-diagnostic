@@ -55,10 +55,31 @@ export default function EditPackagePage() {
 
   const loadTests = async () => {
     try {
-      const res = await testCatalogService.getCatalog(1, 1000);
-      if (res.isSuccess) {
-        setAllTests(res.value.data);
-      }
+      const token = sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '';
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          query: `
+            query {
+              adminCatalogWorkspace {
+                tests {
+                  id title slug category description status price
+                }
+              }
+            }
+          `
+        })
+      });
+
+      const json = await response.json();
+      if (json.errors) throw new Error(json.errors[0]?.message || 'GraphQL error');
+      
+      const tests = json.data?.adminCatalogWorkspace?.tests || [];
+      setAllTests(tests);
     } catch (error) {
       console.error("Failed to load tests", error);
     } finally {
@@ -68,10 +89,32 @@ export default function EditPackagePage() {
 
   const loadPackage = async () => {
     try {
-      const res = await packageService.getById(id);
-      if (res.isSuccess) {
-        setFormData(res.value);
-        setFaqs((res.value as any).faqs || []);
+      const token = sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '';
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          query: `
+            query PackageById($id: ID!) {
+              packageById(id: $id) {
+                id title slug category description packagePrice individualValue status sortOrder testIds
+              }
+            }
+          `,
+          variables: { id }
+        })
+      });
+
+      const json = await response.json();
+      if (json.errors) throw new Error(json.errors[0]?.message || 'GraphQL error');
+      
+      const pkg = json.data?.packageById;
+      if (pkg) {
+        setFormData(pkg);
+        setFaqs((pkg as any).faqs || []);
       } else {
         toast.error('Error', 'Package not found');
         router.push('/admin/catalog');

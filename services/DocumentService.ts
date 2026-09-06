@@ -1,30 +1,60 @@
-import { IDocumentRepository } from '@/domains/document/repository';
 import { DocumentMetadata, DocumentEntityType, AllowedContentType, ALLOWED_CONTENT_TYPES, MAX_FILE_SIZE_BYTES } from '@/domains/document/model';
 import { Result, success, failure } from '@/shared/result';
 
-export interface IStorageService {
-  getPresignedUploadUrl(fileKey: string, contentType: string): Promise<string>;
-  getPresignedDownloadUrl(fileKey: string): Promise<string>;
-}
-
 export class DocumentService {
-  constructor(
-    private readonly documentRepository: IDocumentRepository,
-    private readonly storageService?: IStorageService
-  ) {}
+  constructor() {}
+
+  private async _graphqlFetch<T>(query: string, variables?: Record<string, unknown>): Promise<T | null> {
+    try {
+      const token = typeof window !== 'undefined'
+        ? (sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '')
+        : '';
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ query, variables }),
+      });
+      if (!response.ok) return null;
+      const { data, errors } = await response.json();
+      if (errors?.length) { console.error('GraphQL errors:', errors); return null; }
+      return data as T;
+    } catch (err) {
+      console.error('GraphQL fetch failed:', err);
+      return null;
+    }
+  }
 
   async getById(documentId: string): Promise<Result<DocumentMetadata>> {
-    return this.documentRepository.getById(documentId);
+    const data = await this._graphqlFetch<{ documentById: DocumentMetadata }>(
+      `query DocumentById($id: ID!) {
+        documentById(id: $id) {
+          documentId entityType entityId patientId bookingId
+          fileKey fileName contentType fileSize status createdAt createdBy
+        }
+      }`,
+      { id: documentId }
+    );
+    if (data?.documentById) return success(data.documentById);
+    return failure(new Error('Document not found'));
   }
 
   async getByEntity(entityType: string, entityId: string): Promise<Result<DocumentMetadata[]>> {
-    return this.documentRepository.getByEntity(entityType, entityId);
+    const data = await this._graphqlFetch<{ documents: DocumentMetadata[] }>(
+      `query Documents($entityType: String, $entityId: ID) {
+        documents(entityType: $entityType, entityId: $entityId) {
+          documentId entityType entityId patientId bookingId
+          fileKey fileName contentType fileSize status createdAt createdBy
+        }
+      }`,
+      { entityType, entityId }
+    );
+    if (data?.documents) return success(data.documents);
+    return failure(new Error('Failed to load documents'));
   }
 
-  /**
-   * Validates upload parameters and creates a PENDING metadata record.
-   * Returns the documentId and presigned upload URL.
-   */
   async initiateUpload(params: {
     entityType: DocumentEntityType;
     entityId: string;
@@ -35,96 +65,45 @@ export class DocumentService {
     fileSize: number;
     createdBy: string;
   }): Promise<Result<{ documentId: string; uploadUrl: string; fileKey: string }>> {
-    // Validate content type
-    if (!ALLOWED_CONTENT_TYPES.includes(params.contentType)) {
-      return failure(new Error(`Unsupported content type: ${params.contentType}. Allowed: ${ALLOWED_CONTENT_TYPES.join(', ')}`));
-    }
-
-    // Validate file size
-    if (params.fileSize > MAX_FILE_SIZE_BYTES) {
-      return failure(new Error(`File size ${params.fileSize} exceeds maximum allowed ${MAX_FILE_SIZE_BYTES} bytes (10MB)`));
-    }
-
-    const documentId = `DOC-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
-    const extension = this.getExtension(params.contentType);
-    const fileKey = `documents/${params.patientId}/${params.entityType}/${params.entityId}/${documentId}.${extension}`;
-
-    const metadata: DocumentMetadata = {
-      documentId,
-      entityType: params.entityType,
-      entityId: params.entityId,
-      patientId: params.patientId,
-      bookingId: params.bookingId,
-      fileKey,
-      fileName: params.fileName,
-      contentType: params.contentType,
-      fileSize: params.fileSize,
-      status: 'PENDING',
-      createdAt: new Date().toISOString(),
-      createdBy: params.createdBy,
-    };
-
-    const createRes = await this.documentRepository.createMetadata(metadata);
-    if (!createRes.isSuccess) {
-      return failure(createRes.error || new Error('Failed to create document metadata'));
-    }
-
-    if (!this.storageService) {
-      return failure(new Error('Storage service not configured'));
-    }
-
-    try {
-      const uploadUrl = await this.storageService.getPresignedUploadUrl(fileKey, params.contentType);
-      return success({ documentId, uploadUrl, fileKey });
-    } catch (err: any) {
-      return failure(new Error(`Failed to generate upload URL: ${err.message}`));
-    }
+    const data = await this._graphqlFetch<{ initiateDocumentUpload: { documentId: string; uploadUrl: string; fileKey: string } }>(
+      `mutation InitiateDocumentUpload($input: AWSJSON!) {
+        initiateDocumentUpload(input: $input) {
+          documentId uploadUrl fileKey
+        }
+      }`,
+      { input: params }
+    );
+    if (data?.initiateDocumentUpload) return success(data.initiateDocumentUpload);
+    return failure(new Error('Failed to initiate document upload'));
   }
 
-  /**
-   * Marks a PENDING document as UPLOADED after the browser confirms successful upload.
-   */
   async completeUpload(documentId: string): Promise<Result<DocumentMetadata>> {
-    const res = await this.documentRepository.getById(documentId);
-    if (!res.isSuccess) return failure(res.error || new Error('Document not found'));
-
-    if (res.value.status !== 'PENDING') {
-      return failure(new Error(`Document ${documentId} is not in PENDING state (current: ${res.value.status})`));
-    }
-
-    return this.documentRepository.updateStatus(documentId, 'UPLOADED');
+    const data = await this._graphqlFetch<{ completeDocumentUpload: DocumentMetadata }>(
+      `mutation CompleteDocumentUpload($id: ID!) {
+        completeDocumentUpload(id: $id) {
+          documentId status
+        }
+      }`,
+      { id: documentId }
+    );
+    if (data?.completeDocumentUpload) return success(data.completeDocumentUpload);
+    return failure(new Error('Failed to complete document upload'));
   }
 
-  /**
-   * Returns a presigned download URL for an UPLOADED document.
-   * Authorization must be verified by the caller before invoking this method.
-   */
   async getDownloadUrl(documentId: string): Promise<Result<{ downloadUrl: string; metadata: DocumentMetadata }>> {
-    const res = await this.documentRepository.getById(documentId);
-    if (!res.isSuccess) return failure(res.error || new Error('Document not found'));
-
-    if (res.value.status !== 'UPLOADED') {
-      return failure(new Error(`Document ${documentId} is not available for download (status: ${res.value.status})`));
-    }
-
-    if (!this.storageService) {
-      return failure(new Error('Storage service not configured'));
-    }
-
-    try {
-      const downloadUrl = await this.storageService.getPresignedDownloadUrl(res.value.fileKey);
-      return success({ downloadUrl, metadata: res.value });
-    } catch (err: any) {
-      return failure(new Error(`Failed to generate download URL: ${err.message}`));
-    }
-  }
-
-  private getExtension(contentType: string): string {
-    switch (contentType) {
-      case 'application/pdf': return 'pdf';
-      case 'image/jpeg': return 'jpg';
-      case 'image/png': return 'png';
-      default: return 'bin';
-    }
+    const data = await this._graphqlFetch<{ documentDownloadUrl: { downloadUrl: string; metadata: DocumentMetadata } }>(
+      `query DocumentDownloadUrl($id: ID!) {
+        documentDownloadUrl(id: $id) {
+          downloadUrl
+          metadata {
+            documentId entityType entityId patientId bookingId
+            fileKey fileName contentType fileSize status createdAt createdBy
+          }
+        }
+      }`,
+      { id: documentId }
+    );
+    if (data?.documentDownloadUrl) return success(data.documentDownloadUrl);
+    return failure(new Error('Failed to generate download URL'));
   }
 }

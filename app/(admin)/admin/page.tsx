@@ -36,11 +36,11 @@ export default function GlassDashboard() {
     
     const loadDashboardData = async () => {
       const [bookingsRes, kpisRes] = await Promise.all([
-        bookingService.getRecent(4),
+        bookingService.getAdminWorkspace({ limit: 4, sort: 'date_newest' }),
         analyticsService.getDashboardKPIs()
       ]);
 
-      if (bookingsRes.isSuccess) setRecentBookings(bookingsRes.value);
+      if (bookingsRes.isSuccess) setRecentBookings(bookingsRes.value.queue);
       setKpis(kpisRes);
     };
 

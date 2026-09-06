@@ -21,8 +21,8 @@ export default function DashboardPage() {
     const fetchDashboardData = async () => {
       try {
         // Only fetch data scoped to the currently authenticated patient's ID
-        // Note: We use getByPatientId to avoid fetching the entire database and filtering on the frontend.
-        const bookingsResult = await bookingService.getByPatientId(user.id);
+        // Note: We use getMyBookingsGql to avoid fetching the entire database and filtering on the frontend.
+        const bookingsResult = await bookingService.getMyBookingsGql();
         
         if (bookingsResult.isSuccess) {
           const sortedBookings = bookingsResult.value.sort(

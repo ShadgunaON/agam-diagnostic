@@ -96,6 +96,34 @@ async function getAllStaff(limit = 100) {
   return (result.Items || []).map(fromItem);
 }
 
+async function searchStaff(query, limit = 12) {
+  if (!query || !query.trim()) return [];
+  
+  const qLower = query.toLowerCase().trim();
+  const qUpper = query.toUpperCase().trim();
+  const qTitle = query.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+
+  const result = await docClient.send(new QueryCommand({
+    TableName: TABLE_NAME,
+    IndexName: 'GSI1',
+    KeyConditionExpression: 'GSI1PK = :pk',
+    FilterExpression: 'contains(#name, :qLower) OR contains(#name, :qUpper) OR contains(#name, :qTitle) OR contains(email, :qLower) OR contains(email, :qUpper) OR contains(#role, :qLower) OR contains(#role, :qUpper) OR contains(#role, :qTitle)',
+    ExpressionAttributeNames: {
+      '#name': 'name',
+      '#role': 'role'
+    },
+    ExpressionAttributeValues: { 
+      ':pk': 'ENTITY#STAFF',
+      ':qLower': qLower,
+      ':qUpper': qUpper,
+      ':qTitle': qTitle
+    },
+    Limit: limit,
+    ScanIndexForward: false,
+  }));
+  return (result.Items || []).map(fromItem);
+}
+
 async function updateStaff(id, updates) {
   const allowedFields = ['name', 'phone', 'role', 'department', 'status', 'shift', 'cognitoStatus'];
   const filteredUpdates = {};
@@ -138,5 +166,6 @@ module.exports = {
   createStaff,
   getStaffById,
   getAllStaff,
+  searchStaff,
   updateStaff,
 };

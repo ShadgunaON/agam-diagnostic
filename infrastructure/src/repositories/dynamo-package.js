@@ -66,6 +66,32 @@ class DynamoPackageRepository {
     return items.map((item) => this._mapFromDb(item));
   }
 
+  async search(query, limit = 12) {
+    if (!query || !query.trim()) return [];
+    
+    const qLower = query.toLowerCase().trim();
+    const qUpper = query.toUpperCase().trim();
+    const qTitle = query.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+
+    const params = {
+      TableName: TABLE_NAME,
+      IndexName: 'GSI1',
+      KeyConditionExpression: 'GSI1PK = :pk',
+      FilterExpression: 'contains(title, :qLower) OR contains(title, :qUpper) OR contains(title, :qTitle) OR contains(slug, :qLower) OR contains(category, :qLower) OR contains(category, :qUpper) OR contains(category, :qTitle)',
+      ExpressionAttributeValues: {
+        ':pk': 'PACKAGES#catalog',
+        ':qLower': qLower,
+        ':qUpper': qUpper,
+        ':qTitle': qTitle
+      },
+      ScanIndexForward: false,
+      Limit: limit
+    };
+    
+    const { Items } = await docClient.send(new QueryCommand(params));
+    return (Items || []).map(item => this._mapFromDb(item));
+  }
+
   async getCategories() {
     const items = await this.getCatalog();
     const seen = new Set();

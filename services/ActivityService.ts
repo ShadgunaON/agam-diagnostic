@@ -1,9 +1,10 @@
-import { IActivityRepository } from '@/domains/activity/repository';
+import { ActivityRecordModel } from '@/domains/activity/model';
+import { Result, failure } from '@/shared/result';
 
 export class ActivityService {
-  constructor(private readonly repository: IActivityRepository) {}
+  constructor() {}
 
-  async getAll() {
-    return this.repository.getAll();
+  async getAll(): Promise<Result<ActivityRecordModel[]>> {
+    return failure(new Error('Not implemented'));
   }
 }

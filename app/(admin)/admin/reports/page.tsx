@@ -4,9 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { useToast } from '@/components/admin/feedback/Toast';
-import { reportsService, bookingService } from '@/services';
+import { reportsService } from '@/services';
 import { ReportTaskModel } from '@/domains/reports/model';
-import { BookingModel } from '@/domains/booking/model';
 import { useRBAC } from '@/hooks/useRBAC';
 import { ReportPreviewModal } from '@/components/shared/ReportPreviewModal';
 
@@ -19,42 +18,59 @@ export default function ClinicalReportsWorkspace() {
   const [activeReportId, setActiveReportId] = useState<string | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [sortKey, setSortKey] = useState('date_oldest');
-  const [allBookings, setAllBookings] = useState<BookingModel[]>([]);
+  
+  // Pagination & Filter State
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [cursorHistory, setCursorHistory] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [pendingCount, setPendingCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+
   const { hasPermission } = useRBAC();
   const canEditReports = hasPermission('reports', 'edit');
 
+  const fetchWorkspace = async (cursor: string | null = null, isNavigatingBack = false) => {
+    setIsLoading(true);
+    const res = await reportsService.getAdminWorkspace(20, cursor, statusFilter, sortKey, searchQuery);
+    setIsLoading(false);
+    
+    if (res.isSuccess) {
+      setReports(res.value.queue);
+      setNextCursor(res.value.nextCursor);
+      setPendingCount(res.value.pendingCount);
+      
+      if (!activeReportId && res.value.queue.length > 0) {
+        setActiveReportId(res.value.queue[0].id);
+      }
+      
+      if (cursor && !isNavigatingBack) {
+        setCursorHistory(prev => [...prev, cursor]);
+      }
+    } else {
+      error('Error', 'Failed to load reports workspace');
+    }
+  };
+
   useEffect(() => {
     setMounted(true);
-    const loadReports = async () => {
-      const [repRes, bookRes] = await Promise.all([
-        reportsService.getAllTasks(),
-        bookingService.getAll()
-      ]);
-      
-      if (bookRes.isSuccess && bookRes.value) {
-        setAllBookings(bookRes.value);
-      }
-
-      if (repRes.isSuccess && repRes.value) {
-        setReports(repRes.value);
-        if (repRes.value.length > 0) {
-          setActiveReportId(repRes.value[0].id);
-        }
-      }
-    };
-    loadReports();
   }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    setCursorHistory([]);
+    fetchWorkspace(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted, sortKey, statusFilter, searchQuery]);
 
   if (!mounted) return null;
 
   const activeReport = reports.find(r => r.id === activeReportId);
-  const pendingCount = reports.filter(r => ['Awaiting Verification', 'Processing', 'Generated'].includes(r.status)).length;
 
   const handleAdvanceStatus = async (reportId: string, nextStatus: ReportTaskModel['status']) => {
     const result = await reportsService.updateStatus(reportId, nextStatus);
     if (result.isSuccess) {
-      const updated = await reportsService.getAllTasks();
-      if (updated.isSuccess && updated.value) setReports(updated.value);
+      fetchWorkspace(null); // Refresh workspace to respect filters/sorts from server
       success('Status Updated', `Report ${reportId} advanced to ${nextStatus}.`);
       
       if (nextStatus === 'Published') {
@@ -100,41 +116,70 @@ export default function ClinicalReportsWorkspace() {
 
             {/* Queue List */}
             <div className="flex flex-col gap-3 overflow-y-auto flex-1 pr-1">
-              {[...reports].sort((a, b) => {
-                const bkA = allBookings.find(bk => bk.id === a.bookingId);
-                const bkB = allBookings.find(bk => bk.id === b.bookingId);
-                const timeA = bkA ? new Date(bkA.createdAt).getTime() : 0;
-                const timeB = bkB ? new Date(bkB.createdAt).getTime() : 0;
-                return sortKey === 'date_newest' ? timeB - timeA : timeA - timeB;
-              }).map((report) => (
-                <div 
-                  key={report.id}
-                  onClick={() => setActiveReportId(report.id)}
-                  className={`p-4 rounded-xl cursor-pointer transition-all duration-200 ${
-                    activeReportId === report.id 
-                      ? 'bg-slate-50 border-2 border-blue-500 shadow-[0_4px_12px_rgba(59,130,246,0.1)]' 
-                      : 'bg-white border border-slate-200 shadow-sm'
-                  }`}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', fontFamily: 'monospace' }}>{report.id}</span>
-                    {report.priority === 'STAT' && (
-                      <span style={{ fontSize: '10px', fontWeight: 800, color: '#ef4444', backgroundColor: '#fef2f2', padding: '2px 6px', borderRadius: '4px' }}>STAT</span>
-                    )}
+              {isLoading ? (
+                <div className="flex justify-center items-center h-20 text-sm text-slate-500 font-medium">Loading reports...</div>
+              ) : reports.length === 0 ? (
+                <div className="flex justify-center items-center h-20 text-sm text-slate-500 font-medium">No reports found.</div>
+              ) : (
+                reports.map((report) => (
+                  <div 
+                    key={report.id}
+                    onClick={() => setActiveReportId(report.id)}
+                    className={`p-4 rounded-xl cursor-pointer transition-all duration-200 ${
+                      activeReportId === report.id 
+                        ? 'bg-slate-50 border-2 border-blue-500 shadow-[0_4px_12px_rgba(59,130,246,0.1)]' 
+                        : 'bg-white border border-slate-200 shadow-sm'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', fontFamily: 'monospace' }}>{report.id}</span>
+                      {report.priority === 'STAT' && (
+                        <span style={{ fontSize: '10px', fontWeight: 800, color: '#ef4444', backgroundColor: '#fef2f2', padding: '2px 6px', borderRadius: '4px' }}>STAT</span>
+                      )}
+                    </div>
+                    <h3 className="text-[14px] font-bold text-slate-900 mb-1">{report.patient.name}</h3>
+                    <p className="text-[13px] font-medium text-slate-600 mb-3">{report.testType}</p>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-[12px] font-medium text-slate-400">{report.time}</span>
+                      {report.status === 'Published' ? (
+                         <AdminIcon name="check" strokeWidth={2.5} style={{ width: '16px', height: '16px', color: '#10b981' }} />
+                      ) : (
+                         <span style={{ fontSize: '11px', fontWeight: 700, color: '#f59e0b', backgroundColor: '#fffbeb', padding: '4px 8px', borderRadius: '4px' }}>{report.status}</span>
+                      )}
+                    </div>
                   </div>
-                  <h3 className="text-[14px] font-bold text-slate-900 mb-1">{report.patient.name}</h3>
-                  <p className="text-[13px] font-medium text-slate-600 mb-3">{report.testType}</p>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-[12px] font-medium text-slate-400">{report.time}</span>
-                    {report.status === 'Published' ? (
-                       <AdminIcon name="check" strokeWidth={2.5} style={{ width: '16px', height: '16px', color: '#10b981' }} />
-                    ) : (
-                       <span style={{ fontSize: '11px', fontWeight: 700, color: '#f59e0b', backgroundColor: '#fffbeb', padding: '4px 8px', borderRadius: '4px' }}>{report.status}</span>
-                    )}
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="flex justify-between items-center pt-2 border-t border-slate-200 mt-2">
+              <button
+                disabled={cursorHistory.length === 0}
+                onClick={() => {
+                  const newHistory = [...cursorHistory];
+                  newHistory.pop();
+                  const prevCursor = newHistory.length > 0 ? newHistory[newHistory.length - 1] : null;
+                  setCursorHistory(newHistory);
+                  fetchWorkspace(prevCursor, true);
+                }}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+                  cursorHistory.length === 0 ? 'text-slate-400 bg-slate-50 cursor-not-allowed' : 'text-blue-600 bg-blue-50 hover:bg-blue-100'
+                }`}
+              >
+                Previous
+              </button>
+              
+              <button
+                disabled={!nextCursor}
+                onClick={() => fetchWorkspace(nextCursor)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+                  !nextCursor ? 'text-slate-400 bg-slate-50 cursor-not-allowed' : 'text-blue-600 bg-blue-50 hover:bg-blue-100'
+                }`}
+              >
+                Next
+              </button>
             </div>
           </div>
 

@@ -24,7 +24,13 @@ export default function PatientsPage() {
   const [genderFilter, setGenderFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortBy, setSortBy] = useState('newest');
-  const [kpis, setKpis] = useState({ totalPatients: 0, newThisMonth: 0, activeBookings: 0, retentionRate: 0 });
+  const [kpis, setKpis] = useState<{
+    totalPatients: number;
+    newThisMonth: number;
+    activeBookings: number;
+    retentionRate: null;
+    retentionRateAvailable: false;
+  }>({ totalPatients: 0, newThisMonth: 0, activeBookings: 0, retentionRate: null, retentionRateAvailable: false });
   
   const [patients, setPatients] = useState<PatientModel[]>([]);
 
@@ -155,7 +161,6 @@ export default function PatientsPage() {
         title="Total Patients" 
         value={kpis.totalPatients.toLocaleString()} 
         icon="users"
-        trend={{ value: 4.2, isPositive: true, label: 'vs last month' }}
         iconBgColor="bg-blue-50"
         iconColor="text-blue-500"
       />
@@ -163,7 +168,6 @@ export default function PatientsPage() {
         title="New This Month" 
         value={kpis.newThisMonth.toLocaleString()} 
         icon="userPlus"
-        trend={{ value: 12, isPositive: true, label: 'vs last month' }}
         iconBgColor="bg-emerald-50"
         iconColor="text-emerald-500"
       />
@@ -171,15 +175,14 @@ export default function PatientsPage() {
         title="Active Bookings" 
         value={kpis.activeBookings.toLocaleString()} 
         icon="calendar"
-        trend={{ value: 2, isPositive: false, label: 'needs attention' }}
         iconBgColor="bg-amber-50"
         iconColor="text-amber-500"
       />
       <KPICard 
         title="Retention Rate" 
-        value={`${kpis.retentionRate}%`} 
+        value="N/A"
         icon="activity"
-        trend={{ value: 1.5, isPositive: true, label: 'vs last year' }}
+        subtitle="Requires a product-level definition"
         iconBgColor="bg-rose-50"
         iconColor="text-rose-500"
       />

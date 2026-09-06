@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
 
@@ -26,47 +26,93 @@ const getStatusColor = (status: string) => {
   return { bg: 'rgba(226, 232, 240, 0.5)', text: '#475569', dot: '#94a3b8' };
 };
 
+// Map display tab → GraphQL tab argument
+const TAB_MAP: Record<string, string> = {
+  'All': 'All',
+  'Pending': 'All',       // status filter handles Pending
+  'Home Collection': 'HOME',
+  'Lab Visit': 'LAB',
+};
+
 export default function GlassBookingsPage() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState('All');
   const [sortKey, setSortKey] = useState('date_newest');
   const [bookings, setBookings] = useState<BookingModel[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [errorState, setErrorState] = useState<'none' | '401' | '403' | '500'>('none');
   const [isLoading, setIsLoading] = useState(true);
-  
+  const [cursorStack, setCursorStack] = useState<string[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+
   const { scope, isAdmin } = useRBAC();
   const { user } = useAuth();
 
-  useEffect(() => { 
-    setMounted(true); 
-    const loadBookings = async () => {
-      try {
-        const result = await bookingService.getAll();
-        if (result.isSuccess) {
-          setBookings(result.value);
-        } else {
-          const status = (result.error as any)?.status;
-          if (status === 401 || result.error?.message?.includes('401')) {
-            setErrorState('401');
-          } else if (status === 403 || result.error?.message?.includes('403') || result.error?.message?.includes('Forbidden')) {
-            setErrorState('403');
-          } else {
-            setErrorState('500');
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load bookings", err);
-        setErrorState('500');
-      } finally {
-        setIsLoading(false);
+  // Debounce search input — prevents per-keystroke server requests
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(searchQuery), 500);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCursorStack([]);
+  }, [debouncedSearch, activeTab, sortKey]);
+
+  const loadBookings = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const tab = TAB_MAP[activeTab] || 'All';
+      const status = activeTab === 'Pending' ? 'Pending' : 'All';
+      const currentCursor = cursorStack.length > 0 ? cursorStack[cursorStack.length - 1] : null;
+
+      const result = await bookingService.getAdminWorkspace({
+        limit: 20,
+        cursor: currentCursor,
+        status,
+        tab,
+        sort: sortKey,
+        search: debouncedSearch,
+      });
+
+      if (result.isSuccess) {
+        setBookings(result.value.queue);
+        setNextCursor(result.value.nextCursor);
+        setErrorState('none');
+      } else {
+        const msg = result.error?.message || '';
+        if (msg.includes('401')) setErrorState('401');
+        else if (msg.includes('403') || msg.includes('Access denied')) setErrorState('403');
+        else setErrorState('500');
       }
-    };
-    loadBookings();
+    } catch (err) {
+      console.error('Failed to load bookings', err);
+      setErrorState('500');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeTab, sortKey, debouncedSearch, cursorStack]);
+
+  useEffect(() => {
+    setMounted(true);
   }, []);
-  
+
+  useEffect(() => {
+    if (mounted) loadBookings();
+  }, [mounted, loadBookings]);
+
   if (!mounted) return null;
 
+  const handleNextPage = () => {
+    if (nextCursor) setCursorStack(prev => [...prev, nextCursor]);
+  };
+
+  const handlePrevPage = () => {
+    setCursorStack(prev => prev.slice(0, -1));
+  };
+
+  // Client-side RBAC scope filter (phlebotomist sees only their assignments)
   const filteredBookings = (bookings || []).filter(b => {
     if (!b) return false;
     if (isAdmin || !scope) return true;
@@ -76,6 +122,8 @@ export default function GlassBookingsPage() {
     }
     return true;
   });
+
+  const currentPage = cursorStack.length + 1;
 
   return (
     <AdminPageTemplate>
@@ -131,10 +179,8 @@ export default function GlassBookingsPage() {
               onChange={(e) => setSortKey(e.target.value)}
               className="h-10 px-4 rounded-lg border border-slate-200/80 bg-white/50 text-sm font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20 w-full sm:w-auto"
             >
-              <option value="date_oldest">Date (Oldest First)</option>
               <option value="date_newest">Date (Newest First)</option>
-              <option value="amount_high">Amount (High to Low)</option>
-              <option value="amount_low">Amount (Low to High)</option>
+              <option value="date_oldest">Date (Oldest First)</option>
             </select>
             <div className="relative w-full sm:w-[260px] lg:w-[320px]">
               <AdminIcon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -180,7 +226,7 @@ export default function GlassBookingsPage() {
             ) : errorState === '500' ? (
               <div style={{ textAlign: 'center', padding: '48px 24px', color: '#64748b' }}>
                 <p style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>Unable to load bookings. Please try again.</p>
-                <button onClick={() => window.location.reload()} className="px-4 py-2 bg-slate-100 rounded-lg text-sm font-semibold hover:bg-slate-200">Retry</button>
+                <button onClick={() => loadBookings()} className="px-4 py-2 bg-slate-100 rounded-lg text-sm font-semibold hover:bg-slate-200">Retry</button>
               </div>
             ) : filteredBookings.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '48px 24px', color: '#64748b' }}>
@@ -191,28 +237,7 @@ export default function GlassBookingsPage() {
                 <p style={{ fontSize: '14px', marginTop: '4px' }}>Try adjusting your filters or search query.</p>
               </div>
             ) : (
-              filteredBookings
-                .filter(b => activeTab === 'All' || b.status === activeTab || b.collection?.type === activeTab)
-                .filter(b => {
-                  if (!searchQuery) return true;
-                  const query = searchQuery.toLowerCase();
-                  return (b.id || '').toLowerCase().includes(query) || 
-                         (b.patient?.name || '').toLowerCase().includes(query) || 
-                         (b.patient?.phone || '').includes(query);
-                })
-                .sort((a, b) => {
-                  if (sortKey === 'date_newest') {
-                    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-                  } else if (sortKey === 'date_oldest') {
-                    return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
-                  } else if (sortKey === 'amount_high') {
-                    return (b.payment?.total || 0) - (a.payment?.total || 0);
-                  } else if (sortKey === 'amount_low') {
-                    return (a.payment?.total || 0) - (b.payment?.total || 0);
-                  }
-                  return 0;
-                })
-                .map((booking) => {
+              filteredBookings.map((booking) => {
                 const statusTheme = getStatusColor(booking.status || 'Pending');
                 const isHome = booking.collection?.type === 'Home Collection';
                 return (
@@ -265,6 +290,27 @@ export default function GlassBookingsPage() {
               })
             )}
           </div>
+
+          {/* Pagination Controls */}
+          {!isLoading && errorState === 'none' && (cursorStack.length > 0 || nextCursor) && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid rgba(226, 232, 240, 0.5)' }}>
+              <button
+                onClick={handlePrevPage}
+                disabled={cursorStack.length === 0}
+                style={{ height: '36px', padding: '0 16px', borderRadius: '10px', border: '1px solid rgba(226,232,240,0.8)', background: cursorStack.length === 0 ? 'rgba(241,245,249,0.5)' : 'rgba(255,255,255,0.8)', color: cursorStack.length === 0 ? '#94a3b8' : '#0f172a', fontWeight: 700, fontSize: '13px', cursor: cursorStack.length === 0 ? 'default' : 'pointer' }}
+              >
+                ← Previous
+              </button>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>Page {currentPage}</span>
+              <button
+                onClick={handleNextPage}
+                disabled={!nextCursor}
+                style={{ height: '36px', padding: '0 16px', borderRadius: '10px', border: '1px solid rgba(226,232,240,0.8)', background: !nextCursor ? 'rgba(241,245,249,0.5)' : 'rgba(255,255,255,0.8)', color: !nextCursor ? '#94a3b8' : '#0f172a', fontWeight: 700, fontSize: '13px', cursor: !nextCursor ? 'default' : 'pointer' }}
+              >
+                Next →
+              </button>
+            </div>
+          )}
 
         </div>
       </div>

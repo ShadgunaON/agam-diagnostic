@@ -137,8 +137,30 @@ export class MockReviewRepository implements IReviewRepository {
   }
 
   async getAll(): Promise<Result<ReviewModel[]>> {
-    const reviews = await this.getReviews();
-    return success(reviews.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    const reviews = await this.adapter.load();
+    return success(reviews || []);
+  }
+
+  async getPaginated(params: { limit?: number; cursor?: string | null; status?: string; rating?: number | string; search?: string }): Promise<Result<{ data: ReviewModel[]; nextCursor: string | null }>> {
+    const reviews = (await this.adapter.load()) || [];
+    let filtered = [...reviews].sort((a: ReviewModel, b: ReviewModel) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    
+    if (params.status && params.status !== 'All') {
+      filtered = filtered.filter(i => i.status === params.status);
+    }
+    if (params.rating && params.rating !== 'All') {
+      filtered = filtered.filter(i => i.rating === Number(params.rating));
+    }
+    if (params.search) {
+      const q = params.search.toLowerCase();
+      filtered = filtered.filter(i => i.id?.toLowerCase().includes(q) || i.displayName?.toLowerCase().includes(q) || i.comment?.toLowerCase().includes(q));
+    }
+    const limit = params.limit || 20;
+    const startIndex = params.cursor ? parseInt(params.cursor, 10) : 0;
+    const endIndex = startIndex + limit;
+    const data = filtered.slice(startIndex, endIndex);
+    const nextCursor = endIndex < filtered.length ? endIndex.toString() : null;
+    return success({ data, nextCursor });
   }
 
   async updateStatus(id: string, status: ReviewStatus): Promise<Result<ReviewModel>> {

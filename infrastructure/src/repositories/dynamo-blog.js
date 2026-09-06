@@ -81,6 +81,37 @@ class DynamoBlogRepository {
     return combined.slice(0, limit);
   }
 
+  async search(query, limit = 12) {
+    if (!query || !query.trim()) return [];
+    
+    const qLower = query.toLowerCase().trim();
+    const qUpper = query.toUpperCase().trim();
+    const qTitle = query.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+
+    const buildParams = (status) => ({
+      TableName: TABLE_NAME,
+      IndexName: 'GSI1',
+      KeyConditionExpression: 'GSI1PK = :statusPk',
+      FilterExpression: 'contains(title, :qLower) OR contains(title, :qUpper) OR contains(title, :qTitle) OR contains(slug, :qLower) OR contains(author, :qLower) OR contains(author, :qUpper) OR contains(author, :qTitle)',
+      ExpressionAttributeValues: {
+        ':statusPk': `BLOGS#${status}`,
+        ':qLower': qLower,
+        ':qUpper': qUpper,
+        ':qTitle': qTitle
+      },
+      ScanIndexForward: false,
+      Limit: limit,
+    });
+
+    const [published, drafts] = await Promise.all([
+      docClient.send(new QueryCommand(buildParams('Published'))),
+      docClient.send(new QueryCommand(buildParams('Draft')))
+    ]);
+
+    const combined = [...(published.Items || []), ...(drafts.Items || [])].map(i => this._mapFromDb(i));
+    return combined.slice(0, limit);
+  }
+
   async create(articleData) {
     const now = new Date().toISOString();
     const id = articleData.id || `BLOG-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;

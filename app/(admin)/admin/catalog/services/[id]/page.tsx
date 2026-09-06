@@ -53,10 +53,32 @@ export default function EditServicePage() {
 
   const loadService = async () => {
     try {
-      const res = await serviceCatalogService.getById(id);
-      if (res.isSuccess) {
-        setFormData(res.value);
-        setFaqs(res.value.faqs || []);
+      const token = sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '';
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          query: `
+            query ServiceById($id: ID!) {
+              serviceById(id: $id) {
+                id title slug category description shortDescription price basePrice salePrice status sortOrder estimatedDuration homeAvailable labAvailable faqs { question answer }
+              }
+            }
+          `,
+          variables: { id }
+        })
+      });
+
+      const json = await response.json();
+      if (json.errors) throw new Error(json.errors[0]?.message || 'GraphQL error');
+      
+      const svc = json.data?.serviceById;
+      if (svc) {
+        setFormData(svc);
+        setFaqs(svc.faqs || []);
       } else {
         toast.error('Error', 'Service not found');
         router.push('/admin/catalog');

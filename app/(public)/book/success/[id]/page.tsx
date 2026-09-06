@@ -22,14 +22,13 @@ export default function BookingSuccessPage() {
     
     const fetchBooking = async () => {
       try {
-        const result = await bookingService.getById(id);
+        const result = await bookingService.getByIdGql(id);
         if (result.isSuccess) {
           setBooking(result.value);
           
-          const invResult = await invoiceService.getAll();
-          if (invResult.isSuccess) {
-            const foundInv = invResult.value.find(i => i.bookingId === result.value.id);
-            if (foundInv) setInvoice(foundInv);
+          if (result.value.invoiceId) {
+            const invResult = await invoiceService.getByIdGql(result.value.invoiceId);
+            if (invResult.isSuccess && invResult.value) setInvoice(invResult.value);
           }
         } else {
           setBooking(null);

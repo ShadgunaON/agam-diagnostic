@@ -1,53 +1,152 @@
-import { IServicesRepository } from '@/domains/services/repository';
+import { Result, success, failure } from '@/shared/result';
+import { ServiceItem, ServicesHero, ServiceDetailData } from '@/domains/services/model';
+import { PaginatedResponse } from '@/lib/api/types';
 
 export class ServiceCatalogService {
-  constructor(private readonly repository: IServicesRepository) {}
+  constructor() {}
 
-  async getCatalog(page = 1, limit = 10) {
-    return this.repository.getCatalog(page, limit);
-  }
-
-  async getServiceBySlug(slug: string) {
-    return this.repository.getServiceBySlug(slug);
-  }
-
-  async getHeroData() {
-    return this.repository.getHeroData();
-  }
-
-  // Admin CRUD methods
-  async getById(id: string) {
-    if (this.repository.getById) {
-      return this.repository.getById(id);
+  private async _graphqlFetch<T>(query: string, variables?: Record<string, unknown>): Promise<T | null> {
+    try {
+      const token = typeof window !== 'undefined'
+        ? (sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '')
+        : '';
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ query, variables }),
+      });
+      if (!response.ok) return null;
+      const { data, errors } = await response.json();
+      if (errors?.length) { 
+        console.error('GraphQL errors:', errors); 
+        throw new Error(errors[0].message);
+      }
+      return data as T;
+    } catch (err) {
+      console.error('GraphQL fetch failed:', err);
+      throw err;
     }
-    throw new Error('Method not implemented in repository');
   }
 
-  async create(serviceData: any) {
-    if (this.repository.create) {
-      return this.repository.create(serviceData);
+  async getCatalog(page = 1, limit = 100): Promise<Result<PaginatedResponse<ServiceItem>>> {
+    try {
+      const res = await this._graphqlFetch<{ catalogServices: PaginatedResponse<ServiceItem> }>(
+        `query CatalogServices($page: Int, $limit: Int) {
+          catalogServices(page: $page, limit: $limit) {
+            data {
+              id slug title category tag price discountPrice description duration preparation status createdAt updatedAt
+            }
+            meta { total page limit totalPages }
+          }
+        }`,
+        { page, limit }
+      );
+      return success(res!.catalogServices);
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Failed to get service catalog'));
     }
-    throw new Error('Method not implemented in repository');
   }
 
-  async update(id: string, serviceData: any) {
-    if (this.repository.update) {
-      return this.repository.update(id, serviceData);
+  async getServiceBySlug(slug: string): Promise<Result<ServiceDetailData>> {
+    try {
+      const res = await this._graphqlFetch<{ serviceBySlug: ServiceDetailData }>(
+        `query ServiceBySlug($slug: String!) {
+          serviceBySlug(slug: $slug) {
+            id slug title category tag price discountPrice description duration preparation status createdAt updatedAt
+            faqs { question answer }
+          }
+        }`,
+        { slug }
+      );
+      if (!res?.serviceBySlug) return failure(new Error('Service not found'));
+      return success(res.serviceBySlug);
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Failed to get service'));
     }
-    throw new Error('Method not implemented in repository');
   }
 
-  async updateStatus(id: string, status: 'DRAFT' | 'ACTIVE' | 'INACTIVE') {
-    if (this.repository.updateStatus) {
-      return this.repository.updateStatus(id, status);
-    }
-    throw new Error('Method not implemented in repository');
+  async getHeroData(): Promise<Result<ServicesHero>> {
+    return success({
+      title: 'Our Services',
+      description: 'Comprehensive healthcare services tailored to your needs. From diagnostic imaging to specialized consultations.',
+      image: '/images/hero_services_visual.png',
+    });
   }
 
-  async delete(id: string) {
-    if (this.repository.delete) {
-      return this.repository.delete(id);
+  async getById(id: string): Promise<Result<ServiceItem>> {
+    try {
+      const res = await this._graphqlFetch<{ serviceById: ServiceItem }>(
+        `query ServiceById($id: ID!) {
+          serviceById(id: $id) {
+            id slug title category tag price discountPrice description duration preparation status createdAt updatedAt
+            faqs { question answer }
+          }
+        }`,
+        { id }
+      );
+      if (!res?.serviceById) return failure(new Error('Service not found'));
+      return success(res.serviceById);
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Failed to get service'));
     }
-    throw new Error('Method not implemented in repository');
+  }
+
+  async create(serviceData: any): Promise<Result<ServiceItem>> {
+    try {
+      const res = await this._graphqlFetch<{ createCatalogService: ServiceItem }>(
+        `mutation CreateCatalogService($input: AWSJSON!) {
+          createCatalogService(input: $input) { id slug title status }
+        }`,
+        { input: serviceData }
+      );
+      return success(res!.createCatalogService);
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Failed to create service'));
+    }
+  }
+
+  async update(id: string, serviceData: any): Promise<Result<ServiceItem>> {
+    try {
+      const res = await this._graphqlFetch<{ updateCatalogService: ServiceItem }>(
+        `mutation UpdateCatalogService($id: ID!, $input: AWSJSON!) {
+          updateCatalogService(id: $id, input: $input) { id slug title status }
+        }`,
+        { id, input: serviceData }
+      );
+      return success(res!.updateCatalogService);
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Failed to update service'));
+    }
+  }
+
+  async updateStatus(id: string, status: 'DRAFT' | 'ACTIVE' | 'INACTIVE'): Promise<Result<void>> {
+    try {
+      await this._graphqlFetch(
+        `mutation UpdateCatalogServiceStatus($id: ID!, $status: String!) {
+          updateCatalogServiceStatus(id: $id, status: $status)
+        }`,
+        { id, status }
+      );
+      return success(undefined);
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Failed to update status'));
+    }
+  }
+
+  async delete(id: string): Promise<Result<void>> {
+    try {
+      await this._graphqlFetch(
+        `mutation DeleteCatalogService($id: ID!) {
+          deleteCatalogService(id: $id)
+        }`,
+        { id }
+      );
+      return success(undefined);
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Failed to delete service'));
+    }
   }
 }

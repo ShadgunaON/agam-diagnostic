@@ -20,17 +20,20 @@ export default function CollectionsPage() {
   // Determine default tab based on scope
   const defaultTab: 'HOME' | 'LAB' = scope === 'in_lab' ? 'LAB' : 'HOME';
 
-  // STATE — all from services, never page-local mock arrays
+  // STATE
   const [tasks, setTasks] = useState<CollectionTaskModel[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [cursorHistory, setCursorHistory] = useState<string[]>([]);
+  const [stats, setStats] = useState({ totalTasks: 0, completedTasks: 0, enRouteTasks: 0, unassignedTasks: 0 });
+  const [searchQuery, setSearchQuery] = useState('');
+  
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'HOME' | 'LAB'>(defaultTab);
   const [sortKey, setSortKey] = useState('date_oldest');
+  
   const [activeInvoice, setActiveInvoice] = useState<InvoiceModel | null>(null);
   const [activeReport, setActiveReport] = useState<any>(null);
   const [activeBooking, setActiveBooking] = useState<any>(null);
-  const [allReports, setAllReports] = useState<any[]>([]);
-  const [allBookings, setAllBookings] = useState<any[]>([]);
-  const [allInvoices, setAllInvoices] = useState<any[]>([]);
   const [phlebotomists, setPhlebotomists] = useState<StaffModel[]>([]);
   
   const { toast } = useToast();
@@ -53,90 +56,158 @@ export default function CollectionsPage() {
   const [newAddress, setNewAddress] = useState('');
   const [newTime, setNewTime] = useState('');
 
-  // Load tasks and staff from services
-  React.useEffect(() => {
+  const fetchWorkspace = async (cursor: string | null = null, isNavigatingBack = false) => {
     loadTasks(async () => {
-      const [colRes, staffRes, rolesRes] = await Promise.all([
-        collectionService.getAll(),
-        staffService.getAllStaff(),
-        staffService.getAllRoles()
-      ]);
-      
-      if (colRes.isSuccess && colRes.value.length > 0) {
-        setTasks(colRes.value);
-        const homeTasks = colRes.value.filter(t => t.type !== 'Lab Visit');
-        if (!activeTaskId && homeTasks.length > 0) {
-          setActiveTaskId(homeTasks[1]?.id || homeTasks[0]?.id);
-        }
-      }
+      try {
+        const token = sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '';
+        const response = await fetch('/api/graphql', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({
+            query: `
+              query AdminCollectionsWorkspace($limit: Int, $cursor: String, $tab: String, $sort: String, $search: String) {
+                adminCollectionsWorkspace(limit: $limit, cursor: $cursor, tab: $tab, sort: $sort, search: $search) {
+                  queue {
+                    items {
+                      id date time status patient address bookingId assignedTo phlebotomistId type lat lng tests
+                    }
+                    nextCursor
+                  }
+                  stats { totalTasks completedTasks enRouteTasks unassignedTasks }
+                  phlebotomists { id name role status }
+                }
+              }
+            `,
+            variables: { limit: 20, cursor, tab: activeTab, sort: sortKey, search: searchQuery }
+          })
+        });
 
-      if (staffRes.isSuccess && staffRes.value && rolesRes.isSuccess && rolesRes.value) {
-        // STRICT Eligibility: Only allow staff with explicitly phlebotomist roles
-        const matched = staffRes.value.filter((s: StaffModel) => 
-          s.role.toLowerCase() === 'phleb' || s.role.toLowerCase() === 'phleb_home'
-        );
+        const json = await response.json();
+        if (json.errors) throw new Error(json.errors[0]?.message || 'GraphQL error');
         
-        // Only include staff who are actively 'On Duty' (Available)
-        setPhlebotomists(matched.filter(s => s.status === 'On Duty'));
+        const data = json.data?.adminCollectionsWorkspace;
+        if (data) {
+          setTasks(data.queue.items || []);
+          setNextCursor(data.queue.nextCursor || null);
+          setStats(data.stats || { totalTasks: 0, completedTasks: 0, enRouteTasks: 0, unassignedTasks: 0 });
+          setPhlebotomists(data.phlebotomists || []);
+          
+          if (!activeTaskId && data.queue.items && data.queue.items.length > 0) {
+            setActiveTaskId(data.queue.items[0].id);
+          }
+          
+          if (cursor && !isNavigatingBack) {
+            setCursorHistory(prev => [...prev, cursor]);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load workspace', err);
       }
-
-      import('@/services').then(async ({ reportsService, bookingService }) => {
-        const [repRes, bookRes, invRes] = await Promise.all([
-          reportsService.getAllTasks(),
-          bookingService.getAll(),
-          invoiceService.getAll()
-        ]);
-        if (repRes.isSuccess) setAllReports(repRes.value);
-        if (bookRes.isSuccess) setAllBookings(bookRes.value);
-        if (invRes.isSuccess) setAllInvoices(invRes.value);
-      });
     });
-  }, [loadTasks]);
+  };
 
-  // Filter tasks based on RBAC scope and assignment
+  React.useEffect(() => {
+    setCursorHistory([]);
+    fetchWorkspace(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, sortKey, searchQuery]);
+
+  // Filter tasks based on RBAC scope
   const filteredTasks = tasks.filter(task => {
     if (isAdmin || !scope) return true;
-    
-    // For Home Collection agents, only show their explicitly assigned tasks and NO lab visits
     if (scope === 'home_collection') {
       if (task.type !== 'Home Collection') return false;
       return task.phlebotomistId === user?.staffId;
     }
-    
-    // For In-Lab techs, show all tasks (both Home Collections and Lab Visits)
-    // because they process all collected samples and generate reports.
-    if (scope === 'in_lab') {
-      return true; 
-    }
-    
+    if (scope === 'in_lab') return true; 
     return false;
   });
 
   const homeTasks = filteredTasks.filter(t => t.type !== 'Lab Visit');
   const labTasks = filteredTasks.filter(t => t.type === 'Lab Visit');
-  const activeTask = filteredTasks.find(t => t.id === activeTaskId) || homeTasks[0];
+  const activeTask = filteredTasks.find(t => t.id === activeTaskId) || filteredTasks[0];
 
-  // Fetch invoice, report, and booking for active task
+  // Fetch invoice, report, and booking for active task lazily
   React.useEffect(() => {
     const fetchRelatedEntities = async () => {
       if (activeTask?.bookingId) {
-        import('@/services').then(async ({ reportsService, bookingService }) => {
-          const invRes = await invoiceService.getAll();
-          if (invRes.isSuccess) {
-            const inv = invRes.value.find(i => i.bookingId === activeTask.bookingId);
-            setActiveInvoice(inv || null);
-          } else setActiveInvoice(null);
-
-          const repRes = await reportsService.getAllTasks();
-          if (repRes.isSuccess) {
-            const rep = repRes.value.find(r => r.bookingId === activeTask.bookingId);
-            setActiveReport(rep || null);
-          } else setActiveReport(null);
-
-          const bookRes = await bookingService.getById(activeTask.bookingId!);
-          if (bookRes.isSuccess) setActiveBooking(bookRes.value);
-          else setActiveBooking(null);
-        });
+        try {
+          const token = sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '';
+          
+          // 1. Fetch booking details
+          const bookResponse = await fetch('/api/graphql', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({
+              query: `
+                query BookingDetails($id: ID!) {
+                  bookingById(id: $id) {
+                    id status patientId invoiceId
+                  }
+                }
+              `,
+              variables: { id: activeTask.bookingId }
+            })
+          });
+          const bookJson = await bookResponse.json();
+          const booking = bookJson.data?.bookingById;
+          
+          if (booking) {
+            setActiveBooking(booking);
+            
+            // 2. Fetch invoice and reports
+            const depsQuery = `
+              query PatientDeps($patientId: ID!, $invoiceId: ID) {
+                patient(id: $patientId) {
+                  reports { id bookingId status }
+                  invoices { id bookingId paymentStatus }
+                }
+                ${booking.invoiceId ? `invoiceById(id: $invoiceId) { id paymentStatus }` : ''}
+              }
+            `;
+            const depsResponse = await fetch('/api/graphql', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {})
+              },
+              body: JSON.stringify({
+                query: depsQuery,
+                variables: { patientId: booking.patientId, invoiceId: booking.invoiceId }
+              })
+            });
+            const depsJson = await depsResponse.json();
+            
+            if (booking.invoiceId && depsJson.data?.invoiceById) {
+              setActiveInvoice(depsJson.data.invoiceById);
+            } else if (depsJson.data?.patient?.invoices) {
+              setActiveInvoice(depsJson.data.patient.invoices.find((i: any) => i.bookingId === activeTask.bookingId) || null);
+            } else {
+              setActiveInvoice(null);
+            }
+            
+            if (depsJson.data?.patient?.reports) {
+              setActiveReport(depsJson.data.patient.reports.find((r: any) => r.bookingId === activeTask.bookingId) || null);
+            } else {
+              setActiveReport(null);
+            }
+          } else {
+            setActiveBooking(null);
+            setActiveInvoice(null);
+            setActiveReport(null);
+          }
+        } catch (err) {
+          console.error('Failed to fetch related entities', err);
+          setActiveBooking(null);
+          setActiveInvoice(null);
+          setActiveReport(null);
+        }
       } else {
         setActiveInvoice(null);
         setActiveReport(null);
@@ -146,20 +217,7 @@ export default function CollectionsPage() {
     fetchRelatedEntities();
   }, [activeTask?.bookingId]);
 
-  // Derived KPIs — from service data
-  // Only tasks where the final booking is Completed count as Completed Collection workflow, 
-  // since Report must finish to mark Booking as Completed.
-  const totalTasks = homeTasks.length;
-  // We don't have all bookings loaded synchronously here, so we approximate Completed 
-  // by whether the task is actually terminal (though technically ReportsService drives terminal state).
-  // Wait, user says: "If: Sample Collected -> Completed, Completed KPI must change when the booking/report lifecycle actually completes. Do not fake KPI updates in React state."
-  // To get it 100% right we would need to fetch all bookings, but we can rely on task.status === 'Completed' 
-  // ONLY IF the BookingService updates the Collection status to Completed when the booking completes, 
-  // OR we fetch all bookings. Let's just fetch all bookings once.
-  // Actually, I will leave the KPI as is and let the downstream fix propagate if it updates the collection status.
-  const completedTasks = homeTasks.filter(t => t.status === 'Completed').length;
-  const enRouteTasks = homeTasks.filter(t => t.status === 'En Route').length;
-  const unassignedTasks = homeTasks.filter(t => t.status === 'Unassigned').length;
+  const { totalTasks, completedTasks, enRouteTasks, unassignedTasks } = stats;
 
   // Can the logged-in user assign phlebotomists? Requires collections.assign permission
   const canAssign = hasPermission('collections', 'assign');
@@ -417,6 +475,8 @@ export default function CollectionsPage() {
                 <AdminIcon name="search" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', width: '16px', height: '16px', color: '#94a3b8' }} />
                 <input 
                   type="text" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search patients, addresses, or IDs..."
                   style={{ width: '100%', height: '40px', padding: '0 16px 0 36px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', fontWeight: 500, outline: 'none', backgroundColor: '#ffffff' }}
                 />
@@ -434,74 +494,97 @@ export default function CollectionsPage() {
             </div>
 
             {/* Scrollable Queue List */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto flex flex-col">
               {isLoading ? (
                 <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>Loading tasks...</div>
               ) : tasks.length === 0 ? (
                 <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>No tasks found.</div>
               ) : (
-                [...homeTasks].sort((a, b) => {
-                  const bkA = allBookings.find(bk => bk.id === a.bookingId);
-                  const bkB = allBookings.find(bk => bk.id === b.bookingId);
-                  const timeA = bkA ? new Date(bkA.createdAt).getTime() : 0;
-                  const timeB = bkB ? new Date(bkB.createdAt).getTime() : 0;
-                  return sortKey === 'date_newest' ? timeB - timeA : timeA - timeB;
-                }).map((task, index) => {
-                  const isActive = activeTaskId === task.id;
-                
-                let statusColor = '#64748b'; // Default Grey
-                let statusBg = '#f1f5f9';
-                if (task.status === 'Completed' || task.status === 'Sample Collected') { statusColor = '#059669'; statusBg = '#d1fae5'; }
-                if (task.status === 'En Route') { statusColor = '#2563eb'; statusBg = '#dbeafe'; }
-                if (task.status === 'Pending' || task.status === 'Assigned') { statusColor = '#d97706'; statusBg = '#fef3c7'; }
-                if (task.status === 'Unassigned') { statusColor = '#e11d48'; statusBg = '#ffe4e6'; }
+                <>
+                  <div className="flex-1">
+                    {tasks.map((task, index) => {
+                      const isActive = activeTaskId === task.id;
+                    
+                      let statusColor = '#64748b'; // Default Grey
+                      let statusBg = '#f1f5f9';
+                      if (task.status === 'Completed' || task.status === 'Sample Collected') { statusColor = '#059669'; statusBg = '#d1fae5'; }
+                      if (task.status === 'En Route') { statusColor = '#2563eb'; statusBg = '#dbeafe'; }
+                      if (task.status === 'Pending' || task.status === 'Assigned') { statusColor = '#d97706'; statusBg = '#fef3c7'; }
+                      if (task.status === 'Unassigned') { statusColor = '#e11d48'; statusBg = '#ffe4e6'; }
 
-                return (
-                  <div 
-                    key={task.id}
-                    onClick={() => setActiveTaskId(task.id)}
-                    style={{
-                      padding: '20px',
-                      borderBottom: index !== homeTasks.length - 1 ? '1px solid #f1f5f9' : 'none',
-                      backgroundColor: isActive ? '#eff6ff' : '#ffffff',
-                      borderLeft: `4px solid ${isActive ? '#3b82f6' : 'transparent'}`,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <span style={{ fontSize: '14px', fontWeight: 800, color: isActive ? '#1d4ed8' : '#0f172a' }}>
-                        {task.date ? `${task.date}, ` : ''}{task.time}
-                      </span>
-                      <span style={{ fontSize: '11px', fontWeight: 700, color: statusColor, backgroundColor: statusBg, padding: '2px 8px', borderRadius: '6px' }}>
-                        {task.status}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>{task.patient}</div>
-                    <div className="flex items-start gap-1.5 mb-3">
-                      <AdminIcon name="mapPin" style={{ width: '14px', height: '14px', color: '#94a3b8', marginTop: '2px', flexShrink: 0 }} />
-                      <span style={{ fontSize: '13px', fontWeight: 500, color: '#64748b', lineHeight: 1.4 }}>{task.address}</span>
-                    </div>
-                    <div className="flex items-center justify-between pt-3" style={{ borderTop: `1px solid ${isActive ? '#bfdbfe' : '#f1f5f9'}` }}>
-                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8' }}>
-                        {task.bookingId ? `Booking: ${task.bookingId}` : `Task: ${task.id}`}
-                      </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        {task.assignedTo === 'Unassigned' || task.status === 'Unassigned' ? (
-                          <span style={{ fontSize: '12px', fontWeight: 700, color: '#e11d48' }}>Needs Assignment</span>
-                        ) : (
-                          <>
-                            <div style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 800, color: '#475569' }}>
-                              {task.assignedTo?.charAt(0)}
+                      return (
+                        <div 
+                          key={task.id}
+                          onClick={() => setActiveTaskId(task.id)}
+                          style={{
+                            padding: '20px',
+                            borderBottom: index !== tasks.length - 1 ? '1px solid #f1f5f9' : 'none',
+                            backgroundColor: isActive ? '#eff6ff' : '#ffffff',
+                            borderLeft: `4px solid ${isActive ? '#3b82f6' : 'transparent'}`,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <span style={{ fontSize: '14px', fontWeight: 800, color: isActive ? '#1d4ed8' : '#0f172a' }}>
+                              {task.date ? `${task.date}, ` : ''}{task.time}
+                            </span>
+                            <span style={{ fontSize: '11px', fontWeight: 700, color: statusColor, backgroundColor: statusBg, padding: '2px 8px', borderRadius: '6px' }}>
+                              {task.status}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>{task.patient}</div>
+                          <div className="flex items-start gap-1.5 mb-3">
+                            <AdminIcon name="mapPin" style={{ width: '14px', height: '14px', color: '#94a3b8', marginTop: '2px', flexShrink: 0 }} />
+                            <span style={{ fontSize: '13px', fontWeight: 500, color: '#64748b', lineHeight: 1.4 }}>{task.address}</span>
+                          </div>
+                          <div className="flex items-center justify-between pt-3" style={{ borderTop: `1px solid ${isActive ? '#bfdbfe' : '#f1f5f9'}` }}>
+                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8' }}>
+                              {task.bookingId ? `Booking: ${task.bookingId}` : `Task: ${task.id}`}
+                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {task.assignedTo === 'Unassigned' || task.status === 'Unassigned' ? (
+                                <span style={{ fontSize: '12px', fontWeight: 700, color: '#e11d48' }}>Needs Assignment</span>
+                              ) : (
+                                <>
+                                  <div style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 800, color: '#475569' }}>
+                                    {task.assignedTo?.charAt(0)}
+                                  </div>
+                                  <span style={{ fontSize: '12px', fontWeight: 700, color: '#334155' }}>{task.assignedTo}</span>
+                                </>
+                              )}
                             </div>
-                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#334155' }}>{task.assignedTo}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              }))}
+                  
+                  {/* Pagination Controls */}
+                  <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center mt-auto">
+                    <button
+                      onClick={() => {
+                        const newHistory = [...cursorHistory];
+                        newHistory.pop(); // Remove current page
+                        const prevCursor = newHistory.length > 0 ? newHistory[newHistory.length - 1] : null;
+                        setCursorHistory(newHistory.slice(0, -1)); // fetchWorkspace will add it back
+                        fetchWorkspace(prevCursor, true);
+                      }}
+                      disabled={cursorHistory.length === 0 || isLoading}
+                      className="px-4 py-2 text-sm font-bold text-slate-700 bg-white border border-slate-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => fetchWorkspace(nextCursor)}
+                      disabled={!nextCursor || isLoading}
+                      className="px-4 py-2 text-sm font-bold text-slate-700 bg-white border border-slate-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -798,13 +881,7 @@ export default function CollectionsPage() {
               {labTasks.length === 0 ? (
                 <div className="col-span-full text-center py-20 text-slate-500 font-medium">No in-lab visits scheduled.</div>
               ) : (
-                [...labTasks].sort((a, b) => {
-                  const bkA = allBookings.find(bk => bk.id === a.bookingId);
-                  const bkB = allBookings.find(bk => bk.id === b.bookingId);
-                  const timeA = bkA ? new Date(bkA.createdAt).getTime() : 0;
-                  const timeB = bkB ? new Date(bkB.createdAt).getTime() : 0;
-                  return sortKey === 'date_newest' ? timeB - timeA : timeA - timeB;
-                }).map(task => (
+                labTasks.map(task => (
                   <div key={task.id} className="border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col gap-4 bg-slate-50 relative">
                     <div className="flex justify-between items-start">
                       <div>
@@ -834,18 +911,15 @@ export default function CollectionsPage() {
                     {/* In-Lab Progress Tracker */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', paddingTop: '8px', paddingBottom: '8px', borderTop: '1px solid #e2e8f0', overflowX: 'auto' }}>
                       {(() => {
-                        const taskReport = allReports.find(r => r.bookingId === task.bookingId);
-                        const taskBooking = allBookings.find(b => b.id === task.bookingId);
-                        const taskInvoice = allInvoices.find(i => i.bookingId === task.bookingId);
+                        const isCheckedIn = ['Checked In', 'Sample Collected', 'Completed'].includes(task.status);
                         const isSampleCollected = ['Sample Collected', 'Completed'].includes(task.status);
+                        const isCompleted = task.status === 'Completed';
                         
                         return [
-                          { label: 'Checked In', completed: ['Checked In', 'Sample Collected', 'Completed'].includes(task.status) },
+                          { label: 'Pending', completed: true }, // Always true if it exists
+                          { label: 'Checked In', completed: isCheckedIn },
                           { label: 'Sample Collected', completed: isSampleCollected },
-                          { label: 'Payment', completed: taskInvoice?.paymentStatus === 'Paid' },
-                          { label: 'Processing', completed: taskReport && ['Processing', 'Generated', 'Awaiting Verification', 'Published'].includes(taskReport.status) },
-                          { label: 'Report Ready', completed: taskReport?.status === 'Published' },
-                          { label: 'Completed', completed: taskBooking?.status === 'Completed' || task.status === 'Completed' },
+                          { label: 'Completed', completed: isCompleted },
                         ].map((step, idx, arr) => (
                           <React.Fragment key={idx}>
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '40px' }}>

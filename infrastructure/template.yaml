@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
   Agam Diagnostics AWS Foundation
-  SAM Template for Production Serverless Backend Foundation
+  SAM Template for Production Serverless Backend — GraphQL/AppSync + Cognito
 
 Globals:
   Function:
@@ -15,8 +15,6 @@ Globals:
       Variables:
         DYNAMODB_TABLE_NAME: !Ref AgamDynamoDBTable
         S3_BUCKET_NAME: !Ref AgamStorageBucket
-        CORS_ORIGIN: "*"
-        SUPER_ADMIN_SSM_PATH: /agam/SuperAdminSub
 
 Parameters:
   Environment:
@@ -133,37 +131,6 @@ Resources:
         - "http://localhost:3000/"
 
   # ==========================================================
-  # API GATEWAY FOUNDATION
-  # ==========================================================
-  AgamApi:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: !Ref Environment
-      Cors:
-        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
-        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Idempotency-Key'"
-        AllowOrigin: "'*'"
-      GatewayResponses:
-        DEFAULT_4XX:
-          ResponseParameters:
-            Headers:
-              Access-Control-Allow-Origin: "'*'"
-              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Idempotency-Key'"
-              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
-        DEFAULT_5XX:
-          ResponseParameters:
-            Headers:
-              Access-Control-Allow-Origin: "'*'"
-              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Idempotency-Key'"
-              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
-      Auth:
-        DefaultAuthorizer: CognitoAuthorizer
-        AddDefaultAuthorizerToCorsPreflight: false
-        Authorizers:
-          CognitoAuthorizer:
-            UserPoolArn: !GetAtt AgamUserPool.Arn
-
-  # ==========================================================
   # DYNAMODB FOUNDATION
   # ==========================================================
   AgamDynamoDBTable:
@@ -186,6 +153,10 @@ Resources:
           AttributeType: S
         - AttributeName: GSI2SK
           AttributeType: S
+        - AttributeName: GSI3PK
+          AttributeType: S
+        - AttributeName: GSI3SK
+          AttributeType: S
       KeySchema:
         - AttributeName: PK
           KeyType: HASH
@@ -205,6 +176,14 @@ Resources:
             - AttributeName: GSI2PK
               KeyType: HASH
             - AttributeName: GSI2SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: GSI3
+          KeySchema:
+            - AttributeName: GSI3PK
+              KeyType: HASH
+            - AttributeName: GSI3SK
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
@@ -250,6 +229,7 @@ Resources:
 
   # ==========================================================
   # IAM & LAMBDA FOUNDATION
+  # Shared role used by Cognito auth trigger Lambdas
   # ==========================================================
   AgamLambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -277,7 +257,7 @@ Resources:
                   - dynamodb:Query
                   - dynamodb:Scan
                   - dynamodb:TransactWriteItems
-                Resource: 
+                Resource:
                   - !GetAtt AgamDynamoDBTable.Arn
                   - !Sub "${AgamDynamoDBTable.Arn}/index/*"
         - PolicyName: AgamS3Access
@@ -309,577 +289,10 @@ Resources:
                   - cognito-idp:AdminGetUser
                 Resource: !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/*"
 
-  AgamPaymentLambdaExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      Policies:
-        - PolicyName: AgamDynamoDBAccess
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - dynamodb:PutItem
-                  - dynamodb:GetItem
-                  - dynamodb:UpdateItem
-                  - dynamodb:DeleteItem
-                  - dynamodb:Query
-                  - dynamodb:Scan
-                  - dynamodb:TransactWriteItems
-                Resource: 
-                  - !GetAtt AgamDynamoDBTable.Arn
-                  - !Sub "${AgamDynamoDBTable.Arn}/index/*"
-        - PolicyName: AgamPhonePeSSMAccess
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - ssm:GetParameters
-                Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/agam/phonepe/${Environment}/*"
-
-  HealthCheckFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        EntryPoints:
-          - src/handlers/health.js
-    Properties:
-      CodeUri: .
-      Handler: src/handlers/health.handler
-      Role: !GetAtt AgamLambdaExecutionRole.Arn
-      Events:
-        HealthCheck:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /health
-            Method: get
-            Auth:
-              Authorizer: NONE # Public endpoint for health checks
-
-  VersionFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        EntryPoints:
-          - src/handlers/version.js
-    Properties:
-      CodeUri: .
-      Handler: src/handlers/version.handler
-      Role: !GetAtt AgamLambdaExecutionRole.Arn
-      Events:
-        VersionCheck:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/version
-            Method: get
-            # No Auth: Authorizer: NONE means it inherits DefaultAuthorizer (CognitoAuthorizer)
-
-  PatientFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        EntryPoints:
-          - src/handlers/patient.js
-        External:
-          - '@aws-sdk/client-cognito-identity-provider'
-    Properties:
-      CodeUri: .
-      Handler: src/handlers/patient.handler
-      Role: !GetAtt AgamLambdaExecutionRole.Arn
-      Environment:
-        Variables:
-          USER_POOL_ID: !Ref AgamUserPool
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/patients
-            Method: any
-        ApiProxy:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/patients/{proxy+}
-            Method: any
-
-  BookingFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        EntryPoints:
-          - src/handlers/booking.js
-    Properties:
-      CodeUri: .
-      Handler: src/handlers/booking.handler
-      Role: !GetAtt AgamLambdaExecutionRole.Arn
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/bookings
-            Method: any
-        ApiProxy:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/bookings/{proxy+}
-            Method: any
-
-  CollectionFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        EntryPoints:
-          - src/handlers/collection.js
-    Properties:
-      CodeUri: .
-      Handler: src/handlers/collection.handler
-      Role: !GetAtt AgamLambdaExecutionRole.Arn
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/collections
-            Method: any
-        ApiProxy:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/collections/{proxy+}
-            Method: any
-
-  NotificationFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        EntryPoints:
-          - src/handlers/notification.js
-    Properties:
-      CodeUri: .
-      Handler: src/handlers/notification.handler
-      Role: !GetAtt AgamLambdaExecutionRole.Arn
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/notifications
-            Method: any
-        ApiProxy:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/notifications/{proxy+}
-            Method: any
-
-  InvoiceFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        EntryPoints:
-          - src/handlers/invoice.js
-    Properties:
-      CodeUri: .
-      Handler: src/handlers/invoice.handler
-      Role: !GetAtt AgamLambdaExecutionRole.Arn
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/invoices
-            Method: any
-        ApiProxy:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/invoices/{proxy+}
-            Method: any
-
-  PaymentFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        EntryPoints:
-          - src/handlers/payment.js
-    Properties:
-      CodeUri: .
-      Handler: src/handlers/payment.handler
-      Role: !GetAtt AgamPaymentLambdaExecutionRole.Arn
-      Environment:
-        Variables:
-          PHONEPE_SSM_PREFIX: !Sub "/agam/phonepe/${Environment}"
-          PHONEPE_ENV: !Ref PhonePeEnv
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/payments
-            Method: any
-        ApiProxy:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/payments/{proxy+}
-            Method: any
-
-  DocumentFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        EntryPoints:
-          - src/handlers/document.js
-        External:
-          - '@aws-sdk/client-s3'
-          - '@aws-sdk/s3-request-presigner'
-    Properties:
-      CodeUri: .
-      Handler: src/handlers/document.handler
-      Role: !GetAtt AgamLambdaExecutionRole.Arn
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/documents
-            Method: any
-        ApiProxy:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/documents/{proxy+}
-            Method: any
-
-  ReportFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        EntryPoints:
-          - src/handlers/report.js
-    Properties:
-      CodeUri: .
-      Handler: src/handlers/report.handler
-      Role: !GetAtt AgamLambdaExecutionRole.Arn
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/reports
-            Method: any
-        ApiProxy:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/reports/{proxy+}
-            Method: any
-
-  ReviewFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        EntryPoints:
-          - src/handlers/review.js
-    Properties:
-      CodeUri: .
-      Handler: src/handlers/review.handler
-      Role: !GetAtt AgamLambdaExecutionRole.Arn
-      Events:
-        PublicReviews:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/reviews/public
-            Method: get
-            Auth:
-              Authorizer: NONE
-        ApiGetAuth:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/reviews
-            Method: get
-        ApiPost:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/reviews
-            Method: post
-        ApiProxy:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/reviews/{proxy+}
-            Method: any
-
-  BlogFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        EntryPoints:
-          - src/handlers/blog.js
-    Properties:
-      CodeUri: .
-      Handler: src/handlers/blog.handler
-      Role: !GetAtt AgamLambdaExecutionRole.Arn
-      Events:
-        PublicBlogs:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/blogs
-            Method: get
-            Auth:
-              Authorizer: NONE
-        PublicBlogSlug:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/blogs/{proxy+}
-            Method: get
-            Auth:
-              Authorizer: NONE
-        ApiPost:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/blogs
-            Method: post
-        ApiProxy:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/blogs/{proxy+}
-            Method: any
-        PublicNewsletterSubscribe:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/newsletter/subscribe
-            Method: post
-            Auth:
-              Authorizer: NONE
-        AdminNewsletterSubscribers:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/newsletter/subscribers
-            Method: get
-
-  TestFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        EntryPoints:
-          - src/handlers/test.js
-    Properties:
-      CodeUri: .
-      Handler: src/handlers/test.handler
-      Role: !GetAtt AgamLambdaExecutionRole.Arn
-      Events:
-        PublicTests:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/tests
-            Method: get
-            Auth:
-              Authorizer: NONE
-        AdminTests:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/tests
-            Method: any
-        PublicTestSlug:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/tests/{proxy+}
-            Method: get
-            Auth:
-              Authorizer: NONE
-        AdminTestSlug:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/tests/{proxy+}
-            Method: any
-
-  ServiceFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        EntryPoints:
-          - src/handlers/service.js
-    Properties:
-      CodeUri: .
-      Handler: src/handlers/service.handler
-      Role: !GetAtt AgamLambdaExecutionRole.Arn
-      Events:
-        PublicServices:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/services
-            Method: get
-            Auth:
-              Authorizer: NONE
-        AdminServices:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/services
-            Method: any
-        PublicServiceSlug:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/services/{proxy+}
-            Method: get
-            Auth:
-              Authorizer: NONE
-        AdminServiceSlug:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/services/{proxy+}
-            Method: any
-
-  PackageFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        EntryPoints:
-          - src/handlers/package.js
-    Properties:
-      CodeUri: .
-      Handler: src/handlers/package.handler
-      Role: !GetAtt AgamLambdaExecutionRole.Arn
-      Events:
-        PublicPackages:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/packages
-            Method: get
-            Auth:
-              Authorizer: NONE
-        AdminPackages:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/packages
-            Method: any
-        PublicPackageSlug:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/packages/{proxy+}
-            Method: get
-            Auth:
-              Authorizer: NONE
-        AdminPackageSlug:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/packages/{proxy+}
-            Method: any
-
-  StaffFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        EntryPoints:
-          - src/handlers/staff.js
-        External:
-          - '@aws-sdk/client-cognito-identity-provider'
-    Properties:
-      CodeUri: .
-      Handler: src/handlers/staff.handler
-      Role: !GetAtt AgamLambdaExecutionRole.Arn
-      Environment:
-        Variables:
-          USER_POOL_ID: !Ref AgamUserPool
-          DYNAMODB_TABLE_NAME: !Ref AgamDynamoDBTable
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/staff
-            Method: any
-        ApiProxy:
-          Type: Api
-          Properties:
-            RestApiId: !Ref AgamApi
-            Path: /api/staff/{proxy+}
-            Method: any
-
+  # ==========================================================
+  # COGNITO CUSTOM AUTH TRIGGERS
+  # Required for OTP/custom auth challenge flow
+  # ==========================================================
   DefineAuthChallengeFunction:
     Type: AWS::Serverless::Function
     Metadata:
@@ -946,19 +359,140 @@ Resources:
       Principal: cognito-idp.amazonaws.com
       SourceArn: !GetAtt AgamUserPool.Arn
 
+  # ==========================================================
+  # GRAPHQL / APPSYNC FOUNDATION
+  # The sole application API surface
+  # ==========================================================
+  GraphQLResolverFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: handlers/graphql.handler
+      Environment:
+        Variables:
+          PHONEPE_SSM_PREFIX: !Sub "/agam/phonepe/${Environment}"
+          PHONEPE_ENV: !Ref PhonePeEnv
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AgamDynamoDBTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ssm:GetParameters
+                - ssm:GetParameter
+              Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/agam/phonepe/${Environment}/*"
+
+  GraphQLApi:
+    Type: AWS::AppSync::GraphQLApi
+    Properties:
+      Name: !Sub "agam-graphql-${Environment}"
+      AuthenticationType: AMAZON_COGNITO_USER_POOLS
+      UserPoolConfig:
+        UserPoolId: !Ref AgamUserPool
+        AwsRegion: !Ref "AWS::Region"
+        DefaultAction: ALLOW
+
+  GraphQLSchema:
+    Type: AWS::AppSync::GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      DefinitionS3Location: schema.graphql
+
+  GraphQLDataSourceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: InvokeGraphQLResolver
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !GetAtt GraphQLResolverFunction.Arn
+
+  GraphQLDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      Name: SharedLambdaDataSource
+      Type: AWS_LAMBDA
+      ServiceRoleArn: !GetAtt GraphQLDataSourceRole.Arn
+      LambdaConfig:
+        LambdaFunctionArn: !GetAtt GraphQLResolverFunction.Arn
+
+  # Resolvers mapped to the shared Lambda data source
+  GraphQLResolverQueryPatient:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: patient
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryGlobalSearch:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: globalSearch
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryDashboardStats:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: dashboardStats
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverPatientBookings:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Patient
+      FieldName: bookings
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverPatientReports:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Patient
+      FieldName: reports
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverPatientInvoices:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Patient
+      FieldName: invoices
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
 Outputs:
-  ApiEndpoint:
-    Description: "API Gateway endpoint URL"
-    Value: !Sub "https://${AgamApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/"
   CognitoUserPoolId:
     Description: "Cognito User Pool ID"
     Value: !Ref AgamUserPool
+
   CognitoClientId:
     Description: "Cognito User Pool Client ID"
     Value: !Ref AgamUserPoolClient
+
   DynamoDBTableName:
     Description: "DynamoDB Table Name"
     Value: !Ref AgamDynamoDBTable
+
   S3BucketName:
     Description: "S3 Storage Bucket Name"
     Value: !Ref AgamStorageBucket
+
+  AppSyncEndpoint:
+    Description: "GraphQL AppSync API Endpoint — the sole application API surface"
+    Value: !GetAtt GraphQLApi.GraphQLUrl

@@ -1,4 +1,3 @@
-import { ICollectionRepository } from '@/domains/collections/repository';
 import { CollectionTaskModel } from '@/domains/collections/model';
 import { BookingModel } from '@/domains/booking/model';
 import { success, failure, Result } from '@/shared/result';
@@ -8,7 +7,7 @@ export class CollectionService {
   private reportsService?: import('./ReportsService').ReportsService;
   private notificationService?: import('./NotificationService').NotificationService;
 
-  constructor(private readonly repository: ICollectionRepository) {}
+  constructor() {}
 
   setBookingService(service: import('./BookingService').BookingService) {
     this.bookingService = service;
@@ -22,16 +21,97 @@ export class CollectionService {
     this.notificationService = service;
   }
 
-  async getAll() {
-    return this.repository.getAll();
+  private async _graphqlFetch<T>(query: string, variables?: Record<string, unknown>): Promise<T | null> {
+    try {
+      const token = typeof window !== 'undefined'
+        ? (sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '')
+        : '';
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ query, variables }),
+      });
+      if (!response.ok) return null;
+      const { data, errors } = await response.json();
+      if (errors?.length) { console.error('GraphQL errors:', errors); return null; }
+      return data as T;
+    } catch (err) {
+      console.error('GraphQL fetch failed:', err);
+      return null;
+    }
   }
 
-  async create(task: CollectionTaskModel) {
-    return this.repository.create(task);
+  async getAll(): Promise<Result<CollectionTaskModel[]>> {
+    const data = await this._graphqlFetch<{ collections: CollectionTaskModel[] }>(
+      `query {
+        collections {
+          id type patientId bookingId time date patient address tests assignedTo phlebotomistId status
+        }
+      }`
+    );
+    if (data?.collections) return success(data.collections);
+    return failure(new Error('Failed to load collections'));
+  }
+
+  async getAdminWorkspace(limit = 20, cursor: string | null = null, tab = 'HOME', sort = 'date_oldest', search = '') {
+    try {
+      const data = await this._graphqlFetch<{ adminCollectionsWorkspace: any }>(
+        `query GetWorkspace($limit: Int, $cursor: String, $tab: String, $sort: String, $search: String) {
+          adminCollectionsWorkspace(limit: $limit, cursor: $cursor, tab: $tab, sort: $sort, search: $search) {
+            queue {
+              items {
+                id date time status patient address bookingId assignedTo phlebotomistId type lat lng tests
+              }
+              nextCursor
+            }
+            stats {
+              totalTasks completedTasks enRouteTasks unassignedTasks
+            }
+            phlebotomists {
+              id name role status
+            }
+          }
+        }`,
+        { limit, cursor, tab, sort, search }
+      );
+      if (data?.adminCollectionsWorkspace) return success(data.adminCollectionsWorkspace);
+      return failure(new Error('Failed to load collections workspace'));
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Unknown error'));
+    }
+  }
+
+  async getByPatientId(patientId: string): Promise<Result<CollectionTaskModel[]>> {
+    const data = await this._graphqlFetch<{ collectionsByPatient: CollectionTaskModel[] }>(
+      `query CollectionsByPatient($patientId: ID!) {
+        collectionsByPatient(patientId: $patientId) {
+          id type patientId bookingId time date patient address tests assignedTo phlebotomistId status
+        }
+      }`,
+      { patientId }
+    );
+    if (data?.collectionsByPatient) return success(data.collectionsByPatient);
+    return failure(new Error('Failed to load collections'));
+  }
+
+  async create(task: CollectionTaskModel): Promise<Result<CollectionTaskModel>> {
+    const data = await this._graphqlFetch<{ createCollection: CollectionTaskModel }>(
+      `mutation CreateCollection($input: AWSJSON!) {
+        createCollection(input: $input) {
+          id type patientId bookingId time date patient address tests assignedTo phlebotomistId status
+        }
+      }`,
+      { input: task }
+    );
+    if (data?.createCollection) return success(data.createCollection);
+    return failure(new Error('Failed to create collection'));
   }
 
   async createFromBooking(booking: BookingModel): Promise<Result<CollectionTaskModel>> {
-    const existingRes = await this.repository.getAll();
+    const existingRes = await this.getAll();
     if (existingRes.isSuccess) {
       const existing = existingRes.value.find(t => t.bookingId === booking.id);
       if (existing) return success(existing);
@@ -49,38 +129,36 @@ export class CollectionService {
       assignedTo: booking.collection.assignedPhlebotomist || 'Unassigned',
       status: booking.collection.type === 'Lab Visit' ? 'Pending' : 'Unassigned',
     };
-    return this.repository.create(task);
+    return this.create(task);
   }
 
-  async updateTask(id: string, data: Partial<CollectionTaskModel>) {
-    return this.repository.update(id, data);
+  async updateTask(id: string, updateData: Partial<CollectionTaskModel>): Promise<Result<CollectionTaskModel>> {
+    const data = await this._graphqlFetch<{ updateCollection: CollectionTaskModel }>(
+      `mutation UpdateCollection($id: ID!, $input: AWSJSON!) {
+        updateCollection(id: $id, input: $input) {
+          id type patientId bookingId time date patient address tests assignedTo phlebotomistId status
+        }
+      }`,
+      { id, input: updateData }
+    );
+    if (data?.updateCollection) return success(data.updateCollection);
+    return failure(new Error('Failed to update collection'));
   }
 
-  /**
-   * Assign a phlebotomist to a Home Collection task.
-   * Sets phlebotomistId (authoritative) and assignedTo (display).
-   * Updates status from Unassigned to Assigned.
-   * Also updates the linked booking status.
-   */
   async assignPhlebotomist(taskId: string, staffId: string, staffName: string): Promise<Result<CollectionTaskModel>> {
-    return this.repository.update(taskId, {
+    return this.updateTask(taskId, {
       phlebotomistId: staffId,
       assignedTo: staffName,
       status: 'Assigned',
     });
   }
 
-  /**
-   * Mark a Home Collection task as En Route.
-   * Only valid for tasks with status 'Assigned' or 'Pending'.
-   */
   async markEnRoute(id: string): Promise<Result<CollectionTaskModel>> {
-    const res = await this.repository.update(id, { status: 'En Route' });
-    return res;
+    return this.updateTask(id, { status: 'En Route' });
   }
 
   async recordSampleCollected(id: string, staffId: string): Promise<Result<CollectionTaskModel>> {
-    return this.repository.update(id, {
+    return this.updateTask(id, {
       status: 'Sample Collected',
       collectedBy: staffId,
       collectedAt: new Date().toISOString()
@@ -88,6 +166,6 @@ export class CollectionService {
   }
 
   async recordCheckIn(id: string): Promise<Result<CollectionTaskModel>> {
-    return this.repository.update(id, { status: 'Checked In' });
+    return this.updateTask(id, { status: 'Checked In' });
   }
 }

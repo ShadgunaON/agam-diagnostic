@@ -1,65 +1,181 @@
-import { IPackagesRepository } from '@/domains/packages/repository';
+import { Result, success, failure } from '@/shared/result';
+import { PackageItem, PackagesHero, PackageDetailData, FeaturedPackage } from '@/domains/packages/model';
+import { packagesData } from '@/data/packages';
+import { PaginatedResponse } from '@/lib/api/types';
 
 export class PackageService {
-  constructor(private readonly repository: IPackagesRepository) {}
+  constructor() {}
 
-  async getCatalog(page = 1, limit = 10) {
-    return this.repository.getCatalog(page, limit);
+  private async _graphqlFetch<T>(query: string, variables?: Record<string, unknown>): Promise<T | null> {
+    try {
+      const token = typeof window !== 'undefined'
+        ? (sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '')
+        : '';
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ query, variables }),
+      });
+      if (!response.ok) return null;
+      const { data, errors } = await response.json();
+      if (errors?.length) { 
+        console.error('GraphQL errors:', errors); 
+        throw new Error(errors[0].message);
+      }
+      return data as T;
+    } catch (err) {
+      console.error('GraphQL fetch failed:', err);
+      throw err;
+    }
   }
 
-  async getPackageBySlug(slug: string) {
-    return this.repository.getPackageBySlug(slug);
+  async getCatalog(page = 1, limit = 100): Promise<Result<PaginatedResponse<PackageItem>>> {
+    try {
+      const res = await this._graphqlFetch<{ catalogPackages: PaginatedResponse<PackageItem> }>(
+        `query CatalogPackages($page: Int, $limit: Int) {
+          catalogPackages(page: $page, limit: $limit) {
+            data {
+              id slug title category tag price discountPrice description duration preparation
+              homeCollection sampleType fastFasting parametersCount status createdAt updatedAt
+            }
+            meta { total page limit totalPages }
+          }
+        }`,
+        { page, limit }
+      );
+      return success(res!.catalogPackages);
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Failed to get package catalog'));
+    }
   }
 
-  async getHeroData() {
-    return this.repository.getHeroData();
+  async getPackageBySlug(slug: string): Promise<Result<PackageDetailData>> {
+    try {
+      const res = await this._graphqlFetch<{ packageBySlug: PackageDetailData }>(
+        `query PackageBySlug($slug: String!) {
+          packageBySlug(slug: $slug) {
+            id slug title category tag price discountPrice description duration preparation
+            homeCollection sampleType fastFasting parametersCount status createdAt updatedAt
+            includes { title category description slug status }
+            faqs { question answer }
+          }
+        }`,
+        { slug }
+      );
+      if (!res?.packageBySlug) return failure(new Error('Package not found'));
+      return success(res.packageBySlug);
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Failed to get package'));
+    }
+  }
+
+  async getHeroData(): Promise<Result<PackagesHero>> {
+    return success({
+      title: 'Comprehensive Health Packages',
+      description: 'Preventive health checkups for you and your family. Full body assessments with specialist consultations included.',
+      image: '/images/hero_packages_visual.png',
+      pill: 'Preventive Care',
+    });
   }
 
   async getBenefits() {
-    return this.repository.getBenefits();
+    return success([
+      { title: 'Complete Assessment', description: 'Comprehensive coverage of all vital health parameters.', icon: 'CheckCircle' },
+      { title: 'Free Consultation', description: 'Expert review of your reports by specialist doctors.', icon: 'Stethoscope' },
+      { title: 'Home Collection', description: 'Free sample collection from your home at your preferred time.', icon: 'Home' },
+      { title: 'Smart Reports', description: 'Easy-to-understand digital reports with historical trends.', icon: 'FileText' }
+    ]);
   }
 
   async getProcessSteps() {
-    return this.repository.getProcessSteps();
+    return success([
+      { id: '1', stepNumber: 1, title: 'Book Package', description: 'Select a package and schedule your preferred time.' },
+      { id: '2', stepNumber: 2, title: 'Sample Collection', description: 'Our phlebotomist visits your home for sample collection.' },
+      { id: '3', stepNumber: 3, title: 'Lab Processing', description: 'Samples are processed in our NABL accredited lab.' },
+      { id: '4', stepNumber: 4, title: 'Digital Reports', description: 'Receive smart reports via WhatsApp and email.' }
+    ]);
   }
 
-  async getFeaturedPackages() {
-    return this.repository.getFeaturedPackages();
+  async getFeaturedPackages(): Promise<Result<FeaturedPackage[]>> {
+    return success(packagesData.featured);
   }
 
-  // Admin CRUD methods
-  async getById(id: string) {
-    if (this.repository.getById) {
-      return this.repository.getById(id);
+  async getById(id: string): Promise<Result<PackageItem>> {
+    try {
+      const res = await this._graphqlFetch<{ packageById: PackageItem }>(
+        `query PackageById($id: ID!) {
+          packageById(id: $id) {
+            id slug title category tag price discountPrice description duration preparation
+            homeCollection sampleType fastFasting parametersCount status createdAt updatedAt
+            includes { title category description slug status }
+            faqs { question answer }
+          }
+        }`,
+        { id }
+      );
+      if (!res?.packageById) return failure(new Error('Package not found'));
+      return success(res.packageById);
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Failed to get package'));
     }
-    throw new Error('Method not implemented in repository');
   }
 
-  async create(packageData: any) {
-    if (this.repository.create) {
-      return this.repository.create(packageData);
+  async create(packageData: any): Promise<Result<PackageItem>> {
+    try {
+      const res = await this._graphqlFetch<{ createCatalogPackage: PackageItem }>(
+        `mutation CreateCatalogPackage($input: AWSJSON!) {
+          createCatalogPackage(input: $input) { id slug title status }
+        }`,
+        { input: packageData }
+      );
+      return success(res!.createCatalogPackage);
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Failed to create package'));
     }
-    throw new Error('Method not implemented in repository');
   }
 
-  async update(id: string, packageData: any) {
-    if (this.repository.update) {
-      return this.repository.update(id, packageData);
+  async update(id: string, packageData: any): Promise<Result<PackageItem>> {
+    try {
+      const res = await this._graphqlFetch<{ updateCatalogPackage: PackageItem }>(
+        `mutation UpdateCatalogPackage($id: ID!, $input: AWSJSON!) {
+          updateCatalogPackage(id: $id, input: $input) { id slug title status }
+        }`,
+        { id, input: packageData }
+      );
+      return success(res!.updateCatalogPackage);
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Failed to update package'));
     }
-    throw new Error('Method not implemented in repository');
   }
 
-  async updateStatus(id: string, status: 'DRAFT' | 'ACTIVE' | 'INACTIVE') {
-    if (this.repository.updateStatus) {
-      return this.repository.updateStatus(id, status);
+  async updateStatus(id: string, status: 'DRAFT' | 'ACTIVE' | 'INACTIVE'): Promise<Result<void>> {
+    try {
+      await this._graphqlFetch(
+        `mutation UpdateCatalogPackageStatus($id: ID!, $status: String!) {
+          updateCatalogPackageStatus(id: $id, status: $status)
+        }`,
+        { id, status }
+      );
+      return success(undefined);
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Failed to update status'));
     }
-    throw new Error('Method not implemented in repository');
   }
 
-  async delete(id: string) {
-    if (this.repository.delete) {
-      return this.repository.delete(id);
+  async delete(id: string): Promise<Result<void>> {
+    try {
+      await this._graphqlFetch(
+        `mutation DeleteCatalogPackage($id: ID!) {
+          deleteCatalogPackage(id: $id)
+        }`,
+        { id }
+      );
+      return success(undefined);
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Failed to delete package'));
     }
-    throw new Error('Method not implemented in repository');
   }
 }

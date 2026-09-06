@@ -46,6 +46,11 @@ export class MockReportsRepository implements IReportsRepository {
     return success(await this.getTasks());
   }
 
+  async getByPatientId(patientId: string): Promise<Result<ReportTaskModel[]>> {
+    const tasks = await this.getTasks();
+    return success(tasks.filter(t => t.patientId === patientId || t.patient?.id === patientId));
+  }
+
   async updateStatus(id: string, status: ReportTaskModel['status']): Promise<Result<ReportTaskModel>> {
     const tasks = await this.getTasks();
     const taskIndex = tasks.findIndex(t => t.id === id);

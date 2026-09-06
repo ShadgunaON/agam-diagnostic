@@ -1,56 +1,152 @@
-import { IPatientRepository } from '@/domains/patient/repository';
 import { PatientModel } from '@/domains/patient/model';
 import { BookingService } from './BookingService';
 import { ReportsService } from './ReportsService';
 import { CollectionService } from './CollectionService';
 import { InvoiceService } from './InvoiceService';
 import { Result, success, failure } from '@/shared/result';
+import { PaginatedResponse } from '@/lib/api/types';
 
 export class PatientService {
-  constructor(
-    private readonly patientRepository: IPatientRepository,
-    private readonly bookingService: BookingService,
-    private readonly reportsService: ReportsService,
-    private readonly collectionService: CollectionService,
-    private readonly invoiceService?: InvoiceService
-  ) {}
+  private bookingService?: BookingService;
+  private reportsService?: ReportsService;
+  private collectionService?: CollectionService;
+  private invoiceService?: InvoiceService;
 
-  async getAll(page?: number, limit?: number) {
-    return this.patientRepository.getAll(page, limit);
+  constructor() {}
+
+  setBookingService(service: BookingService) {
+    this.bookingService = service;
+  }
+
+  setReportsService(service: ReportsService) {
+    this.reportsService = service;
+  }
+
+  setCollectionService(service: CollectionService) {
+    this.collectionService = service;
+  }
+
+  setInvoiceService(service: InvoiceService) {
+    this.invoiceService = service;
+  }
+
+  private async _graphqlFetch<T>(query: string, variables?: Record<string, unknown>): Promise<T | null> {
+    try {
+      const token = typeof window !== 'undefined'
+        ? (sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '')
+        : '';
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ query, variables }),
+      });
+      if (!response.ok) return null;
+      const { data, errors } = await response.json();
+      if (errors?.length) { 
+        console.error('GraphQL errors:', errors); 
+        throw new Error(errors[0].message);
+      }
+      return data as T;
+    } catch (err) {
+      console.error('GraphQL fetch failed:', err);
+      throw err;
+    }
+  }
+
+  async getAll(page = 1, limit = 10): Promise<Result<PaginatedResponse<PatientModel>>> {
+    try {
+      const res = await this._graphqlFetch<{ patients: PaginatedResponse<PatientModel> }>(
+        `query GetPatients($page: Int, $limit: Int) {
+          patients(page: $page, limit: $limit) {
+            data {
+              id name age gender phone email status bloodGroup relation dobOrAge ownerSub createdAt updatedAt
+            }
+            meta { total page limit totalPages }
+          }
+        }`,
+        { page, limit }
+      );
+      return success(res!.patients);
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Failed to get patients'));
+    }
   }
 
   async getMe(): Promise<Result<PatientModel>> {
-    if (this.patientRepository.getMe) {
-      return this.patientRepository.getMe();
+    try {
+      const res = await this._graphqlFetch<{ mePatient: PatientModel }>(
+        `query GetMePatient {
+          mePatient {
+            id name age gender phone email status bloodGroup relation dobOrAge ownerSub createdAt updatedAt
+          }
+        }`
+      );
+      if (!res?.mePatient) return failure(new Error('Patient profile not found'));
+      return success(res.mePatient);
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Failed to get me patient'));
     }
-    const res = await this.getAll(1, 1);
-    if (res.isSuccess && res.value.data.length > 0) {
-      return success(res.value.data[0]);
+  }
+
+  async getById(id: string): Promise<Result<PatientModel>> {
+    try {
+      const res = await this._graphqlFetch<{ patientById: PatientModel }>(
+        `query PatientById($id: ID!) {
+          patientById(id: $id) {
+            id name age gender phone email status bloodGroup relation dobOrAge ownerSub createdAt updatedAt
+          }
+        }`,
+        { id }
+      );
+      if (!res?.patientById) return failure(new Error('Patient not found'));
+      return success(res.patientById);
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Failed to get patient'));
     }
-    return failure(new Error('Patient profile not found'));
   }
 
-  async getById(id: string) {
-    return this.patientRepository.getById(id);
+  async update(id: string, data: Partial<PatientModel>): Promise<Result<PatientModel>> {
+    try {
+      const res = await this._graphqlFetch<{ updatePatient: PatientModel }>(
+        `mutation UpdatePatient($id: ID!, $input: AWSJSON!) {
+          updatePatient(id: $id, input: $input) {
+            id name age gender phone email status bloodGroup relation dobOrAge ownerSub createdAt updatedAt
+          }
+        }`,
+        { id, input: data }
+      );
+      return success(res!.updatePatient);
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Failed to update patient'));
+    }
   }
 
-  async update(id: string, data: Partial<PatientModel>) {
-    return this.patientRepository.update(id, data);
-  }
-
-  async create(patient: Omit<PatientModel, 'id'>) {
-    return this.patientRepository.create(patient);
+  async create(patient: Omit<PatientModel, 'id'>): Promise<Result<PatientModel>> {
+    try {
+      const res = await this._graphqlFetch<{ createPatient: PatientModel }>(
+        `mutation CreatePatient($input: AWSJSON!) {
+          createPatient(input: $input) {
+            id name age gender phone email status bloodGroup relation dobOrAge ownerSub createdAt updatedAt
+          }
+        }`,
+        { input: patient }
+      );
+      return success(res!.createPatient);
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Failed to create patient'));
+    }
   }
 
   async resolvePatientBookings(patient: PatientModel) {
+    if (!this.bookingService) return [];
     const result = await this.bookingService.getByPatientId(patient.id);
     if (!result.isSuccess) return [];
 
     return result.value.filter(booking => {
-      // Deterministic matching based on canonical ID first
       if (booking.patientId && booking.patientId === patient.id) return true;
-      
-      // Fallback to phone, then email for legacy bookings.
       if (booking.patient.phone === patient.phone) return true;
       if (booking.patient.email === patient.email) return true;
       return false;
@@ -58,51 +154,24 @@ export class PatientService {
   }
 
   async resolvePatientReports(patient: PatientModel) {
-    const result = await this.reportsService.getAllTasks();
+    if (!this.reportsService) return [];
+    const result = await this.reportsService.getByPatientId(patient.id);
     if (!result.isSuccess) return [];
-
-    return result.value.filter(report => {
-      // 1. Deterministic match based on canonical ID
-      if (report.patientId && report.patientId === patient.id) return true;
-      
-      // 2. Verified deterministic legacy association
-      // If the legacy report's embedded patient.id strictly matches our canonical Patient.id
-      if (report.patient && report.patient.id === patient.id) return true;
-      
-      // 3. Unresolved: we do not guess by name alone.
-      return false;
-    });
+    return result.value;
   }
 
   async resolvePatientCollections(patient: PatientModel) {
-    const result = await this.collectionService.getAll();
+    if (!this.collectionService) return [];
+    const result = await this.collectionService.getByPatientId(patient.id);
     if (!result.isSuccess) return [];
-
-    return result.value.filter(collection => {
-      // 1. Deterministic match based on canonical ID
-      if (collection.patientId && collection.patientId === patient.id) {
-        return true;
-      }
-      
-      // 2. Legacy collections without deterministic identifiers remain unresolved
-      // We explicitly do not guess based on collection.patient (name string)
-      return false;
-    });
+    return result.value;
   }
 
   async resolvePatientInvoices(patient: PatientModel) {
     if (!this.invoiceService) return [];
-    const result = await this.invoiceService.getAll();
+    const result = await this.invoiceService.getByPatientId(patient.id);
     if (!result.isSuccess) return [];
-
-    return result.value.filter(invoice => {
-      // Match by canonical ID or legacy fallback through bookings if needed
-      // Currently, invoice requires patientId or we match via booking
-      if (invoice.patientId && invoice.patientId === patient.id) {
-        return true;
-      }
-      return false;
-    });
+    return result.value;
   }
 
   async getPatientProfileData(patientId: string) {

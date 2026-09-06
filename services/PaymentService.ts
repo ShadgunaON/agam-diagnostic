@@ -24,14 +24,42 @@ export class MockPaymentProvider implements IPaymentProvider {
 }
 
 export class ApiPaymentProvider implements IPaymentProvider {
-  constructor(private readonly apiClient: import('@/lib/api/client').IApiClient) {}
+  constructor() {}
   
+  private async _graphqlFetch<T>(query: string, variables?: Record<string, unknown>): Promise<T | null> {
+    const token = typeof window !== 'undefined'
+      ? (sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '')
+      : '';
+    const response = await fetch('/api/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ query, variables }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`GraphQL Network Error: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    const json = await response.json();
+    if (json.errors && json.errors.length > 0) {
+      throw new Error(json.errors[0].message);
+    }
+    return json.data;
+  }
+
   async processPayment(invoiceId: string, amount: number, method: string): Promise<Result<{ transactionId?: string, redirectUrl?: string }>> {
     try {
-      const response = await this.apiClient.post<{ redirectUrl: string }>('/api/payments/create-order', {
-        invoiceId
-      });
-      return success({ redirectUrl: response.data.redirectUrl });
+      const response = await this._graphqlFetch<{ createPaymentOrder: string }>(
+        `mutation CreatePaymentOrder($invoiceId: ID!) {
+          createPaymentOrder(invoiceId: $invoiceId)
+        }`,
+        { invoiceId }
+      );
+      return success({ redirectUrl: response?.createPaymentOrder });
     } catch (err: any) {
       return failure(err);
     }
@@ -39,8 +67,18 @@ export class ApiPaymentProvider implements IPaymentProvider {
 
   async checkStatus(invoiceId: string): Promise<Result<any>> {
     try {
-      const response = await this.apiClient.get<any>(`/api/payments/status/${invoiceId}`);
-      return success(response.data);
+      const response = await this._graphqlFetch<{ paymentStatus: any }>(
+        `mutation PaymentStatus($invoiceId: ID!) {
+          paymentStatus(invoiceId: $invoiceId) {
+            id
+            paymentStatus
+            paymentMethod
+            paidAt
+          }
+        }`,
+        { invoiceId }
+      );
+      return success(response?.paymentStatus);
     } catch (err: any) {
       return failure(err);
     }

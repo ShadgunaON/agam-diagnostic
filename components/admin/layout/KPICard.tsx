@@ -16,6 +16,7 @@ interface KPICardProps {
   variant?: 'default' | 'glass' | 'solid' | 'gradient';
   iconBgColor?: string;
   iconColor?: string;
+  subtitle?: React.ReactNode;
 }
 
 // Custom hook for smooth count-up animation
@@ -78,7 +79,8 @@ export function KPICard({
   index,
   variant = 'default',
   iconBgColor,
-  iconColor
+  iconColor,
+  subtitle
 }: KPICardProps) {
   const animatedValue = useCountUp(value, 850);
   const [mounted, setMounted] = useState(false);
@@ -217,6 +219,19 @@ export function KPICard({
                 </span>
               )}
             </>
+          )}
+          {subtitle && !trend && (
+            <span
+              style={{
+                fontSize: '13px', fontWeight: 500, color: '#94a3b8',
+                opacity: mounted ? 1 : 0,
+                transform: mounted ? 'translateY(0)' : 'translateY(4px)',
+                transition: 'all 700ms ease-out',
+                transitionDelay: `${(cardIndex * 80) + 400}ms`
+              }}
+            >
+              {subtitle}
+            </span>
           )}
         </div>
       </div>

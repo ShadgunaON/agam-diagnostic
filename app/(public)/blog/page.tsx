@@ -10,7 +10,7 @@ import {
 } from '@/components/sections/blog';
 import { ErrorState, EmptyState } from '@/components/common';
 
-export const revalidate = 10; // Revalidate every 10 seconds
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: `Health Insights & Articles | ${siteConfig.name}`,

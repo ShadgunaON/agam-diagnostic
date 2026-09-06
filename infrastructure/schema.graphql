@@ -1,0 +1,450 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type Query {
+  # Direct Lookup
+  patient(id: ID!): Patient
+
+  # Targeted single-record lookups (replaces REST GET /api/bookings/:id and /api/invoices/:id)
+  bookingById(id: ID!): Booking
+  invoiceById(id: ID!): FullInvoice
+  testById(id: ID!): TestItem
+  packageById(id: ID!): PackageItem
+  serviceById(id: ID!): ServiceItem
+
+  # Patient-scoped booking list (replaces REST GET /api/bookings?patientId=)
+  myBookings: [Booking!]!
+
+  # Patient portal notifications (replaces REST GET /api/notifications)
+  myNotifications: [Notification!]!
+
+  # Aggregated Search
+  globalSearch(query: String!, limit: Int): [GlobalSearchResult!]!
+  
+  # Admin Dashboard
+  dashboardStats: DashboardMetrics!
+
+  # Admin Analytics Charts (revenue aggregated server-side)
+  analyticsCharts: AnalyticsCharts!
+
+  # Admin Patient KPIs (authoritative counts)
+  patientStats: PatientStats!
+
+  # Admin Review KPIs (authoritative aggregates)
+  reviewStats: ReviewStats!
+
+  # Admin Bookings Workspace (paginated; replaces REST GET /api/bookings)
+  adminBookingsWorkspace(limit: Int, cursor: String, status: String, tab: String, sort: String, search: String): AdminBookingsWorkspace!
+
+  # Admin Invoices Workspace (paginated; replaces REST GET /api/invoices)
+  adminInvoicesWorkspace(limit: Int, cursor: String, status: String, search: String): AdminInvoicesWorkspace!
+
+  # Admin Reviews Workspace (paginated; replaces REST GET /api/reviews)
+  adminReviewsWorkspace(limit: Int, cursor: String, status: String, rating: String, search: String): AdminReviewsWorkspace!
+  
+  # Admin Collections Workspace
+  adminCollectionsWorkspace(limit: Int, cursor: String, tab: String, sort: String, search: String): CollectionsWorkspaceData!
+  
+  # Admin Reports Workspace
+  adminReportsWorkspace(limit: Int, cursor: String, status: String, sort: String, search: String): AdminReportsWorkspaceData!
+  
+  # Admin Catalog Workspace
+  adminCatalogWorkspace: CatalogWorkspace!
+  
+  # Patient Portal
+  myPortal: MyPortal!
+
+  # Staff Management
+  adminStaffWorkspace: [Staff!]!
+  staffById(id: ID!): Staff
+  adminRoles: [Role!]!
+  adminPermissionsMap: String!
+}
+
+type Mutation {
+  # Mark a notification as read (replaces REST PUT /api/notifications/:id/read)
+  markNotificationRead(id: ID!): Boolean!
+
+  # Payment processing
+  createPaymentOrder(invoiceId: ID!): String!
+  paymentStatus(invoiceId: ID!): FullInvoice!
+
+  # Staff Management
+  createStaff(name: String!, email: String!, phone: String!, role: String!, department: String!, shift: String!): Staff!
+  updateStaff(id: ID!, name: String, email: String, phone: String, role: String, department: String, shift: String, status: String): Staff!
+  createRole(title: String!, internal: String!, desc: String, color: String): Role!
+  updatePermissions(records: String!): Boolean!
+}
+
+type GlobalSearchResult {
+  id: ID!
+  type: String!
+  title: String!
+  subtitle: String!
+  href: String!
+  icon: String!
+}
+
+
+
+type DashboardMetrics {
+  totalPatients: Int!
+  pendingBookings: Int!
+  awaitingVerification: Int!
+  revenueToday: Float!
+}
+
+type AnalyticsCharts {
+  revenueByMonth: [MonthlyRevenue!]!
+}
+
+type MonthlyRevenue {
+  month: String!
+  revenue: Float!
+}
+
+type PatientStats {
+  totalPatients: Int!
+  newThisMonth: Int!
+  # retentionRate is intentionally omitted: no authoritative definition exists
+}
+
+type ReviewStats {
+  total: Int!
+  pending: Int!
+  approved: Int!
+  averageRating: Float!
+}
+
+type MyPortal {
+  patient: Patient!
+  familyMembers: [Patient!]!
+  bookings: [Booking!]!
+  invoices: [Invoice!]!
+  reviews: [Review!]!
+  collections: [CollectionTask!]!
+  reports: [Report!]!
+}
+
+type Patient {
+  id: ID!
+  name: String!
+  email: String
+  phone: String
+  status: String
+  createdAt: String
+  
+  # Relational fields to be resolved by targeted queries, not fetch-all
+  bookings(status: String): [Booking!]!
+  reports(status: String): [Report!]!
+  invoices(paymentStatus: String): [Invoice!]!
+}
+
+type Booking {
+  id: ID!
+  patientId: ID!
+  status: String!
+  createdAt: String!
+  collection: CollectionDetails
+  payment: PaymentDetails
+  items: [BookingItem!]!
+  patient: PatientSnapshot!
+}
+
+type BookingItem {
+  name: String!
+  type: String!
+}
+
+type PatientSnapshot {
+  id: ID
+  name: String!
+  phone: String
+  email: String
+}
+
+type CollectionDetails {
+  type: String
+  status: String
+  date: String
+  timeSlot: String
+  address: String
+}
+
+type PaymentDetails {
+  status: String
+  total: Float
+  method: String
+}
+
+type TestResult {
+  parameter: String!
+  value: String
+  unit: String
+  reference: String
+  isAbnormal: Boolean
+}
+
+type Report {
+  id: ID!
+  patientId: ID!
+  bookingId: ID
+  status: String!
+  priority: String
+  createdAt: String!
+  testType: String!
+  time: String
+  url: String
+  pdfKey: String
+  patient: PatientSnapshot!
+  results: [TestResult!]
+}
+
+type Invoice {
+  id: ID!
+  patientId: ID!
+  bookingId: ID
+  paymentStatus: String!
+  paymentMethod: String
+  total: Float!
+  createdAt: String!
+}
+
+type TestItem {
+  id: ID!
+  title: String!
+  slug: String!
+  category: String
+  price: Float!
+  status: String
+  description: String
+  sampleType: String
+  faqs: [FaqItem!]
+  relatedTests: [RelatedTest!]
+  basePrice: Float
+  salePrice: Float
+  sortOrder: Int
+  turnaroundTime: String
+  fastingRequired: Boolean
+  homeCollectionAvailable: Boolean
+  labCollectionAvailable: Boolean
+}
+
+type PackageItem {
+  id: ID!
+  title: String!
+  slug: String!
+  category: String
+  price: Float!
+  status: String
+  description: String
+  packagePrice: Float
+  individualValue: Float
+  sortOrder: Int
+  testIds: [String!]
+  faqs: [FaqItem!]
+}
+
+type ServiceItem {
+  id: ID!
+  title: String!
+  slug: String!
+  category: String
+  price: Float!
+  status: String
+  description: String
+  shortDescription: String
+  basePrice: Float
+  salePrice: Float
+  sortOrder: Int
+  estimatedDuration: String
+  homeAvailable: Boolean
+  labAvailable: Boolean
+  faqs: [FaqItem!]
+}
+
+type FaqItem {
+  question: String!
+  answer: String!
+}
+
+type RelatedTest {
+  title: String!
+  category: String
+  description: String
+  slug: String!
+  status: String
+}
+
+type Review {
+  id: ID!
+  patientId: ID
+  bookingId: ID!
+  status: String!
+  displayName: String
+  rating: Float
+  title: String
+  content: String
+  createdAt: String
+  updatedAt: String
+}
+
+type Notification {
+  id: ID!
+  userId: ID!
+  title: String!
+  message: String!
+  isRead: Boolean!
+  link: String
+  createdAt: String
+}
+
+# Full invoice — all financial fields (richer than the summary Invoice type)
+type FullInvoice {
+  id: ID!
+  patientId: ID!
+  bookingId: ID
+  paymentStatus: String!
+  paymentMethod: String
+  paidAt: String
+  total: Float!
+  subtotal: Float
+  discount: Float
+  tax: Float
+  receivedBy: String
+  createdAt: String!
+  updatedAt: String
+  items: [InvoiceLineItem!]
+}
+
+type InvoiceLineItem {
+  id: ID!
+  name: String!
+  type: String!
+  price: Float!
+}
+
+# Admin workspace types
+type AdminBookingsWorkspace {
+  queue: [Booking!]!
+  nextCursor: String
+  totalFiltered: Int
+}
+
+type AdminInvoice {
+  id: ID!
+  patientId: ID!
+  bookingId: ID
+  paymentStatus: String!
+  paymentMethod: String
+  total: Float!
+  subtotal: Float
+  tax: Float
+  discount: Float
+  paidAt: String
+  receivedBy: String
+  createdAt: String!
+  updatedAt: String
+  items: [InvoiceLineItem!]
+}
+
+type AdminInvoicesWorkspace {
+  queue: [AdminInvoice!]!
+  nextCursor: String
+}
+
+type AdminReview {
+  id: ID!
+  patientId: ID
+  bookingId: ID!
+  displayName: String
+  status: String!
+  rating: Float
+  title: String
+  content: String
+  createdAt: String
+  updatedAt: String
+}
+
+type AdminReviewsWorkspace {
+  queue: [AdminReview!]!
+  nextCursor: String
+}
+
+type CatalogWorkspace {
+  tests: [TestItem!]!
+  services: [ServiceItem!]!
+  packages: [PackageItem!]!
+}
+
+type CollectionTask {
+  id: ID!
+  bookingId: ID!
+  status: String!
+  assignedTo: String
+}
+
+type CollectionsWorkspaceData {
+  queue: CollectionConnection!
+  stats: CollectionStats!
+  phlebotomists: [Staff!]!
+}
+
+type CollectionConnection {
+  items: [CollectionQueueItem!]!
+  nextCursor: String
+}
+
+type CollectionQueueItem {
+  id: ID!
+  date: String
+  time: String
+  status: String!
+  patient: String
+  address: String
+  bookingId: ID!
+  assignedTo: String
+  phlebotomistId: String
+  type: String
+  lat: Float
+  lng: Float
+  tests: [String!]
+}
+
+type CollectionStats {
+  totalTasks: Int!
+  completedTasks: Int!
+  enRouteTasks: Int!
+  unassignedTasks: Int!
+}
+
+type Staff {
+  id: ID!
+  name: String!
+  role: String!
+  department: String
+  phone: String
+  email: String
+  shift: String
+  joinDate: String
+  status: String!
+}
+
+type Role {
+  id: ID!
+  title: String!
+  internal: String!
+  users: Int!
+  desc: String
+  color: String
+  scope: String
+}
+
+# Legacy alias preserved for existing resolver
+type AdminReportsWorkspaceData {
+  queue: [Report!]!
+  nextCursor: String
+  pendingCount: Int
+}

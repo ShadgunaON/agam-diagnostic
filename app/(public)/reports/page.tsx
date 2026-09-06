@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { AuthGuard } from '@/components/common';
-import { reportsService } from '@/services';
 import { ReportTaskModel } from '@/domains/reports/model';
 import { Button } from '@/components/ui';
 import { ReportPreviewModal } from '@/components/shared/ReportPreviewModal';
@@ -20,16 +19,36 @@ export default function ReportsPage() {
     
     const fetchReports = async () => {
       try {
-        const result = await reportsService.getAllTasks();
-        if (result.isSuccess) {
-          const familyIds = user.savedPatients.map(p => p.id);
-          const validIds = [user.id, ...familyIds];
-          
-          const userReports = result.value.filter(r => 
-            (validIds.includes(r.patientId || '') || validIds.includes(r.patient.id))
-          );
-          
-          setReports(userReports);
+        const query = `
+          query MyPortalReports {
+            myPortal {
+              reports {
+                id
+                patientId
+                status
+                priority
+                createdAt
+                testType
+                time
+                url
+                pdfKey
+                patient { name }
+              }
+            }
+          }
+        `;
+
+        const response = await fetch('/api/graphql', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query })
+        });
+        
+        const json = await response.json();
+        if (json.errors) throw new Error(json.errors[0]?.message);
+        
+        if (json.data?.myPortal?.reports) {
+          setReports(json.data.myPortal.reports);
         }
       } catch (error) {
         console.error("Failed to load reports", error);

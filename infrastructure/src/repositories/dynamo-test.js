@@ -149,16 +149,38 @@ class DynamoTestRepository {
    * Performed in memory on the full catalog; acceptable for catalog sizes < 10 000.
    */
   async searchTests(query) {
-    const items = await this.getCatalog();
-    if (!query || !query.trim()) return items;
-    const lowerQuery = query.toLowerCase().trim();
-    return items.filter(
-      (item) =>
-        (item.title && item.title.toLowerCase().includes(lowerQuery)) ||
-        (item.description && item.description.toLowerCase().includes(lowerQuery)) ||
-        (item.tag && item.tag.toLowerCase().includes(lowerQuery)) ||
-        (item.category && item.category.toLowerCase().includes(lowerQuery))
-    );
+    if (!query || !query.trim()) return this.getCatalog();
+    
+    const qLower = query.toLowerCase().trim();
+    const qUpper = query.toUpperCase().trim();
+    const qTitle = query.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    
+    const params = {
+      TableName: TABLE_NAME,
+      IndexName: 'GSI1',
+      KeyConditionExpression: 'GSI1PK = :pk',
+      FilterExpression: 'contains(title, :qLower) OR contains(title, :qUpper) OR contains(title, :qTitle) OR contains(slug, :qLower)',
+      ExpressionAttributeValues: {
+        ':pk': 'TESTS#catalog',
+        ':qLower': qLower,
+        ':qUpper': qUpper,
+        ':qTitle': qTitle
+      }
+    };
+    
+    const { Items } = await docClient.send(new QueryCommand(params));
+    return (Items || []).map(item => {
+      const { PK, SK, GSI1PK, GSI1SK, ...rest } = item;
+      return rest;
+    });
+  }
+
+  /**
+   * Canonical search entry point — used by the catalog resolver.
+   * Delegates to searchTests for DRY access.
+   */
+  async search(query, limit) {
+    return this.searchTests(query);
   }
 
   // ----------------------------------------------------------------

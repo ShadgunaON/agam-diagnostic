@@ -38,23 +38,54 @@ export function AdminTopbar() {
 
   React.useEffect(() => {
     if (!user) return;
-    import('@/services').then(({ notificationService }) => {
-      const recipientId = user.staffId || user.id;
-      notificationService.getMyNotifications(recipientId).then(res => {
-        if (res.isSuccess) {
-          setNotifications(res.value);
-        }
-      });
-    });
-  }, [user, showNotifDropdown]); // Refresh when dropdown opens
+    
+    let isMounted = true;
+
+    const fetchNotifications = async () => {
+      const { notificationService } = await import('@/services');
+      // Fix 1: Do NOT pass an explicit userId for self-requests.
+      // Let the backend use the authoritative Cognito `identity.sub`.
+      const res = await notificationService.getMyNotificationsGql();
+      if (res.isSuccess && isMounted) {
+        setNotifications(res.value);
+      }
+    };
+
+    // Initial fetch
+    fetchNotifications();
+
+    // Fix 2: Add 30-second polling for dynamic unread count
+    const intervalId = setInterval(fetchNotifications, 30000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
+  }, [user]); // Removed showNotifDropdown to avoid resetting interval
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
-  const handleMarkAsRead = async (id: string, link?: string) => {
+  const handleMarkAsRead = async (id: string, link?: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation(); // prevent link navigation if just clicking mark read (if applicable)
+    }
+    
+    // Fix 3: Optimistically update local state so badge decrements immediately
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+    
     const { notificationService } = await import('@/services');
-    await notificationService.markAsRead(id);
-    if (link) router.push(link);
-    setShowNotifDropdown(false);
+    const result = await notificationService.markAsReadGql(id);
+    
+    if (!result.isSuccess) {
+      // Revert if failed
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: false } : n));
+    }
+
+    if (link) {
+      setShowNotifDropdown(false);
+      router.push(link);
+    }
+    // Note: dropdown stays open if there is no link, allowing reading multiple items
   };
 
   const isUuid = (str?: string) => !!str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
@@ -138,7 +169,7 @@ export function AdminTopbar() {
                   notifications.map(n => (
                     <div 
                       key={n.id} 
-                      onClick={() => handleMarkAsRead(n.id, n.link)}
+                      onClick={(e) => handleMarkAsRead(n.id, n.link, e)}
                       className={`p-3 border-b border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors ${!n.isRead ? 'bg-blue-50/50' : ''}`}
                     >
                       <p className="text-sm font-bold text-slate-900 mb-1">{n.title}</p>

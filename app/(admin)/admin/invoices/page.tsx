@@ -11,26 +11,67 @@ export default function AdminInvoicesPage() {
   const [mounted, setMounted] = useState(false);
   const [invoices, setInvoices] = useState<InvoiceModel[]>([]);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [isLoading, setIsLoading] = useState(false);
+  const [cursorStack, setCursorStack] = useState<string[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+
+  // Debounce search
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCursorStack([]);
+  }, [debouncedSearch, statusFilter]);
 
   useEffect(() => {
     setMounted(true);
-    const loadData = async () => {
-      const res = await invoiceService.getAll();
-      if (res.isSuccess) {
-        setInvoices(res.value);
-      }
-    };
-    loadData();
   }, []);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      const currentCursor = cursorStack.length > 0 ? cursorStack[cursorStack.length - 1] : null;
+      const res = await invoiceService.getAdminWorkspaceGql({
+        limit: 15,
+        cursor: currentCursor,
+        status: statusFilter,
+        search: debouncedSearch
+      });
+      if (res.isSuccess) {
+        setInvoices(res.value.data);
+        setNextCursor(res.value.nextCursor);
+      }
+    } catch (e) {
+      console.error("Failed to load invoices", e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (mounted) {
+      loadData();
+    }
+  }, [mounted, debouncedSearch, statusFilter, cursorStack]);
 
   if (!mounted) return null;
 
-  const filteredInvoices = invoices.filter(inv => {
-    const matchesSearch = inv.id.toLowerCase().includes(search.toLowerCase()) || inv.patientId.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === 'All' || inv.paymentStatus === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const handleNextPage = () => {
+    if (nextCursor) {
+      setCursorStack(prev => [...prev, nextCursor]);
+    }
+  };
+
+  const handlePrevPage = () => {
+    setCursorStack(prev => prev.slice(0, -1));
+  };
 
   return (
     <AdminPageTemplate>
@@ -83,8 +124,15 @@ export default function AdminInvoicesPage() {
                   <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-wider text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredInvoices.map(inv => (
+              <tbody className="divide-y divide-slate-100 relative">
+                {isLoading && (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-slate-500 font-medium text-sm">
+                      Loading invoices...
+                    </td>
+                  </tr>
+                )}
+                {!isLoading && invoices.map(inv => (
                   <tr key={inv.id} className="hover:bg-slate-50 transition-colors group">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-[14px] font-extrabold text-slate-900">{inv.id}</div>
@@ -116,7 +164,7 @@ export default function AdminInvoicesPage() {
                     </td>
                   </tr>
                 ))}
-                {filteredInvoices.length === 0 && (
+                {!isLoading && invoices.length === 0 && (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center text-slate-500 font-medium text-sm">
                       No invoices found matching your criteria.
@@ -125,6 +173,28 @@ export default function AdminInvoicesPage() {
                 )}
               </tbody>
             </table>
+          </div>
+          
+          <div className="p-4 lg:p-6 border-t border-slate-100 flex items-center justify-between bg-slate-50 mt-auto">
+            <div className="text-sm font-medium text-slate-500">
+              Showing Page {cursorStack.length + 1}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handlePrevPage}
+                disabled={cursorStack.length === 0 || isLoading}
+                className="px-4 py-2 text-sm font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Previous
+              </button>
+              <button
+                onClick={handleNextPage}
+                disabled={!nextCursor || isLoading}
+                className="px-4 py-2 text-sm font-bold text-white bg-slate-900 rounded-xl hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
       </div>

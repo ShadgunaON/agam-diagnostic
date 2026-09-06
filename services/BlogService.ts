@@ -1,50 +1,169 @@
-import { IBlogRepository } from '@/domains/blog/repository';
-import { BlogArticle } from '@/domains/blog/model';
+import { BlogArticle, BlogCategory, BlogHero, PopularRead, NewsletterSubscriber } from '@/domains/blog/model';
+import { Result, success, failure } from '@/shared/result';
+import { PaginatedResponse } from '@/lib/api/types';
+import { NotFoundError } from '@/lib/api/errors';
+import { blogData } from '@/data/blog';
 
 export class BlogService {
-  constructor(private readonly repository: IBlogRepository) {}
+  constructor() {}
 
-  async getArticles(page = 1, limit = 10) {
-    return this.repository.getArticles(page, limit);
+  private async _graphqlFetch<T>(query: string, variables?: Record<string, unknown>): Promise<T | null> {
+    try {
+      const token = typeof window !== 'undefined'
+        ? (sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '')
+        : '';
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ query, variables }),
+      });
+      if (!response.ok) return null;
+      const { data, errors } = await response.json();
+      if (errors?.length) { console.error('GraphQL errors:', errors); return null; }
+      return data as T;
+    } catch (err) {
+      console.error('GraphQL fetch failed:', err);
+      return null;
+    }
   }
 
-  async getArticleBySlug(slug: string) {
-    return this.repository.getArticleBySlug(slug);
+  async getArticles(page = 1, limit = 10): Promise<Result<PaginatedResponse<BlogArticle>>> {
+    const data = await this._graphqlFetch<{ blogs: BlogArticle[] }>(
+      `query Blogs {
+        blogs {
+          id slug title description content date category author authorId
+          icon colorPrimary colorSecondary imageUrl image status views publishedAt createdAt
+        }
+      }`
+    );
+    if (!data?.blogs) return failure(new Error('Failed to load articles'));
+    
+    const articles = data.blogs || [];
+    return success({
+      data: articles,
+      meta: {
+        total: articles.length,
+        page,
+        limit,
+        totalPages: Math.ceil(articles.length / limit) || 1,
+      },
+    });
   }
 
-  async getCategories() {
-    return this.repository.getCategories();
+  async getArticleBySlug(slug: string): Promise<Result<BlogArticle>> {
+    const data = await this._graphqlFetch<{ blogById: BlogArticle }>(
+      `query BlogById($idOrSlug: String!) {
+        blogById(idOrSlug: $idOrSlug) {
+          id slug title description content date category author authorId
+          icon colorPrimary colorSecondary imageUrl image status views publishedAt createdAt
+        }
+      }`,
+      { idOrSlug: slug }
+    );
+    if (data?.blogById) return success(data.blogById);
+    return failure(new Error('Article not found'));
   }
 
-  async getFeaturedArticle() {
-    return this.repository.getFeaturedArticle();
+  async getCategories(): Promise<Result<BlogCategory[]>> {
+    return success(blogData.categories);
   }
 
-  async getPopularReads() {
-    return this.repository.getPopularReads();
+  async getFeaturedArticle(): Promise<Result<BlogArticle>> {
+    const res = await this.getArticles(1, 10);
+    if (res.isFailure) return failure(res.error);
+    const published = res.value.data.filter((a) => a.status === 'Published');
+    if (published.length > 0) return success(published[0]);
+    return failure(new NotFoundError('No featured article found'));
   }
 
-  async getHeroData() {
-    return this.repository.getHeroData();
+  async getPopularReads(): Promise<Result<PopularRead[]>> {
+    const res = await this.getArticles(1, 50);
+    if (res.isFailure) return failure(res.error);
+    
+    const published = res.value.data.filter((a) => a.status === 'Published');
+    const popular = published
+      .sort((a, b) => (b.views || 0) - (a.views || 0))
+      .slice(0, 5)
+      .map(article => ({
+        title: article.title,
+        imageUrl: article.imageUrl || article.image || '/assets/images/placeholder.jpg',
+        date: article.date,
+        icon: article.icon || 'DocumentTextIcon',
+        slug: article.slug
+      }));
+      
+    return success(popular);
   }
 
-  async createArticle(article: Omit<BlogArticle, 'id'>) {
-    return this.repository.createArticle(article);
+  async getHeroData(): Promise<Result<BlogHero>> {
+    return success(blogData.hero);
   }
 
-  async updateArticle(id: string, updates: Partial<BlogArticle>) {
-    return this.repository.updateArticle(id, updates);
+  async createArticle(article: Omit<BlogArticle, 'id'>): Promise<Result<BlogArticle>> {
+    const data = await this._graphqlFetch<{ createBlog: BlogArticle }>(
+      `mutation CreateBlog($input: AWSJSON!) {
+        createBlog(input: $input) {
+          id slug title description status views
+        }
+      }`,
+      { input: article }
+    );
+    if (data?.createBlog) return success(data.createBlog);
+    return failure(new Error('Failed to create article'));
   }
 
-  async deleteArticle(id: string) {
-    return this.repository.deleteArticle(id);
+  async updateArticle(id: string, updates: Partial<BlogArticle>): Promise<Result<BlogArticle>> {
+    const data = await this._graphqlFetch<{ updateBlog: BlogArticle }>(
+      `mutation UpdateBlog($id: ID!, $input: AWSJSON!) {
+        updateBlog(id: $id, input: $input) {
+          id slug title description status views
+        }
+      }`,
+      { id, input: updates }
+    );
+    if (data?.updateBlog) return success(data.updateBlog);
+    return failure(new Error('Failed to update article'));
   }
 
-  async subscribeToNewsletter(email: string) {
-    return this.repository.subscribeToNewsletter(email);
+  async deleteArticle(id: string): Promise<Result<void>> {
+    const data = await this._graphqlFetch<{ deleteBlog: { message: string } }>(
+      `mutation DeleteBlog($id: ID!) {
+        deleteBlog(id: $id) {
+          message
+        }
+      }`,
+      { id }
+    );
+    if (data?.deleteBlog) return success(undefined as any);
+    return failure(new Error('Failed to delete article'));
   }
 
-  async getNewsletterSubscribers() {
-    return this.repository.getNewsletterSubscribers();
+  async subscribeToNewsletter(email: string): Promise<Result<{ message: string; subscriber: NewsletterSubscriber }>> {
+    const data = await this._graphqlFetch<{ newsletterSubscribe: { message: string; subscriber: NewsletterSubscriber } }>(
+      `mutation NewsletterSubscribe($email: String!) {
+        newsletterSubscribe(email: $email) {
+          message
+          subscriber { id email status subscribedAt }
+        }
+      }`,
+      { email }
+    );
+    if (data?.newsletterSubscribe) return success(data.newsletterSubscribe);
+    return failure(new Error('Failed to subscribe'));
+  }
+
+  async getNewsletterSubscribers(): Promise<Result<NewsletterSubscriber[]>> {
+    const data = await this._graphqlFetch<{ newsletterSubscribers: NewsletterSubscriber[] }>(
+      `query NewsletterSubscribers {
+        newsletterSubscribers {
+          id email status subscribedAt
+        }
+      }`
+    );
+    if (data?.newsletterSubscribers) return success(data.newsletterSubscribers);
+    return failure(new Error('Failed to fetch subscribers'));
   }
 }

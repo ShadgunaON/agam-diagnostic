@@ -8,7 +8,7 @@ import { packageService } from '@/services';
 import { siteConfig } from '@/config/site';
 
 // Revalidate every 60 s so admin edits appear without a full redeploy
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 // Allow paths not pre-rendered at build time to be served on demand
 export const dynamicParams = true;
 

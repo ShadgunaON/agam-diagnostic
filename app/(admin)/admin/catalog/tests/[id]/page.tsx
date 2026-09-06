@@ -67,12 +67,34 @@ export default function EditTestPage() {
 
   const loadTest = async () => {
     try {
-      const res = await testCatalogService.getById(id);
-      if (res.isSuccess) {
-        setFormData(res.value);
-        setFaqs(res.value.faqs || []);
+      const token = sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '';
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          query: `
+            query TestById($id: ID!) {
+              testById(id: $id) {
+                id title slug category description price status faqs relatedTests sampleType
+              }
+            }
+          `,
+          variables: { id }
+        })
+      });
+
+      const json = await response.json();
+      if (json.errors) throw new Error(json.errors[0]?.message || 'GraphQL error');
+      
+      const test = json.data?.testById;
+      if (test) {
+        setFormData(test);
+        setFaqs(test.faqs || []);
         // Restore saved related tests selections
-        setRelatedTests((res.value.relatedTests || []).map(rt => ({
+        setRelatedTests((test.relatedTests || []).map((rt: any) => ({
           title: rt.title,
           category: rt.category,
           description: rt.description,
@@ -81,7 +103,7 @@ export default function EditTestPage() {
         })));
 
         // Check if sample type is custom
-        const loadedSampleType = res.value.sampleType || '';
+        const loadedSampleType = test.sampleType || '';
         if (loadedSampleType && !["Blood", "Urine", "Stool", "Sputum", "Saliva", "Swab", "Tissue", "Semen", "CSF", "CSF (Cerebrospinal Fluid)"].includes(loadedSampleType)) {
           setIsCustomSampleType(true);
         }
@@ -160,12 +182,35 @@ export default function EditTestPage() {
     if (pickerLoaded.current) return; // Only fetch once per page session
     setPickerLoading(true);
     try {
-      const res = await testCatalogService.getCatalog(1, 200);
-      if (res.isSuccess) {
-        // Only ACTIVE tests; exclude any test that is not status ACTIVE
-        setAllCatalog(res.value.data.filter(t => !t.status || t.status === 'ACTIVE'));
-        pickerLoaded.current = true;
-      }
+      const token = sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '';
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          query: `
+            query {
+              adminCatalogWorkspace {
+                tests {
+                  id title slug category description status
+                }
+              }
+            }
+          `
+        })
+      });
+
+      const json = await response.json();
+      if (json.errors) throw new Error(json.errors[0]?.message || 'GraphQL error');
+      
+      const tests = json.data?.adminCatalogWorkspace?.tests || [];
+      // Only ACTIVE tests; exclude any test that is not status ACTIVE
+      setAllCatalog(tests.filter((t: any) => !t.status || t.status === 'ACTIVE'));
+      pickerLoaded.current = true;
+    } catch (err) {
+      console.error('Failed to load catalog for picker', err);
     } finally {
       setPickerLoading(false);
     }

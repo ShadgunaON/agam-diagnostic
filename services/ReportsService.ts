@@ -1,4 +1,3 @@
-import { IReportsRepository } from '@/domains/reports/repository';
 import { ReportTaskModel } from '@/domains/reports/model';
 import { CollectionTaskModel } from '@/domains/collections/model';
 import { success, failure, Result } from '@/shared/result';
@@ -6,27 +5,100 @@ import { success, failure, Result } from '@/shared/result';
 export class ReportsService {
   private bookingService?: import('./BookingService').BookingService;
 
-  constructor(private readonly repository: IReportsRepository) {}
+  constructor() {}
 
   setBookingService(service: import('./BookingService').BookingService) {
     this.bookingService = service;
   }
 
-  async getById(id: string) {
-    return this.repository.getById(id);
+  private async _graphqlFetch<T>(query: string, variables?: Record<string, unknown>): Promise<T | null> {
+    try {
+      const token = typeof window !== 'undefined'
+        ? (sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '')
+        : '';
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ query, variables }),
+      });
+      if (!response.ok) return null;
+      const { data, errors } = await response.json();
+      if (errors?.length) { console.error('GraphQL errors:', errors); return null; }
+      return data as T;
+    } catch (err) {
+      console.error('GraphQL fetch failed:', err);
+      return null;
+    }
   }
 
-  async getAllTasks() {
-    return this.repository.getAllTasks();
+  async getById(id: string): Promise<Result<ReportTaskModel>> {
+    const data = await this._graphqlFetch<{ reportById: ReportTaskModel }>(
+      `query ReportById($id: ID!) {
+        reportById(id: $id) {
+          id patientId bookingId testType status priority time results { parameter value unit reference isAbnormal }
+          patient { name age gender id }
+        }
+      }`,
+      { id }
+    );
+    if (data?.reportById) return success(data.reportById);
+    return failure(new Error('Report not found'));
+  }
+
+  async getAllTasks(): Promise<Result<ReportTaskModel[]>> {
+    const data = await this._graphqlFetch<{ reports: ReportTaskModel[] }>(
+      `query {
+        reports {
+          id patientId bookingId testType status priority time results { parameter value unit reference isAbnormal }
+          patient { name age gender id }
+        }
+      }`
+    );
+    if (data?.reports) return success(data.reports);
+    return failure(new Error('Failed to load reports'));
+  }
+
+  async getAdminWorkspace(limit = 20, cursor: string | null = null, status = 'All', sort = 'date_newest', search = '') {
+    try {
+      const data = await this._graphqlFetch<{ adminReportsWorkspace: any }>(
+        `query GetReportsWorkspace($limit: Int, $cursor: String, $status: String, $sort: String, $search: String) {
+          adminReportsWorkspace(limit: $limit, cursor: $cursor, status: $status, sort: $sort, search: $search) {
+            queue {
+              id status priority createdAt testType time url pdfKey
+              patient { name id age gender }
+              results { parameter value unit reference isAbnormal }
+            }
+            nextCursor
+            pendingCount
+          }
+        }`,
+        { limit, cursor, status, sort, search }
+      );
+      if (data?.adminReportsWorkspace) return success(data.adminReportsWorkspace);
+      return failure(new Error('Failed to load reports workspace'));
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Unknown error'));
+    }
+  }
+
+  async getByPatientId(patientId: string): Promise<Result<ReportTaskModel[]>> {
+    const data = await this._graphqlFetch<{ reportsByPatient: ReportTaskModel[] }>(
+      `query ReportsByPatient($patientId: ID!) {
+        reportsByPatient(patientId: $patientId) {
+          id patientId bookingId testType status priority time results { parameter value unit reference isAbnormal }
+          patient { name age gender id }
+        }
+      }`,
+      { patientId }
+    );
+    if (data?.reportsByPatient) return success(data.reportsByPatient);
+    return failure(new Error('Failed to load reports for patient'));
   }
 
   async createFromCollection(collection: CollectionTaskModel): Promise<Result<ReportTaskModel>> {
-    const existingRes = await this.repository.getAllTasks();
-    if (existingRes.isSuccess) {
-      const existing = existingRes.value.find(t => t.bookingId === collection.bookingId);
-      if (existing) return success(existing);
-    }
-    
     const reportTask: ReportTaskModel = {
       id: `REP-${collection.bookingId?.replace('B-', '') || Date.now()}`,
       patientId: collection.patientId,
@@ -38,10 +110,30 @@ export class ReportsService {
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       results: []
     };
-    return this.repository.createTask(reportTask);
+    
+    const data = await this._graphqlFetch<{ createReportTask: ReportTaskModel }>(
+      `mutation CreateReportTask($input: AWSJSON!) {
+        createReportTask(input: $input) {
+          id patientId bookingId testType status priority time results { parameter value unit reference isAbnormal }
+          patient { name age gender id }
+        }
+      }`,
+      { input: reportTask }
+    );
+    if (data?.createReportTask) return success(data.createReportTask);
+    return failure(new Error('Failed to create report task'));
   }
 
-  async updateStatus(id: string, status: ReportTaskModel['status']) {
-    return this.repository.updateStatus(id, status);
+  async updateStatus(id: string, status: ReportTaskModel['status']): Promise<Result<ReportTaskModel>> {
+    const data = await this._graphqlFetch<{ updateReportStatus: ReportTaskModel }>(
+      `mutation UpdateReportStatus($id: ID!, $status: String!) {
+        updateReportStatus(id: $id, status: $status) {
+          id status
+        }
+      }`,
+      { id, status }
+    );
+    if (data?.updateReportStatus) return success(data.updateReportStatus);
+    return failure(new Error('Failed to update report status'));
   }
 }

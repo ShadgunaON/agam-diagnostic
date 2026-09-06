@@ -6,7 +6,7 @@ import { PackagesFeaturedSection } from '@/components/sections/packages';
 import { siteConfig } from '@/config/site';
 import { packageService } from '@/services';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: `Men's Health Packages — Executive & Preventive Checkups | ${siteConfig.name}`,

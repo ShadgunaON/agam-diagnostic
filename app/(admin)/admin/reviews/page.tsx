@@ -10,55 +10,95 @@ import { AdminReviewTable } from '@/components/sections/admin/reviews/AdminRevie
 export default function AdminReviewsPage() {
   const { user } = useAuth();
   const [reviews, setReviews] = useState<ReviewModel[]>([]);
-  const [filteredReviews, setFilteredReviews] = useState<ReviewModel[]>([]);
+  const [stats, setStats] = useState<{ total: number; pending: number; approved: number; averageRating: number } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Pagination states
+  const [cursorStack, setCursorStack] = useState<string[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
 
   // Filters
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ReviewStatus | 'All'>('All');
   const [ratingFilter, setRatingFilter] = useState<number | 'All'>('All');
 
-  const loadReviews = async () => {
+  // Debounce search
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCursorStack([]);
+  }, [debouncedSearch, statusFilter, ratingFilter]);
+
+  const loadReviewsAndStats = async () => {
     setIsLoading(true);
     try {
-      const result = await reviewService.getAllReviews();
-      if (result.isSuccess) {
-        setReviews(result.value);
+      const currentCursor = cursorStack.length > 0 ? cursorStack[cursorStack.length - 1] : null;
+      
+      const [reviewsResult, statsResult] = await Promise.all([
+        reviewService.getPaginatedReviewsGql({
+          limit: 15,
+          cursor: currentCursor,
+          status: statusFilter,
+          rating: ratingFilter,
+          search: debouncedSearch
+        }),
+        // Fetch stats via GraphQL
+        (async () => {
+          try {
+            const token = sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '';
+            const res = await fetch('/api/graphql', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
+              body: JSON.stringify({
+                query: `
+                  query {
+                    reviewStats {
+                      total
+                      pending
+                      approved
+                      averageRating
+                    }
+                  }
+                `
+              })
+            });
+            if (!res.ok) return null;
+            const json = await res.json();
+            return json.data?.reviewStats || null;
+          } catch (e) {
+            console.error("Failed to load review stats via GraphQL", e);
+            return null;
+          }
+        })()
+      ]);
+
+      if (reviewsResult.isSuccess) {
+        setReviews(reviewsResult.value.data);
+        setNextCursor(reviewsResult.value.nextCursor);
+      }
+      if (statsResult !== undefined) {
+        setStats(statsResult);
       }
     } catch (error) {
-      console.error("Failed to load reviews", error);
+      console.error("Failed to load reviews and stats", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadReviews();
-  }, []);
-
-  useEffect(() => {
-    let filtered = [...reviews];
-
-    if (statusFilter !== 'All') {
-      filtered = filtered.filter(r => r.status === statusFilter);
-    }
-
-    if (ratingFilter !== 'All') {
-      filtered = filtered.filter(r => r.rating === ratingFilter);
-    }
-
-    if (search) {
-      const q = search.toLowerCase();
-      filtered = filtered.filter(r => 
-        r.id?.toLowerCase().includes(q) ||
-        r.displayName?.toLowerCase().includes(q) ||
-        r.bookingId?.toLowerCase().includes(q) ||
-        r.comment?.toLowerCase().includes(q)
-      );
-    }
-
-    setFilteredReviews(filtered);
-  }, [reviews, search, statusFilter, ratingFilter]);
+    loadReviewsAndStats();
+  }, [debouncedSearch, statusFilter, ratingFilter, cursorStack]);
 
   const handleModerate = async (id: string, newStatus: ReviewStatus) => {
     try {
@@ -88,7 +128,7 @@ export default function AdminReviewsPage() {
         </p>
       </div>
 
-      <AdminReviewKPIs reviews={reviews} />
+      <AdminReviewKPIs stats={stats} />
 
       <div className="bg-white p-4 rounded-xl border border-border shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
         <input 
@@ -127,7 +167,34 @@ export default function AdminReviewsPage() {
       {isLoading ? (
         <div className="text-center py-20 text-muted-foreground">Loading Reviews...</div>
       ) : (
-        <AdminReviewTable reviews={filteredReviews} onModerate={handleModerate} />
+        <>
+          <AdminReviewTable reviews={reviews} onModerate={handleModerate} />
+          
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-between pt-4 border-t border-border mt-4">
+            <div className="text-sm font-medium text-muted-foreground">
+              Showing Page {cursorStack.length + 1}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCursorStack(prev => prev.slice(0, -1))}
+                disabled={cursorStack.length === 0 || isLoading}
+                className="px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => {
+                  if (nextCursor) setCursorStack(prev => [...prev, nextCursor]);
+                }}
+                disabled={!nextCursor || isLoading}
+                className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

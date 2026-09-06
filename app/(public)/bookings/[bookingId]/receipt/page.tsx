@@ -26,17 +26,13 @@ export default function ReceiptPage() {
     
     const fetchData = async () => {
       try {
-        const bkResult = await bookingService.getById(bookingId);
+        const bkResult = await bookingService.getByIdGql(bookingId);
         if (bkResult.isSuccess && bkResult.value) {
           setBooking(bkResult.value);
           
-          // Fetch invoice by bookingId
-          const invResult = await invoiceService.getAll();
-          if (invResult.isSuccess) {
-            const foundInv = invResult.value.find(i => i.bookingId === bookingId);
-            if (foundInv) {
-              setInvoice(foundInv);
-            }
+          if (bkResult.value.invoiceId) {
+            const invResult = await invoiceService.getByIdGql(bkResult.value.invoiceId);
+            if (invResult.isSuccess && invResult.value) setInvoice(invResult.value);
           }
         }
       } catch (error) {

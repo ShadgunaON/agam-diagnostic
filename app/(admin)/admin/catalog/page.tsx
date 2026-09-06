@@ -38,15 +38,35 @@ export default function AdminCatalogPage() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [testsRes, servicesRes, packagesRes] = await Promise.all([
-        testCatalogService.getCatalog(1, 1000),
-        serviceCatalogService.getCatalog(1, 1000),
-        packageService.getCatalog(1, 1000)
-      ]);
+      const token = sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '';
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          query: `
+            query {
+              adminCatalogWorkspace {
+                tests { id title slug category price status }
+                packages { id title slug category price status }
+                services { id title slug category price status }
+              }
+            }
+          `
+        })
+      });
+
+      const json = await response.json();
+      if (json.errors) throw new Error(json.errors[0]?.message || 'GraphQL error');
       
-      if (testsRes.isSuccess) setTests(testsRes.value?.data || []);
-      if (servicesRes.isSuccess) setServices(servicesRes.value?.data || []);
-      if (packagesRes.isSuccess) setPackages(packagesRes.value?.data || []);
+      const workspace = json.data?.adminCatalogWorkspace;
+      if (workspace) {
+        setTests(workspace.tests || []);
+        setServices(workspace.services || []);
+        setPackages(workspace.packages || []);
+      }
     } catch (error) {
       toast.error('Error', 'Failed to load catalog data');
     } finally {

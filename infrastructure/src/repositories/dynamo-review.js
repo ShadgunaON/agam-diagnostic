@@ -7,6 +7,80 @@ const docClient = DynamoDBDocumentClient.from(client);
 const TABLE_NAME = process.env.DYNAMODB_TABLE_NAME || 'agam-data-dev';
 
 class DynamoReviewRepository {
+  async getPaginated({ limit = 20, cursor = null, status = 'All', rating = 'All', search = '' }) {
+    const params = {
+      TableName: TABLE_NAME,
+      IndexName: 'GSI1',
+      KeyConditionExpression: 'GSI1PK = :entityPk',
+      ScanIndexForward: false, // Descending by Date
+      Limit: limit,
+      ExpressionAttributeValues: {
+        ':entityPk': 'ENTITY#REVIEW'
+      }
+    };
+
+    if (cursor) {
+      try {
+        const decodedStr = Buffer.from(cursor, 'base64').toString('utf8');
+        params.ExclusiveStartKey = JSON.parse(decodedStr);
+      } catch (err) {
+        const error = new Error('Malformed cursor');
+        error.statusCode = 400;
+        throw error;
+      }
+    }
+
+    const filters = [];
+    const attrNames = {};
+    const attrValues = params.ExpressionAttributeValues;
+
+    if (status && status !== 'All') {
+      filters.push('#status = :status');
+      attrNames['#status'] = 'status';
+      attrValues[':status'] = status;
+    }
+
+    if (rating && rating !== 'All') {
+      filters.push('#rating = :rating');
+      attrNames['#rating'] = 'rating';
+      attrValues[':rating'] = Number(rating);
+    }
+
+    if (search && search.trim()) {
+      const qOriginal = search.trim();
+      const qLower = search.toLowerCase().trim();
+      const qUpper = search.toUpperCase().trim();
+      const qTitle = search.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+
+      filters.push('(contains(PK, :qOriginal) OR contains(displayName, :qLower) OR contains(displayName, :qUpper) OR contains(displayName, :qTitle) OR contains(bookingId, :qOriginal) OR contains(#status, :qLower) OR contains(#status, :qUpper) OR contains(#status, :qTitle) OR contains(#comment, :qLower))');
+      attrNames['#status'] = 'status'; // in case not added by status filter
+      attrNames['#comment'] = 'comment';
+      attrValues[':qOriginal'] = qOriginal;
+      attrValues[':qLower'] = qLower;
+      attrValues[':qUpper'] = qUpper;
+      attrValues[':qTitle'] = qTitle;
+    }
+
+    if (filters.length > 0) {
+      params.FilterExpression = filters.join(' AND ');
+      if (Object.keys(attrNames).length > 0) {
+        params.ExpressionAttributeNames = attrNames;
+      }
+    }
+
+    const response = await docClient.send(new QueryCommand(params));
+
+    let nextCursor = null;
+    if (response.LastEvaluatedKey) {
+      nextCursor = Buffer.from(JSON.stringify(response.LastEvaluatedKey)).toString('base64');
+    }
+
+    return {
+      data: (response.Items || []).map(item => this._mapFromDb(item)),
+      nextCursor
+    };
+  }
+
   _mapFromDb(item) {
     if (!item) return null;
     const { PK, SK, GSI1PK, GSI1SK, GSI2PK, GSI2SK, ...rest } = item;
@@ -98,6 +172,38 @@ class DynamoReviewRepository {
     } while (exclusiveStartKey);
 
     return items.map(item => this._mapFromDb(item));
+  }
+
+  async search(query, limit = 12) {
+    if (!query || !query.trim()) return [];
+    
+    const qOriginal = query.trim();
+    const qLower = query.toLowerCase().trim();
+    const qUpper = query.toUpperCase().trim();
+    const qTitle = query.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+
+    const params = {
+      TableName: TABLE_NAME,
+      IndexName: 'GSI1',
+      KeyConditionExpression: 'GSI1PK = :entityPk',
+      FilterExpression: 'contains(PK, :qOriginal) OR contains(displayName, :qLower) OR contains(displayName, :qUpper) OR contains(displayName, :qTitle) OR contains(bookingId, :qOriginal) OR contains(#status, :qLower) OR contains(#status, :qUpper) OR contains(#status, :qTitle) OR contains(#comment, :qLower)',
+      ExpressionAttributeNames: {
+        '#status': 'status',
+        '#comment': 'comment'
+      },
+      ExpressionAttributeValues: {
+        ':entityPk': 'ENTITY#REVIEW',
+        ':qOriginal': qOriginal,
+        ':qLower': qLower,
+        ':qUpper': qUpper,
+        ':qTitle': qTitle
+      },
+      ScanIndexForward: false,
+      Limit: limit,
+    };
+    
+    const { Items } = await docClient.send(new QueryCommand(params));
+    return (Items || []).map((item) => this._mapFromDb(item));
   }
 
   async getByPatientId(patientId) {
@@ -295,6 +401,85 @@ class DynamoReviewRepository {
     }
 
     return this._mapFromDb(response.Attributes);
+  }
+
+  /**
+   * Compute authoritative review KPI aggregates server-side.
+   *
+   * total:
+   *   Query ENTITY#REVIEW with Select:COUNT.
+   *   This partition contains one booking-pointer item per review.
+   *   The pointer is written with ConditionExpression: attribute_not_exists(PK),
+   *   enforcing exactly one pointer per booking, so the count is authoritative.
+   *
+   * pending / approved:
+   *   Query REVIEW#STATUS#<status> with Select:COUNT.
+   *   These are the canonical primary review items.
+   *
+   * averageRating:
+   *   Query ENTITY#REVIEW with ProjectionExpression: rating only.
+   *   No full review objects are transferred. Average computed in Lambda.
+   *
+   * Read-cost note: all four queries consume read capacity proportional to
+   * the number of items in their respective GSI1 partition.
+   * No ScanCommand is used.
+   */
+  async getStats() {
+    const countPartition = async (gsi1pk) => {
+      const params = {
+        TableName: TABLE_NAME,
+        IndexName: 'GSI1',
+        KeyConditionExpression: 'GSI1PK = :pk',
+        ExpressionAttributeValues: { ':pk': gsi1pk },
+        Select: 'COUNT',
+      };
+      let count = 0;
+      let exclusiveStartKey = undefined;
+      do {
+        params.ExclusiveStartKey = exclusiveStartKey;
+        const response = await docClient.send(new QueryCommand(params));
+        count += response.Count || 0;
+        exclusiveStartKey = response.LastEvaluatedKey;
+      } while (exclusiveStartKey);
+      return count;
+    };
+
+    const fetchRatings = async () => {
+      const params = {
+        TableName: TABLE_NAME,
+        IndexName: 'GSI1',
+        KeyConditionExpression: 'GSI1PK = :pk',
+        ExpressionAttributeValues: { ':pk': 'ENTITY#REVIEW' },
+        ProjectionExpression: '#rating',
+        ExpressionAttributeNames: { '#rating': 'rating' },
+      };
+      let sum = 0;
+      let count = 0;
+      let exclusiveStartKey = undefined;
+      do {
+        params.ExclusiveStartKey = exclusiveStartKey;
+        const response = await docClient.send(new QueryCommand(params));
+        if (response.Items) {
+          for (const item of response.Items) {
+            if (typeof item.rating === 'number') {
+              sum += item.rating;
+              count++;
+            }
+          }
+        }
+        exclusiveStartKey = response.LastEvaluatedKey;
+      } while (exclusiveStartKey);
+      return count > 0 ? parseFloat((sum / count).toFixed(1)) : 0;
+    };
+
+    const [total, pending, approved, averageRating] = await Promise.all([
+      countPartition('ENTITY#REVIEW'),
+      countPartition('REVIEW#STATUS#Pending'),
+      countPartition('REVIEW#STATUS#Approved'),
+      fetchRatings(),
+    ]);
+
+    return { total, pending, approved, averageRating };
   }
 }
 

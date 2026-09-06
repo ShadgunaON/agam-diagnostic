@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 // Revalidate every 60 s so admin catalog changes appear without a full redeploy
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 
 export default async function HealthPackagesPage() {

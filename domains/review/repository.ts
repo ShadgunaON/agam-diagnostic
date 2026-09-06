@@ -8,5 +8,6 @@ export interface IReviewRepository {
   getByPatient(patientId: string): Promise<Result<ReviewModel[]>>;
   getByBooking(bookingId: string): Promise<Result<ReviewModel | null>>;
   getAll(): Promise<Result<ReviewModel[]>>;
+  getPaginated(params: { limit?: number; cursor?: string | null; status?: string; rating?: number | string; search?: string }): Promise<Result<{ data: ReviewModel[]; nextCursor: string | null }>>;
   getApproved(): Promise<Result<ReviewModel[]>>;
 }

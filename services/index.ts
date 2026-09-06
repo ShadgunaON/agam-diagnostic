@@ -1,19 +1,4 @@
-import { 
-  blogRepository, 
-  serviceRepository, 
-  packageRepository, 
-  authRepository, 
-  bookingRepository, 
-  reportsRepository, 
-  testRepository,
-  collectionRepository,
-  staffRepository,
-  activityRepository,
-  patientRepository,
-  invoiceRepository,
-  reviewRepository,
-  notificationRepository
-} from '@/repositories/registry';
+
 import { BlogService } from './BlogService';
 import { ServiceCatalogService } from './ServiceCatalogService';
 import { PackageService } from './PackageService';
@@ -29,38 +14,48 @@ import { AnalyticsService } from './AnalyticsService';
 import { AlertService } from './AlertService';
 import { PatientService } from './PatientService';
 import { InvoiceService } from './InvoiceService';
-
 import { GlobalSearchService } from './GlobalSearchService';
 import { NotificationService } from './NotificationService';
+import { DocumentService } from './DocumentService';
 import { PaymentService, MockPaymentProvider, ApiPaymentProvider } from './PaymentService';
 import { env } from '@/config/env';
 import { apiClient } from '@/repositories/registry';
 
-export const blogService = new BlogService(blogRepository);
-export const serviceCatalogService = new ServiceCatalogService(serviceRepository);
-export const packageService = new PackageService(packageRepository);
-export const authService = new AuthService(authRepository);
-export const invoiceService = new InvoiceService(invoiceRepository);
-export const bookingService = new BookingService(bookingRepository, invoiceService);
-invoiceService.setBookingService(bookingService);
-export const reviewService = new ReviewService(reviewRepository, bookingRepository);
+// Services with remaining repositories
+export const blogService = new BlogService();
+export const authService = new AuthService();
+export const activityService = new ActivityService();
 
-export const reportsService = new ReportsService(reportsRepository);
-export const notificationService = new NotificationService(notificationRepository);
-export const testCatalogService = new TestCatalogService(testRepository);
-export const collectionService = new CollectionService(collectionRepository);
+// Services migrated to direct GraphQL fetches
+export const invoiceService = new InvoiceService();
+export const serviceCatalogService = new ServiceCatalogService();
+export const packageService = new PackageService();
+export const testCatalogService = new TestCatalogService();
+export const staffService = new StaffService();
+export const patientService = new PatientService();
+export const notificationService = new NotificationService();
+export const documentService = new DocumentService();
+export const bookingService = new BookingService(invoiceService);
+export const collectionService = new CollectionService();
+export const reportsService = new ReportsService();
+
+// Services depending on other services
+export const reviewService = new ReviewService(bookingService);
 
 // Wire Unified Diagnostic Lifecycle Dependencies
 bookingService.setCollectionService(collectionService);
+invoiceService.setBookingService(bookingService);
 collectionService.setBookingService(bookingService);
 collectionService.setReportsService(reportsService);
 collectionService.setNotificationService(notificationService);
 reportsService.setBookingService(bookingService);
-export const staffService = new StaffService(staffRepository);
-export const activityService = new ActivityService(activityRepository);
+patientService.setBookingService(bookingService);
+patientService.setReportsService(reportsService);
+patientService.setCollectionService(collectionService);
+patientService.setInvoiceService(invoiceService);
+
 export const analyticsService = new AnalyticsService(bookingService, invoiceService);
 export const alertService = new AlertService(reportsService, collectionService);
-export const patientService = new PatientService(patientRepository, bookingService, reportsService, collectionService, invoiceService);
 export const globalSearchService = new GlobalSearchService(
   patientService,
   bookingService,
@@ -76,7 +71,7 @@ export const globalSearchService = new GlobalSearchService(
 );
 
 // Payment Architecture
-const paymentProvider = env.useMockData ? new MockPaymentProvider() : new ApiPaymentProvider(apiClient);
+const paymentProvider = env.useMockData ? new MockPaymentProvider() : new ApiPaymentProvider();
 export const paymentService = new PaymentService(paymentProvider, invoiceService);
 
 

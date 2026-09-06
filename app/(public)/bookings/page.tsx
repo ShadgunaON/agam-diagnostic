@@ -5,13 +5,11 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/context/AuthContext';
 import { AuthGuard } from '@/components/common';
-import { bookingService, invoiceService, reviewService } from '@/services';
 import { BookingModel } from '@/domains/booking/model';
 import { InvoiceModel } from '@/domains/invoice/model';
 import { ReviewModel } from '@/domains/review/model';
 import { CollectionTaskModel } from '@/domains/collections/model';
 import { ReportTaskModel } from '@/domains/reports/model';
-import { collectionService, reportsService } from '@/services';
 
 export default function BookingsPage() {
   const { isAuthenticated, user } = useAuth();
@@ -29,85 +27,93 @@ export default function BookingsPage() {
 
     const fetchData = async () => {
       try {
-        const result = await bookingService.getAll();
-        if (result.isSuccess) {
-          // Filter bookings that belong to user or their family
-          const familyIds = user.savedPatients.map(p => p.id);
-          const validIds = [user.id, ...familyIds];
-
-          const normalizePhone = (phone?: string) => phone ? phone.replace(/\D/g, '').slice(-10) : '';
-          const userPhoneNormalized = normalizePhone(user.mobile);
-
-          const userBookings = result.value.filter(b => {
-            if (b.patientId && validIds.includes(b.patientId)) return true;
-            return normalizePhone(b.patient?.phone) === userPhoneNormalized;
-          });
-
-          // Sort by date descending
-          userBookings.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-          setBookings(userBookings);
-
-          // Fetch invoices for these bookings
-          const invoicesResult = await invoiceService.getAll();
-          if (invoicesResult.isSuccess) {
-            const invoiceMap: Record<string, InvoiceModel> = {};
-            invoicesResult.value.forEach(inv => {
-              if (inv.bookingId) {
-                invoiceMap[inv.bookingId] = inv;
+        const query = `
+          query MyPortal {
+            myPortal {
+              bookings {
+                id
+                status
+                createdAt
+                collection { type date timeSlot address }
+                items { name type }
+                patient { name }
               }
-            });
-            setInvoices(invoiceMap);
-          }
-
-          // Fetch reviews for these bookings
-          const reviewsResult = await reviewService.getReviewsByPatient(user.id);
-          if (reviewsResult.isSuccess) {
-            const reviewMap: Record<string, ReviewModel> = {};
-            reviewsResult.value.forEach(rev => {
-              reviewMap[rev.bookingId] = rev;
-            });
-            // Also check for family members' reviews if necessary
-            const allReviewsResult = await reviewService.getAllReviews();
-            if (allReviewsResult.isSuccess) {
-              allReviewsResult.value.forEach(rev => {
-                if (userBookings.some(b => b.id === rev.bookingId)) {
-                  reviewMap[rev.bookingId] = rev;
-                }
-              });
+              invoices {
+                id
+                bookingId
+                paymentStatus
+                paymentMethod
+              }
+              reviews {
+                id
+                bookingId
+                status
+              }
+              collections {
+                id
+                bookingId
+                status
+                assignedTo
+              }
+              reports {
+                id
+                bookingId
+                status
+              }
             }
-            setReviews(reviewMap);
           }
+        `;
 
-          const collectionsResult = await collectionService.getAll();
-          if (collectionsResult.isSuccess) {
-            const collectionMap: Record<string, CollectionTaskModel> = {};
-            collectionsResult.value.forEach(col => {
-              if (col.bookingId) collectionMap[col.bookingId] = col;
-            });
-            setCollections(collectionMap);
-          }
+        const response = await fetch('/api/graphql', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ query })
+        });
 
-          const reportsResult = await reportsService.getAllTasks();
-          if (reportsResult.isSuccess) {
-            const reportMap: Record<string, ReportTaskModel> = {};
-            reportsResult.value.forEach(rep => {
-              if (rep.bookingId) reportMap[rep.bookingId] = rep;
-            });
-            setReports(reportMap);
-          }
-        } else {
-          const status = (result.error as any)?.status;
-          if (status === 401 || result.error?.message?.includes('401')) {
-            setErrorState('401');
-          } else if (status === 403 || result.error?.message?.includes('403') || result.error?.message?.includes('Forbidden')) {
-            setErrorState('403');
-          } else {
-            setErrorState('500');
-          }
+        const json = await response.json();
+        
+        if (json.errors) {
+          throw new Error(json.errors[0]?.message || 'GraphQL Error');
         }
-      } catch (error) {
-        console.error("Failed to load bookings", error);
-        setErrorState('500');
+
+        const data = json.data?.myPortal;
+        if (data) {
+          setBookings(data.bookings || []);
+
+          const invoiceMap: Record<string, InvoiceModel> = {};
+          (data.invoices || []).forEach((inv: any) => {
+            if (inv.bookingId) invoiceMap[inv.bookingId] = inv;
+          });
+          setInvoices(invoiceMap);
+
+          const reviewMap: Record<string, ReviewModel> = {};
+          (data.reviews || []).forEach((rev: any) => {
+            if (rev.bookingId) reviewMap[rev.bookingId] = rev;
+          });
+          setReviews(reviewMap);
+
+          const collectionMap: Record<string, CollectionTaskModel> = {};
+          (data.collections || []).forEach((col: any) => {
+            if (col.bookingId) collectionMap[col.bookingId] = col;
+          });
+          setCollections(collectionMap);
+
+          const reportMap: Record<string, ReportTaskModel> = {};
+          (data.reports || []).forEach((rep: any) => {
+            if (rep.bookingId) reportMap[rep.bookingId] = rep;
+          });
+          setReports(reportMap);
+        }
+
+      } catch (error: any) {
+        console.error("Failed to load bookings portal data", error);
+        if (error.message?.includes('Access denied') || error.message?.includes('Unauthorized')) {
+          setErrorState('403');
+        } else {
+          setErrorState('500');
+        }
       } finally {
         setIsLoading(false);
       }

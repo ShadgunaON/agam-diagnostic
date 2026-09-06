@@ -7,110 +7,105 @@ export class AnalyticsService {
     private readonly invoiceService?: InvoiceService
   ) {}
 
-  async getRevenueByMonth() {
-    if (this.invoiceService) {
-      const result = await this.invoiceService.getAll();
-      if (!result.isSuccess) return [];
-
-      const invoices = result.value;
-      const monthlyRevenue: Record<string, number> = {
-        'Jan': 0, 'Feb': 0, 'Mar': 0, 'Apr': 0, 'May': 0, 'Jun': 0,
-        'Jul': 0, 'Aug': 0, 'Sep': 0, 'Oct': 0, 'Nov': 0, 'Dec': 0
-      };
-
-      invoices.forEach(inv => {
-        const monthMatch = inv.createdAt.match(/^[a-zA-Z]{3}/);
-        if (monthMatch && monthMatch[0]) {
-          const month = monthMatch[0];
-          if (monthlyRevenue[month] !== undefined && inv.paymentStatus === 'Paid') {
-            monthlyRevenue[month] += inv.total;
-          }
-        } else {
-          // If createdAt is ISO format
-          const date = new Date(inv.createdAt);
-          const month = date.toLocaleString('default', { month: 'short' });
-          if (monthlyRevenue[month] !== undefined && inv.paymentStatus === 'Paid') {
-            monthlyRevenue[month] += inv.total;
-          }
-        }
+  // ---------------------------------------------------------------------------
+  // Internal: shared GraphQL fetch helper (mirrors getDashboardKPIs pattern)
+  // ---------------------------------------------------------------------------
+  private async _graphqlFetch<T>(query: string): Promise<T | null> {
+    try {
+      const token = typeof window !== 'undefined'
+        ? (sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '')
+        : '';
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ query }),
       });
-
-      return Object.entries(monthlyRevenue).map(([month, revenue]) => ({ month, revenue }));
+      if (!response.ok) return null;
+      const { data, errors } = await response.json();
+      if (errors?.length) { console.error('GraphQL errors:', errors); return null; }
+      return data as T;
+    } catch (err) {
+      console.error('GraphQL fetch failed:', err);
+      return null;
     }
-    // Fallback to BookingService if invoiceService is not provided
-    const result = await this.bookingService.getAll();
-    if (!result.isSuccess) {
-      return [];
-    }
+  }
 
-    const bookings = result.value;
-    const monthlyRevenue: Record<string, number> = {
-      'Jan': 0, 'Feb': 0, 'Mar': 0, 'Apr': 0, 'May': 0, 'Jun': 0,
-      'Jul': 0, 'Aug': 0, 'Sep': 0, 'Oct': 0, 'Nov': 0, 'Dec': 0
-    };
-
-    bookings.forEach(b => {
-      const monthMatch = b.createdAt.match(/^[a-zA-Z]{3}/);
-      if (monthMatch && monthMatch[0]) {
-        const month = monthMatch[0];
-        if (monthlyRevenue[month] !== undefined) {
-          monthlyRevenue[month] += b.payment.total;
-        }
-      } else {
-        const date = new Date(b.createdAt);
-        const month = date.toLocaleString('default', { month: 'short' });
-        if (monthlyRevenue[month] !== undefined) {
-          monthlyRevenue[month] += b.payment.total;
+  /**
+   * Revenue aggregated server-side by the GraphQL analyticsCharts resolver.
+   * Uses a single bounded GSI1 range query on ENTITY#INVOICE for the current
+   * UTC year. FilterExpression restricts to paymentStatus=Paid.
+   * Only createdAt and total fields are projected — no full invoice objects.
+   * The old invoiceService.getAll() is no longer used for this purpose.
+   */
+  async getRevenueByMonth(): Promise<Array<{ month: string; revenue: number }>> {
+    const EMPTY: Array<{ month: string; revenue: number }> = [
+      { month: 'Jan', revenue: 0 }, { month: 'Feb', revenue: 0 },
+      { month: 'Mar', revenue: 0 }, { month: 'Apr', revenue: 0 },
+      { month: 'May', revenue: 0 }, { month: 'Jun', revenue: 0 },
+      { month: 'Jul', revenue: 0 }, { month: 'Aug', revenue: 0 },
+      { month: 'Sep', revenue: 0 }, { month: 'Oct', revenue: 0 },
+      { month: 'Nov', revenue: 0 }, { month: 'Dec', revenue: 0 },
+    ];
+    const data = await this._graphqlFetch<{ analyticsCharts: { revenueByMonth: Array<{ month: string; revenue: number }> } }>(`
+      query {
+        analyticsCharts {
+          revenueByMonth {
+            month
+            revenue
+          }
         }
       }
-    });
-
-    return Object.entries(monthlyRevenue).map(([month, revenue]) => ({ month, revenue }));
+    `);
+    // Return the 12-entry array on success; fall back to zeroed structure on failure
+    // so the chart always receives a consistent shape regardless of API state.
+    return data?.analyticsCharts?.revenueByMonth ?? EMPTY;
   }
 
   async getDashboardKPIs() {
-    const result = await this.bookingService.getAll();
-    if (!result.isSuccess) {
+    try {
+      const token = typeof window !== 'undefined' 
+        ? (sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '')
+        : '';
+        
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          query: `
+            query {
+              dashboardStats {
+                bookingsToday
+                pendingBookings
+                homeCollections
+                revenueToday
+              }
+            }
+          `
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`GraphQL Error: ${response.status}`);
+      }
+
+      const { data, errors } = await response.json();
+      
+      if (errors && errors.length > 0) {
+        console.error('GraphQL Analytics Errors:', errors);
+        return { bookingsToday: 0, pendingBookings: 0, homeCollections: 0, revenueToday: 0 };
+      }
+
+      return data.dashboardStats || { bookingsToday: 0, pendingBookings: 0, homeCollections: 0, revenueToday: 0 };
+    } catch (err) {
+      console.error('Failed to fetch dashboard KPIs via GraphQL:', err);
       return { bookingsToday: 0, pendingBookings: 0, homeCollections: 0, revenueToday: 0 };
     }
-
-    const bookings = result.value;
-    const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    
-    // Fallback: If no bookings are strictly "today", we just use all bookings for the sake of the mock,
-    // or we filter by actual today. In mock data, dates are hardcoded to Oct 12, 2026.
-    // For demonstration, we'll calculate based on the entire dataset if none match today.
-    let todayBookings = bookings.filter(b => b.createdAt === today);
-    if (todayBookings.length === 0) {
-      todayBookings = bookings; 
-    }
-
-    const bookingsToday = todayBookings.length;
-    const pendingBookings = bookings.filter(b => b.status === 'Pending').length;
-    const homeCollections = bookings.filter(b => b.collection.type === 'Home Collection').length;
-    let revenueToday = 0;
-
-    if (this.invoiceService) {
-      const invRes = await this.invoiceService.getAll();
-      if (invRes.isSuccess) {
-        const invoices = invRes.value;
-        const todayStr = new Date().toISOString().split('T')[0];
-        
-        let todayInvoices = invoices.filter(inv => inv.createdAt.startsWith(todayStr));
-        if (todayInvoices.length === 0) {
-          todayInvoices = invoices; // fallback
-        }
-        revenueToday = todayInvoices
-          .filter(inv => inv.paymentStatus === 'Paid')
-          .reduce((sum, inv) => sum + inv.total, 0);
-      }
-    } else {
-      revenueToday = todayBookings
-        .filter(b => b.payment.status === 'Paid')
-        .reduce((sum, b) => sum + b.payment.total, 0);
-    }
-
-    return { bookingsToday, pendingBookings, homeCollections, revenueToday };
   }
 
   async getTestDistribution() {
@@ -156,25 +151,47 @@ export class AnalyticsService {
       });
   }
 
-  async getPatientKPIs() {
-    const result = await this.bookingService.getAll();
-    if (!result.isSuccess) {
-      return { totalPatients: 0, newThisMonth: 0, activeBookings: 0, retentionRate: 0 };
+  /**
+   * Patient KPIs — authoritative server-derived values.
+   *
+   * totalPatients: GSI1 ENTITY#PATIENT Select:COUNT (full pagination)
+   * newThisMonth:  GSI1 ENTITY#PATIENT begins_with(GSI1SK, 'YYYY-MM') Select:COUNT
+   * retentionRate: intentionally unavailable — no business definition exists
+   * activeBookings: reuses dashboardStats.pendingBookings (already authoritative)
+   */
+  async getPatientKPIs(): Promise<{
+    totalPatients: number;
+    newThisMonth: number;
+    activeBookings: number;
+    retentionRate: null;
+    retentionRateAvailable: false;
+  }> {
+    const FALLBACK = { totalPatients: 0, newThisMonth: 0, activeBookings: 0, retentionRate: null as null, retentionRateAvailable: false as const };
+    try {
+      const data = await this._graphqlFetch<{
+        patientStats: { totalPatients: number; newThisMonth: number };
+        dashboardStats: { pendingBookings: number };
+      }>(`
+        query {
+          patientStats {
+            totalPatients
+            newThisMonth
+          }
+          dashboardStats {
+            pendingBookings
+          }
+        }
+      `);
+      if (!data) return FALLBACK;
+      return {
+        totalPatients: data.patientStats?.totalPatients ?? 0,
+        newThisMonth: data.patientStats?.newThisMonth ?? 0,
+        activeBookings: data.dashboardStats?.pendingBookings ?? 0,
+        retentionRate: null,
+        retentionRateAvailable: false,
+      };
+    } catch {
+      return FALLBACK;
     }
-
-    const bookings = result.value;
-    
-    const uniquePatients = new Set<string>();
-    bookings.forEach(b => {
-      // Use phone or email as unique identifier for patient
-      uniquePatients.add(b.patient.phone || b.patient.email || b.patient.name);
-    });
-
-    const totalPatients = uniquePatients.size;
-    const newThisMonth = Math.floor(totalPatients * 0.2); // mock metric derived loosely
-    const activeBookings = bookings.filter(b => b.status === 'Pending').length;
-    const retentionRate = totalPatients > 0 ? 80 + (totalPatients % 15) : 0; // mock metric loosely derived
-
-    return { totalPatients, newThisMonth, activeBookings, retentionRate };
   }
 }
