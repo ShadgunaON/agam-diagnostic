@@ -15,7 +15,8 @@ export class AnalyticsService {
       const token = typeof window !== 'undefined'
         ? (sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '')
         : '';
-      const response = await fetch('/api/graphql', {
+      const _url = typeof window === 'undefined' ? (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000') + '/api/graphql' : '/api/graphql';
+      const response = await fetch(_url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -70,7 +71,8 @@ export class AnalyticsService {
         ? (sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '')
         : '';
         
-      const response = await fetch('/api/graphql', {
+      const _url = typeof window === 'undefined' ? (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000') + '/api/graphql' : '/api/graphql';
+      const response = await fetch(_url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
