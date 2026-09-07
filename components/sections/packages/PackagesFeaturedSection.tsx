@@ -45,9 +45,10 @@ export function PackagesFeaturedSection({
     return true;
   });
 
-  const parsePrice = (priceStr?: string) => {
-    if (!priceStr) return 1999;
-    const cleaned = priceStr.replace(/\D/g, '');
+  const parsePrice = (priceStr?: string | number) => {
+    if (priceStr === undefined || priceStr === null) return 1999;
+    if (typeof priceStr === 'number') return Math.round(priceStr);
+    const cleaned = String(priceStr).replace(/\D/g, '');
     return cleaned ? parseInt(cleaned, 10) : 1999;
   };
 

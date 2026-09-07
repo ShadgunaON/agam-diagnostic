@@ -14,9 +14,10 @@ export interface PackagesCatalogSectionProps {
 export function PackagesCatalogSection({ data, className = '' }: PackagesCatalogSectionProps) {
   const { addItem } = useCart();
 
-  const parsePrice = (priceStr?: string) => {
-    if (!priceStr) return 999;
-    const cleaned = priceStr.replace(/\D/g, '');
+  const parsePrice = (priceStr?: string | number) => {
+    if (priceStr === undefined || priceStr === null) return 999;
+    if (typeof priceStr === 'number') return Math.round(priceStr);
+    const cleaned = String(priceStr).replace(/\D/g, '');
     return cleaned ? parseInt(cleaned, 10) : 999;
   };
 

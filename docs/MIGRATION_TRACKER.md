@@ -27,7 +27,12 @@
 
 ### Executive Summary
 
-Production deployed with six schema/service contract mismatches accumulated across sprints (stale field aliases, wrong argument names, wrong return type shape). Simultaneously, a structural bug in `graphql.js` built the identity object with only a `'cognito:groups'` key (quoted), while `auth.js` reads `identity.groups` (unquoted) — causing `isAdmin`, `isStaff`, and `hasPermission` to always evaluate as `false` for every non-SuperAdmin user, silently bypassing RBAC for catalog admin features.
+Production deployed with six schema/service contract mismatches accumulated across sprints. Simultaneously, a structural bug in `graphql.js` built the identity object without properly mapping Cognito groups to roles when `custom:role` was missing, causing `isAdmin`, `isStaff`, and `hasPermission` to silently bypass RBAC for catalog admin features and block Admin creation flows. Furthermore, the catalog pricing fields were strictly evaluated as strings on the frontend despite being typed as Float! from AppSync, causing 500 errors on SSR pages.
+
+**Fixes Applied & Verified (2026-09-07 Hotfix 2):**
+- **Catalog Pricing 500 Error**: Updated `parsePrice` in `TestsCatalogSection`, `ServicesCatalogSection`, `PackagesCatalogSection`, and `PackagesFeaturedSection` to safely accept numeric inputs and bypass regex replacement.
+- **Admin RBAC Role Resolution**: Migrated the `extractIdentity` group-to-role fallback logic into `graphql.js` identity construction, correctly resolving `identity.role` for AdminGroup members missing a custom attribute.
+- **Verification**: `tsc` passed, `next build` passed, `sam deploy` completed, pushed to Amplify, live verification pending.
 
 ### Files Modified
 

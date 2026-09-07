@@ -41,9 +41,10 @@ export function ServicesCatalogSection({ data, className = '' }: ServicesCatalog
     return () => observer.disconnect();
   }, [visibleData]);
 
-  const parsePrice = (priceStr?: string) => {
-    if (!priceStr) return 499;
-    const cleaned = priceStr.replace(/\D/g, '');
+  const parsePrice = (priceStr?: string | number) => {
+    if (priceStr === undefined || priceStr === null) return 499;
+    if (typeof priceStr === 'number') return Math.round(priceStr);
+    const cleaned = String(priceStr).replace(/\D/g, '');
     return cleaned ? parseInt(cleaned, 10) : 499;
   };
 

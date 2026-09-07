@@ -92,15 +92,28 @@ exports.handler = async (event) => {
     ? _rawGroups
     : (typeof _rawGroups === 'string' && _rawGroups ? _rawGroups.split(',').map(g => g.trim()) : []);
 
+  let role = event.identity?.claims?.['custom:role'];
+  if (!role) {
+    if (_normalizedGroups.includes('AdminGroup') || _normalizedGroups.includes('admin')) {
+      role = 'admin';
+    } else if (_normalizedGroups.includes('StaffGroup') || _normalizedGroups.includes('doctor')) {
+      role = 'doctor';
+    } else if (_normalizedGroups.includes('lab_tech')) {
+      role = 'lab_tech';
+    } else if (_normalizedGroups.includes('PhlebGroup') || _normalizedGroups.includes('phleb')) {
+      role = 'phleb';
+    } else {
+      role = 'patient';
+    }
+  }
+
   const identity = {
     sub: event.identity?.sub || event.identity?.claims?.sub,
     email: event.identity?.claims?.email,
     phone: event.identity?.claims?.phone_number,
-    role: event.identity?.claims?.['custom:role'],
+    role: role,
     username: event.identity?.username || event.identity?.claims?.email,
-    // groups is what auth.js isAdmin/isStaff/hasPermission reads
     groups: _normalizedGroups,
-    // Keep cognito:groups for any legacy callers
     'cognito:groups': _normalizedGroups,
   };
   
