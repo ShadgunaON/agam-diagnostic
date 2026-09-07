@@ -10,7 +10,13 @@ export async function GET() {
   try {
     const apiUrl = result.graphqlUrl;
     const apiKey = process.env.APPSYNC_API_KEY || '';
-    const query = `query GetTests { catalogTests(limit: 1) { data { id title } } }`;
+    const query = `query GetTests($limit: Int, $nextToken: String) {
+          catalogTests(limit: $limit, nextToken: $nextToken) {
+            data { id slug title category _category price salePrice discount homeCollection tags isPopular isNew isFasting tags icon }
+            nextToken
+          }
+        }`;
+    const variables = { limit: 10 };
     
     const response = await fetch(apiUrl, {
       method: 'POST',
@@ -18,7 +24,7 @@ export async function GET() {
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
       },
-      body: JSON.stringify({ query }),
+      body: JSON.stringify({ query, variables }),
     });
 
     result.status = response.status;
