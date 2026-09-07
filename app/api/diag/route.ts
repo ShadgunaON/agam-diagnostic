@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const result: any = {
     envKeys: Object.keys(process.env).filter(k => k.includes('NEXT') || k.includes('API') || k.includes('APPSYNC')),
@@ -25,6 +27,7 @@ export async function GET() {
         'x-api-key': apiKey,
       },
       body: JSON.stringify({ query, variables }),
+      cache: 'no-store'
     });
 
     result.status = response.status;
