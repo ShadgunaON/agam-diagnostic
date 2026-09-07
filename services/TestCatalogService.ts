@@ -60,7 +60,7 @@ export class TestCatalogService {
             data {
               id slug title category tag price salePrice basePrice description sampleType
               turnaroundTime fastingRequired homeCollectionAvailable labCollectionAvailable
-              sortOrder status createdAt updatedAt
+              sortOrder status
             }
             meta { total page limit totalPages }
           }
@@ -104,7 +104,7 @@ export class TestCatalogService {
           testBySlug(slug: $slug) {
             id slug title category tag price salePrice basePrice description sampleType
             turnaroundTime fastingRequired homeCollectionAvailable labCollectionAvailable
-            sortOrder status createdAt updatedAt
+            sortOrder status
             relatedTests { title category description slug status }
             faqs { question answer }
           }
@@ -130,7 +130,7 @@ export class TestCatalogService {
             data {
               id slug title category tag price salePrice basePrice description sampleType
               turnaroundTime fastingRequired homeCollectionAvailable labCollectionAvailable
-              sortOrder status createdAt updatedAt
+              sortOrder status
             }
           }
         }`,
@@ -149,7 +149,7 @@ export class TestCatalogService {
           testById(id: $id) {
             id slug title category tag price salePrice basePrice description sampleType
             turnaroundTime fastingRequired homeCollectionAvailable labCollectionAvailable
-            sortOrder status createdAt updatedAt
+            sortOrder status
             relatedTests { title category description slug status }
             faqs { question answer }
           }

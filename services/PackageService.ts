@@ -60,7 +60,6 @@ export class PackageService {
             data {
               id slug title category price status description
               packagePrice individualValue sortOrder testIds
-              createdAt updatedAt
             }
             meta { total page limit totalPages }
           }
@@ -80,7 +79,6 @@ export class PackageService {
           packageBySlug(slug: $slug) {
             id slug title category price status description
             packagePrice individualValue sortOrder testIds includes
-            createdAt updatedAt
             faqs { question answer }
           }
         }`,
@@ -131,7 +129,6 @@ export class PackageService {
           packageById(id: $id) {
             id slug title category price status description
             packagePrice individualValue sortOrder testIds includes
-            createdAt updatedAt
             faqs { question answer }
           }
         }`,

@@ -59,7 +59,7 @@ export class ServiceCatalogService {
             data {
               id slug title category price salePrice basePrice
               description shortDescription estimatedDuration
-              homeAvailable labAvailable sortOrder status createdAt updatedAt
+              homeAvailable labAvailable sortOrder status
             }
             meta { total page limit totalPages }
           }
@@ -79,7 +79,7 @@ export class ServiceCatalogService {
           serviceBySlug(slug: $slug) {
             id slug title category price salePrice basePrice
             description shortDescription estimatedDuration
-            homeAvailable labAvailable sortOrder status createdAt updatedAt
+            homeAvailable labAvailable sortOrder status
             faqs { question answer }
           }
         }`,
@@ -107,7 +107,7 @@ export class ServiceCatalogService {
           serviceById(id: $id) {
             id slug title category price salePrice basePrice
             description shortDescription estimatedDuration
-            homeAvailable labAvailable sortOrder status createdAt updatedAt
+            homeAvailable labAvailable sortOrder status
             faqs { question answer }
           }
         }`,
