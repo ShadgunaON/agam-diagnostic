@@ -57,7 +57,9 @@ export class ServiceCatalogService {
         `query CatalogServices($page: Int, $limit: Int) {
           catalogServices(page: $page, limit: $limit) {
             data {
-              id slug title category tag price discountPrice description duration preparation status createdAt updatedAt
+              id slug title category price salePrice basePrice
+              description shortDescription estimatedDuration
+              homeAvailable labAvailable sortOrder status createdAt updatedAt
             }
             meta { total page limit totalPages }
           }
@@ -75,7 +77,9 @@ export class ServiceCatalogService {
       const res = await this._graphqlFetch<{ serviceBySlug: ServiceDetailData }>(
         `query ServiceBySlug($slug: String!) {
           serviceBySlug(slug: $slug) {
-            id slug title category tag price discountPrice description duration preparation status createdAt updatedAt
+            id slug title category price salePrice basePrice
+            description shortDescription estimatedDuration
+            homeAvailable labAvailable sortOrder status createdAt updatedAt
             faqs { question answer }
           }
         }`,
@@ -101,7 +105,9 @@ export class ServiceCatalogService {
       const res = await this._graphqlFetch<{ serviceById: ServiceItem }>(
         `query ServiceById($id: ID!) {
           serviceById(id: $id) {
-            id slug title category tag price discountPrice description duration preparation status createdAt updatedAt
+            id slug title category price salePrice basePrice
+            description shortDescription estimatedDuration
+            homeAvailable labAvailable sortOrder status createdAt updatedAt
             faqs { question answer }
           }
         }`,

@@ -11,6 +11,7 @@
 - [x] Sprint 6B - Services, Tests, Packages
 - [x] Sprint 6C - Blog, Book Test, Login, Reports
 - [x] Sprint 6D - Catalog Data Reflection & Admin Enhancements
+- [x] Hotfix — GraphQL Contract Alignment & RBAC Identity Fix (2026-09-07)
 - [ ] Sprint 7 - Forms & User Flows
 - [ ] Sprint 8 - Accessibility
 - [ ] Sprint 9 - Performance Optimization
@@ -18,6 +19,56 @@
 - [ ] Sprint 11 - Final QA & Production Readiness
 
 ---
+
+## Hotfix — GraphQL Contract Alignment & RBAC Identity Fix
+
+**Completed:** 2026-09-07  
+**Scope:** End-to-end contract audit between AppSync schema, Lambda resolver, and frontend service queries. Fix for RBAC identity shape bug that silently blocked all permission checks for authenticated admin users.
+
+### Executive Summary
+
+Production deployed with six schema/service contract mismatches accumulated across sprints (stale field aliases, wrong argument names, wrong return type shape). Simultaneously, a structural bug in `graphql.js` built the identity object with only a `'cognito:groups'` key (quoted), while `auth.js` reads `identity.groups` (unquoted) — causing `isAdmin`, `isStaff`, and `hasPermission` to always evaluate as `false` for every non-SuperAdmin user, silently bypassing RBAC for catalog admin features.
+
+### Files Modified
+
+| File | Change |
+|---|---|
+| `infrastructure/schema.graphql` | `TestItem` ← `tag`, `createdAt`, `updatedAt`; `PackageItem` ← `includes`, `createdAt`, `updatedAt`; `ServiceItem` ← `createdAt`, `updatedAt`; `BlogItem` expanded to full field set; `blogs` return type `BlogConnection!` → `[BlogItem!]!`; `blogById` arg renamed `id` → `idOrSlug` |
+| `services/TestCatalogService.ts` | All 4 queries: `discountPrice` → `salePrice`, `duration` → `turnaroundTime`, `fastFasting` → `fastingRequired`, `homeCollection` → `homeCollectionAvailable`; removed `parametersCount`, `preparation` |
+| `services/ServiceCatalogService.ts` | All 3 queries: `discountPrice` → `salePrice`, `duration` → `estimatedDuration`; removed `tag`, `preparation`; added `shortDescription`, `homeAvailable`, `labAvailable` |
+| `services/PackageService.ts` | All 3 queries: replaced test-field copies with actual `PackageItem` schema fields (`packagePrice`, `individualValue`, `testIds`, `includes`); removed all test-specific fields |
+| `services/BlogService.ts` | SSR now fetches AppSync directly (avoids Amplify hairpin timeout); `blogById` query uses `idOrSlug` argument to match resolver + schema |
+| `infrastructure/src/handlers/graphql.js` | Added `groups: _normalizedGroups` to identity object (root cause of RBAC failure); normalized groups from both string and array Cognito formats; replaced all 65 `identityForCheck = { requestContext: ... }` wrappers with `identityForCheck = identity` |
+
+### Architecture Decisions
+
+- **Schema is the source of truth.** Stale field aliases in services were mapped back to what the schema + DynamoDB layer actually exposes, not the other direction.
+- **`blogs` returns a flat array.** The resolver already returned `[BlogItem]` directly; the `BlogConnection` wrapper in the schema was a leftover from an unimplemented pagination plan. Changed schema to match resolver.
+- **`identityForCheck = identity`.** The `{ requestContext: { authorizer: { claims: identity } } }` wrapping was a legacy REST/API-Gateway pattern copied incorrectly into the AppSync Lambda. Auth functions (`isAdmin`, `isStaff`, `hasPermission`) expect a flat identity object — they do not call `extractIdentity`. All 65 call sites corrected in one PowerShell bulk replace.
+- **No REST endpoints created.** All fixes operate entirely within the existing GraphQL surface.
+
+### Verification
+
+| Gate | Result |
+|---|---|
+| TypeScript (`tsc --noEmit`) | ✅ 0 errors |
+| Next.js production build | ✅ Exit 0, 33/33 pages |
+| SAM build | ✅ Build Succeeded |
+| SAM deploy (CloudFormation) | ✅ `UPDATE_COMPLETE` — Lambda + Schema updated |
+
+### Before vs After
+
+| Surface | Before | After |
+|---|---|---|
+| `blogs` schema return type | `BlogConnection!` | `[BlogItem!]!` |
+| `blogById` argument | `id: String!` | `idOrSlug: String!` |
+| `identity.groups` in graphql.js | `undefined` (key was `'cognito:groups'`) | Correctly set array |
+| Admin `canViewInactive` catalog | Always `false` | Correctly `true` for admin users |
+| Blog SSR on Amplify | Hairpin `localhost:3000` timeout | Direct AppSync fetch |
+
+---
+
+
 
 ## Sprint 6D — Catalog Data Reflection & Admin Enhancements
 
@@ -1088,3 +1139,5 @@ This module closes the REST→GraphQL migration. All application communication n
 - Injected 90+ missing schema fields and updated dminRoles with strict RBAC enforcement.
 - Deployed backend updates via AWS SAM successfully.
 - Verified AppSync API Key access to public queries (catalog/blogs) works properly.
+
+- [x] Verified Amplify Production Configuration: Injected APPSYNC_API_KEY into buildSpec for SSR environment variable availability.

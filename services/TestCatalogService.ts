@@ -58,8 +58,9 @@ export class TestCatalogService {
         `query CatalogTests($page: Int, $limit: Int) {
           catalogTests(page: $page, limit: $limit) {
             data {
-              id slug title category tag price discountPrice description duration preparation
-              homeCollection sampleType fastFasting parametersCount status createdAt updatedAt
+              id slug title category tag price salePrice basePrice description sampleType
+              turnaroundTime fastingRequired homeCollectionAvailable labCollectionAvailable
+              sortOrder status createdAt updatedAt
             }
             meta { total page limit totalPages }
           }
@@ -101,8 +102,9 @@ export class TestCatalogService {
       const res = await this._graphqlFetch<{ testBySlug: TestDetailData }>(
         `query TestBySlug($slug: String!) {
           testBySlug(slug: $slug) {
-            id slug title category tag price discountPrice description duration preparation
-            homeCollection sampleType fastFasting parametersCount status createdAt updatedAt
+            id slug title category tag price salePrice basePrice description sampleType
+            turnaroundTime fastingRequired homeCollectionAvailable labCollectionAvailable
+            sortOrder status createdAt updatedAt
             relatedTests { title category description slug status }
             faqs { question answer }
           }
@@ -126,8 +128,9 @@ export class TestCatalogService {
         `query CatalogTests($q: String!) {
           catalogTests(q: $q, limit: 100) {
             data {
-              id slug title category tag price discountPrice description duration preparation
-              homeCollection sampleType fastFasting parametersCount status createdAt updatedAt
+              id slug title category tag price salePrice basePrice description sampleType
+              turnaroundTime fastingRequired homeCollectionAvailable labCollectionAvailable
+              sortOrder status createdAt updatedAt
             }
           }
         }`,
@@ -144,8 +147,9 @@ export class TestCatalogService {
       const res = await this._graphqlFetch<{ testById: TestItem }>(
         `query TestById($id: ID!) {
           testById(id: $id) {
-            id slug title category tag price discountPrice description duration preparation
-            homeCollection sampleType fastFasting parametersCount status createdAt updatedAt
+            id slug title category tag price salePrice basePrice description sampleType
+            turnaroundTime fastingRequired homeCollectionAvailable labCollectionAvailable
+            sortOrder status createdAt updatedAt
             relatedTests { title category description slug status }
             faqs { question answer }
           }

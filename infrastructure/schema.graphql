@@ -14,8 +14,8 @@ type Query {
   serviceBySlug(slug: String!): ServiceItem @aws_api_key @aws_cognito_user_pools
   
   # Blog Queries
-  blogs(page: Int, limit: Int, status: String): BlogConnection! @aws_api_key @aws_cognito_user_pools
-  blogById(id: String!): BlogItem @aws_api_key @aws_cognito_user_pools
+  blogs(page: Int, limit: Int, status: String): [BlogItem!]! @aws_api_key @aws_cognito_user_pools
+  blogById(idOrSlug: String!): BlogItem @aws_api_key @aws_cognito_user_pools
   
   # Patient Queries
   mePatient: Patient
@@ -322,6 +322,7 @@ type TestItem @aws_api_key @aws_cognito_user_pools {
   title: String!
   slug: String!
   category: String
+  tag: String
   price: Float!
   status: String
   description: String
@@ -335,6 +336,8 @@ type TestItem @aws_api_key @aws_cognito_user_pools {
   fastingRequired: Boolean
   homeCollectionAvailable: Boolean
   labCollectionAvailable: Boolean
+  createdAt: String
+  updatedAt: String
 }
 
 type PackageItem @aws_api_key @aws_cognito_user_pools {
@@ -349,7 +352,10 @@ type PackageItem @aws_api_key @aws_cognito_user_pools {
   individualValue: Float
   sortOrder: Int
   testIds: [String!]
+  includes: [String!]
   faqs: [FaqItem!]
+  createdAt: String
+  updatedAt: String
 }
 
 type ServiceItem @aws_api_key @aws_cognito_user_pools {
@@ -368,6 +374,8 @@ type ServiceItem @aws_api_key @aws_cognito_user_pools {
   homeAvailable: Boolean
   labAvailable: Boolean
   faqs: [FaqItem!]
+  createdAt: String
+  updatedAt: String
 }
 
 type FaqItem {
@@ -569,10 +577,21 @@ type BlogItem @aws_api_key @aws_cognito_user_pools {
   id: ID!
   slug: String!
   title: String!
+  description: String
   excerpt: String
   content: String
+  date: String
+  category: String
   author: String
+  authorId: String
+  icon: String
+  colorPrimary: String
+  colorSecondary: String
+  imageUrl: String
+  image: String
   status: String!
+  views: Int
+  publishedAt: String
   createdAt: String
   updatedAt: String
   coverImage: String

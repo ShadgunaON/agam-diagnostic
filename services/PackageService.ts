@@ -58,8 +58,9 @@ export class PackageService {
         `query CatalogPackages($page: Int, $limit: Int) {
           catalogPackages(page: $page, limit: $limit) {
             data {
-              id slug title category tag price discountPrice description duration preparation
-              homeCollection sampleType fastFasting parametersCount status createdAt updatedAt
+              id slug title category price status description
+              packagePrice individualValue sortOrder testIds
+              createdAt updatedAt
             }
             meta { total page limit totalPages }
           }
@@ -77,9 +78,9 @@ export class PackageService {
       const res = await this._graphqlFetch<{ packageBySlug: PackageDetailData }>(
         `query PackageBySlug($slug: String!) {
           packageBySlug(slug: $slug) {
-            id slug title category tag price discountPrice description duration preparation
-            homeCollection sampleType fastFasting parametersCount status createdAt updatedAt
-            includes { title category description slug status }
+            id slug title category price status description
+            packagePrice individualValue sortOrder testIds includes
+            createdAt updatedAt
             faqs { question answer }
           }
         }`,
@@ -128,9 +129,9 @@ export class PackageService {
       const res = await this._graphqlFetch<{ packageById: PackageItem }>(
         `query PackageById($id: ID!) {
           packageById(id: $id) {
-            id slug title category tag price discountPrice description duration preparation
-            homeCollection sampleType fastFasting parametersCount status createdAt updatedAt
-            includes { title category description slug status }
+            id slug title category price status description
+            packagePrice individualValue sortOrder testIds includes
+            createdAt updatedAt
             faqs { question answer }
           }
         }`,

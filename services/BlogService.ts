@@ -9,10 +9,30 @@ export class BlogService {
 
   private async _graphqlFetch<T>(query: string, variables?: Record<string, unknown>): Promise<T | null> {
     try {
-      const token = typeof window !== 'undefined'
+      const isServer = typeof window === 'undefined';
+      const token = !isServer
         ? (sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '')
         : '';
-      const _url = typeof window === 'undefined' ? (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000') + '/api/graphql' : '/api/graphql';
+
+      if (isServer) {
+        // Direct AppSync fetch for SSR — avoids hairpin routing timeout on Amplify
+        const apiUrl = process.env.NEXT_PUBLIC_GRAPHQL_URL || 'https://cihtpsxiibcb5bewwzxibt2l3i.appsync-api.us-east-1.amazonaws.com/graphql';
+        const apiKey = process.env.APPSYNC_API_KEY || '';
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: token } : apiKey ? { 'x-api-key': apiKey } : {}),
+          },
+          body: JSON.stringify({ query, variables }),
+        });
+        if (!response.ok) return null;
+        const { data, errors } = await response.json();
+        if (errors?.length) throw new Error(errors[0].message);
+        return data as T;
+      }
+
+      const _url = '/api/graphql';
       const response = await fetch(_url, {
         method: 'POST',
         headers: {
@@ -41,7 +61,7 @@ export class BlogService {
       }`
     );
     if (!data?.blogs) return failure(new Error('Failed to load articles'));
-    
+
     const articles = data.blogs || [];
     return success({
       data: articles,

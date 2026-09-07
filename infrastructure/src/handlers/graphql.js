@@ -87,12 +87,21 @@ exports.handler = async (event) => {
   // AppSync typically passes Cognito identity in event.identity
   // We normalize it here so our existing shared/auth tools work (which expect API Gateway format)
   // Or we just implement the equivalent auth check for AppSync:
+  const _rawGroups = event.identity?.groups || event.identity?.claims?.['cognito:groups'] || [];
+  const _normalizedGroups = Array.isArray(_rawGroups)
+    ? _rawGroups
+    : (typeof _rawGroups === 'string' && _rawGroups ? _rawGroups.split(',').map(g => g.trim()) : []);
+
   const identity = {
     sub: event.identity?.sub || event.identity?.claims?.sub,
     email: event.identity?.claims?.email,
     phone: event.identity?.claims?.phone_number,
     role: event.identity?.claims?.['custom:role'],
-    username: event.identity?.username || event.identity?.claims?.email
+    username: event.identity?.username || event.identity?.claims?.email,
+    // groups is what auth.js isAdmin/isStaff/hasPermission reads
+    groups: _normalizedGroups,
+    // Keep cognito:groups for any legacy callers
+    'cognito:groups': _normalizedGroups,
   };
   
   const PUBLIC_FIELDS = new Set([
@@ -205,7 +214,7 @@ exports.handler = async (event) => {
       
       case 'dashboardStats': {
         // Enforce RBAC
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         const { hasPermission } = require('../shared/auth');
         if (!(await hasPermission(identityForCheck, 'analytics', 'view'))) {
           throw new Error('Access denied: Missing analytics.view permission');
@@ -320,7 +329,7 @@ exports.handler = async (event) => {
       // Replaces: REST GET /api/bookings (unbounded getAll)
       // ---------------------------------------------------------
       case 'adminBookingsWorkspace': {
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await isAdmin(identityForCheck)) && !(await hasPermission(identityForCheck, 'bookings', 'view'))) {
           throw new Error('Access denied: Missing bookings.view permission');
         }
@@ -341,7 +350,7 @@ exports.handler = async (event) => {
       // Replaces: REST GET /api/invoices (paginated)
       // ---------------------------------------------------------
       case 'adminInvoicesWorkspace': {
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await isAdmin(identityForCheck)) && !(await hasPermission(identityForCheck, 'invoices', 'view'))) {
           throw new Error('Access denied: Missing invoices.view permission');
         }
@@ -361,7 +370,7 @@ exports.handler = async (event) => {
       // Replaces: REST GET /api/reviews (paginated)
       // ---------------------------------------------------------
       case 'adminReviewsWorkspace': {
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await hasPermission(identityForCheck, 'reviews', 'view')) && !(await isAdmin(identityForCheck))) {
           throw new Error('Access denied: Missing reviews.view permission');
         }
@@ -441,7 +450,7 @@ exports.handler = async (event) => {
       }
 
       case 'moderateReview': {
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await hasPermission(identityForCheck, 'reviews', 'edit')) && !(await isAdmin(identityForCheck))) {
           throw new Error('Access denied: Missing reviews.edit permission');
         }
@@ -495,7 +504,7 @@ exports.handler = async (event) => {
       }
 
       case 'allReviews': {
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await hasPermission(identityForCheck, 'reviews', 'view')) && !(await isAdmin(identityForCheck))) {
           throw new Error('Access denied: Missing reviews.view permission');
         }
@@ -516,7 +525,7 @@ exports.handler = async (event) => {
         if (!booking) return null;
 
         // Authorization: admin/staff OR booking owned by the calling patient
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         const isAdminOrStaff = (await isAdmin(identityForCheck)) || (await isStaff(identityForCheck));
         if (!isAdminOrStaff) {
           const patientSub = `pat_${identity.sub}`;
@@ -541,7 +550,7 @@ exports.handler = async (event) => {
         const invoice = await invoiceRepo.getById(id);
         if (!invoice) return null;
 
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         const isAdminOrStaff = (await isAdmin(identityForCheck)) || (await isStaff(identityForCheck));
         if (!isAdminOrStaff) {
           const patientSub = `pat_${identity.sub}`;
@@ -618,7 +627,7 @@ exports.handler = async (event) => {
       // Staff Management (Admin Workspace)
       // ---------------------------------------------------------
       case 'adminStaffWorkspace': {
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await isAdmin(identityForCheck)) && !(await hasPermission(identityForCheck, 'staff', 'view'))) {
           throw new Error('Access denied: Missing staff.view permission');
         }
@@ -627,7 +636,7 @@ exports.handler = async (event) => {
 
       case 'staffById': {
         const { id } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (id !== identity.sub && !(await isAdmin(identityForCheck)) && !(await hasPermission(identityForCheck, 'staff', 'view'))) {
           throw new Error('Access denied: Missing staff.view permission');
         }
@@ -635,7 +644,7 @@ exports.handler = async (event) => {
       }
 
       case 'adminRoles': {
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         const { isAdmin } = require('../shared/auth');
         if (!(await isAdmin(identityForCheck))) {
           throw new Error('Access denied: Admin only');
@@ -770,7 +779,7 @@ exports.handler = async (event) => {
       // Staff Mutations
       // ---------------------------------------------------------
       case 'createStaff': {
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await isAdmin(identityForCheck)) && !(await hasPermission(identityForCheck, 'staff', 'create'))) {
           throw new Error('Access denied: Missing staff.create permission');
         }
@@ -844,7 +853,7 @@ exports.handler = async (event) => {
 
       case 'updateStaff': {
         const { id, ...updates } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await isAdmin(identityForCheck)) && !(await hasPermission(identityForCheck, 'staff', 'edit'))) {
           throw new Error('Access denied: Missing staff.edit permission');
         }
@@ -866,7 +875,7 @@ exports.handler = async (event) => {
       }
 
       case 'createRole': {
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await isAdmin(identityForCheck)) || !(await hasPermission(identityForCheck, 'staff', 'create'))) {
           throw new Error('Access denied: Missing staff.create permission');
         }
@@ -903,7 +912,7 @@ exports.handler = async (event) => {
       }
 
       case 'updatePermissions': {
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await isAdmin(identityForCheck)) || !(await hasPermission(identityForCheck, 'staff', 'edit'))) {
           throw new Error('Access denied: Missing staff.edit permission');
         }
@@ -919,7 +928,7 @@ exports.handler = async (event) => {
 
       case 'adminCollectionsWorkspace': {
         const { hasPermission } = require('../shared/auth');
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         
         // Authorization: Admin or specific collection scope
         if (!(await isAdmin(identityForCheck)) && !(await hasPermission(identityForCheck, 'collections', 'view'))) {
@@ -950,7 +959,7 @@ exports.handler = async (event) => {
 
       case 'adminReportsWorkspace': {
         const { hasPermission } = require('../shared/auth');
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         
         // Authorization: Admin or specific reports scope
         if (!(await isAdmin(identityForCheck)) && !(await hasPermission(identityForCheck, 'reports', 'view'))) {
@@ -974,7 +983,7 @@ exports.handler = async (event) => {
 
       case 'adminCatalogWorkspace': {
         const { hasPermission } = require('../shared/auth');
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         
         // Authorization: Admin or specific catalog scope
         if (!(await isAdmin(identityForCheck)) && !(await hasPermission(identityForCheck, 'catalog', 'view'))) {
@@ -1014,8 +1023,8 @@ exports.handler = async (event) => {
       }
 
       case 'analyticsCharts': {
-        // Require analytics.view permission — identical to dashboardStats
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        // Require analytics.view permission â€” identical to dashboardStats
+        const identityForCheck = identity;
         if (!(await hasPermission(identityForCheck, 'analytics', 'view'))) {
           throw new Error('Access denied: Missing analytics.view permission');
         }
@@ -1026,7 +1035,7 @@ exports.handler = async (event) => {
 
       case 'patientStats': {
         // Require analytics.view permission (same authority as dashboardStats)
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await hasPermission(identityForCheck, 'analytics', 'view'))) {
           throw new Error('Access denied: Missing analytics.view permission');
         }
@@ -1046,8 +1055,8 @@ exports.handler = async (event) => {
       }
 
       case 'reviewStats': {
-        // Require reviews.view permission — identical to the review REST handler
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        // Require reviews.view permission â€” identical to the review REST handler
+        const identityForCheck = identity;
         if (!(await hasPermission(identityForCheck, 'reviews', 'view'))) {
           throw new Error('Access denied: Missing reviews.view permission');
         }
@@ -1066,7 +1075,7 @@ exports.handler = async (event) => {
         
         let canViewInactive = false;
         if (identity) {
-          const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+          const identityForCheck = identity;
           if (await isAdmin(identityForCheck) || await hasPermission(identityForCheck, 'catalog', 'view')) {
             canViewInactive = true;
           }
@@ -1077,7 +1086,7 @@ exports.handler = async (event) => {
         let allItems;
 
         if (q) {
-          // Use the native, GSI1-scoped search — no full-catalog fetch needed
+          // Use the native, GSI1-scoped search â€” no full-catalog fetch needed
           let searchResults = await repo.search(q, limit);
           if (!canViewInactive) {
             searchResults = searchResults.filter(item => !item.status || item.status === 'ACTIVE');
@@ -1114,7 +1123,7 @@ exports.handler = async (event) => {
         
         let canViewInactive = false;
         if (identity) {
-          const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+          const identityForCheck = identity;
           if (await isAdmin(identityForCheck) || await hasPermission(identityForCheck, 'catalog', 'view')) {
             canViewInactive = true;
           }
@@ -1133,7 +1142,7 @@ exports.handler = async (event) => {
       case 'createCatalogTest':
       case 'createCatalogService':
       case 'createCatalogPackage': {
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await isAdmin(identityForCheck)) && !(await hasPermission(identityForCheck, 'catalog', 'create'))) {
           throw new Error('Access denied: Requires catalog create permission');
         }
@@ -1154,7 +1163,7 @@ exports.handler = async (event) => {
       case 'updateCatalogTest':
       case 'updateCatalogService':
       case 'updateCatalogPackage': {
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await isAdmin(identityForCheck)) && !(await hasPermission(identityForCheck, 'catalog', 'edit'))) {
           throw new Error('Access denied: Requires catalog edit permission');
         }
@@ -1177,7 +1186,7 @@ exports.handler = async (event) => {
       case 'updateCatalogTestStatus':
       case 'updateCatalogServiceStatus':
       case 'updateCatalogPackageStatus': {
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await isAdmin(identityForCheck)) && !(await hasPermission(identityForCheck, 'catalog', 'edit'))) {
           throw new Error('Access denied: Requires catalog edit permission');
         }
@@ -1201,7 +1210,7 @@ exports.handler = async (event) => {
       case 'deleteCatalogTest':
       case 'deleteCatalogService':
       case 'deleteCatalogPackage': {
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await isAdmin(identityForCheck)) && !(await hasPermission(identityForCheck, 'catalog', 'delete'))) {
           throw new Error('Access denied: Requires catalog delete permission');
         }
@@ -1243,7 +1252,7 @@ exports.handler = async (event) => {
         const patient = await patientRepo.getById(id);
         if (!patient) return null;
         
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await canAccessPatient(identityForCheck, patient))) {
           let hasPhlebAccess = false;
           if (await isPhlebotomist(identityForCheck)) {
@@ -1262,7 +1271,7 @@ exports.handler = async (event) => {
       }
 
       case 'patients': {
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if ((await isAdmin(identityForCheck)) || ((await isStaff(identityForCheck)) && !(await isPhlebotomist(identityForCheck)))) {
           if (!(await hasPermission(identityForCheck, 'patients', 'view'))) {
             throw new Error('Access denied: Missing patients.view permission');
@@ -1280,7 +1289,7 @@ exports.handler = async (event) => {
 
       case 'createPatient': {
         const { input } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         const isStaffUser = await isStaff(identityForCheck);
         
         if (isStaffUser && !(await hasPermission(identityForCheck, 'patients', 'create'))) {
@@ -1362,7 +1371,7 @@ exports.handler = async (event) => {
           }, identity.sub);
         }
 
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await canAccessPatient(identityForCheck, existingPatient))) {
           throw new Error('Access denied: You are not authorized to update this patient record.');
         }
@@ -1389,7 +1398,7 @@ exports.handler = async (event) => {
           patient = await patientRepo.getById(booking.patientId);
         }
 
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await canAccessBooking(identityForCheck, booking, patient))) {
           let hasPhlebAccess = false;
           if (await isPhlebotomist(identityForCheck)) {
@@ -1411,7 +1420,7 @@ exports.handler = async (event) => {
 
       case 'bookingsByPatient': {
         const { patientId } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         
         if (!(await isAdmin(identityForCheck)) && !(await isStaff(identityForCheck))) {
           const patient = await patientRepo.getById(patientId);
@@ -1432,7 +1441,7 @@ exports.handler = async (event) => {
 
       case 'recentBookings': {
         const { limit = 10 } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
 
         if ((await isAdmin(identityForCheck)) || ((await isStaff(identityForCheck)) && !(await isPhlebotomist(identityForCheck)))) {
           if (!(await hasPermission(identityForCheck, 'orders', 'view'))) {
@@ -1464,7 +1473,7 @@ exports.handler = async (event) => {
 
       case 'createBooking': {
         const { input, idempotencyKey } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
 
         if (await (await isStaff(identityForCheck)) && !(await hasPermission(identityForCheck, 'orders', 'create'))) {
           throw new Error('Access denied: Missing orders.create permission');
@@ -1591,7 +1600,7 @@ exports.handler = async (event) => {
           patient = await patientRepo.getById(existingBooking.patientId);
         }
 
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await canAccessBooking(identityForCheck, existingBooking, patient))) {
           throw new Error('Access denied: You are not authorized to modify this booking.');
         }
@@ -1636,7 +1645,7 @@ exports.handler = async (event) => {
           patient = await patientRepo.getById(existingBooking.patientId);
         }
 
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await canAccessBooking(identityForCheck, existingBooking, patient))) {
           throw new Error('Access denied: You are not authorized to modify this booking.');
         }
@@ -1665,7 +1674,7 @@ exports.handler = async (event) => {
           patient = await patientRepo.getById(collection.patientId);
         }
 
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await canAccessCollection(identityForCheck, collection, patient))) {
           throw new Error('Access denied: You are not authorized to view this collection task.');
         }
@@ -1675,7 +1684,7 @@ exports.handler = async (event) => {
 
       case 'collectionsByPatient': {
         const { patientId } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
 
         if (!(await isAdmin(identityForCheck)) && !(await isStaff(identityForCheck))) {
           const patient = await patientRepo.getById(patientId);
@@ -1695,7 +1704,7 @@ exports.handler = async (event) => {
       }
 
       case 'collections': {
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         
         if ((await isAdmin(identityForCheck)) || ((await isStaff(identityForCheck)) && !(await isPhlebotomist(identityForCheck)))) {
           if (!(await hasPermission(identityForCheck, 'collections', 'view'))) {
@@ -1727,7 +1736,7 @@ exports.handler = async (event) => {
 
       case 'createCollection': {
         const { input } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
 
         if (!(await isAdmin(identityForCheck)) && !(await isStaff(identityForCheck))) {
           if (input.patientId) {
@@ -1773,7 +1782,7 @@ exports.handler = async (event) => {
           patient = await patientRepo.getById(existingCollection.patientId);
         }
 
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await canAccessCollection(identityForCheck, existingCollection, patient))) {
           throw new Error('Access denied: You are not authorized to modify this collection task.');
         }
@@ -1883,7 +1892,7 @@ exports.handler = async (event) => {
         const report = await reportRepo.getById(id);
         if (!report) return null;
 
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         const canViewAsStaff = await hasPermission(identityForCheck, 'reports', 'view');
         
         if (!canViewAsStaff) {
@@ -1904,7 +1913,7 @@ exports.handler = async (event) => {
 
       case 'reports': {
         const { limit = 100 } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         const canViewAsStaff = await hasPermission(identityForCheck, 'reports', 'view');
 
         if (canViewAsStaff) {
@@ -1934,7 +1943,7 @@ exports.handler = async (event) => {
 
       case 'reportsByPatient': {
         const { patientId } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         const canViewAsStaff = await hasPermission(identityForCheck, 'reports', 'view');
 
         if (canViewAsStaff) {
@@ -1956,7 +1965,7 @@ exports.handler = async (event) => {
 
       case 'createReportTask': {
         const { input } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         const canCreate = await hasPermission(identityForCheck, 'reports', 'create');
         if (!canCreate) {
           throw new Error('Access denied: Missing reports.create permission');
@@ -1976,7 +1985,7 @@ exports.handler = async (event) => {
 
       case 'updateReportStatus': {
         const { id, status } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         const canEdit = await hasPermission(identityForCheck, 'reports', 'edit');
         if (!canEdit) {
           throw new Error('Access denied: Missing reports.edit permission');
@@ -2024,7 +2033,7 @@ exports.handler = async (event) => {
           patient = await patientRepo.getById(invoice.patientId);
         }
 
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!(await canAccessInvoice(identityForCheck, invoice, patient))) {
           throw new Error('Access denied: You are not authorized to view this invoice.');
         }
@@ -2034,7 +2043,7 @@ exports.handler = async (event) => {
 
       case 'invoices': {
         const { limit = 20, cursor = null, status = 'All', search = '' } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         
         if ((await isAdmin(identityForCheck)) || ((await isStaff(identityForCheck)) && !(await isPhlebotomist(identityForCheck)))) {
           if (!(await hasPermission(identityForCheck, 'invoices', 'view'))) {
@@ -2075,7 +2084,7 @@ exports.handler = async (event) => {
 
       case 'invoicesByPatient': {
         const { patientId } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         
         if (!(await isAdmin(identityForCheck)) && !((await isStaff(identityForCheck)) && !(await isPhlebotomist(identityForCheck)))) {
           const patient = await patientRepo.getById(patientId);
@@ -2096,7 +2105,7 @@ exports.handler = async (event) => {
 
       case 'createInvoice': {
         const { input } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         
         if (!(await isAdmin(identityForCheck)) && !((await isStaff(identityForCheck)) && !(await isPhlebotomist(identityForCheck)))) {
           if (input.patientId) {
@@ -2139,7 +2148,7 @@ exports.handler = async (event) => {
 
       case 'updateInvoiceStatus': {
         const { id, status } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         
         const existingInvoice = await invoiceRepo.getById(id);
         if (!existingInvoice) throw new Error('Invoice not found');
@@ -2171,7 +2180,7 @@ exports.handler = async (event) => {
 
       case 'updateInvoicePaymentMethod': {
         const { id, paymentMethod } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         
         const existingInvoice = await invoiceRepo.getById(id);
         if (!existingInvoice) throw new Error('Invoice not found');
@@ -2200,7 +2209,7 @@ exports.handler = async (event) => {
 
       case 'updateInvoice': {
         const { id, input } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         
         const existingInvoice = await invoiceRepo.getById(id);
         if (!existingInvoice) throw new Error('Invoice not found');
@@ -2218,7 +2227,7 @@ exports.handler = async (event) => {
       case 'initiateDocumentUpload': {
         const { input } = args;
         const { entityType, entityId, patientId, bookingId, fileName, contentType, fileSize } = input;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
 
         if (!entityType || !entityId || !patientId || !fileName || !contentType || !fileSize) {
           throw new Error('Missing required fields');
@@ -2265,7 +2274,7 @@ exports.handler = async (event) => {
 
       case 'completeDocumentUpload': {
         const { id } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
 
         const doc = await documentRepo.getById(id);
         if (!doc) throw new Error('Document not found');
@@ -2288,7 +2297,7 @@ exports.handler = async (event) => {
 
       case 'documentDownloadUrl': {
         const { id } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
 
         const doc = await documentRepo.getById(id);
         if (!doc) throw new Error('Document not found');
@@ -2312,7 +2321,7 @@ exports.handler = async (event) => {
 
       case 'documentById': {
         const { id } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
 
         const doc = await documentRepo.getById(id);
         if (!doc) return null;
@@ -2331,7 +2340,7 @@ exports.handler = async (event) => {
 
       case 'documents': {
         const { patientId, entityType, entityId } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
 
         if (patientId) {
           let patient = null;
@@ -2438,7 +2447,7 @@ exports.handler = async (event) => {
       }
 
       case 'newsletterSubscribers': {
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         if (!identity) throw new Error('Unauthorized');
         
         if (!(await hasPermission(identityForCheck, 'newsletter', 'view')) && !(await hasPermission(identityForCheck, 'blogs', 'view'))) {
@@ -2449,7 +2458,7 @@ exports.handler = async (event) => {
 
       case 'blogs': {
         const { status } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
         
         const canManageBlogs = await hasPermission(identityForCheck, 'blogs', 'view');
         if (!canManageBlogs) {
@@ -2466,7 +2475,7 @@ exports.handler = async (event) => {
 
       case 'blogById': {
         const { idOrSlug } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
 
         let article = await blogRepo.getBySlug(idOrSlug);
         if (!article) {
@@ -2489,7 +2498,7 @@ exports.handler = async (event) => {
 
       case 'createBlog': {
         const { input } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
 
         if (!identity) throw new Error('Unauthorized');
         if (!(await hasPermission(identityForCheck, 'blogs', 'create'))) {
@@ -2527,7 +2536,7 @@ exports.handler = async (event) => {
 
       case 'updateBlog': {
         const { id, input } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
 
         if (!identity) throw new Error('Unauthorized');
         if (!(await hasPermission(identityForCheck, 'blogs', 'edit'))) {
@@ -2558,7 +2567,7 @@ exports.handler = async (event) => {
 
       case 'deleteBlog': {
         const { id } = args;
-        const identityForCheck = { requestContext: { authorizer: { claims: identity } } };
+        const identityForCheck = identity;
 
         if (!identity) throw new Error('Unauthorized');
         if (!(await hasPermission(identityForCheck, 'blogs', 'del'))) {
@@ -2581,3 +2590,4 @@ exports.handler = async (event) => {
     throw new Error(error.message || 'Internal Server Error');
   }
 };
+
