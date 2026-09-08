@@ -140,7 +140,7 @@ type Mutation {
   updatePatient(id: ID!, input: String!): Patient!
   
   # Booking Mutations
-  createBooking(input: String!): Booking!
+  createBooking(input: String!, idempotencyKey: String): Booking!
   updateBookingStatus(id: ID!, status: String!): Boolean!
   updateBookingPaymentStatus(id: ID!, status: String!): Boolean!
   
@@ -195,10 +195,12 @@ type GlobalSearchResult {
 
 
 type DashboardMetrics {
-  totalPatients: Int!
+  totalPatients: Int
   pendingBookings: Int!
-  awaitingVerification: Int!
+  awaitingVerification: Int
   revenueToday: Float!
+  bookingsToday: Int!
+  homeCollections: Int!
 }
 
 type AnalyticsCharts {
@@ -240,6 +242,13 @@ type Patient {
   phone: String
   status: String
   createdAt: String
+  age: Int
+  gender: String
+  bloodGroup: String
+  relation: String
+  dobOrAge: String
+  ownerSub: String
+  updatedAt: String
   
   # Relational fields to be resolved by targeted queries, not fetch-all
   bookings(status: String): [Booking!]!

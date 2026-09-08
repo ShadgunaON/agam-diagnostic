@@ -125,12 +125,12 @@ export class BlogService {
 
   async createArticle(article: Omit<BlogArticle, 'id'>): Promise<Result<BlogArticle>> {
     const data = await this._graphqlFetch<{ createBlog: BlogArticle }>(
-      `mutation CreateBlog($input: AWSJSON!) {
+      `mutation CreateBlog($input: String!) {
         createBlog(input: $input) {
           id slug title description status views
         }
       }`,
-      { input: article }
+      { input: typeof article === "string" ? article : JSON.stringify(article) }
     );
     if (data?.createBlog) return success(data.createBlog);
     return failure(new Error('Failed to create article'));
@@ -138,12 +138,12 @@ export class BlogService {
 
   async updateArticle(id: string, updates: Partial<BlogArticle>): Promise<Result<BlogArticle>> {
     const data = await this._graphqlFetch<{ updateBlog: BlogArticle }>(
-      `mutation UpdateBlog($id: ID!, $input: AWSJSON!) {
+      `mutation UpdateBlog($id: ID!, $input: String!) {
         updateBlog(id: $id, input: $input) {
           id slug title description status views
         }
       }`,
-      { id, input: updates }
+      { id, input: typeof updates === "string" ? updates : JSON.stringify(updates) }
     );
     if (data?.updateBlog) return success(data.updateBlog);
     return failure(new Error('Failed to update article'));

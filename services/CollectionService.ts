@@ -100,12 +100,12 @@ export class CollectionService {
 
   async create(task: CollectionTaskModel): Promise<Result<CollectionTaskModel>> {
     const data = await this._graphqlFetch<{ createCollection: CollectionTaskModel }>(
-      `mutation CreateCollection($input: AWSJSON!) {
+      `mutation CreateCollection($input: String!) {
         createCollection(input: $input) {
           id type patientId bookingId time date patient address tests assignedTo phlebotomistId status
         }
       }`,
-      { input: task }
+      { input: typeof task === "string" ? task : JSON.stringify(task) }
     );
     if (data?.createCollection) return success(data.createCollection);
     return failure(new Error('Failed to create collection'));
@@ -135,12 +135,12 @@ export class CollectionService {
 
   async updateTask(id: string, updateData: Partial<CollectionTaskModel>): Promise<Result<CollectionTaskModel>> {
     const data = await this._graphqlFetch<{ updateCollection: CollectionTaskModel }>(
-      `mutation UpdateCollection($id: ID!, $input: AWSJSON!) {
+      `mutation UpdateCollection($id: ID!, $input: String!) {
         updateCollection(id: $id, input: $input) {
           id type patientId bookingId time date patient address tests assignedTo phlebotomistId status
         }
       }`,
-      { id, input: updateData }
+      { id, input: typeof updateData === "string" ? updateData : JSON.stringify(updateData) }
     );
     if (data?.updateCollection) return success(data.updateCollection);
     return failure(new Error('Failed to update collection'));

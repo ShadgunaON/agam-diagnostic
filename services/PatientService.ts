@@ -112,12 +112,12 @@ export class PatientService {
   async update(id: string, data: Partial<PatientModel>): Promise<Result<PatientModel>> {
     try {
       const res = await this._graphqlFetch<{ updatePatient: PatientModel }>(
-        `mutation UpdatePatient($id: ID!, $input: AWSJSON!) {
+        `mutation UpdatePatient($id: ID!, $input: String!) {
           updatePatient(id: $id, input: $input) {
             id name age gender phone email status bloodGroup relation dobOrAge ownerSub createdAt updatedAt
           }
         }`,
-        { id, input: data }
+        { id, input: typeof data === "string" ? data : JSON.stringify(data) }
       );
       return success(res!.updatePatient);
     } catch (err) {
@@ -128,12 +128,12 @@ export class PatientService {
   async create(patient: Omit<PatientModel, 'id'>): Promise<Result<PatientModel>> {
     try {
       const res = await this._graphqlFetch<{ createPatient: PatientModel }>(
-        `mutation CreatePatient($input: AWSJSON!) {
+        `mutation CreatePatient($input: String!) {
           createPatient(input: $input) {
             id name age gender phone email status bloodGroup relation dobOrAge ownerSub createdAt updatedAt
           }
         }`,
-        { input: patient }
+        { input: typeof patient === "string" ? patient : JSON.stringify(patient) }
       );
       return success(res!.createPatient);
     } catch (err) {

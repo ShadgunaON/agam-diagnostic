@@ -153,8 +153,10 @@ class DynamoReportRepository {
       const qTitle = search.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
       const qOriginal = search.trim();
       
-      filters.push('(contains(PK, :qOriginal) OR contains(#patient, :qLower) OR contains(#patient, :qUpper) OR contains(#patient, :qTitle))');
-      attrNames['#patient'] = 'patient';
+      // 'patient' is a DynamoDB map attribute — contains() on a non-string type causes a validation error.
+      // Use string fields: patientId (String), PK (String), and status (String).
+      filters.push('(contains(PK, :qOriginal) OR contains(patientId, :qLower) OR contains(patientId, :qOriginal) OR contains(#status, :qLower) OR contains(#status, :qUpper) OR contains(#status, :qTitle))');
+      attrNames['#status'] = 'status';
       attrValues[':qOriginal'] = qOriginal;
       attrValues[':qLower'] = qLower;
       attrValues[':qUpper'] = qUpper;

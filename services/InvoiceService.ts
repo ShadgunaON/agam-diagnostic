@@ -132,13 +132,13 @@ export class InvoiceService {
 
   async create(invoice: Omit<InvoiceModel, 'id' | 'createdAt' | 'updatedAt'>): Promise<Result<InvoiceModel>> {
     const data = await this._graphqlFetch<{ createInvoice: InvoiceModel }>(
-      `mutation CreateInvoice($input: AWSJSON!) {
+      `mutation CreateInvoice($input: String!) {
         createInvoice(input: $input) {
           id patientId bookingId paymentStatus paymentMethod total subtotal tax discount
           items { id name type price }
         }
       }`,
-      { input: invoice }
+      { input: typeof invoice === "string" ? invoice : JSON.stringify(invoice) }
     );
     if (data?.createInvoice) return success(data.createInvoice);
     return failure(new Error('Failed to create invoice'));

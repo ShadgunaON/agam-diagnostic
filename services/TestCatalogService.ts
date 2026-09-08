@@ -166,10 +166,10 @@ export class TestCatalogService {
   async create(testData: any): Promise<Result<TestItem>> {
     try {
       const res = await this._graphqlFetch<{ createCatalogTest: TestItem }>(
-        `mutation CreateCatalogTest($input: AWSJSON!) {
+        `mutation CreateCatalogTest($input: String!) {
           createCatalogTest(input: $input) { id slug title status }
         }`,
-        { input: testData }
+        { input: typeof testData === "string" ? testData : JSON.stringify(testData) }
       );
       return success(res!.createCatalogTest);
     } catch (err) {
@@ -180,10 +180,10 @@ export class TestCatalogService {
   async update(id: string, testData: any): Promise<Result<TestItem>> {
     try {
       const res = await this._graphqlFetch<{ updateCatalogTest: TestItem }>(
-        `mutation UpdateCatalogTest($id: ID!, $input: AWSJSON!) {
+        `mutation UpdateCatalogTest($id: ID!, $input: String!) {
           updateCatalogTest(id: $id, input: $input) { id slug title status }
         }`,
-        { id, input: testData }
+        { id, input: typeof testData === "string" ? testData : JSON.stringify(testData) }
       );
       return success(res!.updateCatalogTest);
     } catch (err) {

@@ -67,12 +67,12 @@ export class DocumentService {
     createdBy: string;
   }): Promise<Result<{ documentId: string; uploadUrl: string; fileKey: string }>> {
     const data = await this._graphqlFetch<{ initiateDocumentUpload: { documentId: string; uploadUrl: string; fileKey: string } }>(
-      `mutation InitiateDocumentUpload($input: AWSJSON!) {
+      `mutation InitiateDocumentUpload($input: String!) {
         initiateDocumentUpload(input: $input) {
           documentId uploadUrl fileKey
         }
       }`,
-      { input: params }
+      { input: typeof params === "string" ? params : JSON.stringify(params) }
     );
     if (data?.initiateDocumentUpload) return success(data.initiateDocumentUpload);
     return failure(new Error('Failed to initiate document upload'));

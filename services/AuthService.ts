@@ -551,12 +551,12 @@ export class AuthService {
 
   async updateProfile(userId: string, data: Partial<UserProfile>): Promise<Result<UserProfile>> {
     const res = await this._graphqlFetch<{ updatePatient: UserProfile }>(
-      `mutation UpdatePatient($id: ID!, $input: AWSJSON!) {
+      `mutation UpdatePatient($id: ID!, $input: String!) {
         updatePatient(id: $id, input: $input) {
           id fullName email mobile role
         }
       }`,
-      { id: userId, input: data }
+      { id: userId, input: typeof data === "string" ? data : JSON.stringify(data) }
     );
     if (res?.updatePatient) {
       return success(res.updatePatient);

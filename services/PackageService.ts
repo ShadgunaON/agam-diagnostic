@@ -144,10 +144,10 @@ export class PackageService {
   async create(packageData: any): Promise<Result<PackageItem>> {
     try {
       const res = await this._graphqlFetch<{ createCatalogPackage: PackageItem }>(
-        `mutation CreateCatalogPackage($input: AWSJSON!) {
+        `mutation CreateCatalogPackage($input: String!) {
           createCatalogPackage(input: $input) { id slug title status }
         }`,
-        { input: packageData }
+        { input: typeof packageData === "string" ? packageData : JSON.stringify(packageData) }
       );
       return success(res!.createCatalogPackage);
     } catch (err) {
@@ -158,10 +158,10 @@ export class PackageService {
   async update(id: string, packageData: any): Promise<Result<PackageItem>> {
     try {
       const res = await this._graphqlFetch<{ updateCatalogPackage: PackageItem }>(
-        `mutation UpdateCatalogPackage($id: ID!, $input: AWSJSON!) {
+        `mutation UpdateCatalogPackage($id: ID!, $input: String!) {
           updateCatalogPackage(id: $id, input: $input) { id slug title status }
         }`,
-        { id, input: packageData }
+        { id, input: typeof packageData === "string" ? packageData : JSON.stringify(packageData) }
       );
       return success(res!.updateCatalogPackage);
     } catch (err) {

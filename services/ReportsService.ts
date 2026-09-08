@@ -113,13 +113,13 @@ export class ReportsService {
     };
     
     const data = await this._graphqlFetch<{ createReportTask: ReportTaskModel }>(
-      `mutation CreateReportTask($input: AWSJSON!) {
+      `mutation CreateReportTask($input: String!) {
         createReportTask(input: $input) {
           id patientId bookingId testType status priority time results { parameter value unit reference isAbnormal }
           patient { name age gender id }
         }
       }`,
-      { input: reportTask }
+      { input: typeof reportTask === "string" ? reportTask : JSON.stringify(reportTask) }
     );
     if (data?.createReportTask) return success(data.createReportTask);
     return failure(new Error('Failed to create report task'));

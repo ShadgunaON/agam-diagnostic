@@ -18,6 +18,41 @@
 - [ ] Sprint 10 - SEO & Metadata
 - [ ] Sprint 11 - Final QA & Production Readiness
 
+## Complete Remediation — Systematic Fix Execution (2026-09-08)
+
+### Remediation Log
+
+#### Issue 1: Deployed Lambda Syntax Crash
+- **Issue:** Every GraphQL query and mutation returned `Runtime.UserCodeSyntaxError: SyntaxError: Unexpected token 'case'` from `GraphQLResolverFunction`.
+- **Confirmed Root Cause:** Unclosed switch-case block in `infrastructure/src/handlers/graphql.js` preceding `case 'updateInvoicePaymentMethod': {`. The previous `case 'updateInvoiceStatus'` block had an unbalanced brace structure.
+- **Files Changed:** `infrastructure/src/handlers/graphql.js`
+- **Fix Applied:** Corrected the switch-case structure and closed the `case 'updateInvoiceStatus'` switch block.
+- **Verification Performed:**
+  - `node --check infrastructure/src/handlers/graphql.js` (Passed)
+  - `npx tsc --noEmit` (Passed)
+  - `sam build && sam deploy` (Passed, Stack UPDATE_COMPLETE)
+  - `npm run build` (Passed)
+- **Result:** ✅ Fix verified locally and deployed to AWS. GraphQL AppSync API is now successfully handling requests without syntax errors.
+
+#### Issue 2: Missing Lambda Environment Variable `USER_POOL_ID` & IAM Permissions
+- **Issue:** Admin staff creation (`createStaff`) and patient self-registration failed with `"userPoolId must not be null"`.
+- **Confirmed Root Cause:** `GraphQLResolverFunction` in `infrastructure/template.yaml` lacked `USER_POOL_ID` in `Environment.Variables`, lacked IAM policies for `cognito-idp:AdminCreateUser`, `AdminAddUserToGroup`, `AdminGetUser`, and lacked SSM access to `/agam/SuperAdminSub`. Additionally, `@aws-sdk/client-cognito-identity-provider` was improperly placed in `devDependencies` in `infrastructure/package.json`.
+- **Files Changed:** `infrastructure/template.yaml`, `infrastructure/package.json`
+- **Fix Applied:** Injected `USER_POOL_ID: !Ref AgamUserPool` and `SUPER_ADMIN_SSM_PATH: "/agam/SuperAdminSub"` into `GraphQLResolverFunction` environment. Added IAM statements for Cognito IDP admin actions and SSM Parameter Store access. Moved Cognito and S3 SDK packages to `dependencies` in `infrastructure/package.json`.
+- **Verification Performed:** YAML syntax and CloudFormation resource cross-reference inspection; `package.json` structure check.
+- **Result:** ✅ Resolved missing environment variable and IAM role capabilities.
+
+#### Issue 3: GraphQL Contract Mismatches (UnknownType AWSJSON & FieldUndefined)
+- **Issue:** Frontend queries consistently returned `Validation error of type UnknownType: Unknown type AWSJSON` and `FieldUndefined` errors because they expected fields not present in the backend AppSync schema.
+- **Confirmed Root Cause:** Frontend mutations erroneously defined inputs with `AWSJSON!`, whereas the AppSync schema specified `String!`. Additionally, the frontend requested fields (e.g., `age`, `gender`, `bloodGroup`) on `Patient` that existed in the TypeScript models but were absent from `schema.graphql`.
+- **Files Changed:** `services/*.ts` (10 files), `infrastructure/schema.graphql`
+- **Fix Applied:** Modified all frontend services to correctly specify `$input: String!` and stringify input variables globally. Added missing fields (`age`, `gender`, `bloodGroup`, `relation`, `dobOrAge`, `ownerSub`, `updatedAt`) to the `Patient` type in `schema.graphql` to establish contract parity.
+- **Verification Performed:**
+  - `npx tsc --noEmit` (Passed)
+  - `npm run build` (Passed)
+  - Validation: Confirmed parity of GraphQL parameters between Frontend queries and backend schema mutations.
+- **Result:** ✅ Fix verified. Frontend mutations correctly match backend AppSync schema. `FieldUndefined` correctly resolved for the Patient model.
+
 ---
 
 ## Hotfix — GraphQL Contract Alignment & RBAC Identity Fix

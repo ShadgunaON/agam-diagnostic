@@ -154,8 +154,8 @@ exports.handler = async (event) => {
       
       case 'globalSearch': {
         const { query, limit = 12 } = args;
-        const isStaffUser = await isStaff({ requestContext: { authorizer: { claims: identity } } });
-        const isAdminUser = await isAdmin({ requestContext: { authorizer: { claims: identity } } });
+        const isStaffUser = await isStaff(identity);
+        const isAdminUser = await isAdmin(identity);
         
         const safeQuery = query ? query.trim() : '';
         if (!safeQuery) return [];
@@ -168,7 +168,7 @@ exports.handler = async (event) => {
             id: t.id || t.slug, type: 'test', title: t.title, subtitle: t.category || 'Test', href: `/tests/${t.slug}`, icon: 'TestTube'
           }))),
           packageRepo.search(safeQuery, limit).then(res => res.map(p => ({
-            id: p.id || p.slug, type: 'package', title: p.title, subtitle: p.category || 'Package', href: `/packages/${p.slug}`, icon: 'Package'
+            id: p.id || p.slug, type: 'package', title: p.title, subtitle: p.category || 'Package', href: `/health-packages/${p.slug}`, icon: 'Package'
           }))),
           serviceRepo.search(safeQuery, limit).then(res => res.map(s => ({
             id: s.id || s.slug, type: 'service', title: s.title, subtitle: s.category || 'Service', href: `/services/${s.slug}`, icon: 'Stethoscope'
@@ -226,10 +226,10 @@ exports.handler = async (event) => {
       }
       
       case 'dashboardStats': {
-        // Enforce RBAC
+        // Enforce RBAC â€” admin always has access; staff need analytics.view permission
         const identityForCheck = identity;
         const { hasPermission } = require('../shared/auth');
-        if (!(await hasPermission(identityForCheck, 'analytics', 'view'))) {
+        if (!(await isAdmin(identityForCheck)) && !(await hasPermission(identityForCheck, 'analytics', 'view'))) {
           throw new Error('Access denied: Missing analytics.view permission');
         }
         
@@ -242,6 +242,8 @@ exports.handler = async (event) => {
         ]);
         
         return {
+          totalPatients: null,          // populated by patientStats query
+          awaitingVerification: null,   // no authoritative definition
           bookingsToday: bookingMetrics.bookingsToday,
           pendingBookings: bookingMetrics.pendingBookings,
           homeCollections: bookingMetrics.homeCollections,
@@ -416,14 +418,14 @@ exports.handler = async (event) => {
 
         const ratingNum = Number(rating);
         if (!Number.isInteger(ratingNum) || ratingNum < 1 || ratingNum > 5) throw new Error('Rating must be an integer between 1 and 5.');
-        const trimmedComment = (comment || '').trim();
-        if (trimmedComment.length < 10 || trimmedComment.length > 2000) throw new Error('Comment must be between 10 and 2000 characters.');
+        const trimmedContent = (comment || '').trim();
+        if (trimmedContent.length < 10 || trimmedContent.length > 2000) throw new Error('Comment must be between 10 and 2000 characters.');
 
         const reviewPayload = {
           patientId: booking.patientId || identity.primaryPatientId || `pat_${identity.sub}`,
           bookingId: booking.id,
           rating: ratingNum,
-          comment: trimmedComment,
+          content: trimmedContent,  // schema field is 'content', not 'comment'
           displayName: displayName || identity.fullName || 'Verified Patient',
           status: 'Pending',
           verified: true,
@@ -477,10 +479,10 @@ exports.handler = async (event) => {
         const review = await reviewRepo.getById(id);
         if (!review) return null;
         
-        const canViewFull = identity && (review.ownerSub === identity.sub || await hasPermission({ requestContext: { authorizer: { claims: identity } } }, 'reviews', 'view'));
+        const canViewFull = identity && (review.ownerSub === identity.sub || await hasPermission(identity, 'reviews', 'view'));
         if (review.status === 'Approved' && !canViewFull) {
           return {
-            id: review.id, rating: review.rating, comment: review.comment,
+            id: review.id, rating: review.rating, content: review.content || review.comment,
             displayName: review.displayName || 'Verified Patient', verified: !!review.verified, createdAt: review.createdAt
           };
         }
@@ -492,7 +494,7 @@ exports.handler = async (event) => {
       case 'reviewsByPatient': {
         const { patientId } = args;
         const targetPatientId = patientId || identity.primaryPatientId || identity.sub;
-        if (targetPatientId !== identity.sub && targetPatientId !== identity.primaryPatientId && targetPatientId !== `pat_${identity.sub}` && !(await hasPermission({ requestContext: { authorizer: { claims: identity } } }, 'reviews', 'view'))) {
+        if (targetPatientId !== identity.sub && targetPatientId !== identity.primaryPatientId && targetPatientId !== `pat_${identity.sub}` && !(await hasPermission(identity, 'reviews', 'view'))) {
           throw new Error('You are not authorized to view reviews for other patients');
         }
         return await reviewRepo.getByPatientId(targetPatientId);
@@ -502,7 +504,7 @@ exports.handler = async (event) => {
         const { bookingId } = args;
         const review = await reviewRepo.getByBookingId(bookingId);
         if (!review) return null;
-        if (review.ownerSub !== identity.sub && !(await hasPermission({ requestContext: { authorizer: { claims: identity } } }, 'reviews', 'view'))) {
+        if (review.ownerSub !== identity.sub && !(await hasPermission(identity, 'reviews', 'view'))) {
           throw new Error('Access denied to this review');
         }
         return review;
@@ -511,7 +513,7 @@ exports.handler = async (event) => {
       case 'publicReviews': {
         const approved = await reviewRepo.getPublicApproved();
         return approved.map(r => ({
-          id: r.id, rating: r.rating, comment: r.comment,
+          id: r.id, rating: r.rating, content: r.content || r.comment,
           displayName: r.displayName || 'Verified Patient', verified: !!r.verified, createdAt: r.createdAt
         }));
       }
@@ -574,6 +576,7 @@ exports.handler = async (event) => {
           if (!allowed) throw new Error('Access denied: You are not authorized to view this invoice.');
         }
 
+        return invoice;
       }
 
       // ---------------------------------------------------------
@@ -726,8 +729,8 @@ exports.handler = async (event) => {
 
         // Use the shared phonepe service
         const { createPaymentOrder } = require('../shared/phonepe');
-        
-        const host = event.headers['origin'] || event.headers['Origin'] || 'http://localhost:3000';
+        const requestHeaders = event.request?.headers || event.headers || {};
+        const host = requestHeaders['origin'] || requestHeaders['Origin'] || 'http://localhost:3000';
         const amountInPaisa = Math.round((invoice.total || 0) * 100);
         
         try {
@@ -889,7 +892,8 @@ exports.handler = async (event) => {
 
       case 'createRole': {
         const identityForCheck = identity;
-        if (!(await isAdmin(identityForCheck)) || !(await hasPermission(identityForCheck, 'staff', 'create'))) {
+        // Admin OR staff with create permission â€” either condition is sufficient
+        if (!(await isAdmin(identityForCheck)) && !(await hasPermission(identityForCheck, 'staff', 'create'))) {
           throw new Error('Access denied: Missing staff.create permission');
         }
 
@@ -926,7 +930,8 @@ exports.handler = async (event) => {
 
       case 'updatePermissions': {
         const identityForCheck = identity;
-        if (!(await isAdmin(identityForCheck)) || !(await hasPermission(identityForCheck, 'staff', 'edit'))) {
+        // Admin OR staff with edit permission â€” either condition is sufficient
+        if (!(await isAdmin(identityForCheck)) && !(await hasPermission(identityForCheck, 'staff', 'edit'))) {
           throw new Error('Access denied: Missing staff.edit permission');
         }
 
@@ -1389,7 +1394,7 @@ exports.handler = async (event) => {
           throw new Error('Access denied: You are not authorized to update this patient record.');
         }
 
-        if (await (await isStaff(identityForCheck)) && existingPatient.ownerSub !== identity.sub) {
+        if ((await isStaff(identityForCheck)) && existingPatient.ownerSub !== identity.sub) {
           if (!(await hasPermission(identityForCheck, 'patients', 'edit'))) {
             throw new Error('Access denied: Missing patients.edit permission');
           }
@@ -1488,7 +1493,7 @@ exports.handler = async (event) => {
         const { input, idempotencyKey } = args;
         const identityForCheck = identity;
 
-        if (await (await isStaff(identityForCheck)) && !(await hasPermission(identityForCheck, 'orders', 'create'))) {
+        if ((await isStaff(identityForCheck)) && !(await hasPermission(identityForCheck, 'orders', 'create'))) {
           throw new Error('Access denied: Missing orders.create permission');
         }
 
@@ -2012,25 +2017,28 @@ exports.handler = async (event) => {
           throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
         }
 
-        const updatedReport = await reportRepo.updateStatus(id, status);
+        await reportRepo.updateStatus(id, status);
 
-        if (status === 'Published' && updatedReport.bookingId) {
-          try {
-            await bookingRepo.updateStatus(updatedReport.bookingId, 'Completed');
-            
-            if (updatedReport.patientId) {
-              const collections = await collectionRepo.getByPatientId(updatedReport.patientId);
-              const matchingTask = collections.find(c => c.bookingId === updatedReport.bookingId);
-              if (matchingTask && matchingTask.status !== 'Completed') {
-                await collectionRepo.update(matchingTask.id, { status: 'Completed' });
+        // Side effect: publish â†’ mark booking + collection as Completed
+        if (status === 'Published') {
+          const updatedReport = await reportRepo.getById(id);
+          if (updatedReport && updatedReport.bookingId) {
+            try {
+              await bookingRepo.updateStatus(updatedReport.bookingId, 'Completed');
+              if (updatedReport.patientId) {
+                const collections = await collectionRepo.getByPatientId(updatedReport.patientId);
+                const matchingTask = collections.find(c => c.bookingId === updatedReport.bookingId);
+                if (matchingTask && matchingTask.status !== 'Completed') {
+                  await collectionRepo.update(matchingTask.id, { status: 'Completed' });
+                }
               }
+            } catch (syncErr) {
+              logger.warn(`Failed to sync booking/collection for published report ${id}`, syncErr);
             }
-          } catch (syncErr) {
-            logger.warn(`Failed to sync booking/collection for published report ${id}`, syncErr);
           }
         }
 
-        return updatedReport;
+        return true; // Schema: updateReportStatus returns Boolean!
       }
 
       // ---------------------------------------------------------
@@ -2188,11 +2196,13 @@ exports.handler = async (event) => {
           statusUpdates.paidAt = new Date().toISOString();
         }
 
-        return await invoiceRepo.update(id, statusUpdates);
+        await invoiceRepo.update(id, statusUpdates);
+        return true; // Schema: updateInvoiceStatus returns Boolean!
       }
 
       case 'updateInvoicePaymentMethod': {
-        const { id, paymentMethod } = args;
+        // Schema: updateInvoicePaymentMethod(id: ID!, method: String!): Boolean!
+        const { id, method: paymentMethod } = args;  // schema arg is 'method', not 'paymentMethod'
         const identityForCheck = identity;
         
         const existingInvoice = await invoiceRepo.getById(id);
@@ -2217,7 +2227,8 @@ exports.handler = async (event) => {
           throw new Error('Access denied: You do not have permission to modify this invoice.');
         }
 
-        return await invoiceRepo.update(id, { paymentMethod });
+        await invoiceRepo.update(id, { paymentMethod });
+        return true; // Schema returns Boolean!
       }
 
       case 'updateInvoice': {
@@ -2328,8 +2339,9 @@ exports.handler = async (event) => {
           throw new Error('Document is not available for download');
         }
 
+        // Schema declares documentDownloadUrl as String! â€” return URL only
         const downloadUrl = await storageRepo.getPresignedDownloadUrl(doc.fileKey);
-        return { downloadUrl, metadata: doc };
+        return downloadUrl;
       }
 
       case 'documentById': {
@@ -2456,7 +2468,8 @@ exports.handler = async (event) => {
           }
         }
 
-        return { message: 'Subscribed successfully', subscriber: result.subscriber };
+        // Schema declares newsletterSubscribe as Boolean! â€” return true on success
+        return true;
       }
 
       case 'newsletterSubscribers': {
@@ -2518,7 +2531,9 @@ exports.handler = async (event) => {
           throw new Error('Forbidden: Missing blogs.create permission');
         }
 
-        if (!input.title || typeof input.title !== 'string' || input.title.trim().length === 0) {
+        const blogInput = typeof input === 'string' ? JSON.parse(input) : (input || {});
+
+        if (!blogInput.title || typeof blogInput.title !== 'string' || blogInput.title.trim().length === 0) {
           throw new Error('Article title is required');
         }
 
@@ -2536,7 +2551,7 @@ exports.handler = async (event) => {
           createdBy: _cb,
           ownerSub: _os,
           ...allowedFields
-        } = input;
+        } = blogInput;
 
         return await blogRepo.create({
           ...allowedFields,
@@ -2560,6 +2575,8 @@ exports.handler = async (event) => {
         if (!existing) existing = await blogRepo.getBySlug(id);
         if (!existing) throw new Error('Article not found');
 
+        const blogUpdates = typeof input === 'string' ? JSON.parse(input) : (input || {});
+
         const {
           id: _id,
           PK: _pk,
@@ -2572,7 +2589,7 @@ exports.handler = async (event) => {
           createdBy: _cb,
           ownerSub: _os,
           ...updates
-        } = input;
+        } = blogUpdates;
 
         updates.updatedBy = identity.sub;
         return await blogRepo.update(existing.id, updates);

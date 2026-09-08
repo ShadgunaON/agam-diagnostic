@@ -80,6 +80,7 @@ async function isSuperAdmin(identity) {
  */
 async function hasPermission(identity, moduleId, action) {
   if (await isSuperAdmin(identity)) return true; // Super Admin is the permanent root authority
+  if (await isAdmin(identity)) return true; // Admin has immutable full access
 
   if (!(await isStaff(identity))) return false; // Non-staff are immediately rejected from staff matrix actions
 
@@ -102,7 +103,8 @@ function extractIdentity(event) {
   let claims = event.requestContext?.authorizer?.claims;
   if (!claims) {
     // Fallback: decode JWT payload if client passed Bearer token on Authorizer: NONE route
-    const authHeader = event.headers?.Authorization || event.headers?.authorization;
+    const headers = event.request?.headers || event.headers || {};
+    const authHeader = headers.Authorization || headers.authorization;
     if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
       try {
         const token = authHeader.substring(7).trim();

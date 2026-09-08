@@ -232,22 +232,21 @@ class DynamoInvoiceRepository {
 
   async getTodayRevenue() {
     const todayStr = new Date().toISOString().split('T')[0];
-    
     const params = {
       TableName: TABLE_NAME,
       IndexName: 'GSI1',
-      KeyConditionExpression: 'GSI1PK = :entity AND begins_with(GSI1SK, :todayPrefix)',
-      FilterExpression: 'paymentStatus = :paid',
+      KeyConditionExpression: 'GSI1PK = :entity AND begins_with(GSI1SK, :todayStr)',
+      FilterExpression: '#paymentStatus = :paidStatus',
+      ExpressionAttributeNames: {
+        '#paymentStatus': 'paymentStatus',
+        '#total': 'total'
+      },
       ExpressionAttributeValues: {
         ':entity': 'ENTITY#INVOICE',
-        ':todayPrefix': `INVOICE#${todayStr}`,
-        ':paid': 'Paid'
+        ':todayStr': `INVOICE#${todayStr}`,
+        ':paidStatus': 'Paid'
       },
-      // We only need the total to sum it
-      ProjectionExpression: '#total',
-      ExpressionAttributeNames: {
-        '#total': 'total'
-      }
+      ProjectionExpression: '#total'
     };
 
     let totalRevenue = 0;
