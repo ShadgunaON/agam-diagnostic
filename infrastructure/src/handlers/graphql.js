@@ -414,7 +414,8 @@ exports.handler = async (event) => {
       // NEW: Additional Review Resolvers
       // ---------------------------------------------------------
       case 'createReview': {
-        const { bookingId, rating, comment, displayName } = args;
+        if (!args.input || typeof args.input !== 'object') throw new Error('Input is required');
+        const { bookingId, rating, comment, displayName } = args.input;
         if (!bookingId) throw new Error('bookingId is required to submit a review');
         
         const booking = await bookingRepo.getById(bookingId);

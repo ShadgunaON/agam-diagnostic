@@ -104,12 +104,12 @@ export class ReviewService {
     
     try {
       const res = await this._graphqlFetch<{ createReview: ReviewModel }>(
-        `mutation CreateReview($bookingId: String!, $rating: Int!, $comment: String!, $displayName: String) {
-          createReview(bookingId: $bookingId, rating: $rating, comment: $comment, displayName: $displayName) {
+        `mutation CreateReview($input: String!) {
+          createReview(input: $input) {
             id patientId bookingId displayName status rating title content createdAt updatedAt
           }
         }`,
-        { bookingId: data.bookingId, rating: data.rating, comment: data.comment, displayName: data.displayName }
+        { input: JSON.stringify({ bookingId: data.bookingId, rating: data.rating, comment: data.comment, displayName: data.displayName }) }
       );
       return success(res!.createReview);
     } catch (err) {
