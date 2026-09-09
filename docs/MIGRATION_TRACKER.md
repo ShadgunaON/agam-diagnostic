@@ -113,6 +113,22 @@
 - **Commit:** `3b24081`
 - **Result:** ✅ Fix verified. Staff with valid order viewing permissions can now access the Bookings Workspace.
 
+#### Issue 15 (P1-1): deleteBlog resolver return type mismatch
+
+- **Issue:** The `deleteBlog` mutation returned an object `{ message, id }` from the resolver, but the GraphQL schema declares the return type as `Boolean!`. This mismatch would cause AppSync to throw a field resolution error.
+- **Confirmed Root Cause:** The resolver (`graphql.js:2623`) returned a message object instead of a boolean. The frontend caller (`BlogService.ts:153`) already correctly expected a boolean.
+- **Files Changed:** `infrastructure/src/handlers/graphql.js`
+- **Lines Changed:** 2623
+- **Fix Applied:** Changed the return value from `{ message: 'Article deleted successfully', id: existing.id }` to `true`.
+- **Verification Performed:**
+  - `node --check infrastructure/src/handlers/graphql.js` → exit 0
+  - Contract check script → 3/3 passed:
+    - Resolver returns boolean ✅
+    - Schema declares `Boolean!` ✅
+    - Frontend expects `boolean` ✅
+- **Commit:** `ce9475f`
+- **Result:** ✅ Fix verified. The `deleteBlog` resolver now returns a boolean, satisfying the schema contract.
+
 
 #### Issue 1: Deployed Lambda Syntax Crash
 - **Issue:** Every GraphQL query and mutation returned `Runtime.UserCodeSyntaxError: SyntaxError: Unexpected token 'case'` from `GraphQLResolverFunction`.
