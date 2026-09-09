@@ -59,6 +59,41 @@
 - **Commit:** `a75777d`
 - **Result:** ✅ Fix verified. Missing `idempotencyKey` no longer crashes `createBooking`. True idempotency is preserved for all real callers.
 
+#### Issue 13 (P1-3): setPaymentMethod sends wrong GraphQL argument name
+
+- **Issue:** `InvoiceService.setPaymentMethod` sent the mutation variable as `$paymentMethod` / `paymentMethod: $paymentMethod`. AppSync rejected the request with an unknown-field error because the schema declares the argument as `method`, not `paymentMethod`. Additionally, the mutation requested a sub-selection `{ id paymentMethod }` but the schema return type is `Boolean!`, which has no fields.
+- **Confirmed Root Cause:** Frontend mutation string and variables object used the wrong argument name. The schema (`schema.graphql:158`) and resolver (`graphql.js:2216`) both correctly use `method` — only the frontend was wrong.
+- **Contract Evidence:**
+  - Schema: `updateInvoicePaymentMethod(id: ID!, method: String!): Boolean!`
+  - Resolver: `const { id, method: paymentMethod } = args;` — reads `method` ✅
+  - Frontend (before fix): `$paymentMethod: String!` / `paymentMethod: $paymentMethod` / `{ id paymentMethod }` ❌
+- **Files Changed:** `services/InvoiceService.ts`
+- **Lines Changed:** 199-210 (method only — no other code touched)
+- **Fix Applied (diff):**
+  ```diff
+  -    const data = await this._graphqlFetch<{ updateInvoicePaymentMethod: InvoiceModel }>(
+  -      `mutation UpdateInvoicePaymentMethod($id: ID!, $paymentMethod: String!) {
+  -        updateInvoicePaymentMethod(id: $id, paymentMethod: $paymentMethod) {
+  -          id paymentMethod
+  -        }
+  -      }`,
+  -      { id: invoiceId, paymentMethod: method }
+  +    const data = await this._graphqlFetch<{ updateInvoicePaymentMethod: boolean }>(
+  +      `mutation UpdateInvoicePaymentMethod($id: ID!, $method: String!) {
+  +        updateInvoicePaymentMethod(id: $id, method: $method)
+  +      }`,
+  +      { id: invoiceId, method }
+  ```
+- **Verification Performed:**
+  - `npx tsc --noEmit` → exit 0 (0 TypeScript errors)
+  - 5-case contract alignment test → 5/5 passed:
+    - Fixed `method` arg resolves correctly in resolver ✅
+    - Old `paymentMethod` arg causes resolver to fail (reproduces bug) ✅
+    - Mutation string uses `$method` not `$paymentMethod` ✅
+    - Variables object has key `method` not `paymentMethod` ✅
+    - No object sub-selection on Boolean! return ✅
+- **Commit:** `09f1178`
+- **Result:** ✅ Fix verified. `setPaymentMethod` now sends the correct argument name and AppSync will accept the mutation.
 
 #### Issue 1: Deployed Lambda Syntax Crash
 - **Issue:** Every GraphQL query and mutation returned `Runtime.UserCodeSyntaxError: SyntaxError: Unexpected token 'case'` from `GraphQLResolverFunction`.
