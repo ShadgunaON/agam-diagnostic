@@ -147,6 +147,17 @@
 - **Commit:** `18fc077`
 - **Result:** ✅ Fix verified. `newsletterSubscribers` now properly adheres to the `SubscriberConnection` contract and uses server-side data access pagination without unbounded reads.
 
+#### Issue 20 (P2-2): GraphQL Subscriber type missing ID field
+- **Issue:** The `Subscriber` type in `schema.graphql` did not expose an `id` field, despite `id` existing in the DynamoDB data, being correctly mapped by the repository, and being explicitly queried by the frontend `NewsletterSubscriber` model. This caused GraphQL validation errors when fetching newsletter subscribers.
+- **Confirmed Root Cause:** Omission of `id: ID!` in `type Subscriber` within `infrastructure/schema.graphql`.
+- **Files Changed:** `infrastructure/schema.graphql`
+- **Fix Applied:** Added `id: ID!` to the `Subscriber` type.
+- **Verification Performed:**
+  - Verified repository returns `id`.
+  - Verified frontend `getNewsletterSubscribers` query specifies `id`.
+  - `npx tsc --noEmit` → exit 0.
+- **Result:** ✅ Fix verified. Subscriber GraphQL schema is now consistent with underlying data and frontend caller expectations.
+
 #### Issue 19 (P2-1): createBooking fallback uses phone/email for invoice patientId
 - **Issue:** `createBooking` used `newBookingData.patient?.phone || newBookingData.patient?.email` as the `patientId` for invoices if `newBookingData.patientId` was missing. This stored PII (phone/email) in the `patientId` index field, breaking `invoicesByPatient` lookups for new patients who didn't supply an explicit `patientId` but provided `patient` info.
 - **Confirmed Root Cause:** The fallback logic in `graphql.js` assigned phone/email to the `invoiceData.patientId` while leaving `newBookingData.patientId` undefined, leading to mismatched and improperly formatted IDs.
