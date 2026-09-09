@@ -133,6 +133,14 @@ exports.handler = async (event) => {
 
   const { arguments: args, source } = event;
 
+  if (args && typeof args.input === 'string') {
+    try {
+      args.input = JSON.parse(args.input);
+    } catch (e) {
+      // Ignore JSON parse errors, leave as string
+    }
+  }
+
   try {
     switch (fieldName) {
       // ---------------------------------------------------------
@@ -1513,13 +1521,13 @@ exports.handler = async (event) => {
           let authoritativePrice = 0;
           
           if (item.type === 'Package') {
-            const pkg = await packageRepo.getBySlug(item.slug || item.id);
+            const pkg = item.slug ? await packageRepo.getBySlug(item.slug) : await packageRepo.getById(item.id);
             if (!pkg || pkg.status !== 'ACTIVE') throw new Error(`Package ${item.name} is unavailable or invalid`);
             authoritativePrice = parseFloat(pkg.price || pkg.packagePrice || '0');
           } else {
-            const test = await testRepo.getBySlug(item.slug || item.id);
+            const test = item.slug ? await testRepo.getBySlug(item.slug) : await testRepo.getById(item.id);
             if (!test || test.status !== 'ACTIVE') {
-              const service = await serviceRepo.getBySlug(item.slug || item.id);
+              const service = item.slug ? await serviceRepo.getBySlug(item.slug) : await serviceRepo.getById(item.id);
               if (!service || service.status !== 'ACTIVE') {
                  throw new Error(`Item ${item.name} is unavailable or invalid`);
               } else {
