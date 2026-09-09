@@ -39,6 +39,23 @@ class DynamoTestRepository {
   }
 
   /**
+   * Coerce a price-like value to a Number suitable for DynamoDB (and GraphQL Float!).
+   * - null/undefined → null (field is optional; only `price` itself is Float! non-nullable,
+   *   so callers must ensure non-null for that field at the resolver level)
+   * - Number → Number (identity, including 0)
+   * - Numeric string → Number (e.g. "450" → 450)
+   * - Non-numeric string → throws so corruption is caught at write time, not read time
+   */
+  _normalizePrice(value, field = 'price') {
+    if (value === null || value === undefined) return null;
+    const n = Number(value);
+    if (Number.isNaN(n)) {
+      throw new Error(`Invalid value for ${field}: "${value}" is not a number`);
+    }
+    return n;
+  }
+
+  /**
    * Fetch a single test by its stable ID.
    */
   async getById(id) {
@@ -210,10 +227,12 @@ class DynamoTestRepository {
       tag: testData.tag || '',
       description: testData.description || '',
       
-      // Pricing
-      price: testData.price || null,
-      basePrice: testData.basePrice ?? null,
-      salePrice: testData.salePrice ?? null,
+      // Pricing — must be stored as Number (Float) to satisfy `price: Float!` in the GraphQL schema.
+      // _normalizePrice returns a Number for any numeric-compatible value, null for absent/null values,
+      // and throws for non-numeric strings that would silently corrupt the DynamoDB attribute type.
+      price: this._normalizePrice(testData.price, 'price'),
+      basePrice: this._normalizePrice(testData.basePrice ?? null, 'basePrice'),
+      salePrice: this._normalizePrice(testData.salePrice ?? null, 'salePrice'),
       
       // Status & Sorting
       status: testData.status || 'ACTIVE',

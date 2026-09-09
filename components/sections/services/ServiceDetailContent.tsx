@@ -44,8 +44,8 @@ export function ServiceDetailContent({ data, className = '' }: ServiceDetailCont
     title: data.title,
     type: 'service' as const,
     category: data.category,
-    price: parseInt(data.price || '1999', 10),
-    originalPrice: Math.round(parseInt(data.price || '1999', 10) * 1.35),
+    price: parseInt(String(data.price || '1999'), 10),
+    originalPrice: Math.round(parseInt(String(data.price || '1999'), 10) * 1.35),
   };
 
   const sections = [

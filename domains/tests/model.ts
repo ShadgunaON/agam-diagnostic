@@ -5,7 +5,7 @@ export interface TestItem {
   category: string;
   tag: string;
   description: string;
-  price?: string;
+  price?: number | string;
   basePrice?: number;
   salePrice?: number;
   status?: 'DRAFT' | 'ACTIVE' | 'INACTIVE';

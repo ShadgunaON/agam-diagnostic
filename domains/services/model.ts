@@ -5,7 +5,7 @@ export interface ServiceItem {
   category: string;
   description: string;
   shortDescription?: string;
-  price: string;
+  price: number | string;
   basePrice?: number;
   salePrice?: number;
   icon: string;

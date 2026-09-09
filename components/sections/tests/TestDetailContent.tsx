@@ -41,8 +41,8 @@ export function TestDetailContent({ data, className = '' }: TestDetailContentPro
     title: data.title,
     type: 'service' as const, // For cart purposes, a test is a service
     category: data.category,
-    price: parseInt(data.price || '150', 10),
-    originalPrice: Math.round(parseInt(data.price || '150', 10) * 1.35),
+    price: parseInt(String(data.price || '150'), 10),
+    originalPrice: Math.round(parseInt(String(data.price || '150'), 10) * 1.35),
   };
 
   const sections = [];

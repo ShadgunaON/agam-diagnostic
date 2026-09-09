@@ -14,6 +14,22 @@ class DynamoServiceRepository {
     return rest;
   }
 
+  /**
+   * Coerce a price-like value to a Number suitable for DynamoDB (and GraphQL Float!).
+   * - null/undefined → null
+   * - Number → Number (identity, including 0)
+   * - Numeric string → Number (e.g. "450" → 450)
+   * - Non-numeric string → throws so corruption is caught at write time
+   */
+  _normalizePrice(value, field = 'price') {
+    if (value === null || value === undefined) return null;
+    const n = Number(value);
+    if (Number.isNaN(n)) {
+      throw new Error(`Invalid value for ${field}: "${value}" is not a number`);
+    }
+    return n;
+  }
+
   async getById(id) {
     if (!id) return null;
     const response = await docClient.send(new GetCommand({
@@ -137,10 +153,10 @@ class DynamoServiceRepository {
       icon: serviceData.icon || 'default-icon',
       color: serviceData.color || 'blue',
       
-      // Pricing
-      price: serviceData.price || null,
-      basePrice: serviceData.basePrice ?? null,
-      salePrice: serviceData.salePrice ?? null,
+      // Pricing — normalized to Number so DynamoDB stores Float, not String.
+      price: this._normalizePrice(serviceData.price, 'price'),
+      basePrice: this._normalizePrice(serviceData.basePrice ?? null, 'basePrice'),
+      salePrice: this._normalizePrice(serviceData.salePrice ?? null, 'salePrice'),
       
       // Status & Sorting
       status: serviceData.status || 'ACTIVE',

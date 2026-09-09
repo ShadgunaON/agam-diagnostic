@@ -30,8 +30,8 @@ export function PackageDetailContent({ data, className = '' }: PackageDetailCont
     title: data.title,
     type: 'package' as const,
     category: data.category,
-    price: parseInt(data.price || '1999', 10),
-    originalPrice: Math.round(parseInt(data.price || '1999', 10) * 1.35),
+    price: parseInt(String(data.price || '1999'), 10),
+    originalPrice: Math.round(parseInt(String(data.price || '1999'), 10) * 1.35),
     includedTests: data.includedTests,
   };
 

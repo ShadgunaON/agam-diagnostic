@@ -25,7 +25,7 @@ export default function EditServicePage() {
     category: 'general',
     description: '',
     shortDescription: '',
-    price: '0',
+    price: 0,
     basePrice: 0,
     salePrice: 0,
     status: 'ACTIVE',

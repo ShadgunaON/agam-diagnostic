@@ -4,7 +4,7 @@ export interface PackageItem {
   title: string;
   category: string;
   description: string;
-  price: string;
+  price: number | string;
   packagePrice?: number;
   individualValue?: number;
   icon: string;
