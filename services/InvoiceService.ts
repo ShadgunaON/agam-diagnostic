@@ -197,15 +197,13 @@ export class InvoiceService {
   }
 
   async setPaymentMethod(invoiceId: string, method: string): Promise<Result<InvoiceModel>> {
-    const data = await this._graphqlFetch<{ updateInvoicePaymentMethod: InvoiceModel }>(
-      `mutation UpdateInvoicePaymentMethod($id: ID!, $paymentMethod: String!) {
-        updateInvoicePaymentMethod(id: $id, paymentMethod: $paymentMethod) {
-          id paymentMethod
-        }
+    const data = await this._graphqlFetch<{ updateInvoicePaymentMethod: boolean }>(
+      `mutation UpdateInvoicePaymentMethod($id: ID!, $method: String!) {
+        updateInvoicePaymentMethod(id: $id, method: $method)
       }`,
-      { id: invoiceId, paymentMethod: method }
+      { id: invoiceId, method }
     );
-    if (data?.updateInvoicePaymentMethod) return success(data.updateInvoicePaymentMethod);
+    if (data?.updateInvoicePaymentMethod) return success({ id: invoiceId, paymentMethod: method } as unknown as InvoiceModel);
     return failure(new Error('Failed to set payment method'));
   }
 }
