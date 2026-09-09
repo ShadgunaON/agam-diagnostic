@@ -53,6 +53,30 @@
   - Validation: Confirmed parity of GraphQL parameters between Frontend queries and backend schema mutations.
 - **Result:** ✅ Fix verified. Frontend mutations correctly match backend AppSync schema. `FieldUndefined` correctly resolved for the Patient model.
 
+#### Issue 4: PhonePe AppSync Event Header Access
+- **Issue:** PhonePe integration failed because the request origin/host could not be retrieved from `event.headers`.
+- **Confirmed Root Cause:** AppSync Lambda Resolvers pass headers in `event.request.headers`, not `event.headers`.
+- **Files Changed:** `infrastructure/src/handlers/graphql.js`, `infrastructure/src/shared/auth.js`
+- **Fix Applied:** Modified the header extraction logic to safely use `event.request?.headers` to extract the correct origin during PhonePe payment initializations.
+- **Verification Performed:** Code analysis verified that AppSync direct Lambda resolvers map context headers to `event.request.headers`.
+- **Result:** ✅ Fixed AppSync PhonePe header resolution.
+
+#### Issue 5: Cognito Group -> Admin Role / Authorization Mismatch
+- **Issue:** Admin staff were failing RBAC authorization checks.
+- **Confirmed Root Cause:** The `identity` object built directly in `graphql.js` was missing `primaryPatientId` and `staffId`, which are constructed correctly in `auth.js`. This mismatch caused RBAC functions (like `canAccessPatient`) to fail when checking against `identity.primaryPatientId`.
+- **Files Changed:** `infrastructure/src/handlers/graphql.js`
+- **Fix Applied:** Normalized the AppSync Cognito `identity` object constructed in `graphql.js` to exactly match the schema returned by `extractIdentity` in `auth.js`, including `primaryPatientId` and `staffId`.
+- **Verification Performed:** Code analysis confirmed identity schema parity across both modules.
+- **Result:** ✅ Resolved AppSync Cognito identity mismatch, restoring full RBAC functionality for Admin accounts.
+
+#### Issue 6: Reports DynamoDB Map-type FilterExpression
+- **Issue:** DynamoDB returned a `ValidationException: The first operand to the contains function must be a String, Set, or List` when searching Reports and Collections.
+- **Confirmed Root Cause:** The search FilterExpression tried to use the `contains()` function directly on the `patient` attribute, which is a DynamoDB Map type, instead of a primitive type.
+- **Files Changed:** `infrastructure/src/repositories/dynamo-report.js`, `infrastructure/src/repositories/dynamo-collection.js`
+- **Fix Applied:** Modified the DynamoDB query FilterExpressions to use `patientId` (which is a String) instead of the `patient` Map or non-existent fields.
+- **Verification Performed:** Verified DynamoDB Query commands use only scalar types for `contains()`.
+- **Result:** ✅ Resolved `ValidationException` during pagination and search queries.
+
 ---
 
 ## Hotfix — GraphQL Contract Alignment & RBAC Identity Fix

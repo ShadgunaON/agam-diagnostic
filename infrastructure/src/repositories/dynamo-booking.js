@@ -311,7 +311,7 @@ class DynamoBookingRepository {
       TableName: TABLE_NAME,
       IndexName: 'GSI1',
       KeyConditionExpression: 'GSI1PK = :entity',
-      FilterExpression: 'contains(#status, :qUpper) OR contains(#status, :qLower) OR contains(PK, :qOriginal) OR contains(patientName, :qLower) OR contains(patientName, :qUpper) OR contains(patientName, :qTitle)',
+      FilterExpression: 'contains(#status, :qUpper) OR contains(#status, :qLower) OR contains(PK, :qOriginal) OR contains(patientId, :qLower) OR contains(patientId, :qOriginal)',
       ExpressionAttributeNames: {
         '#status': 'status'
       },

@@ -200,7 +200,7 @@ class DynamoReportRepository {
       TableName: TABLE_NAME,
       IndexName: 'GSI2',
       KeyConditionExpression: 'GSI2PK = :entity',
-      FilterExpression: 'contains(#status, :qUpper) OR contains(#status, :qLower) OR contains(PK, :qOriginal) OR contains(patientName, :qLower) OR contains(patientName, :qUpper) OR contains(patientName, :qTitle)',
+      FilterExpression: 'contains(#status, :qUpper) OR contains(#status, :qLower) OR contains(PK, :qOriginal) OR contains(patientId, :qLower) OR contains(patientId, :qOriginal)',
       ExpressionAttributeNames: {
         '#status': 'status'
       },

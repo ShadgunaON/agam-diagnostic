@@ -107,16 +107,18 @@ exports.handler = async (event) => {
     }
   }
 
+  const sub = event.identity?.sub || event.identity?.claims?.sub;
   const identity = {
-    sub: event.identity?.sub || event.identity?.claims?.sub,
-    email: event.identity?.claims?.email,
-    phone: event.identity?.claims?.phone_number,
+    sub: sub,
+    email: event.identity?.claims?.email || '',
+    phone: event.identity?.claims?.phone_number || '',
     role: role,
-    username: event.identity?.username || event.identity?.claims?.email,
+    username: event.identity?.username || event.identity?.claims?.email || sub,
     groups: _normalizedGroups,
     'cognito:groups': _normalizedGroups,
+    primaryPatientId: sub ? `pat_${sub}` : undefined,
+    staffId: event.identity?.claims?.['custom:staff_id'] || (role !== 'patient' ? sub : undefined)
   };
-  
   const PUBLIC_FIELDS = new Set([
     'catalogTests', 'catalogPackages', 'catalogServices',
     'testBySlug', 'packageBySlug', 'serviceBySlug',
@@ -729,7 +731,7 @@ exports.handler = async (event) => {
 
         // Use the shared phonepe service
         const { createPaymentOrder } = require('../shared/phonepe');
-        const requestHeaders = event.request?.headers || event.headers || {};
+        const requestHeaders = event.request?.headers || {};
         const host = requestHeaders['origin'] || requestHeaders['Origin'] || 'http://localhost:3000';
         const amountInPaisa = Math.round((invoice.total || 0) * 100);
         

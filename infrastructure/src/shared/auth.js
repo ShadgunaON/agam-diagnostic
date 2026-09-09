@@ -103,7 +103,7 @@ function extractIdentity(event) {
   let claims = event.requestContext?.authorizer?.claims;
   if (!claims) {
     // Fallback: decode JWT payload if client passed Bearer token on Authorizer: NONE route
-    const headers = event.request?.headers || event.headers || {};
+    const headers = event.request?.headers || {};
     const authHeader = headers.Authorization || headers.authorization;
     if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
       try {

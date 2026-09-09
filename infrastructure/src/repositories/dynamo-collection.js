@@ -89,7 +89,7 @@ class DynamoCollectionRepository {
       const qTitle = search.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
       const qOriginal = search.trim();
       
-      filters.push('(contains(PK, :qOriginal) OR contains(patient, :qLower) OR contains(patient, :qUpper) OR contains(patient, :qTitle) OR contains(address, :qLower) OR contains(address, :qUpper) OR contains(address, :qTitle) OR contains(assignedTo, :qLower) OR contains(assignedTo, :qUpper) OR contains(assignedTo, :qTitle))');
+      filters.push('(contains(PK, :qOriginal) OR contains(patientId, :qLower) OR contains(patientId, :qOriginal) OR contains(address, :qLower) OR contains(address, :qUpper) OR contains(address, :qTitle) OR contains(assignedTo, :qLower) OR contains(assignedTo, :qUpper) OR contains(assignedTo, :qTitle))');
       attrValues[':qOriginal'] = qOriginal;
       attrValues[':qLower'] = qLower;
       attrValues[':qUpper'] = qUpper;
@@ -174,7 +174,7 @@ class DynamoCollectionRepository {
       TableName: TABLE_NAME,
       IndexName: 'GSI1',
       KeyConditionExpression: 'GSI1PK = :entity',
-      FilterExpression: 'contains(#status, :qUpper) OR contains(#status, :qLower) OR contains(PK, :qOriginal) OR contains(patient, :qLower) OR contains(patient, :qUpper) OR contains(patient, :qTitle) OR contains(address, :qLower) OR contains(address, :qUpper) OR contains(address, :qTitle) OR contains(assignedTo, :qLower) OR contains(assignedTo, :qUpper) OR contains(assignedTo, :qTitle)',
+      FilterExpression: 'contains(#status, :qUpper) OR contains(#status, :qLower) OR contains(PK, :qOriginal) OR contains(patientId, :qLower) OR contains(patientId, :qOriginal) OR contains(address, :qLower) OR contains(address, :qUpper) OR contains(address, :qTitle) OR contains(assignedTo, :qLower) OR contains(assignedTo, :qUpper) OR contains(assignedTo, :qTitle)',
       ExpressionAttributeNames: {
         '#status': 'status'
       },
