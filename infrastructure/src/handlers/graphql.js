@@ -1500,7 +1500,8 @@ exports.handler = async (event) => {
       }
 
       case 'createBooking': {
-        const { input, idempotencyKey } = args;
+        const { input, idempotencyKey: rawIdempotencyKey } = args;
+        const idempotencyKey = rawIdempotencyKey || `idem_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
         const identityForCheck = identity;
 
         if ((await isStaff(identityForCheck)) && !(await hasPermission(identityForCheck, 'orders', 'create'))) {
