@@ -2484,13 +2484,28 @@ exports.handler = async (event) => {
       }
 
       case 'newsletterSubscribers': {
+        const { limit = 50, cursor = '1' } = args;
         const identityForCheck = identity;
         if (!identity) throw new Error('Unauthorized');
         
         if (!(await hasPermission(identityForCheck, 'newsletter', 'view')) && !(await hasPermission(identityForCheck, 'blogs', 'view'))) {
           throw new Error('Forbidden: Missing newsletter.view or blogs.view permission');
         }
-        return await newsletterRepo.getAll();
+        
+        const allItems = await newsletterRepo.getAll();
+        const page = parseInt(cursor) || 1;
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        
+        return {
+          data: allItems.slice(startIndex, endIndex),
+          meta: {
+            total: allItems.length,
+            page,
+            limit,
+            totalPages: Math.ceil(allItems.length / limit) || 1
+          }
+        };
       }
 
       case 'blogs': {

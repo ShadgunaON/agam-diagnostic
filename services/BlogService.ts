@@ -177,14 +177,19 @@ export class BlogService {
   }
 
   async getNewsletterSubscribers(): Promise<Result<NewsletterSubscriber[]>> {
-    const data = await this._graphqlFetch<{ newsletterSubscribers: NewsletterSubscriber[] }>(
+    const data = await this._graphqlFetch<{ newsletterSubscribers: { data: NewsletterSubscriber[], meta: any } }>(
       `query NewsletterSubscribers {
         newsletterSubscribers {
-          id email status subscribedAt
+          data {
+            id email status subscribedAt
+          }
+          meta {
+            total page limit totalPages
+          }
         }
       }`
     );
-    if (data?.newsletterSubscribers) return success(data.newsletterSubscribers);
+    if (data?.newsletterSubscribers?.data) return success(data.newsletterSubscribers.data);
     return failure(new Error('Failed to fetch subscribers'));
   }
 }
