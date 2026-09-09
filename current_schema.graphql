@@ -1,0 +1,605 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+#  Admin workspace types
+type AdminBookingsWorkspace {
+  nextCursor: String
+  queue: [Booking!]!
+  totalFiltered: Int
+}
+
+type AdminInvoice {
+  bookingId: ID
+  createdAt: String!
+  discount: Float
+  id: ID!
+  items: [InvoiceLineItem!]
+  paidAt: String
+  patientId: ID!
+  paymentMethod: String
+  paymentStatus: String!
+  receivedBy: String
+  subtotal: Float
+  tax: Float
+  total: Float!
+  updatedAt: String
+}
+
+type AdminInvoicesWorkspace {
+  nextCursor: String
+  queue: [AdminInvoice!]!
+}
+
+#  Legacy alias preserved for existing resolver
+type AdminReportsWorkspaceData {
+  nextCursor: String
+  pendingCount: Int
+  queue: [Report!]!
+}
+
+type AdminReview {
+  bookingId: ID!
+  content: String
+  createdAt: String
+  displayName: String
+  id: ID!
+  patientId: ID
+  rating: Float
+  status: String!
+  title: String
+  updatedAt: String
+}
+
+type AdminReviewsWorkspace {
+  nextCursor: String
+  queue: [AdminReview!]!
+}
+
+type AnalyticsCharts {
+  revenueByMonth: [MonthlyRevenue!]!
+}
+
+type BlogConnection @aws_api_key @aws_cognito_user_pools {
+  data: [BlogItem!]!
+  meta: PaginationMeta!
+}
+
+type BlogItem @aws_api_key @aws_cognito_user_pools {
+  author: String
+  authorId: String
+  category: String
+  colorPrimary: String
+  colorSecondary: String
+  content: String
+  coverImage: String
+  createdAt: String
+  date: String
+  description: String
+  excerpt: String
+  icon: String
+  id: ID!
+  image: String
+  imageUrl: String
+  publishedAt: String
+  slug: String!
+  status: String!
+  title: String!
+  updatedAt: String
+  views: Int
+}
+
+type Booking {
+  collection: CollectionDetails
+  createdAt: String!
+  id: ID!
+  items: [BookingItem!]!
+  patient: PatientSnapshot!
+  patientId: ID!
+  payment: PaymentDetails
+  status: String!
+}
+
+type BookingItem {
+  name: String!
+  type: String!
+}
+
+type CatalogPackagesConnection @aws_api_key @aws_cognito_user_pools {
+  data: [PackageItem!]!
+  meta: PaginationMeta!
+}
+
+type CatalogServicesConnection @aws_api_key @aws_cognito_user_pools {
+  data: [ServiceItem!]!
+  meta: PaginationMeta!
+}
+
+type CatalogTestsConnection @aws_api_key @aws_cognito_user_pools {
+  data: [TestItem!]!
+  meta: PaginationMeta!
+}
+
+type CatalogWorkspace {
+  packages: [PackageItem!]!
+  services: [ServiceItem!]!
+  tests: [TestItem!]!
+}
+
+type CollectionConnection {
+  items: [CollectionQueueItem!]!
+  nextCursor: String
+}
+
+type CollectionDetails {
+  address: String
+  date: String
+  status: String
+  timeSlot: String
+  type: String
+}
+
+type CollectionQueueItem {
+  address: String
+  assignedTo: String
+  bookingId: ID!
+  date: String
+  id: ID!
+  lat: Float
+  lng: Float
+  patient: String
+  phlebotomistId: String
+  status: String!
+  tests: [String!]
+  time: String
+  type: String
+}
+
+type CollectionStats {
+  completedTasks: Int!
+  enRouteTasks: Int!
+  totalTasks: Int!
+  unassignedTasks: Int!
+}
+
+type CollectionTask {
+  assignedTo: String
+  bookingId: ID!
+  id: ID!
+  status: String!
+}
+
+type CollectionsWorkspaceData {
+  phlebotomists: [Staff!]!
+  queue: CollectionConnection!
+  stats: CollectionStats!
+}
+
+type DashboardMetrics {
+  awaitingVerification: Int!
+  pendingBookings: Int!
+  revenueToday: Float!
+  totalPatients: Int!
+}
+
+type DocumentItem {
+  createdAt: String
+  entityId: ID!
+  entityType: String!
+  id: ID!
+  title: String!
+  type: String!
+  uploadedBy: String
+  url: String!
+}
+
+type DocumentUploadResponse {
+  id: ID!
+  uploadUrl: String!
+}
+
+type FaqItem {
+  answer: String!
+  question: String!
+}
+
+#  Full invoice — all financial fields (richer than the summary Invoice type)
+type FullInvoice {
+  bookingId: ID
+  createdAt: String!
+  discount: Float
+  id: ID!
+  items: [InvoiceLineItem!]
+  paidAt: String
+  patientId: ID!
+  paymentMethod: String
+  paymentStatus: String!
+  receivedBy: String
+  subtotal: Float
+  tax: Float
+  total: Float!
+  updatedAt: String
+}
+
+type GlobalSearchResult {
+  href: String!
+  icon: String!
+  id: ID!
+  subtitle: String!
+  title: String!
+  type: String!
+}
+
+type Invoice {
+  bookingId: ID
+  createdAt: String!
+  id: ID!
+  patientId: ID!
+  paymentMethod: String
+  paymentStatus: String!
+  total: Float!
+}
+
+type InvoiceLineItem {
+  id: ID!
+  name: String!
+  price: Float!
+  type: String!
+}
+
+type MonthlyRevenue {
+  month: String!
+  revenue: Float!
+}
+
+type Mutation {
+  completeDocumentUpload(id: ID!): DocumentItem!
+  #  Blog Mutations
+  createBlog(input: String!): BlogItem!
+  #  Booking Mutations
+  createBooking(input: String!): Booking!
+  createCatalogPackage(input: String!): PackageItem!
+  createCatalogService(input: String!): ServiceItem!
+  #  Catalog Mutations
+  createCatalogTest(input: String!): TestItem!
+  #  Collection Mutations
+  createCollection(input: String!): CollectionTask!
+  #  Invoice Mutations
+  createInvoice(input: String!): Invoice!
+  #  Patient Mutations
+  createPatient(input: String!): Patient!
+  #  Payment processing
+  createPaymentOrder(invoiceId: ID!): String!
+  #  Report Mutations
+  createReportTask(input: String!): Report!
+  #  Review Mutations
+  createReview(input: String!): Review!
+  createRole(color: String, desc: String, internal: String!, title: String!): Role!
+  #  Staff Management
+  createStaff(department: String!, email: String!, name: String!, phone: String!, role: String!, shift: String!): Staff!
+  deleteBlog(id: ID!): Boolean!
+  deleteCatalogPackage(id: ID!): Boolean!
+  deleteCatalogService(id: ID!): Boolean!
+  deleteCatalogTest(id: ID!): Boolean!
+  #  Document Mutations
+  initiateDocumentUpload(input: String!): DocumentUploadResponse!
+  #  Mark a notification as read (replaces REST PUT /api/notifications/:id/read)
+  markNotificationRead(id: ID!): Boolean!
+  moderateReview(id: ID!, status: String!): Boolean!
+  #  Newsletter Mutations
+  newsletterSubscribe(email: String!): Boolean!
+  paymentStatus(invoiceId: ID!): FullInvoice!
+  updateBlog(id: ID!, input: String!): BlogItem!
+  updateBookingPaymentStatus(id: ID!, status: String!): Boolean!
+  updateBookingStatus(id: ID!, status: String!): Boolean!
+  updateCatalogPackage(id: ID!, input: String!): PackageItem!
+  updateCatalogPackageStatus(id: ID!, status: String!): Boolean!
+  updateCatalogService(id: ID!, input: String!): ServiceItem!
+  updateCatalogServiceStatus(id: ID!, status: String!): Boolean!
+  updateCatalogTest(id: ID!, input: String!): TestItem!
+  updateCatalogTestStatus(id: ID!, status: String!): Boolean!
+  updateCollection(id: ID!, input: String!): CollectionTask!
+  updateInvoice(id: ID!, input: String!): Invoice!
+  updateInvoicePaymentMethod(id: ID!, method: String!): Boolean!
+  updateInvoiceStatus(id: ID!, status: String!): Boolean!
+  updatePatient(id: ID!, input: String!): Patient!
+  updatePermissions(records: String!): Boolean!
+  updateReportStatus(id: ID!, results: String, status: String!): Boolean!
+  updateStaff(department: String, email: String, id: ID!, name: String, phone: String, role: String, shift: String, status: String): Staff!
+}
+
+type MyPortal {
+  bookings: [Booking!]!
+  collections: [CollectionTask!]!
+  familyMembers: [Patient!]!
+  invoices: [Invoice!]!
+  patient: Patient!
+  reports: [Report!]!
+  reviews: [Review!]!
+}
+
+type Notification {
+  createdAt: String
+  id: ID!
+  isRead: Boolean!
+  link: String
+  message: String!
+  title: String!
+  userId: ID!
+}
+
+type PackageItem @aws_api_key @aws_cognito_user_pools {
+  category: String
+  createdAt: String
+  description: String
+  faqs: [FaqItem!]
+  id: ID!
+  includes: [String!]
+  individualValue: Float
+  packagePrice: Float
+  price: Float!
+  slug: String!
+  sortOrder: Int
+  status: String
+  testIds: [String!]
+  title: String!
+  updatedAt: String
+}
+
+type PaginationMeta @aws_api_key @aws_cognito_user_pools {
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+type Patient {
+  #  Relational fields to be resolved by targeted queries, not fetch-all
+  bookings(status: String): [Booking!]!
+  createdAt: String
+  email: String
+  id: ID!
+  invoices(paymentStatus: String): [Invoice!]!
+  name: String!
+  phone: String
+  reports(status: String): [Report!]!
+  status: String
+}
+
+type PatientConnection {
+  data: [Patient!]!
+  meta: PaginationMeta!
+}
+
+type PatientSnapshot {
+  email: String
+  id: ID
+  name: String!
+  phone: String
+}
+
+type PatientStats {
+  newThisMonth: Int!
+  totalPatients: Int!
+}
+
+type PaymentDetails {
+  method: String
+  status: String
+  total: Float
+}
+
+type Query {
+  #  Admin Bookings Workspace (paginated; replaces REST GET /api/bookings)
+  adminBookingsWorkspace(cursor: String, limit: Int, search: String, sort: String, status: String, tab: String): AdminBookingsWorkspace!
+  #  Admin Catalog Workspace
+  adminCatalogWorkspace: CatalogWorkspace!
+  #  Admin Collections Workspace
+  adminCollectionsWorkspace(cursor: String, limit: Int, search: String, sort: String, tab: String): CollectionsWorkspaceData!
+  #  Admin Invoices Workspace (paginated; replaces REST GET /api/invoices)
+  adminInvoicesWorkspace(cursor: String, limit: Int, search: String, status: String): AdminInvoicesWorkspace!
+  adminPermissionsMap: String!
+  #  Admin Reports Workspace
+  adminReportsWorkspace(cursor: String, limit: Int, search: String, sort: String, status: String): AdminReportsWorkspaceData!
+  #  Admin Reviews Workspace (paginated; replaces REST GET /api/reviews)
+  adminReviewsWorkspace(cursor: String, limit: Int, rating: String, search: String, status: String): AdminReviewsWorkspace!
+  adminRoles: [Role!]! @aws_cognito_user_pools
+  #  Staff Management
+  adminStaffWorkspace: [Staff!]!
+  allReviews(cursor: String, limit: Int): ReviewConnection!
+  #  Admin Analytics Charts (revenue aggregated server-side)
+  analyticsCharts: AnalyticsCharts!
+  blogById(idOrSlug: String!): BlogItem @aws_api_key @aws_cognito_user_pools
+  #  Blog Queries
+  blogs(limit: Int, page: Int, status: String): [BlogItem!]! @aws_api_key @aws_cognito_user_pools
+  #  Targeted single-record lookups (replaces REST GET /api/bookings/:id and /api/invoices/:id)
+  bookingById(id: ID!): Booking
+  #  Booking Queries
+  bookingsByPatient(patientId: ID!): [Booking!]!
+  catalogPackages(limit: Int, page: Int, q: String): CatalogPackagesConnection! @aws_api_key @aws_cognito_user_pools
+  catalogServices(limit: Int, page: Int, q: String): CatalogServicesConnection! @aws_api_key @aws_cognito_user_pools
+  #  Catalog Queries
+  catalogTests(limit: Int, page: Int, q: String): CatalogTestsConnection! @aws_api_key @aws_cognito_user_pools
+  #  Collection Queries
+  collectionById(id: ID!): CollectionTask
+  collections(cursor: String, limit: Int, search: String, status: String): CollectionConnection!
+  collectionsByPatient(patientId: ID!): [CollectionTask!]!
+  #  Admin Dashboard
+  dashboardStats: DashboardMetrics!
+  documentById(id: ID!): DocumentItem
+  documentDownloadUrl(id: ID!): String!
+  #  Document Queries
+  documents(entityId: ID, entityType: String): [DocumentItem!]!
+  #  Aggregated Search
+  globalSearch(limit: Int, query: String!): [GlobalSearchResult!]! @aws_api_key @aws_cognito_user_pools
+  invoiceById(id: ID!): FullInvoice
+  #  Invoice Queries
+  invoicesByPatient(patientId: ID!): [Invoice!]!
+  #  Patient Queries
+  mePatient: Patient
+  #  Patient-scoped booking list (replaces REST GET /api/bookings?patientId=)
+  myBookings: [Booking!]!
+  #  Patient portal notifications (replaces REST GET /api/notifications)
+  myNotifications: [Notification!]!
+  #  Patient Portal
+  myPortal: MyPortal!
+  #  Newsletter
+  newsletterSubscribers(cursor: String, limit: Int): SubscriberConnection!
+  packageById(id: ID!): PackageItem
+  packageBySlug(slug: String!): PackageItem @aws_api_key @aws_cognito_user_pools
+  #  Direct Lookup
+  patient(id: ID!): Patient
+  patientById(id: ID!): Patient
+  #  Admin Patient KPIs (authoritative counts)
+  patientStats: PatientStats!
+  patients(cursor: String, limit: Int, search: String): PatientConnection!
+  publicReviews(limit: Int): [Review!]! @aws_api_key @aws_cognito_user_pools
+  recentBookings(limit: Int): [Booking!]!
+  #  Report Queries
+  reportById(id: ID!): Report
+  reportsByPatient(patientId: ID!): [Report!]!
+  reviewByBooking(bookingId: ID!): Review
+  #  Review Queries
+  reviewById(id: ID!): Review
+  #  Admin Review KPIs (authoritative aggregates)
+  reviewStats: ReviewStats!
+  reviewsByPatient(patientId: ID!): [Review!]!
+  serviceById(id: ID!): ServiceItem
+  serviceBySlug(slug: String!): ServiceItem @aws_api_key @aws_cognito_user_pools
+  staffById(id: ID!): Staff
+  testById(id: ID!): TestItem
+  testBySlug(slug: String!): TestItem @aws_api_key @aws_cognito_user_pools
+}
+
+type RelatedTest {
+  category: String
+  description: String
+  slug: String!
+  status: String
+  title: String!
+}
+
+type Report {
+  bookingId: ID
+  createdAt: String!
+  id: ID!
+  patient: PatientSnapshot!
+  patientId: ID!
+  pdfKey: String
+  priority: String
+  results: [TestResult!]
+  status: String!
+  testType: String!
+  time: String
+  url: String
+}
+
+type Review @aws_api_key @aws_cognito_user_pools {
+  bookingId: ID!
+  content: String
+  createdAt: String
+  displayName: String
+  id: ID!
+  patientId: ID
+  rating: Float
+  status: String!
+  title: String
+  updatedAt: String
+}
+
+type ReviewConnection @aws_api_key @aws_cognito_user_pools {
+  data: [Review!]!
+  meta: PaginationMeta!
+}
+
+type ReviewStats {
+  approved: Int!
+  averageRating: Float!
+  pending: Int!
+  total: Int!
+}
+
+type Role {
+  color: String
+  desc: String
+  id: ID!
+  internal: String!
+  scope: String
+  title: String!
+  users: Int!
+}
+
+type ServiceItem @aws_api_key @aws_cognito_user_pools {
+  basePrice: Float
+  category: String
+  createdAt: String
+  description: String
+  estimatedDuration: String
+  faqs: [FaqItem!]
+  homeAvailable: Boolean
+  id: ID!
+  labAvailable: Boolean
+  price: Float!
+  salePrice: Float
+  shortDescription: String
+  slug: String!
+  sortOrder: Int
+  status: String
+  title: String!
+  updatedAt: String
+}
+
+type Staff {
+  department: String
+  email: String
+  id: ID!
+  joinDate: String
+  name: String!
+  phone: String
+  role: String!
+  shift: String
+  status: String!
+}
+
+type Subscriber {
+  email: String!
+  status: String
+  subscribedAt: String!
+}
+
+type SubscriberConnection @aws_api_key @aws_cognito_user_pools {
+  data: [Subscriber!]!
+  meta: PaginationMeta!
+}
+
+type TestItem @aws_api_key @aws_cognito_user_pools {
+  basePrice: Float
+  category: String
+  createdAt: String
+  description: String
+  faqs: [FaqItem!]
+  fastingRequired: Boolean
+  homeCollectionAvailable: Boolean
+  id: ID!
+  labCollectionAvailable: Boolean
+  price: Float!
+  relatedTests: [RelatedTest!]
+  salePrice: Float
+  sampleType: String
+  slug: String!
+  sortOrder: Int
+  status: String
+  tag: String
+  title: String!
+  turnaroundTime: String
+  updatedAt: String
+}
+
+type TestResult {
+  isAbnormal: Boolean
+  parameter: String!
+  reference: String
+  unit: String
+  value: String
+}

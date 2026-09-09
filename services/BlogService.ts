@@ -150,11 +150,9 @@ export class BlogService {
   }
 
   async deleteArticle(id: string): Promise<Result<void>> {
-    const data = await this._graphqlFetch<{ deleteBlog: { message: string } }>(
+    const data = await this._graphqlFetch<{ deleteBlog: boolean }>(
       `mutation DeleteBlog($id: ID!) {
-        deleteBlog(id: $id) {
-          message
-        }
+        deleteBlog(id: $id)
       }`,
       { id }
     );
@@ -163,16 +161,18 @@ export class BlogService {
   }
 
   async subscribeToNewsletter(email: string): Promise<Result<{ message: string; subscriber: NewsletterSubscriber }>> {
-    const data = await this._graphqlFetch<{ newsletterSubscribe: { message: string; subscriber: NewsletterSubscriber } }>(
+    const data = await this._graphqlFetch<{ newsletterSubscribe: boolean }>(
       `mutation NewsletterSubscribe($email: String!) {
-        newsletterSubscribe(email: $email) {
-          message
-          subscriber { id email status subscribedAt }
-        }
+        newsletterSubscribe(email: $email)
       }`,
       { email }
     );
-    if (data?.newsletterSubscribe) return success(data.newsletterSubscribe);
+    if (data?.newsletterSubscribe) {
+      return success({ 
+        message: 'Subscribed successfully', 
+        subscriber: { id: Date.now().toString(), email, status: 'Active', subscribedAt: new Date().toISOString() } 
+      });
+    }
     return failure(new Error('Failed to subscribe'));
   }
 

@@ -77,6 +77,38 @@
 - **Verification Performed:** Verified DynamoDB Query commands use only scalar types for `contains()`.
 - **Result:** ✅ Resolved `ValidationException` during pagination and search queries.
 
+#### Issue 7: Reports GraphQL Mutation Contract Mismatch (P2-1)
+- **Issue:** The `updateReportStatus` mutation in `ReportsService.ts` requested a sub-selection `{ id status }`, but the schema defined it as scalar `Boolean!`.
+- **Confirmed Root Cause:** Frontend mutation contract mismatch.
+- **Files Changed:** `services/ReportsService.ts`
+- **Fix Applied:** Replaced the `{ id status }` sub-selection with a scalar request, and synthesized the domain return object internally so that the service layer continues to emit a properly shaped model.
+- **Verification Performed:** Verified that the API call no longer produces a GraphQL sub-selection error.
+- **Result:** ✅ Resolved.
+
+#### Issue 8: Blog GraphQL Contract Mismatch (P2-2)
+- **Issue:** The `deleteArticle` and `subscribeToNewsletter` mutations in `BlogService.ts` requested sub-selections, but the schema defines them as `Boolean!`.
+- **Confirmed Root Cause:** Frontend mutation contract mismatch.
+- **Files Changed:** `services/BlogService.ts`
+- **Fix Applied:** Removed sub-selections from both `deleteBlog` and `newsletterSubscribe` mutations. Synthesized the correct success payloads locally to satisfy frontend types.
+- **Verification Performed:** Verified the API calls are scalar-compliant.
+- **Result:** ✅ Resolved.
+
+#### Issue 9: Global Search Package Route 404 (P2-3)
+- **Issue:** Global search previously returned `/packages/${p.slug}`.
+- **Confirmed Root Cause:** The public route is `/health-packages/`, not `/packages/`.
+- **Files Changed:** `infrastructure/src/handlers/graphql.js`
+- **Fix Applied:** Adjusted the `packageRepo.search` map callback to correctly use `/health-packages/${p.slug}` in the `href`. (Note: This was verified as already completed during earlier hotfixes).
+- **Verification Performed:** Verified code explicitly sets `href: /health-packages/${p.slug}`.
+- **Result:** ✅ Resolved.
+
+#### Issue 10: AWS SDK Dependency Packaging Risk (P3-1)
+- **Issue:** Runtime-required AWS SDKs were incorrectly placed in `devDependencies`, which could cause SAM to strip them during production builds.
+- **Confirmed Root Cause:** `package.json` misconfiguration.
+- **Files Changed:** `infrastructure/package.json`
+- **Fix Applied:** Relocated `@aws-sdk/client-cognito-identity-provider`, `@aws-sdk/client-s3`, and `@aws-sdk/s3-request-presigner` to the `dependencies` block. (Note: applied concurrently with P0-2).
+- **Verification Performed:** Verified `package.json` structure and `sam build` artifact output.
+- **Result:** ✅ Resolved.
+
 ---
 
 ## Hotfix — GraphQL Contract Alignment & RBAC Identity Fix

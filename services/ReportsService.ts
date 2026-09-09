@@ -126,15 +126,13 @@ export class ReportsService {
   }
 
   async updateStatus(id: string, status: ReportTaskModel['status']): Promise<Result<ReportTaskModel>> {
-    const data = await this._graphqlFetch<{ updateReportStatus: ReportTaskModel }>(
+    const data = await this._graphqlFetch<{ updateReportStatus: boolean }>(
       `mutation UpdateReportStatus($id: ID!, $status: String!) {
-        updateReportStatus(id: $id, status: $status) {
-          id status
-        }
+        updateReportStatus(id: $id, status: $status)
       }`,
       { id, status }
     );
-    if (data?.updateReportStatus) return success(data.updateReportStatus);
+    if (data?.updateReportStatus) return success({ id, status } as ReportTaskModel);
     return failure(new Error('Failed to update report status'));
   }
 }
