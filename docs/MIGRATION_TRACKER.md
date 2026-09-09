@@ -34,6 +34,31 @@
 - **Commit:** `5c1fe58`
 - **Result:** ✅ Fix verified. `createBooking` now resolves catalog items correctly whether `item.slug` or `item.id` is supplied.
 
+#### Issue 12 (P0-1): createBooking crashes when idempotencyKey is omitted by the caller
+
+- **Issue:** `dynamo-booking.js:createAggregate` performs a hard `throw` if `idempotencyKey` is falsy. The GraphQL schema declares `idempotencyKey: String` (nullable — no `!`), so any caller that legally omits it triggers a runtime crash before any DynamoDB write occurs.
+- **Confirmed Root Cause:** Schema and repo contract mismatch. The resolver forwarded `args.idempotencyKey` directly to the repo with no fallback guard.
+- **Caller Audit (pre-fix):**
+  - `BookingProcessSection.tsx` — always provides `crypto.randomUUID()` via `useRef`
+  - `ProgressiveBookingFlow.tsx` — same pattern
+  - `admin/bookings/create/page.tsx` — always provides `crypto.randomUUID()` at submit time
+  - `BookingService.ts` — service-layer fallback: `` options?.idempotencyKey || `idem_${Date.now()}` ``
+  - **All real callers are safe.** The crash only fires for edge-case / direct API callers that omit the field.
+- **Fix Decision:** Resolver-level fallback. Generating the fallback in the resolver (between schema and repo) ensures the repo guard is never reachable from a null key, while keeping true idempotency intact for all callers that supply a stable UUID. The repo guard (`dynamo-booking.js:51`) is left **untouched** as defence-in-depth.
+- **Files Changed:** `infrastructure/src/handlers/graphql.js`
+- **Lines Changed:** 1503 (1 line → 2 lines)
+- **Fix Applied (diff):**
+  ```diff
+  -        const { input, idempotencyKey } = args;
+  +        const { input, idempotencyKey: rawIdempotencyKey } = args;
+  +        const idempotencyKey = rawIdempotencyKey || `idem_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  ```
+- **Verification Performed:**
+  - `node --check infrastructure/src/handlers/graphql.js` → exit 0
+  - 7-case behavioral test → 7/7 passed: UUID pass-through, idem_ pass-through, null fallback, undefined fallback, stable key stability, distinct fallbacks, repo guard unchanged
+- **Commit:** `a75777d`
+- **Result:** ✅ Fix verified. Missing `idempotencyKey` no longer crashes `createBooking`. True idempotency is preserved for all real callers.
+
 
 #### Issue 1: Deployed Lambda Syntax Crash
 - **Issue:** Every GraphQL query and mutation returned `Runtime.UserCodeSyntaxError: SyntaxError: Unexpected token 'case'` from `GraphQLResolverFunction`.
