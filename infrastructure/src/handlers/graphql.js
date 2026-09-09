@@ -2620,7 +2620,7 @@ exports.handler = async (event) => {
         if (!existing) throw new Error('Article not found');
 
         await blogRepo.delete(existing.id);
-        return { message: 'Article deleted successfully', id: existing.id };
+        return true;
       }
       default:
         throw new Error(`Unsupported field: ${fieldName}`);
