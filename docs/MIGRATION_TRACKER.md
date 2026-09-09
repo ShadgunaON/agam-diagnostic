@@ -134,19 +134,18 @@
 - **Issue:** The `newsletterSubscribers` resolver returned a flat array of subscribers, and the frontend requested fields as if it were a flat array. However, the GraphQL schema declares the return type as `SubscriberConnection!` (which contains `{ data, meta }`).
 - **Confirmed Root Cause:** The resolver (`graphql.js:2493`) directly returned `newsletterRepo.getAll()`. The schema expects connection-based pagination.
 - **Files Changed:**
+  - `infrastructure/src/repositories/dynamo-newsletter.js`
   - `infrastructure/src/handlers/graphql.js`
   - `services/BlogService.ts`
-- **Lines Changed:**
-  - `graphql.js`: 2487-2503
-  - `BlogService.ts`: 180-192
 - **Fix Applied:**
-  - **Resolver:** Added in-memory pagination to slice the results from `getAll()`. The resolver now reads `limit` and `cursor`, calculates the page slice, and wraps the result in the `{ data, meta }` structure matching `PaginationMeta`.
-  - **Frontend:** Updated the GraphQL query in `getNewsletterSubscribers` to request fields inside `data { ... }` and `meta { ... }`. The method still extracts and returns the flat array to satisfy existing callers cleanly.
+  - **Repository:** Added `getPaginated` using DynamoDB `QueryCommand` with `Limit` and `ExclusiveStartKey` (base64 encoded cursor), eliminating the `getAll()` unbounded read.
+  - **Resolver:** Replaced the in-memory slice logic with `newsletterRepo.getPaginated({ limit, cursor })`, properly formatting the `{ data, meta }` response matching `PaginationMeta`.
+  - **Frontend:** Updated the GraphQL query in `getNewsletterSubscribers` to request fields inside `data { ... }` and `meta { ... }`.
 - **Verification Performed:**
   - `npx tsc --noEmit` → exit 0
-  - Pagination slice logic script → 2/2 passed
-- **Commit:** `ca632c4`
-- **Result:** ✅ Fix verified. `newsletterSubscribers` now properly adheres to the `SubscriberConnection` contract with correct pagination metadata.
+  - Server-side cursor and limit logic check → ✅
+- **Commit:** `18fc077`
+- **Result:** ✅ Fix verified. `newsletterSubscribers` now properly adheres to the `SubscriberConnection` contract and uses server-side data access pagination without unbounded reads.
 
 
 #### Issue 1: Deployed Lambda Syntax Crash
