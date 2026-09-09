@@ -95,6 +95,25 @@
 - **Commit:** `09f1178`
 - **Result:** ✅ Fix verified. `setPaymentMethod` now sends the correct argument name and AppSync will accept the mutation.
 
+#### Issue 14 (P1-4): adminBookingsWorkspace checks wrong RBAC module key
+
+- **Issue:** Staff with booking access were wrongly denied entry to the Admin Bookings Workspace.
+- **Confirmed Root Cause:** The `adminBookingsWorkspace` resolver (`graphql.js:358`) checked `hasPermission(identityForCheck, 'bookings', 'view')`. However, the RBAC permission matrix and all other booking-related resolvers (`recentBookings`, `bookingsByPatient`, `createBooking`, etc.) uniformly use the module key `'orders'`. The mismatch caused the fail-closed RBAC engine to deny access.
+- **Files Changed:** `infrastructure/src/handlers/graphql.js`
+- **Lines Changed:** 358-359
+- **Fix Applied:** Changed `'bookings'` to `'orders'` in both the `hasPermission` check and the resulting error message.
+- **Verification Performed:**
+  - `node --check infrastructure/src/handlers/graphql.js` → exit 0
+  - Behavioral auth test script → 5/5 passed:
+    - Admin gets access (bypasses matrix) ✅
+    - Staff with `orders.view` gets access (uses matrix) ✅
+    - Staff without `orders.view` is denied ✅
+    - Patient is denied ✅
+    - Old logic (`bookings.view`) reproduces the staff denial bug ✅
+- **Commit:** `3b24081`
+- **Result:** ✅ Fix verified. Staff with valid order viewing permissions can now access the Bookings Workspace.
+
+
 #### Issue 1: Deployed Lambda Syntax Crash
 - **Issue:** Every GraphQL query and mutation returned `Runtime.UserCodeSyntaxError: SyntaxError: Unexpected token 'case'` from `GraphQLResolverFunction`.
 - **Confirmed Root Cause:** Unclosed switch-case block in `infrastructure/src/handlers/graphql.js` preceding `case 'updateInvoicePaymentMethod': {`. The previous `case 'updateInvoiceStatus'` block had an unbalanced brace structure.
