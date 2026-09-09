@@ -1517,6 +1517,10 @@ exports.handler = async (event) => {
           status: input.status || 'Pending',
         };
 
+        if (!newBookingData.patientId && newBookingData.patient) {
+          newBookingData.patientId = `pat_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        }
+
         const invoiceItems = [];
         for (let i = 0; i < (newBookingData.items || []).length; i++) {
           const item = newBookingData.items[i];
@@ -1562,7 +1566,7 @@ exports.handler = async (event) => {
         const invoiceData = {
           id: `inv_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
           bookingId: bookingId,
-          patientId: newBookingData.patientId || newBookingData.patient?.phone || newBookingData.patient?.email || 'GENERAL',
+          patientId: newBookingData.patientId || 'GENERAL',
           items: invoiceItems,
           subtotal,
           discount: 0,
