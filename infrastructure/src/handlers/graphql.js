@@ -355,8 +355,8 @@ exports.handler = async (event) => {
       // ---------------------------------------------------------
       case 'adminBookingsWorkspace': {
         const identityForCheck = identity;
-        if (!(await isAdmin(identityForCheck)) && !(await hasPermission(identityForCheck, 'bookings', 'view'))) {
-          throw new Error('Access denied: Missing bookings.view permission');
+        if (!(await isAdmin(identityForCheck)) && !(await hasPermission(identityForCheck, 'orders', 'view'))) {
+          throw new Error('Access denied: Missing orders.view permission');
         }
 
         const { limit = 20, cursor = null, status = 'All', tab = 'All', sort = 'date_newest', search = '' } = args;
