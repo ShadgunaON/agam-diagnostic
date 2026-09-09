@@ -22,6 +22,19 @@
 
 ### Remediation Log
 
+#### Issue 11 (P0-2): createBooking fails when items are identified by ID instead of slug
+- **Issue:** `createBooking` threw `"Package <name> is unavailable or invalid"` for any booking where cart items were stored/sent by ID only (no `slug` field). Reported as a production failure.
+- **Confirmed Root Cause:** The item price-validation loop in `graphql.js` (lines 1523-1530) called `packageRepo.getBySlug(item.slug || item.id)`, `testRepo.getBySlug(...)`, and `serviceRepo.getBySlug(...)`. `getBySlug` queries the slug GSI — passing an `id` string always returns `null`. The `null` check then threw the "unavailable or invalid" error before any DynamoDB write, silently killing every booking submitted without a slug.
+- **Files Changed:** `infrastructure/src/handlers/graphql.js`
+- **Lines Changed:** 1524, 1528, 1530
+- **Fix Applied:** Replaced the single-arg `getBySlug(item.slug || item.id)` calls with explicit branching: `item.slug ? repo.getBySlug(item.slug) : repo.getById(item.id)`. Applied to all three catalog lookups (packageRepo, testRepo, serviceRepo). No other code touched.
+- **Verification Performed:**
+  - `node --check infrastructure/src/handlers/graphql.js` → exit 0
+  - 9-case inline Node.js regression test (7 fixed-path assertions + 2 old-path bug-reproduction assertions) → 9/9 passed
+- **Commit:** `5c1fe58`
+- **Result:** ✅ Fix verified. `createBooking` now resolves catalog items correctly whether `item.slug` or `item.id` is supplied.
+
+
 #### Issue 1: Deployed Lambda Syntax Crash
 - **Issue:** Every GraphQL query and mutation returned `Runtime.UserCodeSyntaxError: SyntaxError: Unexpected token 'case'` from `GraphQLResolverFunction`.
 - **Confirmed Root Cause:** Unclosed switch-case block in `infrastructure/src/handlers/graphql.js` preceding `case 'updateInvoicePaymentMethod': {`. The previous `case 'updateInvoiceStatus'` block had an unbalanced brace structure.
