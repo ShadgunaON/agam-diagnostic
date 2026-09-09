@@ -100,6 +100,37 @@ class DynamoNewsletterRepository {
     const { Items } = await docClient.send(new QueryCommand(params));
     return (Items || []).map((item) => this._mapFromDb(item));
   }
+
+  async getPaginated({ limit = 20, cursor = null } = {}) {
+    const params = {
+      TableName: TABLE_NAME,
+      IndexName: 'GSI1',
+      KeyConditionExpression: 'GSI1PK = :pk',
+      ExpressionAttributeValues: {
+        ':pk': 'NEWSLETTER',
+      },
+      ScanIndexForward: false,
+      Limit: limit,
+    };
+
+    if (cursor) {
+      try {
+        params.ExclusiveStartKey = JSON.parse(Buffer.from(cursor, 'base64').toString('utf8'));
+      } catch {
+        const err = new Error('Malformed cursor');
+        err.statusCode = 400;
+        throw err;
+      }
+    }
+
+    const response = await docClient.send(new QueryCommand(params));
+    const data = (response.Items || []).map((item) => this._mapFromDb(item));
+    const nextCursor = response.LastEvaluatedKey
+      ? Buffer.from(JSON.stringify(response.LastEvaluatedKey)).toString('base64')
+      : null;
+
+    return { data, nextCursor };
+  }
 }
 
 module.exports = new DynamoNewsletterRepository();

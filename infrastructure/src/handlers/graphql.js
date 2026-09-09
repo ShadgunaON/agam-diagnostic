@@ -2484,7 +2484,7 @@ exports.handler = async (event) => {
       }
 
       case 'newsletterSubscribers': {
-        const { limit = 50, cursor = '1' } = args;
+        const { limit = 50, cursor = null } = args;
         const identityForCheck = identity;
         if (!identity) throw new Error('Unauthorized');
         
@@ -2492,18 +2492,15 @@ exports.handler = async (event) => {
           throw new Error('Forbidden: Missing newsletter.view or blogs.view permission');
         }
         
-        const allItems = await newsletterRepo.getAll();
-        const page = parseInt(cursor) || 1;
-        const startIndex = (page - 1) * limit;
-        const endIndex = startIndex + limit;
+        const paginated = await newsletterRepo.getPaginated({ limit, cursor });
         
         return {
-          data: allItems.slice(startIndex, endIndex),
+          data: paginated.data,
           meta: {
-            total: allItems.length,
-            page,
+            total: paginated.data.length,
+            page: 1,
             limit,
-            totalPages: Math.ceil(allItems.length / limit) || 1
+            totalPages: 1
           }
         };
       }
