@@ -147,6 +147,16 @@
 - **Commit:** `18fc077`
 - **Result:** ✅ Fix verified. `newsletterSubscribers` now properly adheres to the `SubscriberConnection` contract and uses server-side data access pagination without unbounded reads.
 
+#### Issue 19 (P2-1): createBooking fallback uses phone/email for invoice patientId
+- **Issue:** `createBooking` used `newBookingData.patient?.phone || newBookingData.patient?.email` as the `patientId` for invoices if `newBookingData.patientId` was missing. This stored PII (phone/email) in the `patientId` index field, breaking `invoicesByPatient` lookups for new patients who didn't supply an explicit `patientId` but provided `patient` info.
+- **Confirmed Root Cause:** The fallback logic in `graphql.js` assigned phone/email to the `invoiceData.patientId` while leaving `newBookingData.patientId` undefined, leading to mismatched and improperly formatted IDs.
+- **Files Changed:** `infrastructure/src/handlers/graphql.js`
+- **Fix Applied:** Changed `createBooking` to automatically generate a valid `pat_...` ID and assign it to `newBookingData.patientId` *before* constructing the invoice/collection objects if `patient` info is provided but `patientId` is missing. Removed the phone/email fallback in `invoiceData.patientId` so it safely defaults to `newBookingData.patientId` or `'GENERAL'`.
+- **Verification Performed:**
+  - Ran syntax checks on `graphql.js` (`exit 0`).
+  - Executed logic simulation demonstrating that `booking`, `invoice`, and `collection` consistently share the provided `patientId`, generated `patientId`, or appropriately fallback (`GENERAL` for invoices).
+- **Result:** ✅ Fix verified. New bookings for new patients now properly instantiate and share a standard `patientId` across booking, invoice, and collection records, fixing the `invoicesByPatient` index.
+
 #### Issue 18: Catalog Price Type Write Bug (Schema Mismatch)
 - **Issue:** The schema defines `price: Float!`, but `createCatalogTest`, `createCatalogPackage`, and `createCatalogService` persisted `price` as a String in DynamoDB because the repository layer did not coerce the input. Legacy records also contained string prices, causing AppSync to reject or nullify the field on read, which broke the `adminCatalogWorkspace` query in the UI.
 - **Confirmed Root Cause:** Lack of numeric normalization at the DynamoDB write boundary in the catalog repositories (`dynamo-test.js`, `dynamo-package.js`, `dynamo-service.js`), combined with frontend form initializations using string `'0'`.
