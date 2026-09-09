@@ -147,6 +147,31 @@
 - **Commit:** `18fc077`
 - **Result:** ✅ Fix verified. `newsletterSubscribers` now properly adheres to the `SubscriberConnection` contract and uses server-side data access pagination without unbounded reads.
 
+#### Issue 18: Catalog Price Type Write Bug (Schema Mismatch)
+- **Issue:** The schema defines `price: Float!`, but `createCatalogTest`, `createCatalogPackage`, and `createCatalogService` persisted `price` as a String in DynamoDB because the repository layer did not coerce the input. Legacy records also contained string prices, causing AppSync to reject or nullify the field on read, which broke the `adminCatalogWorkspace` query in the UI.
+- **Confirmed Root Cause:** Lack of numeric normalization at the DynamoDB write boundary in the catalog repositories (`dynamo-test.js`, `dynamo-package.js`, `dynamo-service.js`), combined with frontend form initializations using string `'0'`.
+- **Files Changed:**
+  - `infrastructure/src/repositories/dynamo-test.js`
+  - `infrastructure/src/repositories/dynamo-package.js`
+  - `infrastructure/src/repositories/dynamo-service.js`
+  - `app/(admin)/admin/catalog/tests/[id]/page.tsx`
+  - `app/(admin)/admin/catalog/services/[id]/page.tsx`
+  - `domains/tests/model.ts`
+  - `domains/packages/model.ts`
+  - `domains/services/model.ts`
+  - `components/sections/tests/TestDetailContent.tsx`
+  - `components/sections/packages/PackageDetailContent.tsx`
+  - `components/sections/services/ServiceDetailContent.tsx`
+- **Fix Applied:**
+  - **Repositories:** Added `_normalizePrice()` helper to coerce all pricing fields to `Number` (or throw on invalid inputs) during `upsert`.
+  - **Frontend Form:** Changed initial form values from `'0'` to `0`.
+  - **Frontend Models:** Widened `price` to `number | string` to safely accept legacy data and new data without breaking TypeScript components.
+  - **Frontend Components:** Fixed string coercion before `parseInt` in detail components to handle the widened type.
+- **Verification Performed:**
+  - Wrote a verification script `scratch/verify_price.js` to ensure numeric coercion logic behaves identically to requirements (preserves 0, parses numbers, throws on 'abc' or empty strings).
+  - `npx tsc --noEmit` → exit 0.
+- **Result:** ✅ Fix verified. New catalog items will safely persist numeric prices to DynamoDB, preserving schema conformity and `adminCatalogWorkspace` query stability.
+
 #### Issue 17 (P2-3): createReview incorrectly parses args instead of args.input
 
 - **Issue:** The schema defines `createReview(input: String!): Review!`. The global middleware correctly parses `args.input` if it is a JSON string. However, the resolver destructured fields from the root `args` instead of `args.input`, and the frontend sent root arguments instead of a stringified input object.
