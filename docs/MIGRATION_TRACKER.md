@@ -147,6 +147,26 @@
 - **Commit:** `18fc077`
 - **Result:** ✅ Fix verified. `newsletterSubscribers` now properly adheres to the `SubscriberConnection` contract and uses server-side data access pagination without unbounded reads.
 
+#### Issue 17 (P2-3): createReview incorrectly parses args instead of args.input
+
+- **Issue:** The schema defines `createReview(input: String!): Review!`. The global middleware correctly parses `args.input` if it is a JSON string. However, the resolver destructured fields from the root `args` instead of `args.input`, and the frontend sent root arguments instead of a stringified input object.
+- **Confirmed Root Cause:** Mismatched argument destructuring in `graphql.js:417` and incorrect GraphQL variables payload in `ReviewService.ts:107`.
+- **Files Changed:**
+  - `infrastructure/src/handlers/graphql.js`
+  - `services/ReviewService.ts`
+- **Lines Changed:**
+  - `graphql.js`: 417-418
+  - `ReviewService.ts`: 107-113
+- **Fix Applied:**
+  - **Resolver:** Added a guard for missing `args.input` and changed destructuring to target `args.input` instead of `args`.
+  - **Frontend:** Changed the mutation to accept `$input: String!` and passed a stringified JSON payload matching the schema contract.
+- **Verification Performed:**
+  - `node --check infrastructure/src/handlers/graphql.js` → exit 0
+  - `npx tsc --noEmit` → exit 0
+  - Input parsing behavior script → 4/4 passed (valid input, missing input, null input, missing required fields)
+- **Commit:** `f7c4376`
+- **Result:** ✅ Fix verified. `createReview` now strictly obeys the `input: String!` schema contract on both the frontend and backend.
+
 
 #### Issue 1: Deployed Lambda Syntax Crash
 - **Issue:** Every GraphQL query and mutation returned `Runtime.UserCodeSyntaxError: SyntaxError: Unexpected token 'case'` from `GraphQLResolverFunction`.
