@@ -190,6 +190,12 @@ class DynamoPackageRepository {
     const id = packageData.id || `package-${packageData.slug}`;
     const slug = packageData.slug;
 
+    const derivedPrice = packageData.price ?? packageData.packagePrice;
+    const finalPrice = this._normalizePrice(derivedPrice, 'price');
+    if (finalPrice === null) {
+      throw new Error('A valid numeric packagePrice is required');
+    }
+
     const item = {
       PK: `PACKAGE#${id}`,
       SK: 'METADATA',
@@ -206,7 +212,7 @@ class DynamoPackageRepository {
       icon: packageData.icon || 'default-icon',
       
       // Pricing — normalized to Number so DynamoDB stores Float, not String.
-      price: this._normalizePrice(packageData.price, 'price'),
+      price: finalPrice,
       packagePrice: this._normalizePrice(packageData.packagePrice ?? null, 'packagePrice'),
       individualValue: this._normalizePrice(packageData.individualValue ?? null, 'individualValue'),
       

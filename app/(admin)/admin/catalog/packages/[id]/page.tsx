@@ -240,10 +240,11 @@ export default function EditPackagePage() {
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Category</label>
               <select name="category" value={formData.category || 'general'} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg">
-                <option value="full-body">Full Body</option>
-                <option value="mens-health">Men's Health</option>
-                <option value="womens-health">Women's Health</option>
-                <option value="senior-citizen">Senior Citizen</option>
+                <option value="Full Body">Full Body</option>
+                <option value="Men's Health">Men's Health</option>
+                <option value="Women's Health">Women's Health</option>
+                <option value="Senior Citizen">Senior Citizen</option>
+                <option value="Health Package">Health Package</option>
                 <option value="general">General</option>
               </select>
             </div>
