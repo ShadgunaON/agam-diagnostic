@@ -1432,3 +1432,6 @@ This module closes the REST→GraphQL migration. All application communication n
 
 ## Forensic Audit Fixes
 - **BlogConnection Schema Mismatch**: Fixed update-schema.js generator script to output logs query as returning [BlogItem!]! instead of BlogConnection! to match the authoritative GraphQL schema and resolver implementations.
+
+- **Blog Schema Deployment & Verification**: Deployed the corrected infrastructure/schema.graphql to AWS AppSync via SAM. Cleared Next.js fetch cache and verified 
+pm run build. The GraphQL logs query now correctly returns [BlogItem!]! against the live environment, successfully resolving the Field 'id' in type 'BlogConnection' build failure during SSG prerendering.
