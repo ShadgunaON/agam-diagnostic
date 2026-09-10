@@ -248,6 +248,19 @@ class DynamoReportRepository {
 
   _mapFromDb(item) {
     const { PK, SK, GSI1PK, GSI1SK, GSI2PK, GSI2SK, GSI3PK, GSI3SK, ...rest } = item;
+    // AppSync schema requires these fields to be non-null:
+    //   Report.status: String!, Report.createdAt: String!, Report.testType: String!
+    //   Report.patient: PatientSnapshot! with patient.name: String!
+    // A single null in any of these crashes the entire adminReportsWorkspace query.
+    if (!rest.status) rest.status = 'Unknown';
+    if (!rest.createdAt) rest.createdAt = new Date().toISOString();
+    if (!rest.testType) rest.testType = 'Unknown';
+    // Normalize embedded PatientSnapshot
+    if (!rest.patient) {
+      rest.patient = { id: rest.patientId || null, name: 'Unknown Patient', phone: null, email: null };
+    } else if (!rest.patient.name) {
+      rest.patient = { ...rest.patient, name: 'Unknown Patient' };
+    }
     return rest;
   }
 }
