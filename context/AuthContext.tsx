@@ -34,6 +34,8 @@ interface AuthContextType {
   removePatient: (id: string) => Promise<void>;
   addAddress: (address: Omit<SavedAddressItem, 'id'>) => Promise<void>;
   logout: () => void;
+  /** Silently refresh the Cognito token using the stored refresh token */
+  refreshSession: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -162,6 +164,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
     }
   }, [storageAdapter]);
+
+  // Proactive token refresh: fire 55 minutes after login (Cognito tokens expire at 60 min).
+  // If refresh fails (refresh token also expired), dispatch session_expired.
+  useEffect(() => {
+    if (authState !== 'AUTHENTICATED') return;
+    const FIFTY_FIVE_MIN = 55 * 60 * 1000;
+    const timerId = setInterval(async () => {
+      const ok = await authService.refreshSession();
+      if (!ok) {
+        window.dispatchEvent(new Event('session_expired'));
+      }
+    }, FIFTY_FIVE_MIN);
+    return () => clearInterval(timerId);
+  }, [authState]);
 
   const signInWithPassword = async (email: string, password: string): Promise<{ success: boolean; user?: UserProfile; error?: string; needsNewPassword?: boolean; session?: string; challengeEmail?: string }> => {
     const result = await authService.signInWithPassword(email, password);
@@ -413,6 +429,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const refreshSession = async (): Promise<boolean> => {
+    const ok = await authService.refreshSession();
+    if (!ok && typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('session_expired'));
+    }
+    return ok;
+  };
+
   const logout = () => {
     saveUserToStateAndStorage(null);
   };
@@ -444,6 +468,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         removePatient,
         addAddress,
         logout,
+        refreshSession,
       }}
     >
       {children}

@@ -569,9 +569,46 @@ export class AuthService {
   }
 
   /**
+   * Silently refreshes the Cognito session using the stored refresh token.
+   * On success, updates sessionStorage with the new ID and access tokens.
+   * Returns true if successful, false if the refresh token is missing/expired.
+   */
+  async refreshSession(): Promise<boolean> {
+    if (typeof window === 'undefined') return false;
+    const refreshToken = sessionStorage.getItem('cognito_refresh_token');
+    if (!refreshToken) return false;
+
+    try {
+      const command = new InitiateAuthCommand({
+        AuthFlow: 'REFRESH_TOKEN_AUTH',
+        ClientId: this.clientId,
+        AuthParameters: {
+          REFRESH_TOKEN: refreshToken,
+        },
+      });
+
+      const response = await this.cognitoClient.send(command);
+      const authResult = response.AuthenticationResult;
+
+      if (authResult?.IdToken && authResult?.AccessToken) {
+        // Refresh token itself is not re-issued on REFRESH_TOKEN_AUTH; keep the stored one
+        this.storeTokens({
+          IdToken: authResult.IdToken,
+          AccessToken: authResult.AccessToken,
+        });
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Sanitizes and maps AWS Cognito errors to application domain error classes.
    */
   private mapCognitoError(err: unknown): Error {
+
     if (typeof err !== 'object' || err === null) {
       return new ServerError('An unexpected authentication error occurred.');
     }

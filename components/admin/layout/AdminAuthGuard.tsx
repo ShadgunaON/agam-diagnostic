@@ -19,14 +19,39 @@ import { getDefaultRoute } from '@/lib/rbac/routePermissions';
  *   - Not authenticated → /login
  *   - Authenticated but no admin/staff role → / (public site)
  *   - Authenticated staff but no permission for this route → first accessible route
+ *
+ * Token expiry recovery:
+ *   - If RBAC fails with "Token has expired", silently refresh via Cognito REFRESH_TOKEN_AUTH
+ *   - If refresh succeeds → refetch RBAC (no error shown to user)
+ *   - If refresh fails → dispatch session_expired → show "Session Expired" screen
  */
 export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, authState, isLoading: authLoading } = useAuth();
+  const { user, authState, refreshSession } = useAuth();
   const { isLoading: rbacLoading, error: rbacError, refetch: refetchRBAC, hasPermission, accessibleModules, isStaff } = useRBAC();
   const router = useRouter();
   const pathname = usePathname();
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
 
-  const isLoading = authLoading || (rbacLoading && authState === 'AUTHENTICATED');
+  const isLoading = rbacLoading && authState === 'AUTHENTICATED';
+
+
+  // Detect token expiry in RBAC errors and silently recover
+  React.useEffect(() => {
+    if (!rbacError) return;
+    const isTokenExpired = rbacError.toLowerCase().includes('token') && rbacError.toLowerCase().includes('expired');
+    if (!isTokenExpired) return;
+    if (isRefreshing) return;
+
+    setIsRefreshing(true);
+    refreshSession().then((ok) => {
+      setIsRefreshing(false);
+      if (ok) {
+        // Refresh succeeded: new token is in sessionStorage; re-run RBAC
+        refetchRBAC();
+      }
+      // If not ok: session_expired event was dispatched → authState becomes SESSION_EXPIRED
+    });
+  }, [rbacError, isRefreshing, refreshSession, refetchRBAC]);
 
   React.useEffect(() => {
     if (isLoading) return;
@@ -60,7 +85,7 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [isLoading, authState, user, isStaff, rbacError, rbacLoading, pathname, hasPermission, accessibleModules, router]);
 
-  if (isLoading) {
+  if (isLoading || isRefreshing) {
     return (
       <div style={{
         position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -72,7 +97,9 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
             border: '3px solid rgba(255,255,255,0.1)', borderTopColor: '#3b82f6',
             animation: 'spin 0.8s linear infinite', margin: '0 auto 16px auto',
           }} />
-          <p style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 600 }}>Verifying access...</p>
+          <p style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 600 }}>
+            {isRefreshing ? 'Refreshing session...' : 'Verifying access...'}
+          </p>
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
@@ -104,7 +131,9 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (rbacError) {
+  // Only show the error dialog for non-token-expiry errors that are NOT being refreshed
+  const isTokenExpiredError = rbacError?.toLowerCase().includes('token') && rbacError?.toLowerCase().includes('expired');
+  if (rbacError && !isTokenExpiredError) {
     return (
       <div style={{
         position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -136,3 +165,4 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
 
   return <>{children}</>;
 }
+
