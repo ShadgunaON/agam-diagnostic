@@ -1187,7 +1187,9 @@ exports.handler = async (event) => {
         const isService = fieldName === 'createCatalogService';
         const repo = isTest ? testRepo : isService ? serviceRepo : packageRepo;
         
-        const { input } = args;
+        const rawInput = args.input;
+        // input is sent as a JSON string from the frontend (schema: input: String!)
+        const input = typeof rawInput === 'string' ? JSON.parse(rawInput) : rawInput;
         if (!input.slug || !input.title) throw new Error('Missing required fields (slug, title)');
         
         const existing = await repo.getBySlug(input.slug);
@@ -1208,8 +1210,11 @@ exports.handler = async (event) => {
         const isService = fieldName === 'updateCatalogService';
         const repo = isTest ? testRepo : isService ? serviceRepo : packageRepo;
         
-        const { id, input } = args;
+        const { id } = args;
         if (!id) throw new Error('Missing id');
+        const rawInput = args.input;
+        // input is sent as a JSON string from the frontend (schema: input: String!)
+        const input = typeof rawInput === 'string' ? JSON.parse(rawInput) : rawInput;
         
         try {
           return await repo.update(id, input);

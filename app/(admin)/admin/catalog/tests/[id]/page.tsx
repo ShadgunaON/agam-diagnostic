@@ -67,50 +67,25 @@ export default function EditTestPage() {
 
   const loadTest = async () => {
     try {
-      const token = sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '';
-      const response = await fetch('/api/graphql', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-          query: `
-            query TestById($id: ID!) {
-              testById(id: $id) {
-                id title slug category description price status faqs relatedTests sampleType
-              }
-            }
-          `,
-          variables: { id }
-        })
-      });
-
-      const json = await response.json();
-      if (json.errors) throw new Error(json.errors[0]?.message || 'GraphQL error');
-      
-      const test = json.data?.testById;
-      if (test) {
-        setFormData(test);
-        setFaqs(test.faqs || []);
-        // Restore saved related tests selections
-        setRelatedTests((test.relatedTests || []).map((rt: any) => ({
-          title: rt.title,
-          category: rt.category,
-          description: rt.description,
-          slug: rt.slug,
-          status: rt.status || 'ACTIVE',
-        })));
-
-        // Check if sample type is custom
-        const loadedSampleType = test.sampleType || '';
-        if (loadedSampleType && !["Blood", "Urine", "Stool", "Sputum", "Saliva", "Swab", "Tissue", "Semen", "CSF", "CSF (Cerebrospinal Fluid)"].includes(loadedSampleType)) {
-          setIsCustomSampleType(true);
-        }
-
-      } else {
-        toast.error('Error', 'Test not found');
+      const res = await testCatalogService.getById(id);
+      if (!res.isSuccess || !res.value) {
+        toast.error('Error', (!res.isSuccess && (res as any).error?.message) || 'Test not found');
         router.push('/admin/catalog');
+        return;
+      }
+      const test = res.value;
+      setFormData(test);
+      setFaqs(test.faqs || []);
+      setRelatedTests((test.relatedTests || []).map((rt: any) => ({
+        title: rt.title,
+        category: rt.category,
+        description: rt.description,
+        slug: rt.slug,
+        status: rt.status || 'ACTIVE',
+      })));
+      const loadedSampleType = test.sampleType || '';
+      if (loadedSampleType && !["Blood", "Urine", "Stool", "Sputum", "Saliva", "Swab", "Tissue", "Semen", "CSF", "CSF (Cerebrospinal Fluid)"].includes(loadedSampleType)) {
+        setIsCustomSampleType(true);
       }
     } catch (error) {
       toast.error('Error', 'Failed to load test');
