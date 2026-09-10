@@ -150,8 +150,8 @@
 #### Issue 20 (P2-2): GraphQL Subscriber type missing ID field
 - **Issue:** The `Subscriber` type in `schema.graphql` did not expose an `id` field, despite `id` existing in the DynamoDB data, being correctly mapped by the repository, and being explicitly queried by the frontend `NewsletterSubscriber` model. This caused GraphQL validation errors when fetching newsletter subscribers.
 - **Confirmed Root Cause:** Omission of `id: ID!` in `type Subscriber` within `infrastructure/schema.graphql`.
-- **Files Changed:** `infrastructure/schema.graphql`
-- **Fix Applied:** Added `id: ID!` to the `Subscriber` type.
+- **Files Changed:** `infrastructure/schema.graphql`, `current_schema.graphql`, `update-schema.js`
+- **Fix Applied:** Added `id: ID!` to the `Subscriber` type across all schema definition files.
 - **Verification Performed:**
   - Verified repository returns `id`.
   - Verified frontend `getNewsletterSubscribers` query specifies `id`.
