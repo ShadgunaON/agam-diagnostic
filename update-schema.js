@@ -1,7 +1,7 @@
 const fs = require('fs');
 let schema = fs.readFileSync('infrastructure/schema.graphql', 'utf8');
 
-const missingQueries = \
+const missingQueries = `
   # Catalog Queries
   catalogTests(page: Int, limit: Int, q: String): CatalogTestsConnection!
   catalogPackages(page: Int, limit: Int, q: String): CatalogPackagesConnection!
@@ -11,7 +11,7 @@ const missingQueries = \
   serviceBySlug(slug: String!): ServiceItem
   
   # Blog Queries
-  blogs(page: Int, limit: Int, status: String): BlogConnection!
+  blogs(page: Int, limit: Int, status: String): [BlogItem!]!
   blogById(id: String!): BlogItem
   
   # Patient Queries
@@ -49,9 +49,9 @@ const missingQueries = \
   
   # Newsletter
   newsletterSubscribers(limit: Int, cursor: String): SubscriberConnection!
-\;
+`;
 
-const missingMutations = \
+const missingMutations = `
   # Catalog Mutations
   createCatalogTest(input: String!): TestItem!
   updateCatalogTest(id: ID!, input: String!): TestItem!
@@ -102,13 +102,13 @@ const missingMutations = \
   
   # Newsletter Mutations
   newsletterSubscribe(email: String!): Boolean!
-\;
+`;
 
-const missingTypes = \
+const missingTypes = `
 type CatalogTestsConnection { data: [TestItem!]!, meta: PaginationMeta! }
 type CatalogPackagesConnection { data: [PackageItem!]!, meta: PaginationMeta! }
 type CatalogServicesConnection { data: [ServiceItem!]!, meta: PaginationMeta! }
-type BlogConnection { data: [BlogItem!]!, meta: PaginationMeta! }
+
 type PatientConnection { data: [Patient!]!, meta: PaginationMeta! }
 type ReviewConnection { data: [Review!]!, meta: PaginationMeta! }
 type SubscriberConnection { data: [Subscriber!]!, meta: PaginationMeta! }
@@ -150,7 +150,7 @@ type Subscriber {
   subscribedAt: String!
   status: String
 }
-\;
+`;
 
 // Inject into schema
 schema = schema.replace('type Query {', 'type Query {\\n' + missingQueries);
