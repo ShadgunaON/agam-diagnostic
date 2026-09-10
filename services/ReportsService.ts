@@ -43,7 +43,7 @@ export class ReportsService {
       `query ReportById($id: ID!) {
         reportById(id: $id) {
           id patientId bookingId testType status priority time results { parameter value unit reference isAbnormal }
-          patient { name age gender id }
+          patient { name id phone email }
         }
       }`,
       { id }
@@ -57,7 +57,7 @@ export class ReportsService {
       `query {
         reports {
           id patientId bookingId testType status priority time results { parameter value unit reference isAbnormal }
-          patient { name age gender id }
+          patient { name id phone email }
         }
       }`
     );
@@ -72,7 +72,7 @@ export class ReportsService {
           adminReportsWorkspace(limit: $limit, cursor: $cursor, status: $status, sort: $sort, search: $search) {
             queue {
               id status priority createdAt testType time url pdfKey
-              patient { name id age gender }
+              patient { name id phone email }
               results { parameter value unit reference isAbnormal }
             }
             nextCursor
@@ -93,7 +93,7 @@ export class ReportsService {
       `query ReportsByPatient($patientId: ID!) {
         reportsByPatient(patientId: $patientId) {
           id patientId bookingId testType status priority time results { parameter value unit reference isAbnormal }
-          patient { name age gender id }
+          patient { name id phone email }
         }
       }`,
       { patientId }
@@ -119,7 +119,7 @@ export class ReportsService {
       `mutation CreateReportTask($input: String!) {
         createReportTask(input: $input) {
           id patientId bookingId testType status priority time results { parameter value unit reference isAbnormal }
-          patient { name age gender id }
+          patient { name id phone email }
         }
       }`,
       { input: typeof reportTask === "string" ? reportTask : JSON.stringify(reportTask) }

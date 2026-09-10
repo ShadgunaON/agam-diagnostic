@@ -48,7 +48,7 @@ export default function ClinicalReportsWorkspace() {
         setCursorHistory(prev => [...prev, cursor]);
       }
     } else {
-      error('Error', 'Failed to load reports workspace');
+      error('Error', res.error?.message || 'Failed to load reports workspace');
     }
   };
 
