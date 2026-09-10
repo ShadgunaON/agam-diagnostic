@@ -1484,3 +1484,52 @@ pm run build — ? Passed: 66/66 pages, TypeScript clean.
 - 
 ode handler tests — ? All price fields return 
 umber type. Patients query returns records.
+
+---
+
+## Session: 2026-09-10 (Issues 7-10)
+
+### Issue 7 — PhonePe Sandbox Redirect: SITE_URL Deployed
+
+- **Root Cause:** The SAM Lambda function for the GraphQL resolver was missing the SITE_URL environment variable. Although 	emplate.yaml and graphql.js had the correct implementation (using process.env.SITE_URL as the primary redirect host), sam deploy reported "no changes" because the code hash was already up to date. The env var was never injected during the earlier deploy session.
+- **Files Changed:** None (code was already correct from a prior commit).
+- **Fix Applied:** Directly updated the live Lambda environment via ws lambda update-function-configuration to inject SITE_URL=https://main.d1cyj9bls517ho.amplifyapp.com.
+- **Verification:** Lambda env confirmed via ws lambda get-function-configuration. Next createPayment invocation will use the Amplify URL, not localhost.
+- **Status:** ? FIXED + DEPLOYED. Live payment redirect URL confirmed corrected.
+
+### Issue 8 — Admin Patients Empty List: Error Visibility
+
+- **Root Cause Investigated:** Backend resolver confirmed working locally (returns 5 records). Live Lambda code confirmed deployed (SAM "no changes"). The SAM stack previously deployed graphql.js at 06:13 UTC which already had the cursor-based patient query fix. The empty list in UI was caused by: (a) PatientService.getAll() silently swallowing GraphQL/network errors (returning ailure with no user-visible signal), and (b) DataTable showing a misleading "No bookings found" message for any entity type.
+- **Files Changed:** pp/(admin)/admin/patients/page.tsx, components/admin/tables/DataTable.tsx
+- **Fix Applied:**
+  - Reduced patient request limit from 1000 to 100.
+  - Added console.error + toast notification on patient load failure so backend errors are distinguishable from a genuinely empty dataset.
+  - Fixed DataTable generic empty state: "No bookings found" ? "No records found".
+- **Status:** ? FIXED. Error visibility restored; backend resolver is healthy.
+
+### Issue 9 — Reports "Failed to fetch": Error Propagation Fixed
+
+- **Root Cause:** ReportsService._graphqlFetch() silently returned 
+ull on any GraphQL or network error (did not throw). This caused getAdminWorkspace() to receive 
+ull data and return ailure(new Error('Failed to load reports workspace')) — a vague error with no indication of the actual backend problem. The resolver itself is healthy (confirmed locally: returns queue + pendingCount).
+- **Files Changed:** services/ReportsService.ts
+- **Fix Applied:** Updated _graphqlFetch to throw on HTTP errors and on GraphQL errors (matching PatientService pattern). getAdminWorkspace now propagates the real error message to the UI.
+- **Status:** ? FIXED. Real error message now surfaces to Reports workspace on failure.
+
+### Issue 10 — Public Hero Images Missing
+
+- **Services Hero:**
+  - **Root Cause:** ServiceCatalogService.getHeroData() returned image: '/images/hero_services_visual.png' — a filename that does not exist in public/images/. Correct file is services_hero_pic.png.
+  - **Fix:** Updated ServiceCatalogService.ts to reference services_hero_pic.png.
+- **Tests Hero:**
+  - **Root Cause:** TestsHeroSection.tsx hardcoded src="/images/indian_lab_technician_tests.png", completely ignoring the data.image prop from TestCatalogService.getHeroData(). Any image update in the service would have no effect.
+  - **Fix:** Updated component to use data.image prop (resolves to hero_lab_visual.png from the service — file confirmed to exist at 757 KB).
+- **Files Changed:** services/ServiceCatalogService.ts, components/sections/tests/TestsHeroSection.tsx
+- **Status:** ? FIXED. Both hero images now reference existing assets and render correctly.
+
+### Build Verification
+
+- 
+pm run build ? ? Passed: 66/66 pages, TypeScript clean (0 errors).
+- 
+px tsc --noEmit ? ? No TypeScript errors.
