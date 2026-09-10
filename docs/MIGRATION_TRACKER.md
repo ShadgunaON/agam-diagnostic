@@ -1533,3 +1533,13 @@ ull data and return ailure(new Error('Failed to load reports workspace')) — a v
 pm run build ? ? Passed: 66/66 pages, TypeScript clean (0 errors).
 - 
 px tsc --noEmit ? ? No TypeScript errors.
+
+### Issue 11 — Reports Workspace Failure: Invalid GraphQL Query
+
+- **Root Cause:** The frontend ReportsService.ts was requesting fields (ge, gender) on the patient object in dminReportsWorkspace. However, the GraphQL schema for this query returns a PatientSnapshot type, which only contains id, 
+ame, phone, and email. AppSync immediately rejected the entire query with a validation error before it reached the Lambda. Furthermore, the UI in pp/(admin)/admin/reports/page.tsx was hardcoded to display a generic "Failed to load reports workspace" toast, hiding the actual GraphQL error.
+- **Files Changed:** services/ReportsService.ts, pp/(admin)/admin/reports/page.tsx
+- **Fix Applied:** 
+  1. Updated all queries in ReportsService.ts to request valid fields (patient { name id phone email }).
+  2. Updated eports/page.tsx to surface the actual es.error.message in the toast.
+- **Status:** ? FIXED + DEPLOYED. The reports page will now load successfully.
