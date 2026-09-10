@@ -190,7 +190,7 @@ export function ConfigurableDataTable<T>({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         </div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-1">No bookings found</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-1">No records found</h3>
         <p className="text-[14px] text-slate-500 mb-6 text-center max-w-sm">Try adjusting your filters or search query to find what you&apos;re looking for.</p>
         <button className="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-[8px] font-medium text-[13px] hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm">
           Clear Filters

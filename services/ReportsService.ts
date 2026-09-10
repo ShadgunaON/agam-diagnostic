@@ -25,13 +25,16 @@ export class ReportsService {
         },
         body: JSON.stringify({ query, variables }),
       });
-      if (!response.ok) return null;
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       const { data, errors } = await response.json();
-      if (errors?.length) { console.error('GraphQL errors:', errors); return null; }
+      if (errors?.length) {
+        console.error('[ReportsService] GraphQL errors:', errors);
+        throw new Error(errors[0].message);
+      }
       return data as T;
     } catch (err) {
-      console.error('GraphQL fetch failed:', err);
-      return null;
+      console.error('[ReportsService] fetch failed:', err);
+      throw err;
     }
   }
 

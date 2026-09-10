@@ -41,7 +41,8 @@ export default function PatientsPage() {
 
   useEffect(() => {
     const loadPatients = async () => {
-      const result = await patientService.getAll(1, 1000); // load all for client-side search in mock
+      const result = await patientService.getAll(1, 100); // load up to 100; paginated on client
+
       if (result.isSuccess && result.value) {
         const uniquePatientsMap = new Map<string, PatientModel>();
         
@@ -61,10 +62,15 @@ export default function PatientsPage() {
         });
         
         setPatients(Array.from(uniquePatientsMap.values()));
+      } else if (result.isFailure) {
+        console.error('[PatientsPage] Failed to load patients:', result.error?.message);
+        toast({ title: 'Failed to load patients', description: result.error?.message || 'Could not fetch patient list.', variant: 'warning' });
+
       }
     };
     loadPatients();
   }, []);
+
 
   const filteredAndSortedPatients = React.useMemo(() => {
     let result = [...patients];
