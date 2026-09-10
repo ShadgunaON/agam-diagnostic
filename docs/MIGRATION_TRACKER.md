@@ -1437,3 +1437,50 @@ This module closes the RESTâ†’GraphQL migration. All application communication n
 pm run build. The GraphQL  logs query now correctly returns [BlogItem!]! against the live environment, successfully resolving the Field 'id' in type 'BlogConnection' build failure during SSG prerendering.
 
 - **Catalog Creation Pricing & Category Fix**: Fixed data-integrity defect where newly created packages resulted in a NULL `price` (crashing GraphQL catalog listings) and a mismatched `general` category. Derived canonical `price` from `packagePrice` and implemented a strict runtime validation boundary in `dynamo-package.js` `upsert` to reject invalid payloads without hiding missing values as 0. Updated frontend form dropdown `<option>` values to exactly match legacy canonical strings (e.g., `"Women's Health"`).
+
+## Bug Fix Session – 6 Reported Defects (2026-09-10)
+
+### Fix 1: Tests Detail Page 404 (Public Site)
+- **Root Cause:** All three DynamoDB repositories (dynamo-test.js, dynamo-service.js, dynamo-package.js) returned raw DynamoDB values where legacy price fields were stored as String (e.g. "8000"). AppSync enforces Float! for price fields and rejects string values, causing 
+ull returns and triggering 
+otFound().
+- **Files Changed:** infrastructure/src/repositories/dynamo-test.js, dynamo-service.js, dynamo-package.js
+- **Fix Applied:** Added price normalization (_normalizePrice) in _mapFromDb() for price, salePrice, asePrice, packagePrice, individualValue on all three repositories. Coerces legacy string numbers to Float at read time.
+- **Result:** ? 	estBySlug now returns price: number (8000) instead of price: string ("8000"). All test/package/service detail pages resolve correctly.
+
+### Fix 2: Service FAQ/Detail Not Saving (Admin Catalog)
+- **Root Cause:** Same string-price issue. When a service was loaded from DynamoDB, its price came back as a string. AppSync rejected it when building the ServiceItem response, causing the edit page to fail before FAQs could be presented or saved.
+- **Fix Applied:** Same _mapFromDb price normalization in dynamo-service.js.
+- **Result:** ? Service detail pages load and save correctly including FAQs.
+
+### Fix 3: Patients Missing (Admin Patients Page + Create Booking)
+- **Root Cause:** PatientService.getAll() sent page and limit variables to the patients query, but the schema and resolver only accept limit, cursor, and search (cursor-based pagination). The unknown page variable was silently ignored, causing unexpected behaviour.
+- **Files Changed:** services/PatientService.ts
+- **Fix Applied:** Updated getAll() to pass { limit, search: '' } (cursor-based), matching the live AppSync schema.
+- **Result:** ? Patients page and Create Booking patient search now load patient records.
+
+### Fix 4: PhonePe Sandbox Redirect Host
+- **Root Cause:** AppSync strips browser headers (including Origin) before passing the event to Lambda. The resolver fell back to http://localhost:3000 as the redirect host for PhonePe payment callbacks, causing the payment flow to redirect to localhost instead of the live site.
+- **Files Changed:** infrastructure/src/handlers/graphql.js, infrastructure/template.yaml
+- **Fix Applied:** Added SITE_URL environment variable to the Lambda function and SAM template. The resolver now uses process.env.SITE_URL as the primary redirect host, with request headers and localhost as fallbacks. Added a SiteUrl SAM parameter for deployment.
+- **Deployment Required:** Next sam deploy should pass --parameter-overrides SiteUrl=https://<your-amplify-domain>.
+- **Result:** ? PhonePe redirect URL will now correctly point to the deployed frontend domain.
+
+### Fix 5: Bell Icon Removed (Admin Topbar)
+- **Root Cause:** The notification bell icon was non-functional (no real-time push; polling was removed).
+- **Files Changed:** components/admin/layout/AdminTopbar.tsx
+- **Fix Applied:** Removed the bell button, notification dropdown, showNotifDropdown state, 
+otifRef, notification polling useEffect, and handleMarkAsRead. Retained the user profile dropdown and separator.
+- **Result:** ? Bell icon is gone. Topbar is clean.
+
+### Fix 6: Men's Health Packages — Data Gap (No Code Bug)
+- **Root Cause:** No Men's Health packages exist in DynamoDB. The category filter in the Catalog page is derived from actual data, so "Men's Health" doesn't appear as a filter tab.
+- **Code Status:** No code defect. This requires seeding Men's Health package data via the Admin Catalog ? New Package form.
+- **Result:** ?? Documented as a data gap. Admin can create Men's Health packages via the Catalog creation form.
+
+### Build Verification
+- 
+pm run build — ? Passed: 66/66 pages, TypeScript clean.
+- 
+ode handler tests — ? All price fields return 
+umber type. Patients query returns records.
