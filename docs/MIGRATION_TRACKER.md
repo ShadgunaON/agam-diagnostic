@@ -1424,14 +1424,16 @@ This module closes the REST→GraphQL migration. All application communication n
 
 ## AppSync Public Auth & Schema Fix
 - Added API Key authentication to AppSync backend.
-- Injected 90+ missing schema fields and updated dminRoles with strict RBAC enforcement.
+- Injected 90+ missing schema fields and updated  dminRoles with strict RBAC enforcement.
 - Deployed backend updates via AWS SAM successfully.
 - Verified AppSync API Key access to public queries (catalog/blogs) works properly.
 
 - [x] Verified Amplify Production Configuration: Injected APPSYNC_API_KEY into buildSpec for SSR environment variable availability.
 
 ## Forensic Audit Fixes
-- **BlogConnection Schema Mismatch**: Fixed update-schema.js generator script to output logs query as returning [BlogItem!]! instead of BlogConnection! to match the authoritative GraphQL schema and resolver implementations.
+- **BlogConnection Schema Mismatch**: Fixed update-schema.js generator script to output  logs query as returning [BlogItem!]! instead of BlogConnection! to match the authoritative GraphQL schema and resolver implementations.
 
 - **Blog Schema Deployment & Verification**: Deployed the corrected infrastructure/schema.graphql to AWS AppSync via SAM. Cleared Next.js fetch cache and verified 
-pm run build. The GraphQL logs query now correctly returns [BlogItem!]! against the live environment, successfully resolving the Field 'id' in type 'BlogConnection' build failure during SSG prerendering.
+pm run build. The GraphQL  logs query now correctly returns [BlogItem!]! against the live environment, successfully resolving the Field 'id' in type 'BlogConnection' build failure during SSG prerendering.
+
+- **Catalog Creation Pricing & Category Fix**: Fixed data-integrity defect where newly created packages resulted in a NULL `price` (crashing GraphQL catalog listings) and a mismatched `general` category. Derived canonical `price` from `packagePrice` and implemented a strict runtime validation boundary in `dynamo-package.js` `upsert` to reject invalid payloads without hiding missing values as 0. Updated frontend form dropdown `<option>` values to exactly match legacy canonical strings (e.g., `"Women's Health"`).
