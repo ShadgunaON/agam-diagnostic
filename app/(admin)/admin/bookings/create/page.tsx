@@ -143,6 +143,7 @@ export default function AdminCreateBookingPage() {
           address: locationType === 'Home Collection' ? address : 'Agam Diagnostics Centre'
         },
         items: selectedItems.map(i => ({
+          id: i.id,
           name: i.name,
           type: i.type,
           price: i.price
