@@ -563,6 +563,7 @@ type Staff {
 }
 
 type Subscriber {
+  id: ID!
   email: String!
   status: String
   subscribedAt: String!

@@ -145,6 +145,7 @@ type DocumentUploadResponse {
 }
 
 type Subscriber {
+  id: ID!
   email: String!
   subscribedAt: String!
   status: String
