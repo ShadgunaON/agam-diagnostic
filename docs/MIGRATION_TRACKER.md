@@ -1429,3 +1429,6 @@ This module closes the REST→GraphQL migration. All application communication n
 - Verified AppSync API Key access to public queries (catalog/blogs) works properly.
 
 - [x] Verified Amplify Production Configuration: Injected APPSYNC_API_KEY into buildSpec for SSR environment variable availability.
+
+## Forensic Audit Fixes
+- **BlogConnection Schema Mismatch**: Fixed update-schema.js generator script to output logs query as returning [BlogItem!]! instead of BlogConnection! to match the authoritative GraphQL schema and resolver implementations.
