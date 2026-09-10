@@ -39,7 +39,7 @@ export function TestsHeroSection({ data, className = '' }: TestsHeroSectionProps
         <div className="relative w-full aspect-[4/3] sm:aspect-video lg:aspect-auto lg:h-full lg:min-h-[350px] flex items-center justify-center overflow-hidden">
           <div className="hidden lg:block absolute inset-0 z-10" style={{ background: 'linear-gradient(to right, var(--color-bg-alt) 0%, transparent 15%)' }}></div>
           <img 
-            src="/images/indian_lab_technician_tests.png" 
+            src={data.image} 
             alt={data.title} 
             className="w-full h-full object-cover lg:object-[left_center]"
           />

@@ -96,7 +96,7 @@ export class ServiceCatalogService {
     return success({
       title: 'Our Services',
       description: 'Comprehensive healthcare services tailored to your needs. From diagnostic imaging to specialized consultations.',
-      image: '/images/hero_services_visual.png',
+      image: '/images/services_hero_pic.png',
     });
   }
 
