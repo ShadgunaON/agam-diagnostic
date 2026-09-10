@@ -17,10 +17,11 @@ export default async function WomenHealthPage() {
   const featuredResult = await packageService.getFeaturedPackages();
   const allFeatured = featuredResult.isSuccess ? featuredResult.value : [];
   
-  const womensPackages = allFeatured.filter(pkg => 
-    pkg.slug.includes('women') || 
-    pkg.slug.includes('basic') || 
-    pkg.slug.includes('master')
+  const womensPackages = allFeatured.filter(pkg =>
+    pkg.category?.toLowerCase().includes("women") ||
+    (pkg.slug || '').includes('women') ||
+    (pkg.slug || '').includes('basic') ||
+    (pkg.slug || '').includes('master')
   );
 
   return (

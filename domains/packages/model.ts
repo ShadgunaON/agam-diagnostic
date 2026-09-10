@@ -54,8 +54,10 @@ export interface ProcessStep {
 }
 
 export interface FeaturedPackage {
+  id?: string;
   slug: string;
   title: string;
+  category?: string;
   badgeText: string;
   badgeColor: string;
   benefit: string;
@@ -64,4 +66,5 @@ export interface FeaturedPackage {
   price: string;
   ageGroups?: string[];
   includedTests?: string[];
+  status?: string;
 }

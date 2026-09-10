@@ -1314,7 +1314,8 @@ exports.handler = async (event) => {
           }
           const { limit = 20, cursor = null, search = '' } = args;
           const paginated = await patientRepo.getPaginated({ limit, cursor, search });
-          return { data: paginated.data, nextCursor: paginated.nextCursor, meta: { total: paginated.data.length, page: 1, limit } };
+          const totalCount = paginated.totalCount ?? paginated.data.length;
+          return { data: paginated.data, nextCursor: paginated.nextCursor, meta: { total: totalCount, page: 1, limit, totalPages: Math.ceil(totalCount / limit) || 1 } };
         } else if (await isPhlebotomist(identityForCheck)) {
           return { data: [], nextCursor: null, meta: { total: 0, page: 1, limit: 20, totalPages: 1 } };
         } else {
@@ -1364,10 +1365,33 @@ exports.handler = async (event) => {
             }
           } catch (err) {
             if (err.name === 'UsernameExistsException') {
-              throw new Error('A patient with this email already exists. Please search for the existing patient instead of creating a new one.');
+              // Patient already has a Cognito account - look up their existing DynamoDB record
+              try {
+                const { AdminGetUserCommand } = require('@aws-sdk/client-cognito-identity-provider');
+                const USER_POOL_ID = process.env.USER_POOL_ID;
+                const existingCognitoUser = await cognitoClient.send(new AdminGetUserCommand({
+                  UserPoolId: USER_POOL_ID,
+                  Username: input.email.trim().toLowerCase(),
+                }));
+                const existingSub = existingCognitoUser.UserAttributes?.find(a => a.Name === 'sub')?.Value;
+                if (existingSub) {
+                  const existingPatient = await patientRepo.getById(`pat_${existingSub}`);
+                  if (existingPatient) {
+                    logger.info(`Returning existing patient for sub ${existingSub}`);
+                    return existingPatient;
+                  }
+                  // Patient exists in Cognito but not in DB - create DB record with correct IDs
+                  patientId = `pat_${existingSub}`;
+                  ownerSub = existingSub;
+                }
+              } catch (lookupErr) {
+                logger.warn('Failed to retrieve existing patient from Cognito', lookupErr);
+              }
+              // Fall through to create the DynamoDB patient record with the resolved IDs
+            } else {
+              logger.error('Failed to provision Cognito account for new patient', err);
+              throw new Error('Failed to provision patient account.');
             }
-            logger.error('Failed to provision Cognito account for new patient', err);
-            throw new Error('Failed to provision patient account.');
           }
         }
         
@@ -1534,20 +1558,29 @@ exports.handler = async (event) => {
           let authoritativePrice = 0;
           
           if (item.type === 'Package') {
-            const pkg = item.slug ? await packageRepo.getBySlug(item.slug) : await packageRepo.getById(item.id);
-            if (!pkg || pkg.status !== 'ACTIVE') throw new Error(`Package ${item.name} is unavailable or invalid`);
-            authoritativePrice = parseFloat(pkg.price || pkg.packagePrice || '0');
-          } else {
-            const test = item.slug ? await testRepo.getBySlug(item.slug) : await testRepo.getById(item.id);
-            if (!test || test.status !== 'ACTIVE') {
-              const service = item.slug ? await serviceRepo.getBySlug(item.slug) : await serviceRepo.getById(item.id);
-              if (!service || service.status !== 'ACTIVE') {
-                 throw new Error(`Item ${item.name} is unavailable or invalid`);
-              } else {
-                 authoritativePrice = parseFloat(service.price || '0');
-              }
+            const pkg = item.slug ? await packageRepo.getBySlug(item.slug) : (item.id ? await packageRepo.getById(item.id) : null);
+            if (pkg && pkg.status === 'ACTIVE') {
+              authoritativePrice = parseFloat(pkg.price || pkg.packagePrice || '0');
+            } else if (item.price != null && !isNaN(parseFloat(item.price))) {
+              // Package not found in DB or not active - trust admin-provided price
+              authoritativePrice = parseFloat(item.price);
             } else {
+              throw new Error(`Package "${item.name}" is unavailable or has no price. Please re-add it from the catalog.`);
+            }
+          } else {
+            const test = item.slug ? await testRepo.getBySlug(item.slug) : (item.id ? await testRepo.getById(item.id) : null);
+            if (test && test.status === 'ACTIVE') {
               authoritativePrice = parseFloat(test.price || '0');
+            } else {
+              const service = item.slug ? await serviceRepo.getBySlug(item.slug) : (item.id ? await serviceRepo.getById(item.id) : null);
+              if (service && service.status === 'ACTIVE') {
+                authoritativePrice = parseFloat(service.price || '0');
+              } else if (item.price != null && !isNaN(parseFloat(item.price))) {
+                // Item not found in DB - trust admin-provided price
+                authoritativePrice = parseFloat(item.price);
+              } else {
+                throw new Error(`Item "${item.name}" is unavailable or has no price. Please re-add it from the catalog.`);
+              }
             }
           }
           
@@ -2509,10 +2542,10 @@ exports.handler = async (event) => {
         return {
           data: paginated.data,
           meta: {
-            total: paginated.data.length,
+            total: paginated.totalCount ?? paginated.data.length,
             page: 1,
             limit,
-            totalPages: 1
+            totalPages: Math.ceil((paginated.totalCount ?? paginated.data.length) / limit) || 1
           }
         };
       }

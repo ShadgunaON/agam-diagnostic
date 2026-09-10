@@ -17,11 +17,12 @@ export default async function MenHealthPage() {
   const featuredResult = await packageService.getFeaturedPackages();
   const allFeatured = featuredResult.isSuccess ? featuredResult.value : [];
 
-  const mensPackages = allFeatured.filter(pkg => 
-    pkg.slug.includes('men') || 
-    pkg.slug.includes('executive') || 
-    pkg.slug.includes('advanced') ||
-    pkg.slug.includes('master')
+  const mensPackages = allFeatured.filter(pkg =>
+    pkg.category?.toLowerCase().includes("men") ||
+    (pkg.slug || '').includes('men') || 
+    (pkg.slug || '').includes('executive') || 
+    (pkg.slug || '').includes('advanced') ||
+    (pkg.slug || '').includes('master')
   );
 
   return (

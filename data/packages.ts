@@ -9,8 +9,10 @@ export interface PackageItem {
 }
 
 export interface FeaturedPackage {
+  id?: string;
   slug: string;
   title: string;
+  category?: string;
   badgeText: string;
   badgeColor: string; // 'purple', 'green', 'blue', 'orange'
   benefit: string;
@@ -19,6 +21,7 @@ export interface FeaturedPackage {
   price: string;
   ageGroups?: string[];
   includedTests?: string[];
+  status?: string;
 }
 
 export interface PackageDetailData {

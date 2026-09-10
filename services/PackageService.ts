@@ -119,7 +119,39 @@ export class PackageService {
   }
 
   async getFeaturedPackages(): Promise<Result<FeaturedPackage[]>> {
-    return success(packagesData.featured);
+    try {
+      const res = await this._graphqlFetch<{ catalogPackages: { data: PackageItem[] } }>(
+        `query GetFeaturedPackages {
+          catalogPackages(limit: 100) {
+            data {
+              id slug title category price status description
+              packagePrice individualValue sortOrder
+            }
+          }
+        }`
+      );
+      if (!res?.catalogPackages?.data) return success(packagesData.featured);
+      // Map live DB packages to FeaturedPackage shape, fall back to static data if empty
+      const live = res.catalogPackages.data;
+      if (live.length === 0) return success(packagesData.featured);
+      return success(live.map(pkg => ({
+        id: pkg.id,
+        slug: pkg.slug,
+        title: pkg.title,
+        category: pkg.category || 'Health Package',
+        price: String(pkg.price ?? pkg.packagePrice ?? 0),
+        individualValue: pkg.individualValue ?? 0,
+        description: pkg.description || '',
+        badgeText: pkg.category || 'Health Package',
+        badgeColor: 'blue',
+        benefit: '',
+        highlightIcon: 'CheckCircle',
+        highlightText: '',
+        status: pkg.status,
+      })) as FeaturedPackage[]);
+    } catch {
+      return success(packagesData.featured);
+    }
   }
 
   async getById(id: string): Promise<Result<PackageItem>> {
