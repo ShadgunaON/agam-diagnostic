@@ -59,16 +59,16 @@ export class PatientService {
 
   async getAll(page = 1, limit = 10): Promise<Result<PaginatedResponse<PatientModel>>> {
     try {
-      const res = await this._graphqlFetch<{ patients: PaginatedResponse<PatientModel> }>(
-        `query GetPatients($page: Int, $limit: Int) {
-          patients(page: $page, limit: $limit) {
+      const res = await this._graphqlFetch<{ patients: { data: PatientModel[], nextCursor: string | null, meta: any } }>(
+        `query GetPatients($limit: Int, $search: String) {
+          patients(limit: $limit, search: $search) {
             data {
               id name age gender phone email status bloodGroup relation dobOrAge ownerSub createdAt updatedAt
             }
             meta { total page limit totalPages }
           }
         }`,
-        { page, limit }
+        { limit, search: '' }
       );
       return success(res!.patients);
     } catch (err) {

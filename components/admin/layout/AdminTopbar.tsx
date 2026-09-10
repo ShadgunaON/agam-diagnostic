@@ -17,76 +17,17 @@ export function AdminTopbar() {
   const { user, logout } = useAuth();
   const { role } = useRBAC();
   const [showDropdown, setShowDropdown] = React.useState(false);
-  const [showNotifDropdown, setShowNotifDropdown] = React.useState(false);
-  const [notifications, setNotifications] = React.useState<any[]>([]);
-  
   const dropdownRef = React.useRef<HTMLDivElement>(null);
-  const notifRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowDropdown(false);
       }
-      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
-        setShowNotifDropdown(false);
-      }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  React.useEffect(() => {
-    if (!user) return;
-    
-    let isMounted = true;
-
-    const fetchNotifications = async () => {
-      const { notificationService } = await import('@/services');
-      // Fix 1: Do NOT pass an explicit userId for self-requests.
-      // Let the backend use the authoritative Cognito `identity.sub`.
-      const res = await notificationService.getMyNotificationsGql();
-      if (res.isSuccess && isMounted) {
-        setNotifications(res.value);
-      }
-    };
-
-    // Initial fetch
-    fetchNotifications();
-
-    // Fix 2: Add 30-second polling for dynamic unread count
-    const intervalId = setInterval(fetchNotifications, 30000);
-
-    return () => {
-      isMounted = false;
-      clearInterval(intervalId);
-    };
-  }, [user]); // Removed showNotifDropdown to avoid resetting interval
-
-  const unreadCount = notifications.filter(n => !n.isRead).length;
-
-  const handleMarkAsRead = async (id: string, link?: string, e?: React.MouseEvent) => {
-    if (e) {
-      e.stopPropagation(); // prevent link navigation if just clicking mark read (if applicable)
-    }
-    
-    // Fix 3: Optimistically update local state so badge decrements immediately
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
-    
-    const { notificationService } = await import('@/services');
-    const result = await notificationService.markAsReadGql(id);
-    
-    if (!result.isSuccess) {
-      // Revert if failed
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: false } : n));
-    }
-
-    if (link) {
-      setShowNotifDropdown(false);
-      router.push(link);
-    }
-    // Note: dropdown stays open if there is no link, allowing reading multiple items
-  };
 
   const isUuid = (str?: string) => !!str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
   const displayName = !isUuid(user?.fullName) && user?.fullName
@@ -142,48 +83,6 @@ export function AdminTopbar() {
         {/* Search */}
         <AdminSearch />
 
-        {/* Notifications */}
-        <div className="relative" ref={notifRef}>
-          <button 
-            onClick={() => setShowNotifDropdown(!showNotifDropdown)}
-            className="relative flex items-center justify-center hover:bg-slate-50 transition-colors cursor-pointer border-none bg-transparent outline-none" 
-            style={{ width: '44px', height: '44px', borderRadius: '12px' }}
-          >
-            <AdminIcon name="bell" className="text-slate-500" style={{ width: '22px', height: '22px' }} strokeWidth={2} />
-            {unreadCount > 0 && (
-              <span className="absolute bg-red-500 rounded-full ring-2 ring-white flex items-center justify-center" style={{ top: '6px', right: '8px', width: '16px', height: '16px', fontSize: '10px', color: 'white', fontWeight: 'bold' }}>
-                {unreadCount}
-              </span>
-            )}
-          </button>
-          {showNotifDropdown && (
-            <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden z-50">
-              <div className="p-3 border-b border-slate-100 flex justify-between items-center">
-                <h3 className="font-bold text-slate-900 text-sm m-0">Notifications</h3>
-                {unreadCount > 0 && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">{unreadCount} New</span>}
-              </div>
-              <div className="max-h-80 overflow-y-auto">
-                {notifications.length === 0 ? (
-                  <div className="p-4 text-center text-sm text-slate-500">No notifications</div>
-                ) : (
-                  notifications.map(n => (
-                    <div 
-                      key={n.id} 
-                      onClick={(e) => handleMarkAsRead(n.id, n.link, e)}
-                      className={`p-3 border-b border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors ${!n.isRead ? 'bg-blue-50/50' : ''}`}
-                    >
-                      <p className="text-sm font-bold text-slate-900 mb-1">{n.title}</p>
-                      <p className="text-xs text-slate-600 line-clamp-2">{n.message}</p>
-                      <p className="text-[10px] text-slate-400 mt-2 font-medium">
-                        {new Date(n.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
-                      </p>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* Separator */}
         <div className="bg-[#E5E7EB]" style={{ width: '1px', height: '24px' }}></div>

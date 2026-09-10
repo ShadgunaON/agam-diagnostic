@@ -11,6 +11,10 @@ class DynamoPackageRepository {
   _mapFromDb(item) {
     if (!item) return null;
     const { PK, SK, GSI1PK, GSI1SK, GSI2PK, GSI2SK, ...rest } = item;
+    // Normalize price fields: legacy records stored as String; AppSync requires Float!
+    if (rest.price !== null && rest.price !== undefined) rest.price = this._normalizePrice(rest.price, 'price') ?? rest.price;
+    if (rest.packagePrice !== null && rest.packagePrice !== undefined) rest.packagePrice = this._normalizePrice(rest.packagePrice, 'packagePrice') ?? rest.packagePrice;
+    if (rest.individualValue !== null && rest.individualValue !== undefined) rest.individualValue = this._normalizePrice(rest.individualValue, 'individualValue') ?? rest.individualValue;
     return rest;
   }
 

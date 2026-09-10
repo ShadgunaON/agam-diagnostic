@@ -740,8 +740,15 @@ exports.handler = async (event) => {
 
         // Use the shared phonepe service
         const { createPaymentOrder } = require('../shared/phonepe');
+        // AppSync strips browser Origin headers before Lambda receives them.
+        // Use the deployed site URL from env (set in template.yaml SITE_URL), then
+        // fall back to the request origin header (for local dev via /api/graphql proxy),
+        // then finally localhost.
         const requestHeaders = event.request?.headers || {};
-        const host = requestHeaders['origin'] || requestHeaders['Origin'] || 'http://localhost:3000';
+        const host = process.env.SITE_URL
+          || requestHeaders['origin']
+          || requestHeaders['Origin']
+          || 'http://localhost:3000';
         const amountInPaisa = Math.round((invoice.total || 0) * 100);
         
         try {
