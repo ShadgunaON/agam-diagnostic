@@ -25,7 +25,11 @@ export default function BookingsPage() {
   useEffect(() => {
     if (!isAuthenticated || !user) return;
 
-    const fetchData = async () => {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchData = React.useCallback(async () => {
+    if (!isAuthenticated || !user) return;
+    setIsRefreshing(true);
       try {
         const query = `
           query MyPortal {
@@ -71,7 +75,8 @@ export default function BookingsPage() {
             'Content-Type': 'application/json',
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
-          body: JSON.stringify({ query })
+          body: JSON.stringify({ query }),
+          cache: 'no-store'
         });
 
         const json = await response.json();
@@ -121,24 +126,46 @@ export default function BookingsPage() {
         }
       } finally {
         setIsLoading(false);
+        setIsRefreshing(false);
       }
     };
-
-    fetchData();
   }, [isAuthenticated, user]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   return (
     <AuthGuard>
       <div className="container" style={{ paddingTop: 'var(--sp-10)', paddingBottom: 'var(--sp-10)' }}>
         {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-extrabold text-foreground mb-1">My Bookings</h1>
-          <p className="text-sm text-muted-foreground">
-            {isAuthenticated
-              ? `Welcome back, ${user?.fullName || 'Patient'}. Your appointment history will appear here.`
-              : 'Log in to view and manage your booking history.'}
-          </p>
-          <p className="text-muted-foreground text-sm mt-1">Manage and track your diagnostic tests</p>
+        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-extrabold text-foreground mb-1">My Bookings</h1>
+            <p className="text-sm text-muted-foreground">
+              {isAuthenticated
+                ? `Welcome back, ${user?.fullName || 'Patient'}. Your appointment history will appear here.`
+                : 'Log in to view and manage your booking history.'}
+            </p>
+            <p className="text-muted-foreground text-sm mt-1">Manage and track your diagnostic tests</p>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={fetchData} 
+            disabled={isRefreshing || isLoading}
+            className="flex items-center gap-2 self-start md:self-auto"
+          >
+            <svg 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`}
+            >
+              <path d="M21.5 2v6h-6M2.13 15.57a10 10 0 1 0 3.43-12.2l-4.14 4.14" />
+            </svg>
+            {isRefreshing ? 'Refreshing...' : 'Refresh Status'}
+          </Button>
         </div>
 
         {isLoading ? (
