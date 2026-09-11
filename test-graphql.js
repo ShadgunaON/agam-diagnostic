@@ -1,17 +1,15 @@
 const url = 'https://cihtpsxiibcb5bewwzxibt2l3i.appsync-api.us-east-1.amazonaws.com/graphql';
-const key = 'da2-wyfofmw3ffgwrgdo5kyajft5yy';
-const query = `query CatalogTests($page: Int, $limit: Int) {
-  catalogTests(page: $page, limit: $limit) {
-    data {
-      id slug title category tag price salePrice basePrice description sampleType
-      turnaroundTime fastingRequired homeCollectionAvailable labCollectionAvailable
-      sortOrder status
-    }
-    meta { total page limit totalPages }
-  }
+const query = `mutation { 
+  createPatient(input: {
+    name: "Test User",
+    email: "admin@agamdiagnostics.com",
+    phone: "+919999999999",
+    age: 30,
+    gender: "Male"
+  }) { id name email }
 }`;
 fetch(url, {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json', 'x-api-key': key },
-  body: JSON.stringify({ query, variables: { page: 1, limit: 200 } })
-}).then(r => r.json()).then(j => console.log(JSON.stringify(j, null, 2))).catch(console.error);
+  headers: { 'Content-Type': 'application/json', 'Authorization': 'dummy' },
+  body: JSON.stringify({query})
+}).then(r => r.json()).then(d => console.log(JSON.stringify(d, null, 2))).catch(console.error);

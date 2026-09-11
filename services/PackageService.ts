@@ -22,7 +22,7 @@ export class PackageService {
             'Content-Type': 'application/json',
             ...(token ? { Authorization: token } : apiKey ? { 'x-api-key': apiKey } : {}),
           },
-          body: JSON.stringify({ query, variables }),
+          body: JSON.stringify({ query, variables }), cache: 'no-store',
         });
         if (!response.ok) return null;
         const { data, errors } = await response.json();
@@ -37,7 +37,7 @@ export class PackageService {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ query, variables }),
+        body: JSON.stringify({ query, variables }), cache: 'no-store',
       });
       if (!response.ok) return null;
       const { data, errors } = await response.json();
@@ -79,6 +79,7 @@ export class PackageService {
           packageBySlug(slug: $slug) {
             id slug title category price status description
             packagePrice individualValue sortOrder testIds includes
+            overview whoShouldConsider preparation
             faqs { question answer }
           }
         }`,
@@ -161,6 +162,7 @@ export class PackageService {
           packageById(id: $id) {
             id slug title category price status description
             packagePrice individualValue sortOrder testIds includes
+            overview whoShouldConsider preparation
             faqs { question answer }
           }
         }`,

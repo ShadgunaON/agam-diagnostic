@@ -22,7 +22,7 @@ export class TestCatalogService {
             'Content-Type': 'application/json',
             ...(token ? { Authorization: token } : apiKey ? { 'x-api-key': apiKey } : {}),
           },
-          body: JSON.stringify({ query, variables }),
+          body: JSON.stringify({ query, variables }), cache: 'no-store',
         });
         if (!response.ok) return null;
         const { data, errors } = await response.json();
@@ -37,7 +37,7 @@ export class TestCatalogService {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ query, variables }),
+        body: JSON.stringify({ query, variables }), cache: 'no-store',
       });
       if (!response.ok) return null;
       const { data, errors } = await response.json();
@@ -104,7 +104,8 @@ export class TestCatalogService {
           testBySlug(slug: $slug) {
             id slug title category tag price salePrice basePrice description sampleType
             turnaroundTime fastingRequired homeCollectionAvailable labCollectionAvailable
-            sortOrder status
+            sortOrder status sampleVolume overview whatItChecks whyPerformed
+            preparationRequired precautions sampleInfo reportTiming additionalInstructions
             relatedTests { title category description slug status }
             faqs { question answer }
           }
@@ -149,7 +150,8 @@ export class TestCatalogService {
           testById(id: $id) {
             id slug title category tag price salePrice basePrice description sampleType
             turnaroundTime fastingRequired homeCollectionAvailable labCollectionAvailable
-            sortOrder status
+            sortOrder status sampleVolume overview whatItChecks whyPerformed
+            preparationRequired precautions sampleInfo reportTiming additionalInstructions
             relatedTests { title category description slug status }
             faqs { question answer }
           }

@@ -51,7 +51,7 @@ export function ServiceDetailContent({ data, className = '' }: ServiceDetailCont
   const sections = [
     {
       id: 'about',
-      title: 'About This Service',
+      title: 'Overview',
       content: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div dangerouslySetInnerHTML={{ __html: data.overview || data.aboutHtml || '' }} style={{ fontSize: '14px', lineHeight: 1.6 }} />
@@ -63,7 +63,7 @@ export function ServiceDetailContent({ data, className = '' }: ServiceDetailCont
             </div>
           ) : (data.whoShouldUse && data.whoShouldUse.length > 0) ? (
             <div style={{ padding: '12px', background: 'var(--color-bg-alt)', borderRadius: 'var(--radius-sm)' }}>
-              <h4 style={{ marginBottom: '8px', fontSize: '13px' }}>Ideal For:</h4>
+              <h4 style={{ marginBottom: '8px', fontSize: '13px' }}>Who is it For?</h4>
               <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px' }}>
                 {data.whoShouldUse.map((item, idx) => (
                   <li key={idx} style={{ marginBottom: '4px' }}>{item}</li>

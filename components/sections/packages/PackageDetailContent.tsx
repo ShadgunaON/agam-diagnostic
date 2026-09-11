@@ -65,7 +65,7 @@ export function PackageDetailContent({ data, className = '' }: PackageDetailCont
     },
     {
       id: 'who',
-      title: 'Who Should Get This Package?',
+      title: 'Who Should Consider',
       content: (
         <p style={{ fontSize: '14px', lineHeight: 1.6, color: 'var(--color-text)' }}>
           {data.whoShouldConsider || 'This package is designed to provide comprehensive health insights.'}

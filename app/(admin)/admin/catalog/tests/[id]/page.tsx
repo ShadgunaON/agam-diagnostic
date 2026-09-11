@@ -399,15 +399,15 @@ export default function EditTestPage() {
               <textarea name="overview" value={formData.overview || ''} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg min-h-[100px]" />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">What it Checks (Markdown/HTML)</label>
+              <label className="text-sm font-medium text-gray-700">Who Should Get This Test? / What it Checks (Markdown/HTML)</label>
               <textarea name="whatItChecks" value={formData.whatItChecks || ''} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg min-h-[100px]" />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Why Performed (Markdown/HTML)</label>
+              <label className="text-sm font-medium text-gray-700">Why is it Performed? (Markdown/HTML)</label>
               <textarea name="whyPerformed" value={formData.whyPerformed || ''} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg min-h-[100px]" />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Preparation Required</label>
+              <label className="text-sm font-medium text-gray-700">Preparation Required / Instructions</label>
               <textarea name="preparationRequired" value={formData.preparationRequired || formData.preparation || ''} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg min-h-[80px]" />
             </div>
           </div>

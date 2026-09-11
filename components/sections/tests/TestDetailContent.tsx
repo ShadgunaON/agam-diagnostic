@@ -60,7 +60,7 @@ export function TestDetailContent({ data, className = '' }: TestDetailContentPro
   sections.push(
     {
       id: 'who',
-      title: 'Who Should Get This Test?',
+      title: 'What it Checks',
       content: (
         <p style={{ fontSize: '14px', lineHeight: 1.6, color: 'var(--color-text)' }}>
           {data.whatItChecks || data.whoShouldGet || 'This test helps provide clinical insights for your health.'}
@@ -72,7 +72,7 @@ export function TestDetailContent({ data, className = '' }: TestDetailContentPro
   if (data.whyPerformed) {
     sections.push({
       id: 'why',
-      title: 'Why is it Performed?',
+      title: 'Why Performed',
       content: (
         <div dangerouslySetInnerHTML={{ __html: data.whyPerformed }} style={{ fontSize: '14px', lineHeight: 1.6, color: 'var(--color-text)' }} />
       )

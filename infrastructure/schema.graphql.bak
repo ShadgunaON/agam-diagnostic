@@ -345,15 +345,6 @@ type TestItem @aws_api_key @aws_cognito_user_pools {
   fastingRequired: Boolean
   homeCollectionAvailable: Boolean
   labCollectionAvailable: Boolean
-  overview: String
-  whatItChecks: String
-  whyPerformed: String
-  preparationRequired: String
-  precautions: String
-  sampleInfo: String
-  reportTiming: String
-  additionalInstructions: String
-  sampleVolume: String
   createdAt: String
   updatedAt: String
 }
@@ -372,17 +363,6 @@ type PackageItem @aws_api_key @aws_cognito_user_pools {
   testIds: [String!]
   includes: [String!]
   faqs: [FaqItem!]
-  overview: String
-  whatItChecks: String
-  whyPerformed: String
-  preparationRequired: String
-  precautions: String
-  sampleInfo: String
-  reportTiming: String
-  additionalInstructions: String
-  sampleVolume: String
-  whoShouldConsider: String
-  preparation: String
   createdAt: String
   updatedAt: String
 }
@@ -403,27 +383,16 @@ type ServiceItem @aws_api_key @aws_cognito_user_pools {
   homeAvailable: Boolean
   labAvailable: Boolean
   faqs: [FaqItem!]
-  overview: String
-  whatItChecks: String
-  whyPerformed: String
-  preparationRequired: String
-  precautions: String
-  sampleInfo: String
-  reportTiming: String
-  additionalInstructions: String
-  sampleVolume: String
-  whatIncludes: String
-  whoItIsFor: String
   createdAt: String
   updatedAt: String
 }
 
-type FaqItem @aws_api_key @aws_cognito_user_pools {
+type FaqItem {
   question: String!
   answer: String!
 }
 
-type RelatedTest @aws_api_key @aws_cognito_user_pools {
+type RelatedTest {
   title: String!
   category: String
   description: String

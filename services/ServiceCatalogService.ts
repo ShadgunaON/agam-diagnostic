@@ -21,7 +21,7 @@ export class ServiceCatalogService {
             'Content-Type': 'application/json',
             ...(token ? { Authorization: token } : apiKey ? { 'x-api-key': apiKey } : {}),
           },
-          body: JSON.stringify({ query, variables }),
+          body: JSON.stringify({ query, variables }), cache: 'no-store',
         });
         if (!response.ok) return null;
         const { data, errors } = await response.json();
@@ -36,7 +36,7 @@ export class ServiceCatalogService {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ query, variables }),
+        body: JSON.stringify({ query, variables }), cache: 'no-store',
       });
       if (!response.ok) return null;
       const { data, errors } = await response.json();
@@ -80,6 +80,7 @@ export class ServiceCatalogService {
             id slug title category price salePrice basePrice
             description shortDescription estimatedDuration
             homeAvailable labAvailable sortOrder status
+            overview whatIncludes whoItIsFor preparationRequired
             faqs { question answer }
           }
         }`,
@@ -108,6 +109,7 @@ export class ServiceCatalogService {
             id slug title category price salePrice basePrice
             description shortDescription estimatedDuration
             homeAvailable labAvailable sortOrder status
+            overview whatIncludes whoItIsFor preparationRequired
             faqs { question answer }
           }
         }`,

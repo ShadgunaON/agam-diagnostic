@@ -26,7 +26,8 @@ export async function POST(request: Request) {
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers,
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      cache: 'no-store'
     });
     
     const data = await response.json();

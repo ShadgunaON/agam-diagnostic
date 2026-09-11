@@ -23,7 +23,7 @@ export class InvoiceService {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ query, variables }),
+        body: JSON.stringify({ query, variables }), cache: 'no-store',
       });
       if (!response.ok) return null;
       const { data, errors } = await response.json();

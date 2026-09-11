@@ -1369,7 +1369,7 @@ exports.handler = async (event) => {
               }
             }
           } catch (err) {
-            if (err.name === 'UsernameExistsException') {
+            if (err.name === 'UsernameExistsException' || err.name === 'AliasExistsException') {
               // Patient already has a Cognito account - look up their existing DynamoDB record
               try {
                 const { AdminGetUserCommand } = require('@aws-sdk/client-cognito-identity-provider');

@@ -224,7 +224,7 @@ export default function EditServicePage() {
           
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Overview</label>
+              <label className="text-sm font-medium text-gray-700">Overview / About This Service</label>
               <textarea name="overview" value={formData.overview || ''} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg min-h-[100px]" />
             </div>
             <div className="space-y-2">
@@ -232,11 +232,11 @@ export default function EditServicePage() {
               <textarea name="whatIncludes" value={formData.whatIncludes || ''} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg min-h-[100px]" />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Who is it For? (Markdown/HTML)</label>
+              <label className="text-sm font-medium text-gray-700">Who is it For? / Ideal For (Markdown/HTML)</label>
               <textarea name="whoItIsFor" value={formData.whoItIsFor || ''} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg min-h-[100px]" />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Preparation Required</label>
+              <label className="text-sm font-medium text-gray-700">Preparation Required / Instructions</label>
               <textarea name="preparationRequired" value={formData.preparationRequired || (formData as any).preparation?.description || ''} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg min-h-[80px]" />
             </div>
           </div>

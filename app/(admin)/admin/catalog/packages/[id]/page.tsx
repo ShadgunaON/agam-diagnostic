@@ -331,11 +331,11 @@ export default function EditPackagePage() {
               <textarea name="overview" value={formData.overview || ''} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg min-h-[100px]" />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Who Should Consider? (Markdown/HTML)</label>
+              <label className="text-sm font-medium text-gray-700">Who Should Get This Package? / Who Should Consider (Markdown/HTML)</label>
               <textarea name="whoShouldConsider" value={formData.whoShouldConsider || ''} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg min-h-[100px]" />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Preparation Required</label>
+              <label className="text-sm font-medium text-gray-700">Preparation Required / Instructions</label>
               <textarea name="preparation" value={formData.preparation || ''} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg min-h-[80px]" />
             </div>
           </div>

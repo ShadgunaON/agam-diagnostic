@@ -23,7 +23,7 @@ export class ReportsService {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ query, variables }),
+        body: JSON.stringify({ query, variables }), cache: 'no-store',
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       const { data, errors } = await response.json();
