@@ -31,6 +31,14 @@ Parameters:
     Default: "UAT"
     Description: PhonePe Environment (UAT or PROD)
 
+  PaymentMode:
+    Type: String
+    Default: "phonepe"
+    AllowedValues:
+      - phonepe
+      - manual_test
+    Description: "Payment processing mode. 'phonepe' = real PhonePe Sandbox/UAT. 'manual_test' = isolated dev test UI with manual SUCCESS/FAILURE buttons (no PhonePe SDK called)."
+
   SiteUrl:
     Type: String
     Default: ""
@@ -385,6 +393,7 @@ Resources:
         Variables:
           PHONEPE_SSM_PREFIX: !Sub "/agam/phonepe/${Environment}"
           PHONEPE_ENV: !Ref PhonePeEnv
+          PAYMENT_MODE: !Ref PaymentMode
           SITE_URL: !Ref SiteUrl
           USER_POOL_ID: !Ref AgamUserPool
           SUPER_ADMIN_SSM_PATH: "/agam/SuperAdminSub"
@@ -1197,6 +1206,14 @@ Resources:
       ApiId: !GetAtt GraphQLApi.ApiId
       TypeName: Mutation
       FieldName: paymentStatus
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationManualTestPayment:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: manualTestPayment
       DataSourceName: !GetAtt GraphQLDataSource.Name
 
   GraphQLResolverMutationCreateStaff:

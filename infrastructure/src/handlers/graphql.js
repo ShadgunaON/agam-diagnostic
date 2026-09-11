@@ -738,6 +738,21 @@ exports.handler = async (event) => {
           throw new Error('Invoice is already paid');
         }
 
+        // ─── MANUAL TEST PAYMENT MODE ───────────────────────────────────────────
+        // Activated by PAYMENT_MODE=manual_test on the Lambda environment variable.
+        // Returns the manual-test page URL. PhonePe SDK is NOT called.
+        // Real PhonePe code below is completely untouched.
+        if (process.env.PAYMENT_MODE === 'manual_test') {
+          const requestHeaders = event.request?.headers || {};
+          const host = process.env.SITE_URL
+            || requestHeaders['origin']
+            || requestHeaders['Origin']
+            || 'http://localhost:3000';
+          // Return a sentinel prefix so the frontend knows to strip it and redirect
+          return `MANUAL_TEST:${host}/payment/${invoiceId}/manual-test`;
+        }
+        // ─── END MANUAL TEST PAYMENT MODE ───────────────────────────────────────
+
         // Use the shared phonepe service
         const { createPaymentOrder } = require('../shared/phonepe');
         // AppSync strips browser Origin headers before Lambda receives them.
@@ -806,6 +821,63 @@ exports.handler = async (event) => {
         } catch (err) {
           logger.error(`Error fetching order status for invoice ${invoiceId}`, err);
           return invoice; // Fallback to local state if SDK fails
+        }
+      }
+
+      // ---------------------------------------------------------
+      // MANUAL TEST PAYMENT MODE
+      // Only active when PAYMENT_MODE=manual_test on the Lambda.
+      // Simulates the external PhonePe callback.
+      // SUCCESS: marks invoice Paid + booking Paid (same logic as paymentStatus COMPLETED).
+      // FAILURE: leaves invoice Pending, returns current state.
+      // ---------------------------------------------------------
+      case 'manualTestPayment': {
+        if (!identity) throw new Error('Missing authentication token');
+
+        // Guard: this mutation is only valid when manual_test mode is active
+        if (process.env.PAYMENT_MODE !== 'manual_test') {
+          throw new Error('manualTestPayment is only available in manual_test payment mode');
+        }
+
+        const { invoiceId, result } = args;
+        if (!invoiceId) throw new Error('Missing invoiceId');
+        if (result !== 'SUCCESS' && result !== 'FAILURE') {
+          throw new Error('result must be SUCCESS or FAILURE');
+        }
+
+        const invoiceRepo = require('../repositories/dynamo-invoice');
+        const invoice = await invoiceRepo.getById(invoiceId);
+        if (!invoice) throw new Error('Invoice not found');
+
+        // Ownership verify
+        if (invoice.ownerSub !== identity.sub && invoice.patientId !== identity.primaryPatientId) {
+          throw new Error('Not authorized to act on this invoice');
+        }
+
+        if (invoice.paymentStatus === 'Paid') {
+          return invoice; // Idempotent
+        }
+
+        if (result === 'SUCCESS') {
+          logger.info(`[MANUAL_TEST] Marking invoice ${invoiceId} as Paid (test success)`);
+          await invoiceRepo.update(invoiceId, {
+            paymentStatus: 'Paid',
+            paymentMethod: 'Manual Test',
+            paidAt: new Date().toISOString(),
+            providerTransactionId: `MANUAL_TEST_${Date.now()}`
+          });
+
+          if (invoice.bookingId) {
+            const bookingRepo = require('../repositories/dynamo-booking');
+            await bookingRepo.updatePaymentStatus(invoice.bookingId, 'Paid');
+          }
+
+          const updatedInvoice = await invoiceRepo.getById(invoiceId);
+          return updatedInvoice;
+        } else {
+          // FAILURE: no state change, just return the current invoice
+          logger.info(`[MANUAL_TEST] Test failure selected for invoice ${invoiceId} — no state change`);
+          return invoice;
         }
       }
 

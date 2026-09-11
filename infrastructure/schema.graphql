@@ -176,6 +176,11 @@ type Mutation {
   createPaymentOrder(invoiceId: ID!): String!
   paymentStatus(invoiceId: ID!): FullInvoice!
 
+  # Manual Test Payment Mode (DEV/TEST ONLY)
+  # Only active when PAYMENT_MODE=manual_test on the Lambda.
+  # Simulates the external PhonePe callback: marks invoice Paid (SUCCESS) or leaves Pending (FAILURE).
+  manualTestPayment(invoiceId: ID!, result: String!): FullInvoice!
+
   # Staff Management
   createStaff(name: String!, email: String!, phone: String!, role: String!, department: String!, shift: String!): Staff!
   updateStaff(id: ID!, name: String, email: String, phone: String, role: String, department: String, shift: String, status: String): Staff!

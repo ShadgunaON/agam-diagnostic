@@ -1,6 +1,11 @@
 import { InvoiceService } from './InvoiceService';
 import { Result, success, failure } from '@/shared/result';
 
+// NEXT_PUBLIC_PAYMENT_MODE=manual_test activates the isolated dev/test payment UI.
+// All other values (or unset) use the real PhonePe Sandbox/UAT.
+export const isManualTestPaymentMode =
+  process.env.NEXT_PUBLIC_PAYMENT_MODE === 'manual_test';
+
 export interface IPaymentProvider {
   processPayment(invoiceId: string, amount: number, method: string, shouldSucceed?: boolean): Promise<Result<{ transactionId?: string, redirectUrl?: string }>>;
   checkStatus(invoiceId: string): Promise<Result<any>>;
@@ -60,7 +65,19 @@ export class ApiPaymentProvider implements IPaymentProvider {
         }`,
         { invoiceId }
       );
-      return success({ redirectUrl: response?.createPaymentOrder });
+
+      const rawUrl = response?.createPaymentOrder;
+      if (!rawUrl) return failure(new Error('No redirect URL received from payment gateway'));
+
+      // Detect MANUAL_TEST sentinel prefix returned by Lambda when PAYMENT_MODE=manual_test.
+      // Strip the prefix to get the real test page URL and pass it as a redirectUrl.
+      const MANUAL_TEST_PREFIX = 'MANUAL_TEST:';
+      if (rawUrl.startsWith(MANUAL_TEST_PREFIX)) {
+        const testPageUrl = rawUrl.slice(MANUAL_TEST_PREFIX.length);
+        return success({ redirectUrl: testPageUrl });
+      }
+
+      return success({ redirectUrl: rawUrl });
     } catch (err: any) {
       return failure(err);
     }
@@ -84,6 +101,28 @@ export class ApiPaymentProvider implements IPaymentProvider {
       return failure(err);
     }
   }
+
+  // Sends the user's manual test decision (SUCCESS or FAILURE) to the backend.
+  // The backend applies the real invoice + booking state update (SUCCESS) or no-op (FAILURE).
+  async manualTestPayment(invoiceId: string, result: 'SUCCESS' | 'FAILURE'): Promise<Result<any>> {
+    try {
+      const response = await this._graphqlFetch<{ manualTestPayment: any }>(
+        `mutation ManualTestPayment($invoiceId: ID!, $result: String!) {
+          manualTestPayment(invoiceId: $invoiceId, result: $result) {
+            id
+            paymentStatus
+            paymentMethod
+            paidAt
+            bookingId
+          }
+        }`,
+        { invoiceId, result }
+      );
+      return success(response?.manualTestPayment);
+    } catch (err: any) {
+      return failure(err);
+    }
+  }
 }
 
 export class PaymentService {
@@ -97,8 +136,7 @@ export class PaymentService {
     
     if (paymentResult.isSuccess) {
       if (paymentResult.value.redirectUrl) {
-        // PG redirect flow (e.g. PhonePe)
-        // We do not record payment here; the webhook will handle it.
+        // PG redirect flow (PhonePe) or Manual Test page — backend handles state on result.
         return success({ success: true, redirectUrl: paymentResult.value.redirectUrl });
       } else {
         // Synchronous mock flow
@@ -116,5 +154,13 @@ export class PaymentService {
 
   async checkStatus(invoiceId: string): Promise<Result<any>> {
     return this.provider.checkStatus(invoiceId);
+  }
+
+  // Delegates to the provider's manualTestPayment — only valid in manual_test mode.
+  async manualTestPayment(invoiceId: string, result: 'SUCCESS' | 'FAILURE'): Promise<Result<any>> {
+    if (this.provider instanceof ApiPaymentProvider) {
+      return this.provider.manualTestPayment(invoiceId, result);
+    }
+    return failure(new Error('manualTestPayment not supported in mock provider'));
   }
 }

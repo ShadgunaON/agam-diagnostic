@@ -1543,3 +1543,14 @@ ame, phone, and email. AppSync immediately rejected the entire query with a vali
   1. Updated all queries in ReportsService.ts to request valid fields (patient { name id phone email }).
   2. Updated eports/page.tsx to surface the actual es.error.message in the toast.
 - **Status:** ? FIXED + DEPLOYED. The reports page will now load successfully.
+
+
+### Issue 12 - Manual Test Payment Mode
+- **Root Cause:** PhonePe sandbox integration returns 401 due to invalid credentials in SSM. User requested a fallback manual test mode that bypasses PhonePe but still fully exercises the backend GraphQL mutation and database updates.
+- **Files Changed:** infrastructure/schema.graphql, infrastructure/template.yaml, infrastructure/src/handlers/graphql.js, services/PaymentService.ts, pp/(public)/payment/[invoiceId]/manual-test/page.tsx, .env.local
+- **Fix Applied:** 
+  1. Created manualTestPayment mutation in schema and AppSync resolver in 	emplate.yaml.
+  2. Updated graphql.js to handle PAYMENT_MODE=manual_test env variable to return a sentinel URL prefix instead of calling PhonePe SDK. Added handler for manualTestPayment simulating PhonePe callback.
+  3. Created dedicated dev-only UI page /payment/[invoiceId]/manual-test allowing SUCCESS/FAILURE simulation.
+  4. Updated PaymentService.ts to route requests based on the sentinel URL and perform the manual test mutation.
+- **Status:** ✅ FIXED + DEPLOYED. Manual test mode is now active via environment variable PAYMENT_MODE=manual_test.
