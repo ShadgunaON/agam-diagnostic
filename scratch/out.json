@@ -1,0 +1,1 @@
+{"patientId":"pat_test123","items":[{"name":"Complete Blood Count (CBC)","type":"Test","price":250}],"payment":{"status":"Pending","total":250},"id":"bk_1789116529769_vz1hk","ownerSub":"testuser","status":"Pending","invoiceId":"inv_1789116529769_d3c0g","createdAt":"2026-09-11T08:48:49.770Z","updatedAt":"2026-09-11T08:48:49.770Z"}

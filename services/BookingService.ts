@@ -28,13 +28,19 @@ export class BookingService {
         },
         body: JSON.stringify({ query, variables }), cache: 'no-store',
       });
-      if (!response.ok) return null;
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`HTTP Error ${response.status}: ${errText}`);
+      }
       const { data, errors } = await response.json();
-      if (errors?.length) { console.error('GraphQL errors:', errors); return null; }
+      if (errors?.length) { 
+        console.error('GraphQL errors:', errors); 
+        throw new Error(errors[0].message);
+      }
       return data as T;
-    } catch (err) {
+    } catch (err: any) {
       console.error('GraphQL fetch failed:', err);
-      return null;
+      throw err;
     }
   }
 
@@ -136,20 +142,24 @@ export class BookingService {
   }
 
   async createBooking(booking: Omit<import('@/domains/booking/model').BookingModel, 'id' | 'createdAt' | 'status'>, options?: { idempotencyKey?: string }): Promise<Result<BookingCreateResult>> {
-    const data = await this._graphqlFetch<{ createBooking: BookingCreateResult }>(
-      `mutation CreateBooking($input: String!, $idempotencyKey: String) {
-        createBooking(input: $input, idempotencyKey: $idempotencyKey) {
-          id patientId status createdAt
-          patient { name phone email }
-          collection { type date timeSlot address }
-          payment { total status method }
-          items { name type }
-        }
-      }`,
-      { input: JSON.stringify(booking), idempotencyKey: options?.idempotencyKey || `idem_${Date.now()}` }
-    );
-    if (data?.createBooking) return resultSuccess(data.createBooking);
-    return resultFailure(new Error('Failed to create booking'));
+    try {
+      const data = await this._graphqlFetch<{ createBooking: BookingCreateResult }>(
+        `mutation CreateBooking($input: String!, $idempotencyKey: String) {
+          createBooking(input: $input, idempotencyKey: $idempotencyKey) {
+            id patientId status createdAt invoiceId
+            patient { name phone email }
+            collection { type date timeSlot address }
+            payment { total status method }
+            items { name type }
+          }
+        }`,
+        { input: JSON.stringify(booking), idempotencyKey: options?.idempotencyKey || `idem_${Date.now()}` }
+      );
+      if (data?.createBooking) return resultSuccess(data.createBooking);
+      return resultFailure(new Error('Failed to create booking (Unknown GraphQL error)'));
+    } catch (err: any) {
+      return resultFailure(new Error(err.message || 'Failed to create booking'));
+    }
   }
 
   async updateBookingStatus(id: string, status: import('@/domains/booking/model').BookingModel['status']): Promise<Result<boolean>> {

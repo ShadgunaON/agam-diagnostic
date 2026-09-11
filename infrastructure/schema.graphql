@@ -270,6 +270,7 @@ type Booking {
   payment: PaymentDetails
   items: [BookingItem!]!
   patient: PatientSnapshot!
+  invoiceId: ID
 }
 
 type BookingItem {

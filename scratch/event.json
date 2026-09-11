@@ -1,0 +1,16 @@
+{
+  "info": {
+    "fieldName": "createBooking",
+    "parentTypeName": "Mutation"
+  },
+  "identity": {
+    "sub": "testuser",
+    "claims": {
+      "email": "test@example.com",
+      "custom:role": "patient"
+    }
+  },
+  "arguments": {
+    "input": "{\"patientId\":\"pat_test123\",\"items\":[{\"name\":\"Complete Blood Count (CBC)\",\"type\":\"Test\",\"price\":250}],\"payment\":{\"status\":\"Pending\"}}"
+  }
+}
