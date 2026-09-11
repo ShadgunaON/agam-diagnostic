@@ -22,9 +22,6 @@ export default function BookingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorState, setErrorState] = useState<string>('none');
 
-  useEffect(() => {
-    if (!isAuthenticated || !user) return;
-
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchData = React.useCallback(async () => {
@@ -128,8 +125,7 @@ export default function BookingsPage() {
         setIsLoading(false);
         setIsRefreshing(false);
       }
-    };
-  }, [isAuthenticated, user]);
+    }, [isAuthenticated, user]);
 
   useEffect(() => {
     fetchData();
