@@ -340,8 +340,8 @@ exports.handler = async (event) => {
         // Map Denormalized patient snapshot for bookings / reports if missing but requested
         // DynamoDB already persists `patient` inside `Booking` and `Report`, so GraphQL will map it directly.
 
-        // Sort descending
-        result.bookings.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        // Sort ascending (First In, First Show) for bookings
+        result.bookings.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
         result.invoices.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
         result.reports.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 
