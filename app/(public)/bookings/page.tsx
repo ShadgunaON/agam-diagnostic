@@ -112,7 +112,9 @@ export default function BookingsPage() {
       } catch (error: any) {
         console.error("Failed to load bookings portal data", error);
         const errMsg = error.message?.toLowerCase() || '';
-        if (errMsg.includes('access denied') || errMsg.includes('unauthorized') || errMsg.includes('authoriz')) {
+        if (errMsg.includes('expired') || errMsg.includes('token')) {
+          setErrorState('401');
+        } else if (errMsg.includes('access denied') || errMsg.includes('unauthorized') || errMsg.includes('authoriz')) {
           setErrorState('403');
         } else {
           setErrorState(error.message || '500');
