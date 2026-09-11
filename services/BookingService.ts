@@ -53,45 +53,53 @@ export class BookingService {
     search?: string;
   }): Promise<import('@/shared/result').Result<{ queue: import('@/domains/booking/model').BookingModel[]; nextCursor: string | null; totalFiltered: number }>> {
     const { limit = 20, cursor = null, status = 'All', tab = 'All', sort = 'date_newest', search = '' } = params || {};
-    const data = await this._graphqlFetch<{
-      adminBookingsWorkspace: { queue: import('@/domains/booking/model').BookingModel[]; nextCursor: string | null; totalFiltered: number };
-    }>(
-      `query AdminBookingsWorkspace($limit: Int, $cursor: String, $status: String, $tab: String, $sort: String, $search: String) {
-        adminBookingsWorkspace(limit: $limit, cursor: $cursor, status: $status, tab: $tab, sort: $sort, search: $search) {
-          queue {
+    try {
+      const data = await this._graphqlFetch<{
+        adminBookingsWorkspace: { queue: import('@/domains/booking/model').BookingModel[]; nextCursor: string | null; totalFiltered: number };
+      }>(
+        `query AdminBookingsWorkspace($limit: Int, $cursor: String, $status: String, $tab: String, $sort: String, $search: String) {
+          adminBookingsWorkspace(limit: $limit, cursor: $cursor, status: $status, tab: $tab, sort: $sort, search: $search) {
+            queue {
+              id patientId status createdAt
+              patient { name phone email }
+              collection { type date timeSlot address }
+              payment { total status method }
+              items { name type }
+            }
+            nextCursor
+            totalFiltered
+          }
+        }`,
+        { limit, cursor, status, tab, sort, search }
+      );
+      if (data?.adminBookingsWorkspace) return resultSuccess(data.adminBookingsWorkspace);
+      return resultFailure(new Error('Failed to load bookings workspace'));
+    } catch (err: any) {
+      return resultFailure(new Error(err.message || 'Failed to load bookings workspace'));
+    }
+  }
+
+  async getById(id: string): Promise<import('@/shared/result').Result<import('@/domains/booking/model').BookingModel>> {
+    try {
+      const data = await this._graphqlFetch<{
+        bookingById: import('@/domains/booking/model').BookingModel | null;
+      }>(
+        `query BookingById($id: ID!) {
+          bookingById(id: $id) {
             id patientId status createdAt
             patient { name phone email }
             collection { type date timeSlot address }
             payment { total status method }
             items { name type }
           }
-          nextCursor
-          totalFiltered
-        }
-      }`,
-      { limit, cursor, status, tab, sort, search }
-    );
-    if (data?.adminBookingsWorkspace) return resultSuccess(data.adminBookingsWorkspace);
-    return resultFailure(new Error('Failed to load bookings workspace'));
-  }
-
-  async getById(id: string): Promise<import('@/shared/result').Result<import('@/domains/booking/model').BookingModel>> {
-    const data = await this._graphqlFetch<{
-      bookingById: import('@/domains/booking/model').BookingModel | null;
-    }>(
-      `query BookingById($id: ID!) {
-        bookingById(id: $id) {
-          id patientId status createdAt
-          patient { name phone email }
-          collection { type date timeSlot address }
-          payment { total status method }
-          items { name type }
-        }
-      }`,
-      { id }
-    );
-    if (data?.bookingById) return resultSuccess(data.bookingById);
-    return resultFailure(new Error('Booking not found'));
+        }`,
+        { id }
+      );
+      if (data?.bookingById) return resultSuccess(data.bookingById);
+      return resultFailure(new Error('Booking not found'));
+    } catch (err: any) {
+      return resultFailure(new Error(err.message || 'Booking not found'));
+    }
   }
 
   async getByIdGql(id: string) {
@@ -108,37 +116,45 @@ export class BookingService {
   }
 
   async getByPatientId(patientId: string): Promise<Result<import('@/domains/booking/model').BookingModel[]>> {
-    const data = await this._graphqlFetch<{ bookingsByPatient: import('@/domains/booking/model').BookingModel[] }>(
-      `query BookingsByPatient($patientId: ID!) {
-        bookingsByPatient(patientId: $patientId) {
-          id patientId status createdAt
-          patient { name phone email }
-          collection { type date timeSlot address }
-          payment { total status method }
-          items { name type }
-        }
-      }`,
-      { patientId }
-    );
-    if (data?.bookingsByPatient) return resultSuccess(data.bookingsByPatient);
-    return resultFailure(new Error('Failed to load bookings'));
+    try {
+      const data = await this._graphqlFetch<{ bookingsByPatient: import('@/domains/booking/model').BookingModel[] }>(
+        `query BookingsByPatient($patientId: ID!) {
+          bookingsByPatient(patientId: $patientId) {
+            id patientId status createdAt
+            patient { name phone email }
+            collection { type date timeSlot address }
+            payment { total status method }
+            items { name type }
+          }
+        }`,
+        { patientId }
+      );
+      if (data?.bookingsByPatient) return resultSuccess(data.bookingsByPatient);
+      return resultFailure(new Error('Failed to load bookings'));
+    } catch (err: any) {
+      return resultFailure(new Error(err.message || 'Failed to load bookings'));
+    }
   }
 
   async getRecent(limit = 10): Promise<Result<import('@/domains/booking/model').BookingModel[]>> {
-    const data = await this._graphqlFetch<{ recentBookings: import('@/domains/booking/model').BookingModel[] }>(
-      `query RecentBookings($limit: Int) {
-        recentBookings(limit: $limit) {
-          id patientId status createdAt
-          patient { name phone email }
-          collection { type date timeSlot address }
-          payment { total status method }
-          items { name type }
-        }
-      }`,
-      { limit }
-    );
-    if (data?.recentBookings) return resultSuccess(data.recentBookings);
-    return resultFailure(new Error('Failed to load recent bookings'));
+    try {
+      const data = await this._graphqlFetch<{ recentBookings: import('@/domains/booking/model').BookingModel[] }>(
+        `query RecentBookings($limit: Int) {
+          recentBookings(limit: $limit) {
+            id patientId status createdAt
+            patient { name phone email }
+            collection { type date timeSlot address }
+            payment { total status method }
+            items { name type }
+          }
+        }`,
+        { limit }
+      );
+      if (data?.recentBookings) return resultSuccess(data.recentBookings);
+      return resultFailure(new Error('Failed to load recent bookings'));
+    } catch (err: any) {
+      return resultFailure(new Error(err.message || 'Failed to load recent bookings'));
+    }
   }
 
   async createBooking(booking: Omit<import('@/domains/booking/model').BookingModel, 'id' | 'createdAt' | 'status'>, options?: { idempotencyKey?: string }): Promise<Result<BookingCreateResult>> {
@@ -163,24 +179,33 @@ export class BookingService {
   }
 
   async updateBookingStatus(id: string, status: import('@/domains/booking/model').BookingModel['status']): Promise<Result<boolean>> {
-    const data = await this._graphqlFetch<{ updateBookingStatus: boolean }>(
-      `mutation UpdateBookingStatus($id: ID!, $status: String!) {
-        updateBookingStatus(id: $id, status: $status)
-      }`,
-      { id, status }
-    );
-    if (data?.updateBookingStatus !== undefined) return resultSuccess(data.updateBookingStatus);
-    return resultFailure(new Error('Failed to update booking status'));
+    try {
+      const data = await this._graphqlFetch<{ updateBookingStatus: boolean }>(
+        `mutation UpdateBookingStatus($id: ID!, $status: String!) {
+          updateBookingStatus(id: $id, status: $status)
+        }`,
+        { id, status }
+      );
+      if (data?.updateBookingStatus !== undefined) return resultSuccess(data.updateBookingStatus);
+      return resultFailure(new Error('Failed to update booking status'));
+    } catch (err: any) {
+      return resultFailure(new Error(err.message || 'Failed to update booking status'));
+    }
   }
 
   async updatePaymentStatus(id: string, status: import('@/domains/booking/model').BookingModel['payment']['status']): Promise<Result<boolean>> {
-    const data = await this._graphqlFetch<{ updateBookingPaymentStatus: boolean }>(
-      `mutation UpdateBookingPaymentStatus($id: ID!, $status: String!) {
-        updateBookingPaymentStatus(id: $id, status: $status)
-      }`,
-      { id, status }
-    );
-    if (data?.updateBookingPaymentStatus !== undefined) return resultSuccess(data.updateBookingPaymentStatus);
-    return resultFailure(new Error('Failed to update payment status'));
+    try {
+      const data = await this._graphqlFetch<{ updateBookingPaymentStatus: boolean }>(
+        `mutation UpdateBookingPaymentStatus($id: ID!, $status: String!) {
+          updateBookingPaymentStatus(id: $id, status: $status)
+        }`,
+        { id, status }
+      );
+      if (data?.updateBookingPaymentStatus !== undefined) return resultSuccess(data.updateBookingPaymentStatus);
+      return resultFailure(new Error('Failed to update payment status'));
+    } catch (err: any) {
+      return resultFailure(new Error(err.message || 'Failed to update payment status'));
+    }
   }
 }
+

@@ -64,10 +64,12 @@ export default function BookingsPage() {
           }
         `;
 
+        const token = sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '';
         const response = await fetch('/api/graphql', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify({ query })
         });

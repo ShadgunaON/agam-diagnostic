@@ -729,8 +729,13 @@ exports.handler = async (event) => {
         const invoice = await invoiceRepo.getById(invoiceId);
         if (!invoice) throw new Error('Invoice not found');
 
-        // Ownership verify
-        if (invoice.ownerSub !== identity.sub && invoice.patientId !== identity.primaryPatientId) {
+        // Ownership verify — handle both `sub` and `pat_${sub}` formats
+        const orderOwnerCheck = invoice.ownerSub === identity.sub ||
+          invoice.patientId === identity.sub ||
+          invoice.patientId === (identity.primaryPatientId || `pat_${identity.sub}`) ||
+          invoice.patientId === `pat_${identity.sub}` ||
+          (invoice.patientId && invoice.patientId.replace(/^pat_/, '') === identity.sub);
+        if (!orderOwnerCheck) {
           throw new Error('Not authorized to pay this invoice');
         }
 
@@ -783,8 +788,14 @@ exports.handler = async (event) => {
         const invoice = await invoiceRepo.getById(invoiceId);
         if (!invoice) throw new Error('Invoice not found');
         
-        // Ownership verify
-        if (invoice.ownerSub !== identity.sub && invoice.patientId !== identity.primaryPatientId) {
+        // Ownership verify — handle both `sub` and `pat_${sub}` formats
+        const primaryPatientId = identity.primaryPatientId || `pat_${identity.sub}`;
+        const isOwner = invoice.ownerSub === identity.sub ||
+          invoice.patientId === identity.sub ||
+          invoice.patientId === primaryPatientId ||
+          invoice.patientId === `pat_${identity.sub}` ||
+          (invoice.patientId && invoice.patientId.replace(/^pat_/, '') === identity.sub);
+        if (!isOwner) {
           throw new Error('Not authorized to view this invoice status');
         }
 
