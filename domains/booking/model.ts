@@ -1,4 +1,4 @@
-export type BookingStatus = 'Pending' | 'Confirmed' | 'Assigned' | 'Sample Collected' | 'Processing' | 'Completed' | 'Cancelled';
+export type BookingStatus = 'Pending' | 'Pending Payment' | 'Confirmed' | 'Assigned' | 'Sample Collected' | 'Processing' | 'Completed' | 'Cancelled';
 export type CollectionType = 'Home Collection' | 'Lab Visit';
 
 export interface BookingModel {

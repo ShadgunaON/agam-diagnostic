@@ -1554,3 +1554,13 @@ ame, phone, and email. AppSync immediately rejected the entire query with a vali
   3. Created dedicated dev-only UI page /payment/[invoiceId]/manual-test allowing SUCCESS/FAILURE simulation.
   4. Updated PaymentService.ts to route requests based on the sentinel URL and perform the manual test mutation.
 - **Status:** ✅ FIXED + DEPLOYED. Manual test mode is now active via environment variable PAYMENT_MODE=manual_test.
+
+
+### Issue 13 - Prevent Failed Payments from Creating Confirmed Bookings
+- **Root Cause:** When a patient attempted payment through PhonePe Sandbox and the payment failed/errored, the booking was still created and appeared in Admin -> Bookings as confirmed. The payment failure state was not properly isolating the booking.
+- **Files Changed:** infrastructure/src/repositories/dynamo-booking.js, infrastructure/src/handlers/graphql.js, domains/booking/model.ts, pp/(public)/payment/[invoiceId]/status/page.tsx
+- **Fix Applied:** 
+  1. Implemented a Pending Payment state to isolate online bookings using a different partition key (ENTITY#BOOKING_PENDING_PAYMENT).
+  2. Added confirmBooking and ailBooking atomic transactions using TransactWriteCommand to move bookings into the standard partition and update aggregates upon successful payment.
+  3. Updated updatePaymentStatus to orchestrate these state transitions depending on the PhonePe SDK callback result.
+- **Status:** ✅ FIXED + DEPLOYED. Failed payments no longer create confirmed bookings.

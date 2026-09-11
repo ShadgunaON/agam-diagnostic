@@ -28,6 +28,11 @@ export default function PaymentStatusPage() {
             setStatus('SUCCESS');
             return;
           }
+
+          if (result.value.paymentStatus === 'Failed') {
+            setStatus('FAILED');
+            return;
+          }
           
           // Check if PhonePe appended 'code' indicating explicit failure
           const phonepeCode = searchParams.get('code');

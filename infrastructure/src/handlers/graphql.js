@@ -818,12 +818,26 @@ exports.handler = async (event) => {
                providerTransactionId: providerTxnId
              });
              
-             // Update Booking
+             // Update & Confirm Booking
              if (invoice.bookingId) {
                const bookingRepo = require('../repositories/dynamo-booking');
-               await bookingRepo.updatePaymentStatus(invoice.bookingId, 'Paid');
+               await bookingRepo.confirmBooking(invoice.bookingId, paymentMethod, providerTxnId);
              }
              
+             const updatedInvoice = await invoiceRepo.getById(invoiceId);
+             return updatedInvoice;
+          } else if (statusResponse && (statusResponse.state === 'FAILED' || statusResponse.state === 'CANCELLED')) {
+             // Update Invoice
+             await invoiceRepo.update(invoiceId, {
+               paymentStatus: 'Failed'
+             });
+
+             // Update & Cancel Booking
+             if (invoice.bookingId) {
+               const bookingRepo = require('../repositories/dynamo-booking');
+               await bookingRepo.failBooking(invoice.bookingId, `Payment ${statusResponse.state}`);
+             }
+
              const updatedInvoice = await invoiceRepo.getById(invoiceId);
              return updatedInvoice;
           }
@@ -880,15 +894,25 @@ exports.handler = async (event) => {
 
           if (invoice.bookingId) {
             const bookingRepo = require('../repositories/dynamo-booking');
-            await bookingRepo.updatePaymentStatus(invoice.bookingId, 'Paid');
+            await bookingRepo.confirmBooking(invoice.bookingId, 'Manual Test', `MANUAL_TEST_${Date.now()}`);
           }
 
           const updatedInvoice = await invoiceRepo.getById(invoiceId);
           return updatedInvoice;
         } else {
-          // FAILURE: no state change, just return the current invoice
-          logger.info(`[MANUAL_TEST] Test failure selected for invoice ${invoiceId} — no state change`);
-          return invoice;
+          // FAILURE: test failure selected
+          logger.info(`[MANUAL_TEST] Test failure selected for invoice ${invoiceId}`);
+          await invoiceRepo.update(invoiceId, {
+            paymentStatus: 'Failed'
+          });
+
+          if (invoice.bookingId) {
+            const bookingRepo = require('../repositories/dynamo-booking');
+            await bookingRepo.failBooking(invoice.bookingId, 'Manual Test Failure');
+          }
+
+          const updatedInvoice = await invoiceRepo.getById(invoiceId);
+          return updatedInvoice;
         }
       }
 
@@ -1629,11 +1653,18 @@ exports.handler = async (event) => {
         }
 
         const bookingId = input.id || `bk_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
+        // Online patient payment requires gateway completion before appearing as a confirmed booking
+        const isStaffUser = (await isStaff(identityForCheck)) || (await isAdmin(identityForCheck));
+        const paymentMethod = input.payment?.method;
+        const paymentStatus = input.payment?.status;
+        const isOnlinePayment = !isStaffUser && paymentMethod !== 'Cash' && paymentStatus !== 'Paid';
+
         const newBookingData = {
           ...input,
           id: bookingId,
           ownerSub: identity.sub,
-          status: input.status || 'Pending',
+          status: isOnlinePayment ? 'Pending Payment' : (input.status || 'Pending'),
         };
 
         if (!newBookingData.patientId && newBookingData.patient) {

@@ -111,10 +111,12 @@ export default function BookingsPage() {
 
       } catch (error: any) {
         console.error("Failed to load bookings portal data", error);
-        if (error.message?.includes('Access denied') || error.message?.includes('Unauthorized')) {
+        const errMsg = error.message?.toLowerCase() || '';
+        if (errMsg.includes('access denied') || errMsg.includes('unauthorized') || errMsg.includes('authoriz')) {
           setErrorState('403');
         } else {
           setErrorState('500');
+          // Attach error message to state if needed, but for now just console log
         }
       } finally {
         setIsLoading(false);
@@ -178,7 +180,7 @@ export default function BookingsPage() {
               const collection = collections[booking.id];
               const report = reports[booking.id];
 
-              const isHome = booking.collection.type === 'Home Collection';
+              const isHome = booking.collection?.type === 'Home Collection';
               const isPaid = invoice?.paymentStatus === 'Paid';
               const isCOD = invoice?.paymentStatus === 'Pending';
               
@@ -241,10 +243,10 @@ export default function BookingsPage() {
                           <span className="ml-2 text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider font-semibold">Family Member</span>
                         )}
                         <span className="mx-2">•</span>
-                        {booking.collection.date} | {booking.collection.timeSlot}
+                        {booking.collection?.date} | {booking.collection?.timeSlot}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {booking.collection.type} • {booking.collection.address}
+                        {booking.collection?.type} • {booking.collection?.address}
                       </p>
                     </div>
 

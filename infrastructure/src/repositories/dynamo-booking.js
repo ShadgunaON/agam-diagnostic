@@ -54,15 +54,17 @@ class DynamoBookingRepository {
 
     const now = new Date().toISOString();
     
+    const isOnlinePending = booking.status === 'Pending Payment';
+
     // Booking Item
     const resolvedOwner = ownerSub || booking.ownerSub || 'SYSTEM';
     const patientKey = booking.patientId || (booking.patient?.id ? booking.patient.id : 'GENERAL');
     const bookingItem = {
       PK: `BOOKING#${booking.id}`,
       SK: 'METADATA',
-      GSI1PK: 'ENTITY#BOOKING',
+      GSI1PK: isOnlinePending ? 'ENTITY#BOOKING_PENDING_PAYMENT' : 'ENTITY#BOOKING',
       GSI1SK: booking.collection?.date || booking.scheduledDate || now,
-      GSI2PK: `PATIENT#${patientKey}`,
+      GSI2PK: isOnlinePending ? `PENDING_PATIENT#${patientKey}` : `PATIENT#${patientKey}`,
       GSI2SK: `BOOKING#${booking.collection?.date || booking.scheduledDate || now}`,
       ...booking,
       patientId: patientKey,
@@ -81,6 +83,7 @@ class DynamoBookingRepository {
       GSI2PK: `PATIENT#${invoice.patientId || patientKey}`,
       GSI2SK: `INVOICE#${now}#${invoice.id}`,
       ...invoice,
+      ownerSub: resolvedOwner,
       createdAt: invoice.createdAt || now,
       updatedAt: invoice.updatedAt || now,
     };
@@ -90,9 +93,9 @@ class DynamoBookingRepository {
     const collectionItem = {
       PK: `COLLECTION#${collectionTask.id}`,
       SK: 'METADATA',
-      GSI1PK: 'ENTITY#COLLECTION',
+      GSI1PK: isOnlinePending ? 'ENTITY#COLLECTION_PENDING_PAYMENT' : 'ENTITY#COLLECTION',
       GSI1SK: `COLLECTION#${collectionDateStr}#${collectionTask.id}`,
-      GSI2PK: `PATIENT#${collectionTask.patientId || patientKey}`,
+      GSI2PK: isOnlinePending ? `PENDING_PATIENT#${collectionTask.patientId || patientKey}` : `PATIENT#${collectionTask.patientId || patientKey}`,
       GSI2SK: `COLLECTION#${collectionDateStr}#${collectionTask.id}`,
       ...collectionTask,
       ownerSub: ownerSub || collectionTask.ownerSub,
@@ -110,7 +113,7 @@ class DynamoBookingRepository {
     };
 
     // Determine initial pending delta (+1 if Pending, 0 otherwise)
-    const isPendingOnCreate = !booking.status || booking.status === 'Pending';
+    const isPendingOnCreate = !isOnlinePending && (!booking.status || booking.status === 'Pending');
 
     try {
       const transactItems = [
@@ -243,7 +246,162 @@ class DynamoBookingRepository {
     return this._mapFromDb(Attributes);
   }
 
+  async confirmBooking(bookingId, paymentMethod = 'Online', providerTxnId = null) {
+    const now = new Date().toISOString();
+    const collectionId = `COL-${bookingId.replace('bk_', '')}`;
+
+    const booking = await this.getById(bookingId);
+    if (!booking) {
+      throw new Error(`Booking ${bookingId} not found to confirm`);
+    }
+
+    const patientKey = booking.patientId || (booking.patient?.id ? booking.patient.id : 'GENERAL');
+    const gsi1sk = booking.collection?.date || booking.scheduledDate || now;
+    const gsi2sk = `BOOKING#${gsi1sk}`;
+    const collectionDateStr = booking.collection?.date || now.split('T')[0];
+
+    const transactItems = [
+      {
+        Update: {
+          TableName: TABLE_NAME,
+          Key: {
+            PK: `BOOKING#${bookingId}`,
+            SK: 'METADATA',
+          },
+          UpdateExpression: 'SET GSI1PK = :gsi1pk, GSI1SK = :gsi1sk, GSI2PK = :gsi2pk, GSI2SK = :gsi2sk, #status = :status, payment.#pStatus = :pStatus, payment.#pMethod = :pMethod, payment.providerTransactionId = :pTxnId, updatedAt = :updatedAt',
+          ExpressionAttributeNames: {
+            '#status': 'status',
+            '#pStatus': 'status',
+            '#pMethod': 'method',
+          },
+          ExpressionAttributeValues: {
+            ':gsi1pk': 'ENTITY#BOOKING',
+            ':gsi1sk': gsi1sk,
+            ':gsi2pk': `PATIENT#${patientKey}`,
+            ':gsi2sk': gsi2sk,
+            ':status': 'Confirmed',
+            ':pStatus': 'Paid',
+            ':pMethod': paymentMethod || booking.payment?.method || 'Online',
+            ':pTxnId': providerTxnId || booking.payment?.providerTransactionId || 'CONFIRMED',
+            ':updatedAt': now,
+          },
+        }
+      },
+      {
+        Update: {
+          TableName: TABLE_NAME,
+          Key: { PK: 'AGGREGATE#PendingBookings', SK: 'METADATA' },
+          UpdateExpression: 'ADD #count :delta',
+          ExpressionAttributeNames: { '#count': 'count' },
+          ExpressionAttributeValues: { ':delta': 1 }
+        }
+      },
+      {
+        Update: {
+          TableName: TABLE_NAME,
+          Key: {
+            PK: `COLLECTION#${collectionId}`,
+            SK: 'METADATA',
+          },
+          UpdateExpression: 'SET GSI1PK = :gsi1pk, GSI1SK = :gsi1sk, GSI2PK = :gsi2pk, GSI2SK = :gsi2sk, updatedAt = :updatedAt',
+          ExpressionAttributeValues: {
+            ':gsi1pk': 'ENTITY#COLLECTION',
+            ':gsi1sk': `COLLECTION#${collectionDateStr}#${collectionId}`,
+            ':gsi2pk': `PATIENT#${patientKey}`,
+            ':gsi2sk': `COLLECTION#${collectionDateStr}#${collectionId}`,
+            ':updatedAt': now,
+          },
+        }
+      }
+    ];
+
+    try {
+      await docClient.send(new TransactWriteCommand({ TransactItems: transactItems }));
+    } catch (err) {
+      console.warn(`TransactWrite failed in confirmBooking for ${bookingId}, falling back to single update:`, err.message);
+      await docClient.send(new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `BOOKING#${bookingId}`,
+          SK: 'METADATA',
+        },
+        UpdateExpression: 'SET GSI1PK = :gsi1pk, GSI1SK = :gsi1sk, GSI2PK = :gsi2pk, GSI2SK = :gsi2sk, #status = :status, payment.#pStatus = :pStatus, payment.#pMethod = :pMethod, updatedAt = :updatedAt',
+        ExpressionAttributeNames: {
+          '#status': 'status',
+          '#pStatus': 'status',
+          '#pMethod': 'method',
+        },
+        ExpressionAttributeValues: {
+          ':gsi1pk': 'ENTITY#BOOKING',
+          ':gsi1sk': gsi1sk,
+          ':gsi2pk': `PATIENT#${patientKey}`,
+          ':gsi2sk': gsi2sk,
+          ':status': 'Confirmed',
+          ':pStatus': 'Paid',
+          ':pMethod': paymentMethod || booking.payment?.method || 'Online',
+          ':updatedAt': now,
+        },
+      }));
+    }
+
+    return this.getById(bookingId);
+  }
+
+  async failBooking(bookingId, reason = 'Payment Failed') {
+    const now = new Date().toISOString();
+    const collectionId = `COL-${bookingId.replace('bk_', '')}`;
+
+    try {
+      await docClient.send(new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `BOOKING#${bookingId}`,
+          SK: 'METADATA',
+        },
+        UpdateExpression: 'SET #status = :status, payment.#pStatus = :pStatus, GSI1PK = :gsi1pk, cancellationReason = :reason, updatedAt = :updatedAt',
+        ExpressionAttributeNames: {
+          '#status': 'status',
+          '#pStatus': 'status',
+        },
+        ExpressionAttributeValues: {
+          ':status': 'Cancelled',
+          ':pStatus': 'Failed',
+          ':gsi1pk': 'ENTITY#BOOKING_FAILED',
+          ':reason': reason,
+          ':updatedAt': now,
+        },
+      }));
+
+      await docClient.send(new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `COLLECTION#${collectionId}`,
+          SK: 'METADATA',
+        },
+        UpdateExpression: 'SET #status = :status, GSI1PK = :gsi1pk, updatedAt = :updatedAt',
+        ExpressionAttributeNames: {
+          '#status': 'status',
+        },
+        ExpressionAttributeValues: {
+          ':status': 'Cancelled',
+          ':gsi1pk': 'ENTITY#COLLECTION_FAILED',
+          ':updatedAt': now,
+        },
+      }));
+    } catch (err) {
+      console.warn(`Error in failBooking for ${bookingId}:`, err.message);
+    }
+
+    return this.getById(bookingId);
+  }
+
   async updatePaymentStatus(bookingId, paymentStatus) {
+    if (paymentStatus === 'Paid') {
+      return this.confirmBooking(bookingId);
+    } else if (paymentStatus === 'Failed') {
+      return this.failBooking(bookingId);
+    }
+
     const now = new Date().toISOString();
     const params = {
       TableName: TABLE_NAME,
