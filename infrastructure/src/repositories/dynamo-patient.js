@@ -115,20 +115,32 @@ class DynamoPatientRepository {
    * Uses GSI1 (ENTITY#PATIENT partition) with DynamoDB-native Limit + ExclusiveStartKey.
    * cursor is a base64-encoded JSON LastEvaluatedKey.
    */
-  async getPaginated({ limit = 20, cursor = null, search = '' } = {}) {
-    if (search) {
-      const results = await this.search(search, limit);
-      return { data: results, nextCursor: null };
-    }
-
+  async getPaginated({ limit = 20, cursor = null, sort = 'date_newest', search = '' } = {}) {
     const params = {
       TableName: TABLE_NAME,
       IndexName: 'GSI1',
       KeyConditionExpression: 'GSI1PK = :entity',
       ExpressionAttributeValues: { ':entity': 'ENTITY#PATIENT' },
-      ScanIndexForward: false,
+      ScanIndexForward: sort === 'date_oldest', // Default is false (descending)
       Limit: limit,
     };
+
+    if (search && search.trim()) {
+      const qLower = search.toLowerCase().trim();
+      const qUpper = search.toUpperCase().trim();
+      const qTitle = search.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      const qOriginal = search.trim();
+      
+      params.FilterExpression = 'contains(#name, :qLower) OR contains(#name, :qUpper) OR contains(#name, :qTitle) OR contains(#phone, :qOriginal) OR contains(PK, :qOriginal)';
+      params.ExpressionAttributeNames = {
+        '#name': 'name',
+        '#phone': 'phone'
+      };
+      params.ExpressionAttributeValues[':qLower'] = qLower;
+      params.ExpressionAttributeValues[':qUpper'] = qUpper;
+      params.ExpressionAttributeValues[':qTitle'] = qTitle;
+      params.ExpressionAttributeValues[':qOriginal'] = qOriginal;
+    }
 
     if (cursor) {
       try {

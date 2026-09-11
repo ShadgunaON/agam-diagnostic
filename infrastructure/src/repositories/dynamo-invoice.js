@@ -267,12 +267,12 @@ class DynamoInvoiceRepository {
     return totalRevenue;
   }
 
-  async getPaginated({ limit = 20, cursor = null, status = 'All', search = '' }) {
+  async getPaginated({ limit = 20, cursor = null, status = 'All', sort = 'date_newest', search = '' }) {
     const params = {
       TableName: TABLE_NAME,
       IndexName: 'GSI1',
       KeyConditionExpression: 'GSI1PK = :entity',
-      ScanIndexForward: false, // Descending by Date/ID
+      ScanIndexForward: sort === 'date_oldest', // Default is date_newest (descending, false)
       Limit: limit,
       ExpressionAttributeValues: {
         ':entity': 'ENTITY#INVOICE'

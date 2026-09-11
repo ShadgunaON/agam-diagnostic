@@ -340,8 +340,8 @@ exports.handler = async (event) => {
         // Map Denormalized patient snapshot for bookings / reports if missing but requested
         // DynamoDB already persists `patient` inside `Booking` and `Report`, so GraphQL will map it directly.
 
-        // Sort ascending (First In, First Show) for bookings
-        result.bookings.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+        // Sort descending (Newest First) for bookings
+        result.bookings.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
         result.invoices.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
         result.reports.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 
@@ -1078,7 +1078,7 @@ exports.handler = async (event) => {
           throw new Error('Access denied: Missing collections.view permission');
         }
 
-        const { limit = 20, cursor = null, tab = 'HOME', sort = 'date_oldest', search = '' } = args;
+        const { limit = 20, cursor = null, tab = 'HOME', sort = 'date_newest', search = '' } = args;
 
         const promises = [
           collectionRepo.getPaginated({ limit, cursor, tab, sort, search }),

@@ -37,7 +37,7 @@ const TAB_MAP: Record<string, string> = {
 export default function GlassBookingsPage() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState('All');
-  const [sortKey, setSortKey] = useState('date_oldest');
+  const [sortKey, setSortKey] = useState('date_newest');
   const [bookings, setBookings] = useState<BookingModel[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');

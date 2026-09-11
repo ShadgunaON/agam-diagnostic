@@ -7,12 +7,12 @@ const docClient = DynamoDBDocumentClient.from(client);
 const TABLE_NAME = process.env.DYNAMODB_TABLE_NAME || 'agam-data-dev';
 
 class DynamoReviewRepository {
-  async getPaginated({ limit = 20, cursor = null, status = 'All', rating = 'All', search = '' }) {
+  async getPaginated({ limit = 20, cursor = null, status = 'All', rating = 'All', sort = 'date_newest', search = '' }) {
     const params = {
       TableName: TABLE_NAME,
       IndexName: 'GSI1',
       KeyConditionExpression: 'GSI1PK = :entityPk',
-      ScanIndexForward: false, // Descending by Date
+      ScanIndexForward: sort === 'date_oldest', // Default is date_newest (descending, false)
       Limit: limit,
       ExpressionAttributeValues: {
         ':entityPk': 'ENTITY#REVIEW'
