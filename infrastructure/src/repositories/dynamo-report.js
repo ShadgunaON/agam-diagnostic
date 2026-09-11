@@ -255,6 +255,9 @@ class DynamoReportRepository {
     if (!rest.status) rest.status = 'Unknown';
     if (!rest.createdAt) rest.createdAt = new Date().toISOString();
     if (!rest.testType) rest.testType = 'Unknown';
+    if (!rest.priority) rest.priority = 'Routine';
+    if (!rest.patientId) rest.patientId = item.GSI1PK ? item.GSI1PK.replace('PATIENT#', '') : 'UNKNOWN';
+    if (!rest.bookingId) rest.bookingId = item.PK ? item.PK.replace('REPORT#', '').replace('REP-', 'bk_') : 'UNKNOWN';
     // Normalize embedded PatientSnapshot
     if (!rest.patient) {
       rest.patient = { id: rest.patientId || null, name: 'Unknown Patient', phone: null, email: null };

@@ -342,7 +342,18 @@ class DynamoCollectionRepository {
   }
 
   _mapFromDb(item) {
-    const { PK, SK, GSI1PK, GSI1SK, GSI2PK, GSI2SK, ...rest } = item || {};
+    if (!item) return null;
+    const { PK, SK, GSI1PK, GSI1SK, GSI2PK, GSI2SK, ...rest } = item;
+    
+    if (!rest.status) rest.status = 'Pending';
+    if (!rest.type) rest.type = 'Home';
+    if (!rest.date) rest.date = rest.createdAt ? rest.createdAt.split('T')[0] : new Date().toISOString().split('T')[0];
+    if (!rest.timeSlot) rest.timeSlot = 'Morning (8AM - 11AM)';
+    if (!rest.address) rest.address = 'Unknown Address';
+    if (!rest.createdAt) rest.createdAt = rest.updatedAt || new Date().toISOString();
+    if (!rest.patientId) rest.patientId = item.GSI2PK ? item.GSI2PK.replace('PATIENT#', '') : 'UNKNOWN';
+    if (!rest.bookingId) rest.bookingId = item.PK ? item.PK.replace('COLLECTION#', '').replace('COL-', 'bk_') : 'UNKNOWN';
+    
     return rest;
   }
 }

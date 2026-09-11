@@ -84,6 +84,12 @@ class DynamoReviewRepository {
   _mapFromDb(item) {
     if (!item) return null;
     const { PK, SK, GSI1PK, GSI1SK, GSI2PK, GSI2SK, ...rest } = item;
+    
+    if (!rest.status) rest.status = 'Pending';
+    if (!rest.bookingId) rest.bookingId = item.PK ? item.PK.replace('REVIEW#', '').replace('BOOKING#', '').replace('#REVIEW', '') : 'UNKNOWN';
+    if (!rest.patientId) rest.patientId = item.GSI2PK ? item.GSI2PK.replace('PATIENT#', '') : 'UNKNOWN';
+    if (!rest.createdAt) rest.createdAt = rest.updatedAt || new Date().toISOString();
+    
     return rest;
   }
 

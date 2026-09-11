@@ -673,7 +673,15 @@ class DynamoBookingRepository {
   }
 
   _mapFromDb(item) {
+    if (!item) return null;
     const { PK, SK, GSI1PK, GSI1SK, GSI2PK, GSI2SK, ...rest } = item;
+    
+    if (!rest.status) rest.status = 'Pending';
+    if (!rest.createdAt) rest.createdAt = rest.updatedAt || new Date().toISOString();
+    if (!rest.patientId) rest.patientId = item.GSI2PK ? item.GSI2PK.replace('PATIENT#', '').replace('PENDING_PATIENT#', '') : 'UNKNOWN';
+    if (!rest.items || !Array.isArray(rest.items)) rest.items = [];
+    if (!rest.patient) rest.patient = { id: rest.patientId, name: 'Unknown' };
+    
     return rest;
   }
 }

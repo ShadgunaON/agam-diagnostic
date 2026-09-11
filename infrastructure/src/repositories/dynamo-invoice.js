@@ -332,6 +332,21 @@ class DynamoInvoiceRepository {
   _mapFromDb(item) {
     if (!item) return null;
     const { PK, SK, GSI1PK, GSI1SK, GSI2PK, GSI2SK, ...rest } = item;
+    
+    // Ensure all non-nullable fields required by AppSync schema are present
+    if (rest.paymentStatus === null || rest.paymentStatus === undefined) {
+      rest.paymentStatus = 'Pending';
+    }
+    if (rest.total === null || rest.total === undefined) {
+      rest.total = 0;
+    }
+    if (rest.createdAt === null || rest.createdAt === undefined) {
+      rest.createdAt = rest.updatedAt || new Date().toISOString();
+    }
+    if (rest.patientId === null || rest.patientId === undefined) {
+      rest.patientId = item.GSI2PK ? item.GSI2PK.replace('PATIENT#', '') : 'UNKNOWN';
+    }
+    
     return rest;
   }
 }
