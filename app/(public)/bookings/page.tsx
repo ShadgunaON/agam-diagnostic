@@ -20,7 +20,7 @@ export default function BookingsPage() {
   const [collections, setCollections] = useState<Record<string, CollectionTaskModel>>({});
   const [reports, setReports] = useState<Record<string, ReportTaskModel>>({});
   const [isLoading, setIsLoading] = useState(true);
-  const [errorState, setErrorState] = useState<'none' | '401' | '403' | '500'>('none');
+  const [errorState, setErrorState] = useState<string>('none');
 
   useEffect(() => {
     if (!isAuthenticated || !user) return;
@@ -115,8 +115,7 @@ export default function BookingsPage() {
         if (errMsg.includes('access denied') || errMsg.includes('unauthorized') || errMsg.includes('authoriz')) {
           setErrorState('403');
         } else {
-          setErrorState('500');
-          // Attach error message to state if needed, but for now just console log
+          setErrorState(error.message || '500');
         }
       } finally {
         setIsLoading(false);
@@ -153,9 +152,9 @@ export default function BookingsPage() {
           <div className="flex justify-center items-center h-64 text-center">
             <p className="text-muted-foreground font-medium">You do not have permission to view these bookings.</p>
           </div>
-        ) : errorState === '500' ? (
+        ) : errorState !== 'none' ? (
           <div className="flex flex-col justify-center items-center h-64 gap-4 text-center">
-            <p className="text-muted-foreground font-medium">Unable to load bookings. Please try again.</p>
+            <p className="text-red-500 font-medium">Unable to load bookings: {errorState}</p>
             <Button variant="outline" onClick={() => window.location.reload()}>Retry</Button>
           </div>
         ) : bookings.length === 0 ? (

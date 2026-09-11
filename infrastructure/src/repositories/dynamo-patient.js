@@ -242,10 +242,12 @@ class DynamoPatientRepository {
   _mapFromDb(item) {
     const { PK, SK, GSI1PK, GSI1SK, GSI2PK, GSI2SK, ...rest } = item;
     // AppSync schema: Patient.name is String! (non-nullable).
-    // A null name causes AppSync to reject the entire paginated response.
-    // Normalize to empty string so one bad record doesn't crash the list.
     if (rest.name === null || rest.name === undefined) {
       rest.name = '';
+    }
+    // AppSync schema: Patient.isFamilyMember is Boolean! (non-nullable).
+    if (rest.isFamilyMember === null || rest.isFamilyMember === undefined) {
+      rest.isFamilyMember = false;
     }
     return rest;
   }
