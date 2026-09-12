@@ -37,6 +37,7 @@ export default function BookingsPage() {
                 status
                 createdAt
                 collection { type date timeSlot address }
+                payment { status total method }
                 items { name type }
                 patient { name }
               }
@@ -206,8 +207,8 @@ export default function BookingsPage() {
               const report = reports[booking.id];
 
               const isHome = booking.collection?.type === 'Home Collection';
-              const isPaid = invoice?.paymentStatus === 'Paid';
-              const isCOD = invoice?.paymentStatus === 'Pending';
+              const isPaid = booking.payment?.status === 'Paid' || invoice?.paymentStatus === 'Paid';
+              const hasPendingAction = !isPaid || (isPaid && booking.status === 'Pending');
               
               const isAssigned = collection?.assignedTo && collection.assignedTo !== 'Unassigned';
               const isCheckedIn = ['Checked In', 'Sample Collected', 'Completed'].includes(collection?.status || '');
@@ -222,7 +223,7 @@ export default function BookingsPage() {
               const stepEnRoute = isHome ? (isAssigned && isEnRoute) : false;
               const stepSampleCollected = isHome ? (stepEnRoute && isSampleCollected) : (stepAssigned && isSampleCollected);
               
-              const isLatePayment = invoice?.paymentMethod === 'Cash' || invoice?.paymentMethod === 'COD';
+              const isLatePayment = invoice?.paymentMethod === 'Cash' || invoice?.paymentMethod === 'COD' || booking.payment?.method === 'Cash' || booking.payment?.method === 'COD';
               const paymentNodeLabel = isLatePayment ? 'Payment Collected' : 'Payment';
 
               const steps = isHome ? [
@@ -255,11 +256,15 @@ export default function BookingsPage() {
                         <span className={`text-xs font-bold px-2 py-1 rounded-md tracking-wider uppercase ${booking.status === 'Confirmed' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
                           {booking.status}
                         </span>
-                        {invoice && (
-                          <span className={`text-xs font-bold px-2 py-1 rounded-md tracking-wider uppercase ${invoice.paymentStatus === 'Paid' ? 'bg-primary/10 text-primary' : 'bg-yellow-100 text-yellow-700'}`}>
+                        {isPaid ? (
+                          <span className="text-xs font-bold px-2 py-1 rounded-md tracking-wider uppercase bg-primary/10 text-primary">
+                            Paid
+                          </span>
+                        ) : invoice ? (
+                          <span className="text-xs font-bold px-2 py-1 rounded-md tracking-wider uppercase bg-yellow-100 text-yellow-700">
                             {invoice.paymentStatus}
                           </span>
-                        )}
+                        ) : null}
                       </div>
                       <h3 className="font-bold text-lg mb-1">{booking.items.map(i => i.name).join(', ')}</h3>
                       <p className="text-sm text-muted-foreground mb-2">
@@ -276,12 +281,12 @@ export default function BookingsPage() {
                     </div>
 
                     <div className="flex flex-col gap-2 min-w-[140px]">
-                      {invoice?.paymentStatus === 'Pending' && (
+                      {!isPaid && (
                         <span className="w-full text-center py-2 px-4 bg-slate-100 text-slate-700 text-xs font-bold rounded-full border border-slate-200">
                           Payment Due
                         </span>
                       )}
-                      {invoice?.paymentStatus === 'Paid' && (
+                      {isPaid && (
                         <Link href={`/bookings/${booking.id}/receipt`} className="w-full text-center py-2 px-4 bg-white border border-border text-foreground text-sm font-bold rounded-full hover:bg-bg-alt transition-colors">
                           View Receipt
                         </Link>
