@@ -168,7 +168,7 @@ exports.handler = async (event) => {
         const isAdminUser = await isAdmin(identity);
         
         const safeQuery = query ? query.trim() : '';
-        if (!safeQuery) return [];
+        // If query is empty, we will still search to return default catalog items
 
         const promises = [];
         

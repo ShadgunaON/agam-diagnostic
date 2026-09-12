@@ -250,18 +250,19 @@ class DynamoCollectionRepository {
   async create(task, ownerSub) {
     const dateStr = task.date || new Date().toISOString().split('T')[0];
     const assigneeId = task.phlebotomistId || 'UNASSIGNED';
+    const createdAt = task.createdAt || new Date().toISOString();
     const dbItem = {
       PK: `COLLECTION#${task.id}`,
       SK: 'METADATA',
       GSI1PK: 'ENTITY#COLLECTION',
-      GSI1SK: `COLLECTION#${dateStr}#${task.id}`,
+      GSI1SK: `COLLECTION#${createdAt}#${task.id}`,
       GSI2PK: `PATIENT#${task.patientId || 'UNKNOWN'}`,
       GSI2SK: `COLLECTION#${dateStr}#${task.id}`,
       GSI3PK: `ASSIGNEE#${assigneeId}`,
       GSI3SK: `STATUS#${task.status || 'Pending'}`,
       ownerSub: ownerSub || task.ownerSub,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: createdAt,
+      updatedAt: createdAt,
       ...task,
     };
     

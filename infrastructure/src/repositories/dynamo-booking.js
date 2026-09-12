@@ -28,7 +28,7 @@ class DynamoBookingRepository {
       PK: `BOOKING#${booking.id}`,
       SK: 'METADATA',
       GSI1PK: 'ENTITY#BOOKING',
-      GSI1SK: booking.collection?.date || booking.scheduledDate || now,
+      GSI1SK: booking.createdAt || now,
       GSI2PK: `PATIENT#${patientKey}`,
       GSI2SK: `BOOKING#${booking.collection?.date || booking.scheduledDate || now}`,
       ...booking,
@@ -63,7 +63,7 @@ class DynamoBookingRepository {
       PK: `BOOKING#${booking.id}`,
       SK: 'METADATA',
       GSI1PK: isOnlinePending ? 'ENTITY#BOOKING_PENDING_PAYMENT' : 'ENTITY#BOOKING',
-      GSI1SK: booking.collection?.date || booking.scheduledDate || now,
+      GSI1SK: booking.createdAt || now,
       GSI2PK: isOnlinePending ? `PENDING_PATIENT#${patientKey}` : `PATIENT#${patientKey}`,
       GSI2SK: `BOOKING#${booking.collection?.date || booking.scheduledDate || now}`,
       ...booking,
@@ -256,7 +256,7 @@ class DynamoBookingRepository {
     }
 
     const patientKey = booking.patientId || (booking.patient?.id ? booking.patient.id : 'GENERAL');
-    const gsi1sk = booking.collection?.date || booking.scheduledDate || now;
+    const gsi1sk = booking.createdAt || now;
     const gsi2sk = `BOOKING#${gsi1sk}`;
     const collectionDateStr = booking.collection?.date || now.split('T')[0];
 

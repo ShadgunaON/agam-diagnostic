@@ -7,7 +7,6 @@ import { AdminIcon } from '../navigation/AdminIcons';
 import { AdminButton } from '../primitives/AdminButton';
 import { AdminInput } from '../primitives/AdminInput';
 import { AdminMobileNav } from '../navigation/AdminMobileNav';
-import { AdminSearch } from './AdminSearch';
 import { useAuth } from '@/context/AuthContext';
 import { useRBAC } from '@/hooks/useRBAC';
 
@@ -79,13 +78,6 @@ export function AdminTopbar() {
 
       {/* Right: Actions & Profile */}
       <div className="flex items-center justify-end shrink-0" style={{ gap: '20px' }}>
-
-        {/* Search */}
-        <AdminSearch />
-
-
-        {/* Separator */}
-        <div className="bg-[#E5E7EB]" style={{ width: '1px', height: '24px' }}></div>
 
         {/* User Profile */}
         <div className="relative" ref={dropdownRef}>

@@ -15,11 +15,10 @@ export async function performGlobalSearch(query: string): Promise<SearchResultIt
   const searchTerm = query.toLowerCase().trim();
   const results: SearchResultItem[] = [];
 
-  // IF empty, return default top items
+  // If empty, return a default selection
   if (!searchTerm) {
-    // Return empty for now, or just an empty array
-    // (We could keep the default top items logic but we'll return empty to avoid fetch-all)
-    return results;
+    // We will still call the backend with an empty query to get top items
+    // The backend handles empty queries by returning default items for public catalog
   }
 
   try {
