@@ -110,8 +110,7 @@ export default function CollectionsPage() {
   // ── ACTIONS ────────────────────────────────────────────────────────────────
 
   const refreshTasks = async () => {
-    const updateRes = await collectionService.getAll();
-    if (updateRes.isSuccess) setTasks(updateRes.value);
+    await fetchWorkspace(null);
   };
 
   const handleCheckIn = (taskId: string) => {
@@ -253,7 +252,7 @@ export default function CollectionsPage() {
 
                       return [
                         { label: 'Confirmed', completed: true },
-                        { label: 'Checked In', completed: isCheckedIn },
+                        { label: 'Check-In', completed: isCheckedIn },
                         { label: 'Sample\nCollected', completed: isSampleCollected },
                         { label: 'Completed', completed: isCompleted },
                       ].map((step, idx, arr) => (
@@ -271,7 +270,7 @@ export default function CollectionsPage() {
                                 </svg>
                               )}
                             </div>
-                            <span style={{ fontSize: '9px', fontWeight: 700, color: step.completed ? '#10b981' : '#94a3b8', textAlign: 'center', whiteSpace: 'pre-line' }}>
+                            <span style={{ fontSize: '9px', fontWeight: 700, color: step.completed ? '#10b981' : '#94a3b8', textAlign: 'center', whiteSpace: 'pre-line', lineHeight: '1.2' }}>
                               {step.label}
                             </span>
                           </div>

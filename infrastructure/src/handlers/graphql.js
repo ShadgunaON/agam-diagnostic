@@ -1969,7 +1969,14 @@ exports.handler = async (event) => {
       }
 
       case 'updateCollection': {
-        const { id, input } = args;
+        let { id, input } = args;
+        if (typeof input === 'string') {
+          try {
+            input = JSON.parse(input);
+          } catch (e) {
+            throw new Error('Invalid JSON input for updateCollection');
+          }
+        }
         const existingCollection = await collectionRepo.getById(id);
         if (!existingCollection) throw new Error('Collection task not found');
 
@@ -2013,6 +2020,7 @@ exports.handler = async (event) => {
           const bookingId = existingCollection.bookingId;
           const statusMap = {
             'Assigned': 'Assigned',
+            'Checked In': 'Checked In',
             'Sample Collected': 'Sample Collected',
             'Completed': 'Completed'
           };

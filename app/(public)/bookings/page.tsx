@@ -228,22 +228,13 @@ export default function BookingsPage() {
 
               const steps = isHome ? [
                 { label: 'Confirmed', completed: true },
-                ...(isLatePayment ? [] : [{ label: paymentNodeLabel, completed: isPaid }]),
                 { label: 'Assigned', completed: stepAssigned },
                 { label: 'On the Way', completed: stepEnRoute },
-                { label: 'Sample Collected', completed: stepSampleCollected },
-                ...(isLatePayment ? [{ label: paymentNodeLabel, completed: isPaid }] : []),
-                { label: 'Processing', completed: isProcessing },
-                { label: 'Report Ready', completed: isReportReady },
                 { label: 'Completed', completed: isCompleted }
               ] : [
                 { label: 'Confirmed', completed: true },
-                ...(isLatePayment ? [] : [{ label: paymentNodeLabel, completed: isPaid }]),
                 { label: 'Check-In', completed: stepAssigned },
                 { label: 'Sample Collected', completed: stepSampleCollected },
-                ...(isLatePayment ? [{ label: paymentNodeLabel, completed: isPaid }] : []),
-                { label: 'Processing', completed: isProcessing },
-                { label: 'Report Ready', completed: isReportReady },
                 { label: 'Completed', completed: isCompleted }
               ];
 

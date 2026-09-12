@@ -543,6 +543,14 @@ type CollectionTask {
   bookingId: ID!
   status: String!
   assignedTo: String
+  type: String
+  patientId: String
+  time: String
+  date: String
+  patient: String
+  address: String
+  tests: [String!]
+  phlebotomistId: String
 }
 
 type CollectionsWorkspaceData {
