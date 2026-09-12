@@ -2,7 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/Button';
+import { Card, Button } from '@/components/ui';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 import { useAuth } from '@/context/AuthContext';
 import { AuthGuard } from '@/components/common';
 import { BookingModel } from '@/domains/booking/model';
