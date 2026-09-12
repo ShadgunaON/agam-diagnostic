@@ -1395,7 +1395,13 @@ exports.handler = async (event) => {
       case 'mePatient': {
         if (!identity) throw new Error('Unauthorized');
         const ownedPatients = await patientRepo.getByOwner(identity.sub);
-        if (ownedPatients.length > 0) return ownedPatients[0];
+        if (ownedPatients.length > 0) {
+          const primaryId = identity.primaryPatientId || `pat_${identity.sub}`;
+          const main = ownedPatients.find(p => p.id === primaryId) || 
+                       ownedPatients.find(p => p.relation === 'Myself' || p.relation === 'myself') || 
+                       ownedPatients[ownedPatients.length - 1];
+          return main;
+        }
         
         return {
           id: identity.primaryPatientId || `pat_${identity.sub}`,
@@ -1539,7 +1545,11 @@ exports.handler = async (event) => {
         if (id === 'me') {
           const ownedPatients = await patientRepo.getByOwner(identity.sub);
           if (ownedPatients.length > 0) {
-            targetPatientId = ownedPatients[0].id;
+            const primaryId = identity.primaryPatientId || `pat_${identity.sub}`;
+            const main = ownedPatients.find(p => p.id === primaryId) || 
+                         ownedPatients.find(p => p.relation === 'Myself' || p.relation === 'myself') || 
+                         ownedPatients[ownedPatients.length - 1];
+            targetPatientId = main.id;
           } else {
             targetPatientId = identity.primaryPatientId || `pat_${identity.sub}`;
           }
