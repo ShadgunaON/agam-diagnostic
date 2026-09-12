@@ -1094,7 +1094,10 @@ exports.handler = async (event) => {
         );
 
         return {
-          queue: paginated,
+          queue: {
+            items: paginated.data,
+            nextCursor: paginated.nextCursor
+          },
           stats,
           phlebotomists
         };
