@@ -1573,3 +1573,16 @@ ame, phone, and email. AppSync immediately rejected the entire query with a vali
   3. Disabled Home Collection toggle in Admin Create Booking.
   4. Forced Admin Collections page to focus purely on In-Lab visits by defaulting to 'LAB' tab and hiding tab selection.
 - **Status:** ?? FIXED + DEPLOYED. Home Collection UI disabled cleanly without removing underlying logic.
+
+### Issue 15 - Cleaned Up Admin Collections Page (In-Lab Only)
+- **Root Cause:** The Admin Collections page still contained the full Home Collection UI as dead code (Dispatch Queue, GPS map iframe, phlebotomist assignment panel, Auto Assign, Mark En Route, Create Dispatch modal) even though ctiveTab was locked to LAB. This caused an extra ~700 lines of unreachable code and confusion.
+- **Files Changed:** `app/(admin)/admin/collections/page.tsx`
+- **Fix Applied:**
+  1. Rewrote the page to render only the In-Lab Visits queue grid.
+  2. Removed all Home Collection operational UI: dispatch sidebar, GPS map, phlebotomist assignment, Auto Assign, Mark En Route, Get Directions, Create Dispatch modal.
+  3. Header renamed from "Collections & Dispatch" to "Collections" with updated subtitle.
+  4. Kept all RBAC logic (scope filter, canEditStatus) intact.
+  5. Kept Check In ? Confirm Sample Collected status workflow intact.
+  6. Kept the existing GraphQL query (adminCollectionsWorkspace with tab=LAB).
+  7. Home Collection backend, models, and data untouched.
+- **Status:** FIXED + DEPLOYING

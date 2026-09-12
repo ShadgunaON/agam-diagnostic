@@ -111,7 +111,7 @@ class DynamoCollectionRepository {
     }
 
     return {
-      data: (response.Items || []).map(item => this._mapFromDb(item)),
+      data: (response.Items || []).map(item => this._mapFromDb(item)).filter(Boolean),
       nextCursor
     };
   }
@@ -349,10 +349,14 @@ class DynamoCollectionRepository {
     if (!rest.type) rest.type = 'Home';
     if (!rest.date) rest.date = rest.createdAt ? rest.createdAt.split('T')[0] : new Date().toISOString().split('T')[0];
     if (!rest.timeSlot) rest.timeSlot = 'Morning (8AM - 11AM)';
+    if (!rest.time) rest.time = rest.timeSlot || 'N/A';
     if (!rest.address) rest.address = 'Unknown Address';
     if (!rest.createdAt) rest.createdAt = rest.updatedAt || new Date().toISOString();
     if (!rest.patientId) rest.patientId = item.GSI2PK ? item.GSI2PK.replace('PATIENT#', '') : 'UNKNOWN';
     if (!rest.bookingId) rest.bookingId = item.PK ? item.PK.replace('COLLECTION#', '').replace('COL-', 'bk_') : 'UNKNOWN';
+    // Ensure tests is a valid non-null array to satisfy schema [String!]
+    if (!Array.isArray(rest.tests)) rest.tests = [];
+    else rest.tests = rest.tests.filter(t => t != null);
     
     return rest;
   }
