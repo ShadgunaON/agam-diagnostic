@@ -17,7 +17,7 @@ export default function ClinicalReportsWorkspace() {
   const [reports, setReports] = useState<ReportTaskModel[]>([]);
   const [activeReportId, setActiveReportId] = useState<string | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [sortKey, setSortKey] = useState('date_oldest');
+  const [sortKey, setSortKey] = useState('date_newest');
   
   // Pagination & Filter State
   const [nextCursor, setNextCursor] = useState<string | null>(null);

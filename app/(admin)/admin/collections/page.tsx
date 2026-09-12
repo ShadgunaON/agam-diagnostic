@@ -24,7 +24,7 @@ export default function CollectionsPage() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [cursorHistory, setCursorHistory] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortKey, setSortKey] = useState('date_oldest');
+  const [sortKey, setSortKey] = useState('date_newest');
 
   const { toast } = useToast();
 

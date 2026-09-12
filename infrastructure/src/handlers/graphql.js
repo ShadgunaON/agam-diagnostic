@@ -222,7 +222,7 @@ exports.handler = async (event) => {
 
         const results = await Promise.allSettled(promises);
         
-        // Flatten and limit
+        // Flatten
         let combined = [];
         for (const result of results) {
           if (result.status === 'fulfilled') {
@@ -232,6 +232,16 @@ exports.handler = async (event) => {
           }
         }
         
+        // Sort Alphabetically by title
+        combined.sort((a, b) => {
+          const tA = (a.title || '').toLowerCase();
+          const tB = (b.title || '').toLowerCase();
+          if (tA < tB) return -1;
+          if (tA > tB) return 1;
+          return 0;
+        });
+        
+        // Limit
         return combined.slice(0, limit);
       }
       
