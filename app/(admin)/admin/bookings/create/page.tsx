@@ -37,7 +37,7 @@ export default function AdminCreateBookingPage() {
   const [selectedItems, setSelectedItems] = useState<Array<{ id: string, name: string, price: number, type: 'Test' | 'Package' }>>([]);
 
   // --- Step 3: Appointment Data ---
-  const [locationType, setLocationType] = useState<'Home Collection' | 'Lab Visit'>('Home Collection');
+  const [locationType, setLocationType] = useState<'Home Collection' | 'Lab Visit'>('Lab Visit'); // Temporarily default to Lab Visit
   const [address, setAddress] = useState('');
   const [date, setDate] = useState('');
   const [timeSlot, setTimeSlot] = useState('');
@@ -462,11 +462,13 @@ export default function AdminCreateBookingPage() {
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-3">Collection Type</label>
                     <div className="flex gap-4">
+                      {/* Temporarily Disable Home Collection
                       <label className={`flex-1 flex flex-col items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all ${locationType === 'Home Collection' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
                         <input type="radio" className="hidden" checked={locationType === 'Home Collection'} onChange={() => setLocationType('Home Collection')} />
                         <span className="text-2xl mb-2">🏠</span>
                         <span className="font-semibold text-sm">Home Collection</span>
                       </label>
+                      */}
                       <label className={`flex-1 flex flex-col items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all ${locationType === 'Lab Visit' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
                         <input type="radio" className="hidden" checked={locationType === 'Lab Visit'} onChange={() => setLocationType('Lab Visit')} />
                         <span className="text-2xl mb-2">🏥</span>

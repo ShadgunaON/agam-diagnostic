@@ -19,7 +19,8 @@ export function ProgressiveBookingFlow() {
   // Booking State
   const [patientType, setPatientType] = useState<PatientType>('myself');
   const [selectedFamilyMemberId, setSelectedFamilyMemberId] = useState<string>('');
-  const [locationType, setLocationType] = useState<LocationType>('home');
+  // Force locationType to be 'lab' initially since home is disabled
+  const [locationType, setLocationType] = useState<LocationType>('lab');
   const [address, setAddress] = useState('');
   const [date, setDate] = useState('');
   const [timeSlot, setTimeSlot] = useState('');
@@ -374,6 +375,7 @@ export function ProgressiveBookingFlow() {
 
                   {/* LOCATION SELECTION - Compact Square Bento Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Home Collection (Temporarily Disabled)
                     <label style={{ 
                       position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
                       padding: '20px 16px', borderRadius: '16px', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -391,6 +393,7 @@ export function ProgressiveBookingFlow() {
                         </div>
                       )}
                     </label>
+                    */}
 
                     <label style={{ 
                       position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 

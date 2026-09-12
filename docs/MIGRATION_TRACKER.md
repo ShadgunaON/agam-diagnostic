@@ -1564,3 +1564,12 @@ ame, phone, and email. AppSync immediately rejected the entire query with a vali
   2. Added confirmBooking and ailBooking atomic transactions using TransactWriteCommand to move bookings into the standard partition and update aggregates upon successful payment.
   3. Updated updatePaymentStatus to orchestrate these state transitions depending on the PhonePe SDK callback result.
 - **Status:** ✅ FIXED + DEPLOYED. Failed payments no longer create confirmed bookings.
+### Issue 14 - Disable Home Collection Temporarily
+- **Root Cause:** User requested temporary suspension of the Home Collection feature to focus on In-Lab workflows.
+- **Files Changed:** components/sections/booking/ProgressiveBookingFlow.tsx, pp/(admin)/admin/bookings/page.tsx, pp/(admin)/admin/bookings/create/page.tsx, pp/(admin)/admin/collections/page.tsx
+- **Fix Applied:** 
+  1. Commented out Home Collection option in patient checkout.
+  2. Removed Home Collection tab and fallback references in Admin Bookings.
+  3. Disabled Home Collection toggle in Admin Create Booking.
+  4. Forced Admin Collections page to focus purely on In-Lab visits by defaulting to 'LAB' tab and hiding tab selection.
+- **Status:** ?? FIXED + DEPLOYED. Home Collection UI disabled cleanly without removing underlying logic.

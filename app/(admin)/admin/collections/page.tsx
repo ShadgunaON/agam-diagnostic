@@ -18,7 +18,7 @@ export default function CollectionsPage() {
   const { user } = useAuth();
 
   // Determine default tab based on scope
-  const defaultTab: 'HOME' | 'LAB' = scope === 'in_lab' ? 'LAB' : 'HOME';
+  const defaultTab: 'HOME' | 'LAB' = 'LAB'; // scope === 'in_lab' ? 'LAB' : 'HOME';
 
   // STATE
   const [tasks, setTasks] = useState<CollectionTaskModel[]>([]);
@@ -433,7 +433,7 @@ export default function CollectionsPage() {
           </div>
         </div>
 
-        {/* TABS — scope restricts visibility for scoped roles */}
+        {/* TABS — scope restricts visibility for scoped roles (Temporarily Hidden)
         {(!scope || isAdmin) ? (
           <div className="flex border-b border-slate-200">
             <button 
@@ -456,6 +456,7 @@ export default function CollectionsPage() {
             </div>
           </div>
         )}
+        */}
 
         {activeTab === 'HOME' ? (
           <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-[600px] min-w-0">

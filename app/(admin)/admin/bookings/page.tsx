@@ -142,7 +142,7 @@ export default function GlassBookingsPage() {
         <div className="admin-responsive-flex-col flex flex-col lg:flex-row justify-between items-start lg:items-center mb-2 gap-4 w-full">
           <div>
             <h1 style={{ fontSize: '32px', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.03em' }}>Order Management</h1>
-            <p style={{ fontSize: '15px', fontWeight: 500, color: '#64748b', margin: '4px 0 0 0' }}>Track home collections, lab visits, and patient requests.</p>
+            <p style={{ fontSize: '15px', fontWeight: 500, color: '#64748b', margin: '4px 0 0 0' }}>Track lab visits and patient requests.</p>
           </div>
           <button 
             onClick={() => window.location.href = '/admin/bookings/create'}
@@ -156,7 +156,7 @@ export default function GlassBookingsPage() {
         {/* GLASS FILTER BAR */}
         <div className="flex flex-col lg:flex-row flex-wrap justify-between lg:items-center gap-4 p-2 rounded-2xl w-full" style={{ ...glassStyle }}>
           <div className="flex flex-wrap gap-2 w-full lg:w-auto">
-            {['All', 'Pending', 'Home Collection', 'Lab Visit'].map(tab => (
+            {['All', 'Pending', 'Lab Visit'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -253,7 +253,7 @@ export default function GlassBookingsPage() {
                       <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>
                         {booking.createdAt ? new Date(booking.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric' }) : 'N/A'}
                       </div>
-                      <div style={{ fontSize: '12px', fontWeight: 700, color: isHome ? '#3b82f6' : '#8b5cf6', backgroundColor: isHome ? '#eff6ff' : '#f3e8ff', display: 'inline-flex', padding: '2px 8px', borderRadius: '12px', alignSelf: 'flex-start' }}>{booking.collection?.type || 'Home Collection'}</div>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: isHome ? '#3b82f6' : '#8b5cf6', backgroundColor: isHome ? '#eff6ff' : '#f3e8ff', display: 'inline-flex', padding: '2px 8px', borderRadius: '12px', alignSelf: 'flex-start' }}>{booking.collection?.type || 'Lab Visit'}</div>
                     </div>
                     
                     <div data-label="Patient Details" style={{ textAlign: 'center' }}>
