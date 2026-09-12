@@ -1586,3 +1586,9 @@ ame, phone, and email. AppSync immediately rejected the entire query with a vali
   6. Kept the existing GraphQL query (adminCollectionsWorkspace with tab=LAB).
   7. Home Collection backend, models, and data untouched.
 - **Status:** FIXED + DEPLOYING
+
+### Issue 16 - Empty Collections Page (GraphQL items vs data mapping)
+- **Root Cause:** In the GraphQL backend (infrastructure/src/handlers/graphql.js), the dminCollectionsWorkspace query was returning queue: paginated. paginated is an object shaped { data, nextCursor }. However, the GraphQL schema for CollectionConnection explicitly defines items: [CollectionQueueItem!]!. AppSync was dropping the array because it looked for items but found data. This caused the Collections page to always render an empty grid despite the records existing in DynamoDB.
+- **Files Changed:** `infrastructure/src/handlers/graphql.js`
+- **Fix Applied:** Modified the return statement to explicitly map paginated.data to items (queue: { items: paginated.data, nextCursor: paginated.nextCursor }).
+- **Status:** FIXED + DEPLOYING
