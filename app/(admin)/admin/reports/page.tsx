@@ -186,7 +186,7 @@ export default function ClinicalReportsWorkspace() {
           {/* RIGHT PANE: Clinical Verification Workspace */}
           <div className="flex-1 flex flex-col min-w-0">
             {activeReport ? (
-              <div className="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col h-full overflow-hidden">
+              <div className="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col overflow-hidden mb-auto">
                 
                 {/* Header Context */}
                 <div className="p-4 lg:p-8 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -205,7 +205,7 @@ export default function ClinicalReportsWorkspace() {
                 </div>
 
                 {/* Data Grid */}
-                <div className="flex-1 overflow-x-auto">
+                <div className="overflow-x-auto">
                   <div className="min-w-[600px] p-4 lg:p-8">
                     <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 pb-4 border-b-2 border-slate-100 mb-4">
                       <span className="text-[12px] font-bold text-slate-500 uppercase tracking-wider">Parameter</span>
