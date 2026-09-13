@@ -217,9 +217,10 @@ class DynamoReviewRepository {
       const params = {
         TableName: TABLE_NAME,
         IndexName: 'GSI2',
-        KeyConditionExpression: 'GSI2PK = :patientPk',
+        KeyConditionExpression: 'GSI2PK = :patientPk AND begins_with(GSI2SK, :skPrefix)',
         ExpressionAttributeValues: {
           ':patientPk': partitionKey,
+          ':skPrefix': 'REVIEW#'
         },
         ScanIndexForward: false,
       };

@@ -98,9 +98,10 @@ class DynamoInvoiceRepository {
     const params = {
       TableName: TABLE_NAME,
       IndexName: 'GSI2',
-      KeyConditionExpression: 'GSI2PK = :patient',
+      KeyConditionExpression: 'GSI2PK = :patient AND begins_with(GSI2SK, :skPrefix)',
       ExpressionAttributeValues: {
         ':patient': `PATIENT#${patientId}`,
+        ':skPrefix': 'INVOICE#'
       },
       ScanIndexForward: false, // Descending by createdAt
     };

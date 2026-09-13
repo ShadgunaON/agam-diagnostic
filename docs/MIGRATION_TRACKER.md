@@ -1646,3 +1646,8 @@ ame, phone, and email. AppSync immediately rejected the entire query with a vali
 - **Files Changed:** services/BookingService.ts, services/ReviewService.ts
 - **Fix Applied:** Added invoiceId to the BookingById GraphQL query so the receipt page can successfully look up the correct invoice. Updated the ReviewByBooking query variable to use the strict ID! type, allowing the eligibility check to run successfully.
 - **Status:** FIXED + DEPLOYED
+### Issue 21 - Incorrect Review Status in My Bookings
+- **Root Cause:** Due to a missing sort key prefix filter in the getByPatientId DynamoDB queries (Single Table Design), querying the GSI2 index by Patient ID returned all of that patient's records (including Bookings and Invoices) instead of only Reviews. Because myPortal mapped these booking entities as if they were reviews, the frontend incorrectly rendered a Booking's 'Completed' status as 'Review Completed' and disabled the Write Review button.
+- **Files Changed:** infrastructure/src/repositories/dynamo-review.js, infrastructure/src/repositories/dynamo-invoice.js
+- **Fix Applied:** Added egins_with(GSI2SK, :skPrefix) to the DynamoDB KeyConditionExpression for both the Review repository and the Invoice repository to strictly isolate entities from the shared patient index.
+- **Status:** FIXED + DEPLOYED
