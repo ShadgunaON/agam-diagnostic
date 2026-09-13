@@ -123,7 +123,8 @@ exports.handler = async (event) => {
   const PUBLIC_FIELDS = new Set([
     'catalogTests', 'catalogPackages', 'catalogServices',
     'testBySlug', 'packageBySlug', 'serviceBySlug',
-    'blogs', 'blogById', 'publicReviews', 'globalSearch'
+    'blogs', 'blogById', 'publicReviews', 'globalSearch',
+    'newsletterSubscribe', 'createInquiry'
   ]);
 
   const { fieldName } = event.info;
