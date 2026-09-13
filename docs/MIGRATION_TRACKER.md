@@ -1634,3 +1634,10 @@ ame, phone, and email. AppSync immediately rejected the entire query with a vali
 - **Fix Applied:** Removed the hardcoded fallback data. Updated \TestimonialsSection\ to rely purely on the existing \eviewService.getPublicReviews()\ GraphQL endpoint which securely fetches only Approved reviews. Added a clean empty state for when no published reviews exist.
 - **Status:** FIXED + DEPLOYED
 
+
+### Issue 19 - Review Submission and Admin Display Bugs
+- **Root Cause:** The review submission from 'My Bookings' was failing because the GraphQL mutation passed a stringified JSON object which the backend incorrectly validated with \	ypeof args.input !== 'object'\, causing an instant crash. Additionally, the Admin Reviews page and Public Reviews page displayed empty review text because the GraphQL schema returns \content\, while the frontend \ReviewModel\ expects \comment\.
+- **Files Changed:** \infrastructure/src/handlers/graphql.js\, \components/sections/admin/reviews/AdminReviewTable.tsx\, \components/sections/reviews/FeaturedReviewsSection.tsx\
+- **Fix Applied:** Fixed backend mutation resolver to properly parse the stringified JSON input. Updated the \dminReviewsWorkspace\ resolver to properly map the database \comment\ field to the GraphQL \content\ field. Patched the frontend tables to fallback to \content\ when \comment\ is unavailable.
+- **Status:** FIXED + DEPLOYED
+

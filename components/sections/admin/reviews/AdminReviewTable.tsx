@@ -44,8 +44,8 @@ export function AdminReviewTable({ reviews, onModerate }: AdminReviewTableProps)
                   <div className="flex gap-1 mb-1 text-warning">
                     {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
                   </div>
-                  <div className="text-muted-foreground line-clamp-3" title={review.comment}>
-                    {review.comment}
+                  <div className="text-muted-foreground line-clamp-3" title={(review as any).content || review.comment}>
+                    {(review as any).content || review.comment}
                   </div>
                 </td>
                 <td className="p-4 align-top text-muted-foreground whitespace-nowrap">

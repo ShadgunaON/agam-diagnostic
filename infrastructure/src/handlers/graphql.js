@@ -416,7 +416,10 @@ exports.handler = async (event) => {
         const paginated = await reviewRepo.getPaginated({ limit, cursor, status, rating, search });
 
         return {
-          queue: paginated.data,
+          queue: paginated.data.map(r => ({
+            ...r,
+            content: r.content || r.comment
+          })),
           nextCursor: paginated.nextCursor,
         };
       }
@@ -425,8 +428,9 @@ exports.handler = async (event) => {
       // NEW: Additional Review Resolvers
       // ---------------------------------------------------------
       case 'createReview': {
-        if (!args.input || typeof args.input !== 'object') throw new Error('Input is required');
-        const { bookingId, rating, comment, displayName } = args.input;
+        const inputObj = typeof args.input === 'string' ? JSON.parse(args.input) : args.input;
+        if (!inputObj || typeof inputObj !== 'object') throw new Error('Input is required');
+        const { bookingId, rating, comment, displayName } = inputObj;
         if (!bookingId) throw new Error('bookingId is required to submit a review');
         
         const booking = await bookingRepo.getById(bookingId);

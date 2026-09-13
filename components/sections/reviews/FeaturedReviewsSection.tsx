@@ -39,8 +39,8 @@ export function FeaturedReviewsSection({ reviews }: FeaturedReviewsSectionProps)
           {reviews.map((review) => (
             <TestimonialCard 
               key={review.id}
-              quote={review.comment}
-              authorName={review.displayName}
+              quote={(review as any).content || review.comment || ''}
+              authorName={review.displayName || 'Verified Patient'}
               authorRole={review.verified ? 'Verified Patient' : 'Patient'}
             />
           ))}
