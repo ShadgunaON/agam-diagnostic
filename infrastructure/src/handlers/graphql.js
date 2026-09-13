@@ -687,9 +687,9 @@ exports.handler = async (event) => {
 
       case 'adminRoles': {
         const identityForCheck = identity;
-        const { isAdmin } = require('../shared/auth');
-        if (!(await isAdmin(identityForCheck))) {
-          throw new Error('Access denied: Admin only');
+        const { isStaff } = require('../shared/auth');
+        if (!(await isStaff(identityForCheck))) {
+          throw new Error('Access denied: Staff only');
         }
         
         let roles = await rbacRepo.getRoles();
