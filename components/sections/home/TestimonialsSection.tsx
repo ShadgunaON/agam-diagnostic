@@ -7,29 +7,30 @@ import { reviewService } from '@/services';
 import { ReviewModel } from '@/domains/review/model';
 
 export interface TestimonialsSectionProps {
-  data: TestimonialData[];
   className?: string;
 }
 
-export function TestimonialsSection({ data, className = '' }: TestimonialsSectionProps) {
+export function TestimonialsSection({ className = '' }: TestimonialsSectionProps) {
   const [reviews, setReviews] = useState<ReviewModel[]>([]);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
     const fetchReviews = async () => {
       try {
         const res = await reviewService.getPublicReviews();
-        if (res.isSuccess && res.value.length > 0) {
+        if (res.isSuccess && res.value) {
           // Take top 3 most recent approved reviews
           setReviews(res.value.slice(0, 3));
         }
       } catch (err) {
         console.error("Failed to fetch public reviews", err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchReviews();
   }, []);
 
-  // Use dynamic reviews if available, otherwise fallback to hardcoded data
   const hasDynamicReviews = reviews.length > 0;
 
   return (
@@ -42,25 +43,23 @@ export function TestimonialsSection({ data, className = '' }: TestimonialsSectio
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {hasDynamicReviews ? (
+          {loading ? (
+            <div className="col-span-1 md:col-span-3 text-center py-8 text-gray-500">
+              Loading patient stories...
+            </div>
+          ) : hasDynamicReviews ? (
             reviews.map((review) => (
               <TestimonialCard
                 key={review.id}
-                quote={review.comment}
-                authorName={review.displayName}
+                quote={(review as any).content || review.comment || ''}
+                authorName={review.displayName || 'Verified Patient'}
                 authorRole={review.verified ? 'Verified Patient' : 'Patient'}
               />
             ))
           ) : (
-            data.map((review, idx) => (
-              <TestimonialCard
-                key={idx}
-                quote={review.quote}
-                authorName={review.name}
-                authorRole={review.role}
-                authorImageUrl={review.imageUrl}
-              />
-            ))
+            <div className="col-span-1 md:col-span-3 text-center py-12 text-gray-500 bg-gray-50 rounded-lg border border-gray-100">
+              No patient stories have been published yet.
+            </div>
           )}
         </div>
       </div>

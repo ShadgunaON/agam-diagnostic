@@ -58,7 +58,7 @@ export default function HomePage() {
       <StatisticsSection data={statisticsData} />
       <ServicesSection data={servicesData} />
       <HealthPackagesSection data={packagesData} />
-      <TestimonialsSection data={testimonialsData} />
+      <TestimonialsSection />
       <WhyChooseUsSection data={whyChooseUsData} />
       <BlogPreviewSection data={blogPreviewData} />
       <ContactPreviewSection data={contactData} />

@@ -1627,3 +1627,10 @@ ame, phone, and email. AppSync immediately rejected the entire query with a vali
 - **Fix Applied:** Implemented the minimum GraphQL + DynamoDB \Inquiry\ functionality. Added \createInquiry\ mutation to schema, wired the resolver to save the message to DynamoDB using standard single-table patterns, and updated \ContactForm.tsx\ to manage state and securely transmit the inquiry via fetch API. Added loading/success UI states.
 - **Status:** FIXED + DEPLOYED
 
+
+### Issue 18 - Dynamic Public Reviews
+- **Root Cause:** The public homepage displayed hardcoded fallback testimonials instead of real patient reviews from the database.
+- **Files Changed:** \components/sections/home/TestimonialsSection.tsx\, \pp/(public)/page.tsx\
+- **Fix Applied:** Removed the hardcoded fallback data. Updated \TestimonialsSection\ to rely purely on the existing \eviewService.getPublicReviews()\ GraphQL endpoint which securely fetches only Approved reviews. Added a clean empty state for when no published reviews exist.
+- **Status:** FIXED + DEPLOYED
+
