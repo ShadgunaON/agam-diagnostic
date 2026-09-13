@@ -216,11 +216,14 @@ export default function ClinicalReportsWorkspace() {
 
                     <div className="flex flex-col gap-2">
                       {(() => {
-                        const resultsToDisplay = activeReport.results?.length > 0 ? activeReport.results : [
-                          { parameter: 'HbA1c (Glycated Hemoglobin)', value: 5.4, unit: '%', reference: '< 5.7', isAbnormal: false },
-                          { parameter: 'Fasting Blood Sugar', value: 92, unit: 'mg/dL', reference: '70 - 100', isAbnormal: false },
-                          { parameter: 'Total Cholesterol', value: 185, unit: 'mg/dL', reference: '< 200', isAbnormal: false }
-                        ];
+                        const resultsToDisplay = activeReport.results || [];
+                        if (resultsToDisplay.length === 0) {
+                          return (
+                            <div className="p-8 text-center border rounded-lg bg-slate-50 border-slate-100">
+                              <p className="text-sm font-medium text-slate-500">Awaiting laboratory results.</p>
+                            </div>
+                          );
+                        }
 
                         return resultsToDisplay.map((result, idx) => (
                           <div key={idx} className={`grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 p-4 rounded-lg border items-center ${result.isAbnormal ? 'bg-red-50 border-red-200' : 'bg-white border-slate-100'}`}>

@@ -2056,7 +2056,7 @@ exports.handler = async (event) => {
 
         const updatedCollection = await collectionRepo.update(id, input);
 
-        if (input.status && input.status !== existingCollection.status && existingCollection.bookingId) {
+        if (input.status && input.status !== existingCollection.status) {
           const bookingId = existingCollection.bookingId;
           const statusMap = {
             'Assigned': 'Assigned',
@@ -2065,7 +2065,7 @@ exports.handler = async (event) => {
             'Completed': 'Completed'
           };
           
-          if (statusMap[input.status]) {
+          if (bookingId && statusMap[input.status]) {
             try {
               await bookingRepo.updateStatus(bookingId, statusMap[input.status]);
             } catch (syncErr) {
@@ -2076,13 +2076,16 @@ exports.handler = async (event) => {
           if (input.status === 'Sample Collected') {
             try {
               const existingReports = await reportRepo.getByPatientId(existingCollection.patientId);
-              const alreadyExists = existingReports.some(r => r.bookingId === bookingId);
+              const alreadyExists = bookingId 
+                ? existingReports.some(r => r.bookingId === bookingId)
+                : existingReports.some(r => r.id === `REP-${existingCollection.id.replace('COL-', '')}`);
               
               if (!alreadyExists) {
+                const reportId = bookingId ? `REP-${bookingId.replace('bk_', '')}` : `REP-${existingCollection.id.replace('COL-', '')}`;
                 await reportRepo.create({
-                  id: `REP-${bookingId.replace('bk_', '')}`,
+                  id: reportId,
                   patientId: existingCollection.patientId,
-                  bookingId: bookingId,
+                  bookingId: bookingId || null,
                   patient: patient ? {
                     name: patient.name || 'Unknown',
                     age: patient.age || 0,
@@ -2102,7 +2105,7 @@ exports.handler = async (event) => {
                 });
               }
             } catch (repErr) {
-              logger.warn(`Failed to generate report task for booking ${bookingId}`, repErr);
+              logger.warn(`Failed to generate report task for collection ${existingCollection.id}`, repErr);
             }
           }
         }
