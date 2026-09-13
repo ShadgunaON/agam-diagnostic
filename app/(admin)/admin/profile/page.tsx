@@ -125,7 +125,7 @@ export default function GlassProfilePage() {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* LEFT: NAV */}
           <div className="w-full lg:w-[280px] shrink-0 flex flex-col gap-3">
-            {['Personal Details', 'Security & Password', 'Notifications'].map(tab => (
+            {['Personal Details'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -175,55 +175,7 @@ export default function GlassProfilePage() {
               </>
             )}
 
-            {activeTab === 'Security & Password' && (
-              <>
-                <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: 0, paddingBottom: '20px', borderBottom: '1px solid rgba(226, 232, 240, 0.8)' }}>Change Password</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 800, color: '#334155' }}>Current Password</label>
-                    <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} style={{ height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid rgba(226, 232, 240, 0.8)', backgroundColor: 'rgba(255,255,255,0.5)', fontSize: '14px', outline: 'none' }} />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 800, color: '#334155' }}>New Password</label>
-                    <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} style={{ height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid rgba(226, 232, 240, 0.8)', backgroundColor: 'rgba(255,255,255,0.5)', fontSize: '14px', outline: 'none' }} />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: 800, color: '#334155' }}>Confirm New Password</label>
-                    <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} style={{ height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid rgba(226, 232, 240, 0.8)', backgroundColor: 'rgba(255,255,255,0.5)', fontSize: '14px', outline: 'none' }} />
-                  </div>
-                </div>
-                <div className="flex justify-start sm:justify-end pt-4">
-                  <button onClick={handleUpdatePassword} className="w-full sm:w-auto h-12 px-8 rounded-xl text-white text-[14px] font-bold cursor-pointer" style={{ border: 'none', background: 'linear-gradient(135deg, #0f172a, #334155)', boxShadow: '0 4px 15px rgba(15, 23, 42, 0.15)' }}>Update Password</button>
-                </div>
-              </>
-            )}
 
-            {activeTab === 'Notifications' && (
-              <>
-                <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: 0, paddingBottom: '20px', borderBottom: '1px solid rgba(226, 232, 240, 0.8)' }}>Alert Preferences</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: '12px' }}>
-                    <div>
-                      <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>Email Notifications</div>
-                      <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>Receive daily summaries and critical alerts.</div>
-                    </div>
-                    <div onClick={() => toast({ title: 'Preference Updated', variant: 'success' })} style={{ width: '48px', height: '28px', backgroundColor: '#10b981', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
-                      <div style={{ width: '22px', height: '22px', backgroundColor: '#fff', borderRadius: '50%', position: 'absolute', top: '3px', left: '23px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}></div>
-                    </div>
-                  </div>
-                  
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: '12px' }}>
-                    <div>
-                      <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>SMS Alerts</div>
-                      <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>Receive urgent SMS for critical path reports.</div>
-                    </div>
-                    <div onClick={() => toast({ title: 'Preference Updated', variant: 'success' })} style={{ width: '48px', height: '28px', backgroundColor: 'rgba(226, 232, 240, 0.8)', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
-                      <div style={{ width: '22px', height: '22px', backgroundColor: '#fff', borderRadius: '50%', position: 'absolute', top: '3px', left: '3px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}></div>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
 
           </div>
         </div>

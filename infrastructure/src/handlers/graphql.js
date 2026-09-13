@@ -2668,7 +2668,7 @@ exports.handler = async (event) => {
       // ---------------------------------------------------------
       case 'newsletterSubscribe': {
         const { email } = args;
-        if (!email || !/^\\S+@\\S+\\.\\S+$/.test(email)) {
+        if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
           throw new Error('Valid email is required');
         }
 
