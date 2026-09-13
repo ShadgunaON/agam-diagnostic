@@ -86,7 +86,7 @@ export class BookingService {
       }>(
         `query BookingById($id: ID!) {
           bookingById(id: $id) {
-            id patientId status createdAt
+            id patientId status invoiceId createdAt
             patient { name phone email }
             collection { type date timeSlot address }
             payment { total status method }

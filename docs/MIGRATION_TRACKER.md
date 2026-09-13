@@ -1641,3 +1641,8 @@ ame, phone, and email. AppSync immediately rejected the entire query with a vali
 - **Fix Applied:** Fixed backend mutation resolver to properly parse the stringified JSON input. Updated the \dminReviewsWorkspace\ resolver to properly map the database \comment\ field to the GraphQL \content\ field. Patched the frontend tables to fallback to \content\ when \comment\ is unavailable.
 - **Status:** FIXED + DEPLOYED
 
+### Issue 20 - Receipt and Review Form Eligibility Bugs
+- **Root Cause:** The View Receipt button navigated to a page that failed to fetch the invoice because the GraphQL BookingById query forgot to ask for the invoiceId, resulting in a missing foreign key. The Write a Review button navigated to the eligibility checker, which crashed instantly because its GraphQL query (ReviewByBooking) defined the parameter as $bookingId: String! instead of the required $bookingId: ID! defined in the AppSync schema.
+- **Files Changed:** services/BookingService.ts, services/ReviewService.ts
+- **Fix Applied:** Added invoiceId to the BookingById GraphQL query so the receipt page can successfully look up the correct invoice. Updated the ReviewByBooking query variable to use the strict ID! type, allowing the eligibility check to run successfully.
+- **Status:** FIXED + DEPLOYED

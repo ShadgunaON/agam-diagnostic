@@ -169,7 +169,7 @@ export class ReviewService {
   async getReviewForBooking(bookingId: string): Promise<Result<ReviewModel | null>> {
     try {
       const res = await this._graphqlFetch<{ reviewByBooking: ReviewModel }>(
-        `query ReviewByBooking($bookingId: String!) {
+        `query ReviewByBooking($bookingId: ID!) {
           reviewByBooking(bookingId: $bookingId) {
             id patientId bookingId displayName status rating title content createdAt updatedAt
           }
