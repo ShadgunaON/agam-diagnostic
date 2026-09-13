@@ -1621,3 +1621,9 @@ ame, phone, and email. AppSync immediately rejected the entire query with a vali
  -   * * S t a t u s : * *   F I X E D   +   D E P L O Y E D 
   
  
+### Issue 17 - Implement Contact Us Form Backend
+- **Root Cause:** The public Contact Us form was a purely presentational shell with no backend capability.
+- **Files Changed:** \infrastructure/src/repositories/dynamo-inquiry.js\, \infrastructure/schema.graphql\, \infrastructure/src/handlers/graphql.js\, \components/forms/ContactForm.tsx\
+- **Fix Applied:** Implemented the minimum GraphQL + DynamoDB \Inquiry\ functionality. Added \createInquiry\ mutation to schema, wired the resolver to save the message to DynamoDB using standard single-table patterns, and updated \ContactForm.tsx\ to manage state and securely transmit the inquiry via fetch API. Added loading/success UI states.
+- **Status:** FIXED + DEPLOYED
+

@@ -37,6 +37,7 @@ const newsletterRepo = require('../repositories/dynamo-newsletter');
 const staffRepo = require('../repositories/dynamo-staff');
 const reviewRepo = require('../repositories/dynamo-review');
 const documentRepo = require('../repositories/dynamo-document');
+const inquiryRepo = require('../repositories/dynamo-inquiry');
 const storageRepo = require('../storage/s3-storage');
 
 const ALLOWED_CONTENT_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
@@ -1293,6 +1294,15 @@ exports.handler = async (event) => {
         if (!item) return null;
         if (!canViewInactive && item.status && item.status !== 'ACTIVE') return null;
         return item;
+      }
+
+      case 'createInquiry': {
+        const inquiryRepo = require('../repositories/dynamo-inquiry');
+        const { input } = args;
+        if (!input) throw new Error('Missing input');
+        const data = typeof input === 'string' ? JSON.parse(input) : input;
+        await inquiryRepo.create(data);
+        return true;
       }
 
       case 'createCatalogTest':

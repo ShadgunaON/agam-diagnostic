@@ -4,6 +4,9 @@ schema {
 }
 
 type Query {
+  # Public Inquiries
+  publicInquiries: Boolean # Dummy for now, no queries needed
+
 
   # Catalog Queries
   catalogTests(page: Int, limit: Int, q: String): CatalogTestsConnection! @aws_api_key @aws_cognito_user_pools
@@ -113,6 +116,9 @@ type Query {
 }
 
 type Mutation {
+  
+  # Inquiry Mutations
+  createInquiry(input: String!): Boolean!
 
   # Catalog Mutations
   createCatalogTest(input: String!): TestItem!
