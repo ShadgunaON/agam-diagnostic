@@ -1651,3 +1651,8 @@ ame, phone, and email. AppSync immediately rejected the entire query with a vali
 - **Files Changed:** infrastructure/src/repositories/dynamo-review.js, infrastructure/src/repositories/dynamo-invoice.js
 - **Fix Applied:** Added egins_with(GSI2SK, :skPrefix) to the DynamoDB KeyConditionExpression for both the Review repository and the Invoice repository to strictly isolate entities from the shared patient index.
 - **Status:** FIXED + DEPLOYED
+### Issue 22 - Admin Reviews Table Empty Despite Stats Showing Reviews
+- **Root Cause:** The getPaginated query (used by dminReviewsWorkspace) queries ENTITY#REVIEW which retrieves ookingPointerItems instead of primary items. These pointer items stored the review ID under the eviewId field rather than id. Because the GraphQL schema requires id: ID!, the missing id field caused AppSync to drop the records from the response array, resulting in an empty table despite the eviewStats (which only counts items) correctly returning 2.
+- **Files Changed:** infrastructure/src/repositories/dynamo-review.js
+- **Fix Applied:** Updated _mapFromDb() to map est.reviewId to est.id so that the ookingPointerItem passes the GraphQL strict type checking.
+- **Status:** FIXED + DEPLOYED
