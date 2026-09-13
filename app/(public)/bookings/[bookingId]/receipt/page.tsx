@@ -78,9 +78,9 @@ export default function ReceiptPage() {
               Pay Now
             </Button>
           ) : (
-            <Button variant="primary" size="sm" onClick={handlePrint}>
+            <Button variant="primary" size="sm" onClick={handlePrint} className="print:hidden">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 mr-2 inline-block"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-              Print Receipt
+              Print / Save PDF
             </Button>
           )}
         </div>
@@ -172,6 +172,9 @@ export default function ReceiptPage() {
               </div>
               {invoice.paymentStatus === 'Paid' && invoice.paidAt && (
                 <p className="text-xs text-green-600 mt-1">Received on {invoice.paidAt}</p>
+              )}
+              {invoice.paymentStatus === 'Paid' && invoice.providerTransactionId && (
+                <p className="text-[10px] font-mono text-slate-500 mt-1 break-all">Txn ID: {invoice.providerTransactionId}</p>
               )}
             </div>
             {invoice.paymentStatus === 'Paid' && (

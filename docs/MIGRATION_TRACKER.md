@@ -1656,3 +1656,10 @@ ame, phone, and email. AppSync immediately rejected the entire query with a vali
 - **Files Changed:** infrastructure/src/repositories/dynamo-review.js
 - **Fix Applied:** Updated _mapFromDb() to map est.reviewId to est.id so that the ookingPointerItem passes the GraphQL strict type checking.
 - **Status:** FIXED + DEPLOYED
+# # #   I s s u e   2 3   -   S a n d b o x   P a y m e n t   D e t a i l s   M i s s i n g   o n   R e c e i p t 
+ -   * * R o o t   C a u s e : * *   T h e   p u b l i c   r e c e i p t   p a g e   d i d   n o t   d i s p l a y   t h e   p r o v i d e r   t r a n s a c t i o n   I D   f r o m   t h e   S a n d b o x   p a y m e n t   i n t e g r a t i o n ,   a n d   i t s   p r i n t   a c t i o n   w a s   n o t   c l e a r l y   l a b e l l e d   f o r   s a v i n g   a s   a   P D F . 
+ -   * * F i l e s   C h a n g e d : * *   a p p / ( p u b l i c ) / b o o k i n g s / [ b o o k i n g I d ] / r e c e i p t / p a g e . t s x 
+ -   * * F i x   A p p l i e d : * *   A d d e d   t h e   p r o v i d e r T r a n s a c t i o n I d   t o   t h e   r e c e i p t   d e t a i l s   w h e n   t h e   p a y m e n t   s t a t u s   i s   ' P a i d '   a n d   r e n a m e d   t h e   ' P r i n t   R e c e i p t '   b u t t o n   t o   ' P r i n t   /   S a v e   P D F '   w i t h o u t   i n t r o d u c i n g   e x t e r n a l   d e p e n d e n c i e s . 
+ -   * * S t a t u s : * *   F I X E D   +   D E P L O Y E D 
+  
+ 
