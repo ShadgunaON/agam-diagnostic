@@ -959,10 +959,12 @@ exports.handler = async (event) => {
 
         // 1. Create Cognito user
         let cognitoUser;
+        const tempPassword = `Agam@${Math.floor(100000 + Math.random() * 900000)}`;
         try {
           const createCommand = new AdminCreateUserCommand({
             UserPoolId: USER_POOL_ID,
             Username: cleanEmail,
+            TemporaryPassword: tempPassword,
             DesiredDeliveryMediums: ['EMAIL'],
             UserAttributes: [
               { Name: 'email', Value: cleanEmail },
@@ -1491,9 +1493,11 @@ exports.handler = async (event) => {
           try {
             const USER_POOL_ID = process.env.USER_POOL_ID;
             if (USER_POOL_ID) {
+              const tempPatientPassword = `Agam@${Math.floor(100000 + Math.random() * 900000)}`;
               const createCommand = new AdminCreateUserCommand({
                 UserPoolId: USER_POOL_ID,
                 Username: cleanEmail,
+                TemporaryPassword: tempPatientPassword,
                 DesiredDeliveryMediums: ['EMAIL'],
                 UserAttributes: [
                   { Name: 'email', Value: cleanEmail },
