@@ -42,10 +42,10 @@ export class InvoiceService {
     search?: string;
   }): Promise<Result<{ data: InvoiceModel[]; nextCursor: string | null }>> {
     const { limit = 15, cursor = null, status = 'All', search = '' } = params || {};
-    const data = await this._graphqlFetch<{ invoices: { data: InvoiceModel[]; nextCursor: string | null } }>(
-      `query Invoices($limit: Int, $cursor: String, $status: String, $search: String) {
-        invoices(limit: $limit, cursor: $cursor, status: $status, search: $search) {
-          data {
+    const data = await this._graphqlFetch<{ adminInvoicesWorkspace: { queue: InvoiceModel[]; nextCursor: string | null } }>(
+      `query AdminInvoicesWorkspace($limit: Int, $cursor: String, $status: String, $search: String) {
+        adminInvoicesWorkspace(limit: $limit, cursor: $cursor, status: $status, search: $search) {
+          queue {
             id patientId bookingId paymentStatus paymentMethod
             total subtotal tax discount paidAt receivedBy createdAt updatedAt providerTransactionId
             items { id name type price }
@@ -55,8 +55,8 @@ export class InvoiceService {
       }`,
       { limit, cursor, status, search }
     );
-    if (data?.invoices) {
-      return success({ data: data.invoices.data, nextCursor: data.invoices.nextCursor });
+    if (data?.adminInvoicesWorkspace) {
+      return success({ data: data.adminInvoicesWorkspace.queue, nextCursor: data.adminInvoicesWorkspace.nextCursor });
     }
     return failure(new Error('Failed to load invoices workspace'));
   }

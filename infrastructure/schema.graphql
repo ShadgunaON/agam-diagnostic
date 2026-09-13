@@ -515,6 +515,7 @@ type AdminInvoice {
   createdAt: String!
   updatedAt: String
   items: [InvoiceLineItem!]
+  providerTransactionId: String
 }
 
 type AdminInvoicesWorkspace {
