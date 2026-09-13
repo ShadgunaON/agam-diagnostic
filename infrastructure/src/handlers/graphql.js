@@ -1395,16 +1395,18 @@ exports.handler = async (event) => {
       case 'mePatient': {
         if (!identity) throw new Error('Unauthorized');
         const ownedPatients = await patientRepo.getByOwner(identity.sub);
+        const primaryId = identity.primaryPatientId || `pat_${identity.sub}`;
+        
+        let main = null;
         if (ownedPatients.length > 0) {
-          const primaryId = identity.primaryPatientId || `pat_${identity.sub}`;
-          const main = ownedPatients.find(p => p.id === primaryId) || 
-                       ownedPatients.find(p => p.relation === 'Myself' || p.relation === 'myself') || 
-                       ownedPatients[ownedPatients.length - 1];
-          return main;
+          main = ownedPatients.find(p => p.id === primaryId) || 
+                 ownedPatients.find(p => p.relation === 'Myself' || p.relation === 'myself');
         }
         
+        if (main) return main;
+        
         return {
-          id: identity.primaryPatientId || `pat_${identity.sub}`,
+          id: primaryId,
           name: identity.username || 'Patient',
           email: identity.email,
           phone: identity.phone,
@@ -1544,15 +1546,15 @@ exports.handler = async (event) => {
         
         if (id === 'me') {
           const ownedPatients = await patientRepo.getByOwner(identity.sub);
+          const primaryId = identity.primaryPatientId || `pat_${identity.sub}`;
+          
+          let main = null;
           if (ownedPatients.length > 0) {
-            const primaryId = identity.primaryPatientId || `pat_${identity.sub}`;
-            const main = ownedPatients.find(p => p.id === primaryId) || 
-                         ownedPatients.find(p => p.relation === 'Myself' || p.relation === 'myself') || 
-                         ownedPatients[ownedPatients.length - 1];
-            targetPatientId = main.id;
-          } else {
-            targetPatientId = identity.primaryPatientId || `pat_${identity.sub}`;
+            main = ownedPatients.find(p => p.id === primaryId) || 
+                   ownedPatients.find(p => p.relation === 'Myself' || p.relation === 'myself');
           }
+          
+          targetPatientId = main ? main.id : primaryId;
         }
 
         if (!targetPatientId) throw new Error('Missing id');
