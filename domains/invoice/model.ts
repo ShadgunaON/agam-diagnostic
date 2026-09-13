@@ -20,4 +20,5 @@ export interface InvoiceModel {
   receivedBy?: string;
   createdAt: string;
   updatedAt: string;
+  providerTransactionId?: string;
 }

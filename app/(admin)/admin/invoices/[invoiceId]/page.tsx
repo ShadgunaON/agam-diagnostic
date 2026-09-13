@@ -92,7 +92,7 @@ export default function AdminInvoiceDetailPage() {
         </div>
 
         <div className="bg-white rounded-[20px] border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-          <div className="p-6 lg:p-8 border-b border-slate-100 grid grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="p-6 lg:p-8 border-b border-slate-100 grid grid-cols-2 lg:grid-cols-5 gap-6">
             <div>
               <div className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-1">Billed To</div>
               <div className="text-[15px] font-bold text-slate-900 truncate" title={booking?.patient?.name || invoice.patientId}>{booking?.patient?.name || invoice.patientId || 'Guest'}</div>
@@ -114,6 +114,12 @@ export default function AdminInvoiceDetailPage() {
                   <div className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-1">Received By</div>
                   <div className="text-[15px] font-bold text-slate-900 truncate" title={invoice.receivedBy}>{invoice.receivedBy || 'System'}</div>
                 </div>
+                {invoice.providerTransactionId && (
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-1">Transaction Ref</div>
+                    <div className="text-[15px] font-mono font-bold text-slate-900 truncate" title={invoice.providerTransactionId}>{invoice.providerTransactionId}</div>
+                  </div>
+                )}
               </>
             )}
           </div>

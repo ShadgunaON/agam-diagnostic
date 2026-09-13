@@ -336,6 +336,7 @@ type Invoice {
   paymentMethod: String
   total: Float!
   createdAt: String!
+  providerTransactionId: String
 }
 
 type TestItem @aws_api_key @aws_cognito_user_pools {
@@ -482,6 +483,7 @@ type FullInvoice {
   createdAt: String!
   updatedAt: String
   items: [InvoiceLineItem!]
+  providerTransactionId: String
 }
 
 type InvoiceLineItem {

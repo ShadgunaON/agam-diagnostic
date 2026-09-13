@@ -47,7 +47,7 @@ export class InvoiceService {
         invoices(limit: $limit, cursor: $cursor, status: $status, search: $search) {
           data {
             id patientId bookingId paymentStatus paymentMethod
-            total subtotal tax discount paidAt receivedBy createdAt updatedAt
+            total subtotal tax discount paidAt receivedBy createdAt updatedAt providerTransactionId
             items { id name type price }
           }
           nextCursor
@@ -66,7 +66,7 @@ export class InvoiceService {
       `query InvoiceById($id: ID!) {
         invoiceById(id: $id) {
           id patientId bookingId paymentStatus paymentMethod
-          total subtotal tax discount paidAt receivedBy createdAt updatedAt
+          total subtotal tax discount paidAt receivedBy createdAt updatedAt providerTransactionId
           items { id name type price }
         }
       }`,
@@ -90,7 +90,7 @@ export class InvoiceService {
         invoices(limit: 1000) {
           data {
             id patientId bookingId paymentStatus paymentMethod
-            total subtotal tax discount paidAt receivedBy createdAt updatedAt
+            total subtotal tax discount paidAt receivedBy createdAt updatedAt providerTransactionId
             items { id name type price }
           }
         }
@@ -107,7 +107,7 @@ export class InvoiceService {
       `query InvoicesByPatient($patientId: ID!) {
         invoicesByPatient(patientId: $patientId) {
           id patientId bookingId paymentStatus paymentMethod
-          total subtotal tax discount paidAt receivedBy createdAt updatedAt
+          total subtotal tax discount paidAt receivedBy createdAt updatedAt providerTransactionId
           items { id name type price }
         }
       }`,
@@ -121,7 +121,7 @@ export class InvoiceService {
     const data = await this._graphqlFetch<{ updateInvoiceStatus: InvoiceModel }>(
       `mutation UpdateInvoiceStatus($id: ID!, $status: String!) {
         updateInvoiceStatus(id: $id, status: $status) {
-          id paymentStatus paymentMethod paidAt receivedBy
+          id paymentStatus paymentMethod paidAt receivedBy providerTransactionId
         }
       }`,
       { id, status }
