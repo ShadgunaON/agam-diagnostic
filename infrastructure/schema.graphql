@@ -118,7 +118,7 @@ type Query {
 type Mutation {
   
   # Inquiry Mutations
-  createInquiry(input: String!): Boolean!
+  createInquiry(input: String!): Boolean! @aws_api_key @aws_cognito_user_pools
 
   # Catalog Mutations
   createCatalogTest(input: String!): TestItem!
@@ -173,7 +173,7 @@ type Mutation {
   moderateReview(id: ID!, status: String!): Boolean!
   
   # Newsletter Mutations
-  newsletterSubscribe(email: String!): Boolean!
+  newsletterSubscribe(email: String!): Boolean! @aws_api_key @aws_cognito_user_pools
 
   # Mark a notification as read (replaces REST PUT /api/notifications/:id/read)
   markNotificationRead(id: ID!): Boolean!
