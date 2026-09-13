@@ -404,8 +404,10 @@ export function ProgressiveBookingFlow() {
                       transform: locationType === 'lab' ? 'translateY(-2px)' : 'none'
                     }}>
                       <input type="radio" checked={locationType === 'lab'} onChange={() => setLocationType('lab')} style={{ display: 'none' }} />
-                      <div style={{ fontSize: '32px', marginBottom: '8px', filter: locationType === 'lab' ? 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))' : 'grayscale(100%) opacity(60%)', transition: 'all 0.3s' }}>🏥</div>
-                      <div style={{ fontWeight: 700, fontSize: '14px', color: locationType === 'lab' ? 'var(--color-dark)' : 'var(--color-text-light)' }}>Visit Lab</div>
+                      <div style={{ width: '100%', display: 'flex', justifyContent: 'center', fontSize: '32px', marginBottom: '8px', lineHeight: 1, filter: locationType === 'lab' ? 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))' : 'grayscale(100%) opacity(60%)', transition: 'all 0.3s' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>🏥</span>
+                      </div>
+                      <div style={{ fontWeight: 700, fontSize: '14px', textAlign: 'center', width: '100%', color: locationType === 'lab' ? 'var(--color-dark)' : 'var(--color-text-light)' }}>Visit Lab</div>
                       {locationType === 'lab' && (
                         <div style={{ position: 'absolute', top: '12px', right: '12px', color: 'var(--color-dark)' }}>
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ width: '16px' }}><polyline points="20 6 9 17 4 12"/></svg>

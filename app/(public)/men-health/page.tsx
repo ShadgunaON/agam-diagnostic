@@ -27,25 +27,7 @@ export default async function MenHealthPage() {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: `
-        #packages-grid .grid > .premium-carousel-card:nth-child(2) {
-          background-image: url('/images/medical_background.jpg') !important;
-          background-size: cover !important;
-          background-position: center !important;
-          background-blend-mode: overlay;
-          background-color: rgba(15, 23, 42, 0.8) !important;
-          border-color: rgba(255,255,255,0.2) !important;
-        }
-        #packages-grid .grid > .premium-carousel-card:nth-child(2) * {
-          color: white !important;
-        }
-        #packages-grid .grid > .premium-carousel-card:nth-child(2) > div:first-child {
-          background: transparent !important;
-        }
-        #packages-grid .grid > .premium-carousel-card:nth-child(2) svg {
-          stroke: white !important;
-        }
-      `}} />
+
       <section className="hero-premium section !p-0 overflow-hidden relative" style={{ background: 'var(--color-bg-alt)' }}>
         <div className="flex flex-col lg:grid lg:grid-cols-[45%_55%] items-stretch lg:h-[calc(100vh-90px)] lg:max-h-[640px] lg:min-h-[480px]">
           <div className="flex flex-col justify-start relative z-10 px-6 py-10 lg:pt-12 lg:pb-10 lg:pl-[max(1.5rem,calc((100vw-var(--max-width))/2+1.5rem))] lg:pr-12">
