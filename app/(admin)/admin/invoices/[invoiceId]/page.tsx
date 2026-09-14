@@ -55,13 +55,21 @@ export default function AdminInvoiceDetailPage() {
   return (
     <AdminPageTemplate>
       <div 
-        className="admin-page-container w-full max-w-[800px] mx-auto p-4 lg:p-8 xl:p-10 flex flex-col gap-6"
+        className="admin-page-container w-full max-w-[800px] mx-auto p-4 lg:p-8 xl:p-10 flex flex-col gap-6 print:p-0"
         style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
       >
+        <style dangerouslySetInnerHTML={{__html: `
+          @media print {
+            body * { visibility: hidden; }
+            #printable-invoice, #printable-invoice * { visibility: visible; }
+            #printable-invoice { position: absolute; left: 0; top: 0; width: 100%; border: none !important; box-shadow: none !important; }
+            .print\\:hidden { display: none !important; }
+          }
+        `}} />
         <div className="flex items-center gap-4">
           <button 
             onClick={() => router.push('/admin/invoices')}
-            className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-100 transition-colors"
+            className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-100 transition-colors print:hidden"
           >
             <AdminIcon name="chevronLeft" className="w-5 h-5 text-slate-600" />
           </button>
@@ -74,24 +82,31 @@ export default function AdminInvoiceDetailPage() {
             </div>
             <div>
               {invoice.paymentStatus === 'Paid' ? (
-                <div className="flex items-center gap-2 h-10 px-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm font-bold">
+                <div className="flex items-center gap-2 h-10 px-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm font-bold print:hidden">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4"><polyline points="20 6 9 17 4 12"/></svg>
                   Paid
                 </div>
               ) : (
                 <button 
                   onClick={() => handleRecordPayment('Card')}
-                  className="flex items-center gap-2 h-10 px-4 rounded-xl border border-blue-200 bg-blue-600 text-white hover:bg-blue-700 text-sm font-bold transition-colors shadow-sm"
+                  className="flex items-center gap-2 h-10 px-4 rounded-xl border border-blue-200 bg-blue-600 text-white hover:bg-blue-700 text-sm font-bold transition-colors shadow-sm print:hidden"
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                   Record Payment
                 </button>
               )}
             </div>
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-2 h-10 px-4 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-sm font-bold transition-colors shadow-sm print:hidden"
+            >
+              <AdminIcon name="download" className="w-4 h-4" />
+              Print / Save PDF
+            </button>
           </div>
         </div>
 
-        <div className="bg-white rounded-[20px] border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+        <div id="printable-invoice" className="bg-white rounded-[20px] border border-slate-200 shadow-sm overflow-hidden flex flex-col">
           <div className="p-6 lg:p-8 border-b border-slate-100 grid grid-cols-2 lg:grid-cols-5 gap-6">
             <div>
               <div className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-1">Billed To</div>
