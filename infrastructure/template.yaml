@@ -1184,6 +1184,22 @@ Resources:
       FieldName: newsletterSubscribe
       DataSourceName: !GetAtt GraphQLDataSource.Name
 
+  GraphQLResolverMutationNewsletterUnsubscribe:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: newsletterUnsubscribe
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationNewsletterDelete:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: newsletterDelete
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
   GraphQLResolverMutationMarkNotificationRead:
     Type: AWS::AppSync::Resolver
     Properties:
