@@ -1674,4 +1674,7 @@ ame, phone, and email. AppSync immediately rejected the entire query with a vali
  -   * * F i x   A p p l i e d : * *   A d d e d   \ p r o v i d e r T r a n s a c t i o n I d \   t o   t h e   G r a p h Q L   s c h e m a   a n d   f r o n t e n d   m o d e l s .   U p d a t e d   t h e   A d m i n   I n v o i c e s   d e t a i l   p a g e   t o   c l e a n l y   r e n d e r   t h e   ' T r a n s a c t i o n   R e f '   i f   i t   e x i s t s .   R e - v e r i f i e d   t h a t   P h o n e P e   c a l l b a c k s   d o   n o t   c r e a t e   d u p l i c a t e   i n v o i c e s   a s   t h e   a r c h i t e c t u r e   h a n d l e s   i d e m p o t e n c y   c l e a n l y . 
  -   * * S t a t u s : * *   F I X E D   +   D E P L O Y E D 
   
+  
+ # # #   Q A   D o c u m e n t  
+ -   * * S t a t u s : * *   C r e a t e d   d o c s / Q A _ T E S T _ D O C U M E N T . m d  
  
