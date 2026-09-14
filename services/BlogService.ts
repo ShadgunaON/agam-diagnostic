@@ -192,4 +192,26 @@ export class BlogService {
     if (data?.newsletterSubscribers?.data) return success(data.newsletterSubscribers.data);
     return failure(new Error('Failed to fetch subscribers'));
   }
+
+  async unsubscribeNewsletter(email: string): Promise<Result<void>> {
+    const data = await this._graphqlFetch<{ newsletterUnsubscribe: boolean }>(
+      `mutation NewsletterUnsubscribe($email: String!) {
+        newsletterUnsubscribe(email: $email)
+      }`,
+      { email }
+    );
+    if (data?.newsletterUnsubscribe) return success(undefined as any);
+    return failure(new Error('Failed to unsubscribe'));
+  }
+
+  async deleteNewsletterSubscriber(email: string): Promise<Result<void>> {
+    const data = await this._graphqlFetch<{ newsletterDelete: boolean }>(
+      `mutation NewsletterDelete($email: String!) {
+        newsletterDelete(email: $email)
+      }`,
+      { email }
+    );
+    if (data?.newsletterDelete) return success(undefined as any);
+    return failure(new Error('Failed to delete subscriber'));
+  }
 }

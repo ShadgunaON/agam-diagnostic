@@ -86,6 +86,25 @@ class DynamoNewsletterRepository {
     return this._mapFromDb(item);
   }
 
+  async delete(email) {
+    if (!email) return false;
+    const normalizedEmail = email.toLowerCase().trim();
+    const existing = await this.getByEmail(normalizedEmail);
+    if (!existing) return false;
+
+    const { DeleteCommand } = require('@aws-sdk/lib-dynamodb');
+    await docClient.send(
+      new DeleteCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `NEWSLETTER#${normalizedEmail}`,
+          SK: 'SUBSCRIBER',
+        },
+      })
+    );
+    return true;
+  }
+
   async getAll() {
     const params = {
       TableName: TABLE_NAME,

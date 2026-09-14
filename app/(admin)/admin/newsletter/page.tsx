@@ -10,8 +10,41 @@ export default function AdminNewsletterPage() {
   const [mounted, setMounted] = useState(false);
   const [subscribers, setSubscribers] = useState<NewsletterSubscriber[]>([]);
   const [search, setSearch] = useState('');
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const closeMenu = () => setOpenMenuId(null);
+    window.addEventListener('click', closeMenu);
+    return () => window.removeEventListener('click', closeMenu);
+  }, []);
+
+  const handleUnsubscribe = async (email: string) => {
+    if (!confirm('Are you sure you want to unsubscribe this email?')) return;
+    const result = await blogService.unsubscribeNewsletter(email);
+    if (result.isSuccess) {
+      setSubscribers(prev => prev.map(s => s.email === email ? { ...s, status: 'Unsubscribed' } : s));
+    } else {
+      alert(result.error.message || 'Failed to unsubscribe');
+    }
+  };
+
+  const handleDelete = async (email: string) => {
+    if (!confirm('Are you sure you want to completely delete this subscriber?')) return;
+    const result = await blogService.deleteNewsletterSubscriber(email);
+    if (result.isSuccess) {
+      setSubscribers(prev => prev.filter(s => s.email !== email));
+    } else {
+      alert(result.error.message || 'Failed to delete subscriber');
+    }
+  };
+
+  const handleCopyEmail = (email: string) => {
+    navigator.clipboard.writeText(email);
+    alert('Email copied to clipboard!');
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -141,10 +174,41 @@ export default function AdminNewsletterPage() {
                           {new Date(subscriber.subscribedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right">
-                        <button className="text-slate-400 hover:text-blue-500 transition-colors p-1 rounded hover:bg-blue-50">
+                      <td className="px-6 py-4 text-right relative">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenMenuId(openMenuId === subscriber.id ? null : subscriber.id);
+                          }}
+                          className="text-slate-400 hover:text-blue-500 transition-colors p-1 rounded hover:bg-blue-50"
+                        >
                           <AdminIcon name="moreVertical" className="w-5 h-5" />
                         </button>
+                        
+                        {openMenuId === subscriber.id && (
+                          <div className="absolute right-6 top-10 w-48 bg-white rounded-xl shadow-lg border border-slate-100 py-2 z-10" onClick={e => e.stopPropagation()}>
+                            <button 
+                              onClick={() => { setOpenMenuId(null); handleCopyEmail(subscriber.email); }}
+                              className="w-full text-left px-4 py-2 text-[13px] font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
+                            >
+                              <AdminIcon name="download" className="w-4 h-4" /> Copy Email
+                            </button>
+                            {subscriber.status !== 'Unsubscribed' && (
+                              <button 
+                                onClick={() => { setOpenMenuId(null); handleUnsubscribe(subscriber.email); }}
+                                className="w-full text-left px-4 py-2 text-[13px] font-semibold text-orange-600 hover:bg-orange-50 transition-colors flex items-center gap-2"
+                              >
+                                <AdminIcon name="x" className="w-4 h-4" /> Unsubscribe
+                              </button>
+                            )}
+                            <button 
+                              onClick={() => { setOpenMenuId(null); handleDelete(subscriber.email); }}
+                              className="w-full text-left px-4 py-2 text-[13px] font-semibold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                            >
+                              <AdminIcon name="trash" className="w-4 h-4" /> Delete Subscriber
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}

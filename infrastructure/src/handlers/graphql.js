@@ -2702,6 +2702,34 @@ exports.handler = async (event) => {
         return true;
       }
 
+      case 'newsletterUnsubscribe': {
+        const { email } = args;
+        const identityForCheck = identity;
+        if (!identity) throw new Error('Unauthorized');
+        
+        if (!(await hasPermission(identityForCheck, 'newsletter', 'edit')) && !(await hasPermission(identityForCheck, 'blogs', 'edit'))) {
+          throw new Error('Forbidden: Missing newsletter.edit or blogs.edit permission');
+        }
+        
+        if (!email) throw new Error('Valid email is required');
+        await newsletterRepo.unsubscribe(email);
+        return true;
+      }
+
+      case 'newsletterDelete': {
+        const { email } = args;
+        const identityForCheck = identity;
+        if (!identity) throw new Error('Unauthorized');
+        
+        if (!(await hasPermission(identityForCheck, 'newsletter', 'delete')) && !(await hasPermission(identityForCheck, 'blogs', 'delete'))) {
+          throw new Error('Forbidden: Missing newsletter.delete or blogs.delete permission');
+        }
+        
+        if (!email) throw new Error('Valid email is required');
+        await newsletterRepo.delete(email);
+        return true;
+      }
+
       case 'newsletterSubscribers': {
         const { limit = 50, cursor = null } = args;
         const identityForCheck = identity;
