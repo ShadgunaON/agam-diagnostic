@@ -25,7 +25,6 @@ const formatCurrency = (value: number): string => {
 export default function GlassAnalyticsPage() {
   const [mounted, setMounted] = useState(false);
   const { toast } = useToast();
-  const [timeFilter, setTimeFilter] = useState<'1D' | '7D' | '1M' | '1Y'>('1D');
 
   // --- LIVE DATA STATE ---
   const [kpis, setKpis] = useState({ bookingsToday: 0, pendingBookings: 0, homeCollections: 0, revenueToday: 0 });
@@ -49,13 +48,11 @@ export default function GlassAnalyticsPage() {
 
   if (!mounted) return null;
 
-  // Simulate data changing based on time filter
-  const multiplier = timeFilter === '1D' ? 1 : timeFilter === '7D' ? 6.5 : timeFilter === '1M' ? 28 : 310;
   const displayKpis = {
-    bookingsToday: Math.floor(kpis.bookingsToday * multiplier),
-    pendingBookings: Math.floor(kpis.pendingBookings * (multiplier * 0.8)), // Pending doesn't scale as fast as total
-    homeCollections: Math.floor(kpis.homeCollections * multiplier),
-    revenueToday: kpis.revenueToday * multiplier,
+    bookingsToday: kpis.bookingsToday,
+    pendingBookings: kpis.pendingBookings,
+    homeCollections: kpis.homeCollections,
+    revenueToday: kpis.revenueToday,
   };
 
   const maxRevenue = revenueByMonth.length > 0 ? Math.max(...revenueByMonth.map(d => d.revenue)) : 1;
@@ -78,10 +75,10 @@ export default function GlassAnalyticsPage() {
   // These are already computed inside AnalyticsService, but for KPI display we use the kpis object
 
   const kpiCards = [
-    { label: "Total Revenue", value: formatCurrency(displayKpis.revenueToday), icon: 'creditCard', color: '#3b82f6', delta: '+12.5%', isPositive: true },
-    { label: "Total Bookings", value: displayKpis.bookingsToday.toString(), icon: 'testTube', color: '#10b981', delta: '+8.2%', isPositive: true },
-    { label: "Pending Tests", value: displayKpis.pendingBookings.toString(), icon: 'users', color: '#8b5cf6', delta: '-2.1%', isPositive: true }, // Less pending is good
-    { label: "Home Collections", value: displayKpis.homeCollections.toString(), icon: 'mapPin', color: '#f59e0b', delta: '+15.3%', isPositive: true }
+    { label: "Total Revenue", value: formatCurrency(displayKpis.revenueToday), icon: 'creditCard', color: '#3b82f6' },
+    { label: "Total Bookings", value: displayKpis.bookingsToday.toString(), icon: 'testTube', color: '#10b981' },
+    { label: "Pending Tests", value: displayKpis.pendingBookings.toString(), icon: 'users', color: '#8b5cf6' },
+    { label: "Home Collections", value: displayKpis.homeCollections.toString(), icon: 'mapPin', color: '#f59e0b' }
   ];
 
   const handlePrint = () => {
@@ -122,18 +119,6 @@ export default function GlassAnalyticsPage() {
           </div>
           
           <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto print-hide">
-            {/* Time Filter Pill */}
-            <div className="flex bg-white p-1 rounded-xl shadow-sm border border-slate-200">
-              {(['1D', '7D', '1M', '1Y'] as const).map(f => (
-                <button
-                  key={f}
-                  onClick={() => setTimeFilter(f)}
-                  className={`px-4 py-1.5 rounded-lg text-[13px] font-bold transition-all ${timeFilter === f ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
 
             <button 
               onClick={handlePrint}
@@ -172,9 +157,6 @@ export default function GlassAnalyticsPage() {
                 <div style={{ fontSize: '32px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em', lineHeight: 1.1 }}>{kpi.value}</div>
                 <div className="flex items-center gap-2 mt-1">
                   <div style={{ fontSize: '14px', fontWeight: 600, color: '#64748b' }}>{kpi.label}</div>
-                  <div className={`px-1.5 py-0.5 rounded flex items-center gap-1 text-[11px] font-bold ${kpi.isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                    {kpi.delta}
-                  </div>
                 </div>
               </div>
             </div>

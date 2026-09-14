@@ -72,10 +72,10 @@ export default function GlassDashboard() {
         {/* GLASS KPI CARDS */}
         <div className="admin-responsive-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           {[
-            { label: "Today's Bookings", value: kpis.bookingsToday.toString(), icon: 'calendar', trend: '+12%', color: '#3b82f6' },
-            { label: "Pending Tests", value: kpis.pendingBookings.toString(), icon: 'clock', trend: '-2%', color: '#f59e0b' },
-            { label: "Home Collections", value: kpis.homeCollections.toString(), icon: 'mapPin', trend: '+4%', color: '#10b981' },
-            { label: "Revenue Today", value: `₹${kpis.revenueToday.toLocaleString()}`, icon: 'creditCard', trend: '+8%', color: '#8b5cf6' }
+            { label: "Today's Bookings", value: kpis.bookingsToday.toString(), icon: 'calendar', color: '#3b82f6' },
+            { label: "Pending Tests", value: kpis.pendingBookings.toString(), icon: 'clock', color: '#f59e0b' },
+            { label: "Home Collections", value: kpis.homeCollections.toString(), icon: 'mapPin', color: '#10b981' },
+            { label: "Revenue Today", value: `₹${kpis.revenueToday.toLocaleString()}`, icon: 'creditCard', color: '#8b5cf6' }
           ].map((kpi, i) => (
             <div
               key={i}
@@ -96,9 +96,6 @@ export default function GlassDashboard() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ width: '44px', height: '44px', borderRadius: '14px', backgroundColor: `rgba(255,255,255, 0.8)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: kpi.color, boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                   <AdminIcon name={kpi.icon as any} style={{ width: '22px', height: '22px' }} />
-                </div>
-                <div style={{ fontSize: '13px', fontWeight: 800, color: kpi.trend.startsWith('+') ? '#10b981' : '#f43f5e', backgroundColor: 'rgba(255,255,255,0.7)', padding: '4px 10px', borderRadius: '20px' }}>
-                  {kpi.trend}
                 </div>
               </div>
               <div>
