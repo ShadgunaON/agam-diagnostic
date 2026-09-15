@@ -2738,9 +2738,8 @@ exports.handler = async (event) => {
         if (!(await hasPermission(identityForCheck, 'newsletter', 'view')) && !(await hasPermission(identityForCheck, 'blogs', 'view'))) {
           throw new Error('Forbidden: Missing newsletter.view or blogs.view permission');
         }
-        
         const paginated = await newsletterRepo.getPaginated({ limit, cursor });
-        
+
         return {
           data: paginated.data,
           meta: {
@@ -2751,6 +2750,33 @@ exports.handler = async (event) => {
           }
         };
       }
+
+      case 'adminInquiries': {
+        const { limit = 50, cursor = null, status = null, search = null } = args;
+        const identityForCheck = identity;
+        if (!identity) throw new Error('Unauthorized');
+
+        if (!(await hasPermission(identityForCheck, 'newsletter', 'view')) && !(await hasPermission(identityForCheck, 'blogs', 'view'))) {
+          throw new Error('Forbidden: Missing newsletter.view permission');
+        }
+
+        const result = await inquiryRepo.list({ limit, cursor, status, search });
+        return { items: result.items, nextCursor: result.nextCursor };
+      }
+
+      case 'updateInquiryStatus': {
+        const { id, status } = args;
+        const identityForCheck = identity;
+        if (!identity) throw new Error('Unauthorized');
+
+        if (!(await hasPermission(identityForCheck, 'newsletter', 'edit')) && !(await hasPermission(identityForCheck, 'blogs', 'edit'))) {
+          throw new Error('Forbidden: Missing newsletter.edit permission');
+        }
+
+        await inquiryRepo.updateStatus(id, status);
+        return true;
+      }
+
 
       case 'blogs': {
         const { status } = args;

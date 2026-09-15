@@ -4,8 +4,8 @@ schema {
 }
 
 type Query {
-  # Public Inquiries
-  publicInquiries: Boolean # Dummy for now, no queries needed
+  # Public Inquiries / Contact Form
+  adminInquiries(limit: Int, cursor: String, status: String, search: String): InquiryConnection!
 
 
   # Catalog Queries
@@ -119,6 +119,7 @@ type Mutation {
   
   # Inquiry Mutations
   createInquiry(input: String!): Boolean! @aws_api_key @aws_cognito_user_pools
+  updateInquiryStatus(id: ID!, status: String!): Boolean!
 
   # Catalog Mutations
   createCatalogTest(input: String!): TestItem!
@@ -683,4 +684,21 @@ type Subscriber {
   email: String!
   subscribedAt: String!
   status: String
+}
+
+type Inquiry {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: String!
+  phone: String
+  message: String!
+  status: String!
+  createdAt: String!
+  updatedAt: String
+}
+
+type InquiryConnection {
+  items: [Inquiry!]!
+  nextCursor: String
 }

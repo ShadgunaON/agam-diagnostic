@@ -27,6 +27,7 @@ export const routePermissions: Record<string, RoutePermission> = {
   '/admin/staff': { moduleId: 'staff', action: 'view' },
   '/admin/blogs': { moduleId: 'blogs', action: 'view' },
   '/admin/newsletter': { moduleId: 'newsletter', action: 'view' },
+  '/admin/newsletter/inquiry': { moduleId: 'newsletter', action: 'view' },
   '/admin/settings': { moduleId: 'settings', action: 'view' },
   '/admin/catalog': { moduleId: 'catalog', action: 'view' },
 };

@@ -18,6 +18,7 @@ import { GlobalSearchService } from './GlobalSearchService';
 import { NotificationService } from './NotificationService';
 import { DocumentService } from './DocumentService';
 import { PaymentService, MockPaymentProvider, ApiPaymentProvider } from './PaymentService';
+import { InquiryService } from './InquiryService';
 import { env } from '@/config/env';
 import { apiClient } from '@/repositories/registry';
 
@@ -25,6 +26,7 @@ import { apiClient } from '@/repositories/registry';
 export const blogService = new BlogService();
 export const authService = new AuthService();
 export const activityService = new ActivityService();
+export const inquiryService = new InquiryService();
 
 // Services migrated to direct GraphQL fetches
 export const invoiceService = new InvoiceService();
