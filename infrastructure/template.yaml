@@ -920,6 +920,30 @@ Resources:
       FieldName: adminPermissionsMap
       DataSourceName: !GetAtt GraphQLDataSource.Name
 
+  GraphQLResolverMutationCreateInquiry:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: createInquiry
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverQueryAdminInquiries:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: adminInquiries
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationUpdateInquiryStatus:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: updateInquiryStatus
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
   GraphQLResolverMutationCreateCatalogTest:
     Type: AWS::AppSync::Resolver
     Properties:
