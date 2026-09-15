@@ -197,7 +197,7 @@ type Mutation {
   updatePermissions(records: String!): Boolean!
 }
 
-type GlobalSearchResult {
+type GlobalSearchResult @aws_api_key @aws_cognito_user_pools {
   id: ID!
   type: String!
   title: String!
