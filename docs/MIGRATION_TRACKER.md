@@ -1678,3 +1678,8 @@ ame, phone, and email. AppSync immediately rejected the entire query with a vali
  # # #   Q A   D o c u m e n t  
  -   * * S t a t u s : * *   C r e a t e d   d o c s / Q A _ T E S T _ D O C U M E N T . m d  
  
+### Prototype - Scroll-Spy Layout for Test Details
+- **Root Cause:** Prototyping a modern scroll-spy sticky sidebar layout for detail pages.
+- **Files Changed:** components/sections/shared/ScrollSpyDetailLayout.tsx, components/sections/tests/TestDetailContent.tsx
+- **Fix Applied:** Implemented Sticky Scroll-Spy detail layout prototype specifically for Test Detail pages. Packages and Services remain unchanged using the old accordion layout for now.
+- **Status:** PROTOTYPED (LOCAL ONLY)

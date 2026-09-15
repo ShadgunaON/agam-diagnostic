@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { TestItem as TestDetailData } from '@/domains/tests/model';
-import { PremiumDetailLayout } from '../shared/PremiumDetailLayout';
+import { ScrollSpyDetailLayout } from '../shared/ScrollSpyDetailLayout';
 
 export interface TestDetailContentProps {
   data: TestDetailData;
@@ -141,12 +141,11 @@ export function TestDetailContent({ data, className = '' }: TestDetailContentPro
   );
 
   return (
-    <PremiumDetailLayout 
+    <ScrollSpyDetailLayout 
       className={className}
       header={headerProps}
       cartData={cartData}
       sections={sections}
-      defaultOpenSection="who"
     />
   );
 }
