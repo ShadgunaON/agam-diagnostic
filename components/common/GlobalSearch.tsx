@@ -5,14 +5,16 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
-import { performGlobalSearch, SearchResultItem } from '@/app/actions/globalSearch';
+import { fetchAllSearchableItems, SearchResultItem } from '@/app/actions/globalSearch';
 
 export function GlobalSearch() {
   const router = useRouter();
   const { items, addItem, updateQuantity, removeItem } = useCart();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResultItem[]>([]);
+  const [allItems, setAllItems] = useState<SearchResultItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   
@@ -29,24 +31,41 @@ export function GlobalSearch() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Debounced search
+  // Fetch all items on first open
+  useEffect(() => {
+    if (isOpen && !hasFetched && !isLoading) {
+      setIsLoading(true);
+      fetchAllSearchableItems()
+        .then((data) => {
+          setAllItems(data);
+          setHasFetched(true);
+        })
+        .catch(console.error)
+        .finally(() => setIsLoading(false));
+    }
+  }, [isOpen, hasFetched, isLoading]);
+
+  // Client-side exact character filtering
   useEffect(() => {
     if (!isOpen) return;
 
-    setIsLoading(true);
-    const debounceId = setTimeout(async () => {
-      try {
-        const data = await performGlobalSearch(query);
-        setResults(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    }, 300);
+    if (!query.trim()) {
+      // If empty, show first 15 items
+      setResults(allItems.slice(0, 15));
+      return;
+    }
 
-    return () => clearTimeout(debounceId);
-  }, [query, isOpen]);
+    const searchTerm = query.toLowerCase().trim();
+    
+    // Filter locally based on exact character match in title or category
+    const filtered = allItems.filter(item => {
+      const titleMatch = item.title.toLowerCase().includes(searchTerm);
+      const catMatch = item.category?.toLowerCase().includes(searchTerm);
+      return titleMatch || catMatch;
+    });
+
+    setResults(filtered.slice(0, 15));
+  }, [query, isOpen, allItems]);
 
   // Reset selection when query changes
   useEffect(() => {

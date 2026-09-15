@@ -94,3 +94,74 @@ export async function performGlobalSearch(query: string): Promise<SearchResultIt
 
   return results.slice(0, 15);
 }
+
+export async function fetchAllSearchableItems(): Promise<SearchResultItem[]> {
+  const results: SearchResultItem[] = [];
+
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const url = new URL('/api/graphql', baseUrl).toString();
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: `
+          query GlobalSearch($query: String!, $limit: Int) {
+            globalSearch(query: $query, limit: $limit) {
+              id
+              type
+              title
+              subtitle
+              href
+              icon
+            }
+          }
+        `,
+        variables: {
+          query: "",
+          limit: 2000 // Large limit to get everything
+        }
+      }),
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      const gqlResults = result.data?.globalSearch || [];
+      
+      gqlResults.forEach((item: any) => {
+        if (['test', 'package', 'service', 'blog'].includes(item.type)) {
+          results.push({
+            id: item.id,
+            slug: item.id,
+            title: item.title,
+            category: item.subtitle,
+            type: item.type,
+            url: item.href
+          });
+        }
+      });
+    }
+  } catch (e) {
+    console.error("GraphQL public search failed", e);
+  }
+
+  const staticPages = [
+    { id: 'page-home', title: 'Home', category: 'Page', url: '/' },
+    { id: 'page-about', title: 'About Us', category: 'Page', url: '/about' },
+    { id: 'page-services', title: 'Diagnostic Services', category: 'Page', url: '/services' },
+    { id: 'page-help', title: 'Help & Contact', category: 'Page', url: '/help' },
+  ];
+  
+  staticPages.forEach(page => {
+    results.push({
+      ...page,
+      slug: page.url,
+      type: 'page'
+    });
+  });
+
+  return results;
+}
