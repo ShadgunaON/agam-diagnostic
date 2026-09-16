@@ -6,4 +6,4 @@ export * from './AgamDifferenceSection';
 export * from './JourneyTrackerSection';
 export * from './TechnologyInfrastructureSection';
 export * from './TeamSection';
-export * from './AccreditationsSection';
+export * from './RecognitionsSection';

@@ -117,13 +117,11 @@ export class ReviewService {
     }
   }
 
-  async moderateReview(id: string, newStatus: ReviewStatus): Promise<Result<ReviewModel>> {
+  async moderateReview(id: string, newStatus: ReviewStatus): Promise<Result<boolean>> {
     try {
-      const res = await this._graphqlFetch<{ moderateReview: ReviewModel }>(
+      const res = await this._graphqlFetch<{ moderateReview: boolean }>(
         `mutation ModerateReview($id: ID!, $status: String!) {
-          moderateReview(id: $id, status: $status) {
-            id patientId bookingId displayName status rating title content createdAt updatedAt
-          }
+          moderateReview(id: $id, status: $status)
         }`,
         { id, status: newStatus }
       );

@@ -132,15 +132,45 @@ export const aboutData = {
       image: "/images/expert_3.png"
     }
   ],
-  accreditations: {
-    title: "Certified by the Best",
-    overline: "Trust & Validation",
-    description: "AGAM Diagnostics adheres to the strictest national and international quality protocols. Our facilities are audited regularly to ensure that every report is reliable.",
-    list: [
-      { title: "NABL Accredited", desc: "National Accreditation Board for Testing and Calibration Laboratories." },
-      { title: "ICMR Approved", desc: "Indian Council of Medical Research approved facility for advanced testing." },
-      { title: "ISO 9001:2015 Certified", desc: "Quality management systems implemented across all branches." }
-    ],
-    stat: { value: "99.9%", label: "Diagnostic Accuracy", desc: "Maintained consistently across millions of tests processed annually." }
+  recognitions: {
+    accreditations: {
+      title: "Industry Accreditations",
+      intro: "Alongside these ceremonial awards, the laboratory maintains top-tier technical and governmental accreditations that serve as the highest benchmark for diagnostic quality:",
+      items: [
+        {
+          title: "NABL Accreditation",
+          description: "Fully accredited by the National Accreditation Board for Testing and Calibration Laboratories, verifying strict adherence to quality, accuracy, and technical competence."
+        },
+        {
+          title: "ICMR Approval",
+          description: "Authorized by the Indian Council of Medical Research as a certified testing facility for specialized molecular and infectious disease diagnostics."
+        }
+      ]
+    },
+    awards: {
+      title: "Major Healthcare & Industry Awards",
+      items: [
+        {
+          title: "Vikatan VConnect Pulse Healthcare Awards",
+          category: "Best Diagnostics Chain (South Tamil Nadu)",
+          description: "Officially presented by the Tamil Nadu Health Minister, this award recognized the laboratory’s broad service footprint and high-quality diagnostic standards across the southern districts."
+        },
+        {
+          title: "LEXA Healthpreneur Awards (2022)",
+          category: "Best Diagnostics Centre",
+          description: "Selected from over 500 healthcare nominations, this award was presented by Dr. M. Mathivendhan, the Tamil Nadu Tourism Minister, honoring outstanding entrepreneurial vision in the healthcare sector."
+        },
+        {
+          title: "Radio City Icon Award (2021)",
+          category: "Excellence in the Category of Diagnostics",
+          description: "A prestigious media recognition celebrating the laboratory’s prominent role, trusted service, and excellence in providing clinical diagnostic solutions to the community."
+        },
+        {
+          title: "Nakshatra Awards (2023)",
+          category: "Madurai",
+          description: "A regional industry honor featuring Agam Diagnostics, with a dedicated showcase by Nakshatra Media commemorating the laboratory’s achievements and local impact."
+        }
+      ]
+    }
   }
 };

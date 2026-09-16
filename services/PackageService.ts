@@ -96,7 +96,7 @@ export class PackageService {
     return success({
       title: 'Comprehensive Health Packages',
       description: 'Preventive health checkups for you and your family. Full body assessments with specialist consultations included.',
-      image: '/images/hero_packages_visual.png',
+      image: '/images/hero_lab_visual.png',
       pill: 'Preventive Care',
     });
   }

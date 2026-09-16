@@ -12,7 +12,7 @@ import {
   JourneyTrackerSection,
   TechnologyInfrastructureSection,
   TeamSection,
-  AccreditationsSection
+  RecognitionsSection
 } from '@/components/sections/about';
 import { ContactPreviewSection } from '@/components/sections/home';
 import { CTASection } from '@/components/common';
@@ -33,7 +33,7 @@ export default function AboutPage() {
       <JourneyTrackerSection data={aboutData.milestones} />
       <TechnologyInfrastructureSection data={aboutData.techFeatures} />
       <TeamSection data={aboutData.team} />
-      <AccreditationsSection data={aboutData.accreditations} />
+      <RecognitionsSection data={aboutData.recognitions} />
       <ContactPreviewSection data={contactData} />
       <section className="py-12 bg-bg-alt border-y border-border">
         <div className="container text-center">
