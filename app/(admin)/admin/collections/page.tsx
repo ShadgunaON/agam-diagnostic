@@ -265,10 +265,21 @@ export default function CollectionsPage() {
                       </button>
                     )}
                     {(task.status === 'Sample Collected' || task.status === 'Completed') && (
-                      <div className="w-full py-2 bg-emerald-50 text-emerald-700 text-center font-bold rounded-lg text-sm border border-emerald-200">
-                        ✓ Sample Collected
-                      </div>
+                      <>
+                        <div className="w-full py-2 bg-emerald-50 text-emerald-700 text-center font-bold rounded-lg text-sm border border-emerald-200">
+                          ✓ {task.status === 'Completed' ? 'Appointment Completed' : 'Sample Collected'}
+                        </div>
+                        {task.bookingId && (
+                          <a
+                            href={`/admin/reports?bookingId=${encodeURIComponent(task.bookingId)}`}
+                            className="w-full py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 text-center font-bold rounded-lg text-sm border border-blue-200 transition-colors block"
+                          >
+                            Create / View Report →
+                          </a>
+                        )}
+                      </>
                     )}
+
                     {!canEditStatus && !['Sample Collected', 'Completed'].includes(task.status) && (
                       <div className="w-full py-2 bg-slate-100 text-slate-400 text-center text-xs font-semibold rounded-lg">
                         No permission to update status

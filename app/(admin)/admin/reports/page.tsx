@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { AdminPageTemplate } from '@/components/admin/layout/AdminPageTemplate';
 import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
 import { useToast } from '@/components/admin/feedback/Toast';
@@ -57,12 +58,14 @@ function formatDate(iso?: string) {
 interface AddReportModalProps {
   onClose: () => void;
   onSuccess: (report: ReportTaskModel) => void;
+  initialBookingId?: string;
 }
 
-function AddReportModal({ onClose, onSuccess }: AddReportModalProps) {
-  const [bookingId, setBookingId] = useState('');
+function AddReportModal({ onClose, onSuccess, initialBookingId = '' }: AddReportModalProps) {
+  const [bookingId, setBookingId] = useState(initialBookingId);
   const [isFetching, setIsFetching] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const autoTriggered = useRef(false);
 
   const getToken = () =>
     typeof window !== 'undefined'
@@ -138,6 +141,15 @@ function AddReportModal({ onClose, onSuccess }: AddReportModalProps) {
     }
   };
 
+  // Auto-trigger the booking lookup when navigated from Collections with ?bookingId
+  useEffect(() => {
+    if (initialBookingId.trim() && !autoTriggered.current) {
+      autoTriggered.current = true;
+      handleCreate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 900, backgroundColor: 'rgba(15,23,42,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}
       onClick={(e) => { if (e.target === e.currentTarget && !isFetching) onClose(); }}>
@@ -180,6 +192,7 @@ export default function AdminReportsPage() {
   const [mounted, setMounted] = useState(false);
   const { success: toastSuccess, error: toastError } = useToast();
   const { hasPermission } = useRBAC();
+  const searchParams = useSearchParams();
 
   const canEdit = hasPermission('reports', 'edit');
   const canCreate = hasPermission('reports', 'create');
@@ -192,6 +205,9 @@ export default function AdminReportsPage() {
   const [activeTab, setActiveTab] = useState<StatusTab>('All');
   const [sortKey, setSortKey] = useState('date_newest');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Pre-filled booking ID from ?bookingId URL param (navigated from Collections)
+  const urlBookingId = searchParams.get('bookingId') || '';
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [submitTarget, setSubmitTarget] = useState<ReportTaskModel | null>(null);
@@ -215,6 +231,8 @@ export default function AdminReportsPage() {
     if (!mounted) return;
     setCursorHistory([]);
     fetchReports(null);
+    // Auto-open AddReportModal if bookingId was passed in URL from Collections page
+    if (urlBookingId) setShowAddModal(true);
   }, [mounted, activeTab, sortKey, searchQuery]);
 
   if (!mounted) return null;
@@ -352,11 +370,19 @@ export default function AdminReportsPage() {
                                 )}
                               </>
                             )}
-                            {eff === 'Published' && (
-                              <button onClick={() => handleDownload(report)} disabled={!report.documentId} style={{ padding: '6px 14px', backgroundColor: '#f0fdf4', color: report.documentId ? '#16a34a' : '#94a3b8', border: `1px solid ${report.documentId ? '#bbf7d0' : '#e2e8f0'}`, borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: report.documentId ? 'pointer' : 'not-allowed', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            {eff === 'Published' && report.documentId && (
+                              <button onClick={() => handleDownload(report)} style={{ padding: '6px 14px', backgroundColor: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <AdminIcon name="download" style={{ width: '12px', height: '12px' }} />
-                                {report.documentId ? 'Download' : 'No Document'}
+                                Download
                               </button>
+                            )}
+                            {eff === 'Published' && !report.documentId && canCreate && (
+                              <button onClick={() => setSubmitTarget(report)} style={{ padding: '6px 14px', backgroundColor: '#fffbeb', color: '#d97706', border: '1px solid #fde68a', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                Upload Document
+                              </button>
+                            )}
+                            {eff === 'Published' && !report.documentId && !canCreate && (
+                              <span style={{ fontSize: '12px', fontWeight: 600, color: '#94a3b8' }}>No Document</span>
                             )}
                           </div>
                         </td>
@@ -382,6 +408,7 @@ export default function AdminReportsPage() {
       {/* Modals */}
       {showAddModal && (
         <AddReportModal
+          initialBookingId={urlBookingId}
           onClose={() => setShowAddModal(false)}
           onSuccess={(newReport) => {
             setShowAddModal(false);

@@ -246,6 +246,8 @@ Resources:
               - "https://localhost:3000"
               - "https://agam-diagnostics.vercel.app"
               - "https://*.vercel.app"
+              - "https://main.d1cyj9bls517ho.amplifyapp.com"
+              - "https://*.amplifyapp.com"
             ExposedHeaders:
               - ETag
             MaxAge: 3600
