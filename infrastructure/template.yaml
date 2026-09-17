@@ -233,6 +233,22 @@ Resources:
         RestrictPublicBuckets: true
       VersioningConfiguration:
         Status: Enabled
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - PUT
+              - GET
+              - HEAD
+            AllowedOrigins:
+              - "http://localhost:3000"
+              - "https://localhost:3000"
+              - "https://agam-diagnostics.vercel.app"
+              - "https://*.vercel.app"
+            ExposedHeaders:
+              - ETag
+            MaxAge: 3600
       Tags:
         - Key: Project
           Value: AgamDiagnostics
