@@ -19,8 +19,7 @@ export default function PatientsPage() {
   
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [genderFilter, setGenderFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortBy, setSortBy] = useState('newest');
@@ -33,6 +32,20 @@ export default function PatientsPage() {
   }>({ totalPatients: 0, newThisMonth: 0, activeBookings: 0, retentionRate: null, retentionRateAvailable: false });
   
   const [patients, setPatients] = useState<PatientModel[]>([]);
+  const [cursorStack, setCursorStack] = useState<string[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Debounce search input
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(searchQuery), 500);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  // Reset pagination when search or sort changes
+  useEffect(() => {
+    setCursorStack([]);
+  }, [debouncedSearch, sortBy]);
 
   useEffect(() => {
     setMounted(true);
@@ -41,35 +54,23 @@ export default function PatientsPage() {
 
   useEffect(() => {
     const loadPatients = async () => {
-      const result = await patientService.getAll(1, 100); // load up to 100; paginated on client
+      setIsLoading(true);
+      const currentCursor = cursorStack.length > 0 ? cursorStack[cursorStack.length - 1] : null;
+      const sortParam = sortBy === 'oldest' ? 'date_oldest' : 'date_newest';
+      
+      const result = await patientService.getAll(1, 10, currentCursor, debouncedSearch, sortParam);
 
       if (result.isSuccess && result.value) {
-        const uniquePatientsMap = new Map<string, PatientModel>();
-        
-        result.value.data.forEach(patient => {
-          // Use phone, email, or name as unique identifier
-          const key = patient.phone || patient.email || patient.name || patient.id;
-          
-          if (!uniquePatientsMap.has(key)) {
-            uniquePatientsMap.set(key, patient);
-          } else {
-            // If duplicate exists, keep the most recently updated one
-            const existing = uniquePatientsMap.get(key)!;
-            if (new Date(patient.createdAt || 0) > new Date(existing.createdAt || 0)) {
-              uniquePatientsMap.set(key, patient);
-            }
-          }
-        });
-        
-        setPatients(Array.from(uniquePatientsMap.values()));
+        setPatients(result.value.data);
+        setNextCursor(result.value.nextCursor ?? null);
       } else if (result.isFailure) {
         console.error('[PatientsPage] Failed to load patients:', result.error?.message);
         toast({ title: 'Failed to load patients', description: result.error?.message || 'Could not fetch patient list.', variant: 'warning' });
-
       }
+      setIsLoading(false);
     };
     loadPatients();
-  }, []);
+  }, [cursorStack, debouncedSearch, sortBy]);
 
 
   const filteredAndSortedPatients = React.useMemo(() => {
@@ -88,37 +89,12 @@ export default function PatientsPage() {
       result = result.filter(p => p.status === statusFilter);
     }
 
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(p => 
-        (p.name?.toLowerCase() || '').includes(query) ||
-        (p.id?.toLowerCase() || '').includes(query) ||
-        (p.phone || '').includes(query) ||
-        (p.email?.toLowerCase() || '').includes(query)
-      );
-    }
-
-    result.sort((a, b) => {
-      switch (sortBy) {
-        case 'name-asc':
-          return (a.name || '').localeCompare(b.name || '');
-        case 'name-desc':
-          return (b.name || '').localeCompare(a.name || '');
-        case 'oldest':
-          return (a.createdAt || '').localeCompare(b.createdAt || '');
-        case 'newest':
-        default:
-          return (b.createdAt || '').localeCompare(a.createdAt || '');
-      }
-    });
-
     return result;
-  }, [patients, genderFilter, statusFilter, searchQuery, sortBy]);
+  }, [patients, genderFilter, statusFilter]);
 
   const paginatedData = React.useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredAndSortedPatients.slice(start, start + itemsPerPage);
-  }, [filteredAndSortedPatients, currentPage, itemsPerPage]);
+    return filteredAndSortedPatients;
+  }, [filteredAndSortedPatients]);
 
   const handleExportCSV = () => {
     if (filteredAndSortedPatients.length === 0) {
@@ -245,8 +221,6 @@ export default function PatientsPage() {
           >
             <option value="newest">Newest First</option>
             <option value="oldest">Oldest First</option>
-            <option value="name-asc">Name: A → Z</option>
-            <option value="name-desc">Name: Z → A</option>
           </select>
           <AdminButton variant="secondary" size="sm" className="gap-1.5 text-[11px]" onClick={handleExportCSV} style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0' }}>
             <AdminIcon name="download" className="w-3 h-3 text-slate-400" strokeWidth={2} />
@@ -334,15 +308,18 @@ export default function PatientsPage() {
             keyExtractor={(row) => row.id}
             onRowClick={(row) => router.push(`/admin/patients/${row.id}`)}
             pagination={{
-              currentPage,
-              totalPages: Math.max(1, Math.ceil(filteredAndSortedPatients.length / itemsPerPage)),
-              totalItems: filteredAndSortedPatients.length,
-              itemsPerPage,
-              onPageChange: setCurrentPage,
-              onItemsPerPageChange: (items: number) => {
-                setItemsPerPage(items);
-                setCurrentPage(1);
-              }
+              currentPage: cursorStack.length + 1,
+              totalPages: nextCursor ? cursorStack.length + 2 : cursorStack.length + 1,
+              totalItems: (cursorStack.length + (nextCursor ? 2 : 1)) * 10,
+              itemsPerPage: 10,
+              onPageChange: (page) => {
+                if (page > cursorStack.length + 1 && nextCursor) {
+                   setCursorStack(prev => [...prev, nextCursor]);
+                } else if (page < cursorStack.length + 1 && cursorStack.length > 0) {
+                   setCursorStack(prev => prev.slice(0, prev.length - (cursorStack.length + 1 - page)));
+                }
+              },
+              onItemsPerPageChange: () => {}
             }}
             className="border-none shadow-none rounded-none bg-transparent"
           />

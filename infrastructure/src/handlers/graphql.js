@@ -1462,8 +1462,8 @@ exports.handler = async (event) => {
           if (!(await hasPermission(identityForCheck, 'patients', 'view'))) {
             throw new Error('Access denied: Missing patients.view permission');
           }
-          const { limit = 20, cursor = null, search = '' } = args;
-          const paginated = await patientRepo.getPaginated({ limit, cursor, search });
+          const { limit = 20, cursor = null, search = '', sort = 'date_newest' } = args;
+          const paginated = await patientRepo.getPaginated({ limit, cursor, search, sort });
           const totalCount = paginated.totalCount ?? paginated.data.length;
           return { data: paginated.data, nextCursor: paginated.nextCursor, meta: { total: totalCount, page: 1, limit, totalPages: Math.ceil(totalCount / limit) || 1 } };
         } else if (await isPhlebotomist(identityForCheck)) {
@@ -2458,6 +2458,7 @@ exports.handler = async (event) => {
         }
 
         await invoiceRepo.update(id, { paymentMethod });
+
         return true; // Schema returns Boolean!
       }
 

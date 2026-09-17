@@ -23,7 +23,7 @@ type Query {
   # Patient Queries
   mePatient: Patient
   patientById(id: ID!): Patient
-  patients(limit: Int, cursor: String, search: String): PatientConnection!
+  patients(limit: Int, cursor: String, search: String, sort: String): PatientConnection!
   
   # Booking Queries
   bookingsByPatient(patientId: ID!): [Booking!]!

@@ -1687,3 +1687,9 @@ ame, phone, and email. AppSync immediately rejected the entire query with a vali
 - **Fix Applied:** Implemented Sticky Scroll-Spy detail layout prototype specifically for Test Detail pages. Packages and Services remain unchanged using the old accordion layout for now.
 - **Status:** PROTOTYPED (LOCAL ONLY)
 
+
+### Issue 26 - Admin Patients Server-Side Pagination and Sort
+- **Root Cause:** Admin Patients was using a client-side fetch of 100 records for its search and sort, causing incomplete results if there were more than 100 patients.
+- **Files Changed:** infrastructure/schema.graphql, infrastructure/src/handlers/graphql.js, services/PatientService.ts, app/(admin)/admin/patients/page.tsx
+- **Fix Applied:** Added sort to the patients GraphQL query. Passed cursor, limit, search, and sort parameters to the backend PatientRepository's getPaginated method. Rewrote the frontend table to use cursor-based server-side pagination with the ConfigurableDataTable.
+- **Status:** FIXED + VERIFIED
