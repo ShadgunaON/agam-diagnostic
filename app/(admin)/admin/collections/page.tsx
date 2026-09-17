@@ -243,44 +243,6 @@ export default function CollectionsPage() {
                     )}
                   </div>
 
-                  {/* Progress Tracker */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', paddingTop: '8px', paddingBottom: '8px', borderTop: '1px solid #e2e8f0', overflowX: 'auto' }}>
-                    {(() => {
-                      const isCheckedIn = ['Checked In', 'Sample Collected', 'Completed'].includes(task.status);
-                      const isSampleCollected = ['Sample Collected', 'Completed'].includes(task.status);
-                      const isCompleted = task.status === 'Completed';
-
-                      return [
-                        { label: 'Confirmed', completed: true },
-                        { label: 'Check-In', completed: isCheckedIn },
-                        { label: 'Sample\nCollected', completed: isSampleCollected },
-                        { label: 'Completed', completed: isCompleted },
-                      ].map((step, idx, arr) => (
-                        <React.Fragment key={idx}>
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '48px' }}>
-                            <div style={{
-                              width: '18px', height: '18px', borderRadius: '50%',
-                              backgroundColor: step.completed ? '#10b981' : '#e2e8f0',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              marginBottom: '4px', flexShrink: 0
-                            }}>
-                              {step.completed && (
-                                <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" style={{ width: '10px', height: '10px' }}>
-                                  <polyline points="20 6 9 17 4 12"/>
-                                </svg>
-                              )}
-                            </div>
-                            <span style={{ fontSize: '9px', fontWeight: 700, color: step.completed ? '#10b981' : '#94a3b8', textAlign: 'center', whiteSpace: 'pre-line', lineHeight: '1.2' }}>
-                              {step.label}
-                            </span>
-                          </div>
-                          {idx < arr.length - 1 && (
-                            <div style={{ flex: 1, height: '2px', backgroundColor: step.completed ? '#10b981' : '#e2e8f0', marginBottom: '18px', minWidth: '8px' }} />
-                          )}
-                        </React.Fragment>
-                      ));
-                    })()}
-                  </div>
 
                   {/* Action Buttons */}
                   <div className="mt-auto pt-4 border-t border-slate-200 flex flex-col gap-2">

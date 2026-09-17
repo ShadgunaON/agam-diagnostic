@@ -104,13 +104,33 @@ function AddReportModal({ onClose, onSuccess }: AddReportModalProps) {
       const exJson = await exRes.json();
       const existing: any[] = exJson.data?.reportsByPatient || [];
       const dup = existing.find((r) => r.bookingId === id);
-      if (dup) throw new Error(`A report already exists for this booking (${dup.id} · ${dup.status}). Use "Submit Report" on that row.`);
 
-      // 3. Create report
+      if (dup) {
+        if (dup.status === 'Pending Upload') {
+          // Open the existing Pending Upload report directly — no duplicate created
+          const testType = (booking.items || []).map((i: any) => i.name).join(', ') || 'Diagnostic Test';
+          onSuccess({
+            id: dup.id,
+            bookingId: id,
+            testType,
+            patientId: pid || '',
+            patient: { id: pid || '', name: booking.patient?.name || 'Unknown Patient' },
+            status: 'Pending Upload',
+          } as any);
+          return;
+        }
+        // Already submitted or published — show informational message
+        throw new Error(
+          `This booking already has a report (status: ${dup.status}). Find it in the "${dup.status}" tab and use the row actions there.`
+        );
+      }
+
+      // 3. No existing report — create one
       const testType = (booking.items || []).map((i: any) => i.name).join(', ') || 'Diagnostic Test';
       const result = await reportsService.createForBooking(id, pid || '', testType, booking.patient?.name || 'Unknown Patient');
       if (!result.isSuccess) throw new Error(result.error?.message || 'Failed to create report');
       onSuccess(result.value);
+
     } catch (e: any) {
       setErr(e?.message || 'Unexpected error.');
     } finally {
