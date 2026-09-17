@@ -171,8 +171,10 @@ async function isStaff(identity) {
   if (!identity) return false;
   if (await isAdmin(identity)) return true;
   const role = (identity.role || '').toLowerCase();
-  const staffRoles = ['doctor', 'lab_tech', 'phleb', 'phleb_home', 'phlebotomist', 'staff', 'op', 'path', 'phleb_lab', 'hr'];
-  if (staffRoles.includes(role)) return true;
+  
+  // Accept known staff roles + any dynamically added custom roles
+  if (role && role !== 'patient') return true;
+  
   const staffGroups = ['staffgroup', 'staff', 'phleb', 'phleb_home', 'phlebgroup'];
   return identity.groups?.some(g => staffGroups.includes(g.toLowerCase()));
 }
