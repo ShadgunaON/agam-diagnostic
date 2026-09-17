@@ -633,7 +633,7 @@ type CatalogTestsConnection @aws_api_key @aws_cognito_user_pools { data: [TestIt
 type CatalogPackagesConnection @aws_api_key @aws_cognito_user_pools { data: [PackageItem!]!, meta: PaginationMeta! }
 type CatalogServicesConnection @aws_api_key @aws_cognito_user_pools { data: [ServiceItem!]!, meta: PaginationMeta! }
 type BlogConnection @aws_api_key @aws_cognito_user_pools { data: [BlogItem!]!, meta: PaginationMeta! }
-type PatientConnection { data: [Patient!]!, meta: PaginationMeta! }
+type PatientConnection { data: [Patient!]!, nextCursor: String, meta: PaginationMeta! }
 type ReviewConnection @aws_api_key @aws_cognito_user_pools { data: [Review!]!, meta: PaginationMeta! }
 type SubscriberConnection @aws_api_key @aws_cognito_user_pools { data: [Subscriber!]!, meta: PaginationMeta! }
 
