@@ -130,6 +130,8 @@ class DynamoDocumentRepository {
   _mapFromDb(item) {
     if (!item) return null;
     const { PK, SK, GSI1PK, GSI1SK, GSI2PK, GSI2SK, ...rest } = item;
+    // Map documentId to id for GraphQL compatibility
+    rest.id = rest.documentId || (PK ? PK.replace('DOCUMENT#', '') : undefined);
     return rest;
   }
 }
