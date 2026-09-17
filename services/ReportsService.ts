@@ -1,5 +1,4 @@
 import { ReportTaskModel } from '@/domains/reports/model';
-import { CollectionTaskModel } from '@/domains/collections/model';
 import { success, failure, Result } from '@/shared/result';
 
 export class ReportsService {
@@ -16,14 +15,17 @@ export class ReportsService {
       const token = typeof window !== 'undefined'
         ? (sessionStorage.getItem('cognito_id_token') || localStorage.getItem('cognito_id_token') || '')
         : '';
-      const _url = typeof window === 'undefined' ? (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000') + '/api/graphql' : '/api/graphql';
+      const _url = typeof window === 'undefined'
+        ? (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000') + '/api/graphql'
+        : '/api/graphql';
       const response = await fetch(_url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ query, variables }), cache: 'no-store',
+        body: JSON.stringify({ query, variables }),
+        cache: 'no-store',
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       const { data, errors } = await response.json();
@@ -42,8 +44,9 @@ export class ReportsService {
     const data = await this._graphqlFetch<{ reportById: ReportTaskModel }>(
       `query ReportById($id: ID!) {
         reportById(id: $id) {
-          id patientId bookingId testType status priority time results { parameter value unit reference isAbnormal }
-          patient { name id phone email }
+          id patientId bookingId testType status createdAt
+          documentId submittedAt publishedAt
+          patient { name id }
         }
       }`,
       { id }
@@ -52,33 +55,22 @@ export class ReportsService {
     return failure(new Error('Report not found'));
   }
 
-  async getAllTasks(): Promise<Result<ReportTaskModel[]>> {
-    const data = await this._graphqlFetch<{ reports: ReportTaskModel[] }>(
-      `query {
-        reports {
-          id patientId bookingId testType status priority time results { parameter value unit reference isAbnormal }
-          patient { name id phone email }
-        }
-      }`
-    );
-    if (data?.reports) return success(data.reports);
-    return failure(new Error('Failed to load reports'));
-  }
-
   async getAdminWorkspace(limit = 20, cursor: string | null = null, status = 'All', sort = 'date_newest', search = '') {
     try {
       const data = await this._graphqlFetch<{ adminReportsWorkspace: any }>(
         `query GetReportsWorkspace($limit: Int, $cursor: String, $status: String, $sort: String, $search: String) {
           adminReportsWorkspace(limit: $limit, cursor: $cursor, status: $status, sort: $sort, search: $search) {
             queue {
-              id status priority createdAt testType time url pdfKey
-              patient { name id phone email }
-              results { parameter value unit reference isAbnormal }
+              id status createdAt testType
+              documentId submittedAt publishedAt
+              bookingId
+              patient { name id }
             }
             nextCursor
             pendingCount
           }
         }`,
+
         { limit, cursor, status, sort, search }
       );
       if (data?.adminReportsWorkspace) return success(data.adminReportsWorkspace);
@@ -92,8 +84,9 @@ export class ReportsService {
     const data = await this._graphqlFetch<{ reportsByPatient: ReportTaskModel[] }>(
       `query ReportsByPatient($patientId: ID!) {
         reportsByPatient(patientId: $patientId) {
-          id patientId bookingId testType status priority time results { parameter value unit reference isAbnormal }
-          patient { name id phone email }
+          id patientId bookingId testType status createdAt
+          documentId submittedAt publishedAt
+          patient { name id }
         }
       }`,
       { patientId }
@@ -102,40 +95,108 @@ export class ReportsService {
     return failure(new Error('Failed to load reports for patient'));
   }
 
-  async createFromCollection(collection: CollectionTaskModel): Promise<Result<ReportTaskModel>> {
-    const reportTask: ReportTaskModel = {
-      id: `REP-${collection.bookingId?.replace('B-', '') || Date.now()}`,
-      patientId: collection.patientId,
-      bookingId: collection.bookingId,
-      patient: { name: collection.patient, age: 30, gender: 'Male', id: collection.patientId || 'pat_1' },
-      testType: collection.tests.join(', '),
-      status: 'Processing',
-      priority: 'Routine',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      results: []
+  /**
+   * Creates a new Report in 'Pending Upload' status for a given booking.
+   * Before calling, the caller should check whether a report already exists
+   * for this bookingId to avoid duplicates.
+   */
+  async createForBooking(
+    bookingId: string,
+    patientId: string,
+    testType: string,
+    patientName: string
+  ): Promise<Result<ReportTaskModel>> {
+    const reportInput = {
+      bookingId,
+      patientId,
+      testType,
+      status: 'Pending Upload',
+      patient: { id: patientId, name: patientName },
     };
-    
+
     const data = await this._graphqlFetch<{ createReportTask: ReportTaskModel }>(
       `mutation CreateReportTask($input: String!) {
         createReportTask(input: $input) {
-          id patientId bookingId testType status priority time results { parameter value unit reference isAbnormal }
-          patient { name id phone email }
+          id patientId bookingId testType status createdAt
+          documentId submittedAt publishedAt
+          patient { name id }
         }
       }`,
-      { input: typeof reportTask === "string" ? reportTask : JSON.stringify(reportTask) }
+      { input: JSON.stringify(reportInput) }
     );
     if (data?.createReportTask) return success(data.createReportTask);
-    return failure(new Error('Failed to create report task'));
+    return failure(new Error('Failed to create report'));
   }
 
-  async updateStatus(id: string, status: ReportTaskModel['status']): Promise<Result<ReportTaskModel>> {
+  /**
+   * Links an uploaded document to a report and advances status to 'Submitted'.
+   * The document must already be fully uploaded (status = UPLOADED) before calling.
+   */
+  async submitReport(reportId: string, documentId: string): Promise<Result<void>> {
+    const data = await this._graphqlFetch<{ updateReportStatus: boolean }>(
+      `mutation SubmitReport($id: ID!, $documentId: ID) {
+        updateReportStatus(id: $id, status: "Submitted", documentId: $documentId)
+      }`,
+      { id: reportId, documentId }
+    );
+    if (data?.updateReportStatus) return success(undefined);
+    return failure(new Error('Failed to submit report'));
+  }
+
+  /**
+   * Advances a report to 'Published' status.
+   * Does NOT automatically modify Booking or Collection status.
+   */
+  async publishReport(reportId: string): Promise<Result<void>> {
+    const data = await this._graphqlFetch<{ updateReportStatus: boolean }>(
+      `mutation PublishReport($id: ID!) {
+        updateReportStatus(id: $id, status: "Published")
+      }`,
+      { id: reportId }
+    );
+    if (data?.updateReportStatus) return success(undefined);
+    return failure(new Error('Failed to publish report'));
+  }
+
+  /**
+   * Generic status update — used for backward-compat status transitions.
+   * For Submitted, use submitReport(). For Published, use publishReport().
+   */
+  async updateStatus(id: string, status: ReportTaskModel['status']): Promise<Result<void>> {
     const data = await this._graphqlFetch<{ updateReportStatus: boolean }>(
       `mutation UpdateReportStatus($id: ID!, $status: String!) {
         updateReportStatus(id: $id, status: $status)
       }`,
       { id, status }
     );
-    if (data?.updateReportStatus) return success({ id, status } as ReportTaskModel);
+    if (data?.updateReportStatus) return success(undefined);
     return failure(new Error('Failed to update report status'));
+  }
+
+  /**
+   * Gets a presigned download URL for a report document.
+   * Requires the caller to have an authenticated session and access to the document.
+   */
+  async getDocumentDownloadUrl(documentId: string): Promise<Result<string>> {
+    const data = await this._graphqlFetch<{ documentDownloadUrl: string }>(
+      `query GetDocumentDownloadUrl($id: ID!) {
+        documentDownloadUrl(id: $id)
+      }`,
+      { id: documentId }
+    );
+    if (data?.documentDownloadUrl) return success(data.documentDownloadUrl);
+    return failure(new Error('Failed to get download URL'));
+  }
+
+  /**
+   * Backward-compat shim for AlertService.
+   * LIMS-style 'Awaiting Verification' / 'STAT' filters will return 0 records
+   * in the new e-commerce model, so AlertService alert generation is silently suppressed.
+   * @deprecated AlertService should be updated to new lifecycle states.
+   */
+  async getAllTasks(): Promise<Result<ReportTaskModel[]>> {
+    const res = await this.getAdminWorkspace(50, null, 'All');
+    if (!res.isSuccess) return failure(res.error!);
+    return success((res.value.queue || []) as ReportTaskModel[]);
   }
 }

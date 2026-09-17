@@ -2074,41 +2074,8 @@ exports.handler = async (event) => {
             }
           }
 
-          if (input.status === 'Sample Collected') {
-            try {
-              const existingReports = await reportRepo.getByPatientId(existingCollection.patientId);
-              const alreadyExists = bookingId 
-                ? existingReports.some(r => r.bookingId === bookingId)
-                : existingReports.some(r => r.id === `REP-${existingCollection.id.replace('COL-', '')}`);
-              
-              if (!alreadyExists) {
-                const reportId = bookingId ? `REP-${bookingId.replace('bk_', '')}` : `REP-${existingCollection.id.replace('COL-', '')}`;
-                await reportRepo.create({
-                  id: reportId,
-                  patientId: existingCollection.patientId,
-                  bookingId: bookingId || null,
-                  patient: patient ? {
-                    name: patient.name || 'Unknown',
-                    age: patient.age || 0,
-                    gender: patient.gender || 'Unknown',
-                    id: patient.id || existingCollection.patientId
-                  } : {
-                    name: typeof existingCollection.patient === 'string' ? existingCollection.patient : existingCollection.patient?.name || 'Unknown',
-                    age: 0,
-                    gender: 'Unknown',
-                    id: existingCollection.patientId
-                  },
-                  tests: existingCollection.tests || [],
-                  testType: (existingCollection.tests || []).join(', '),
-                  status: 'Processing',
-                  priority: 'Routine',
-                  generatedAt: new Date().toISOString()
-                });
-              }
-            } catch (repErr) {
-              logger.warn(`Failed to generate report task for collection ${existingCollection.id}`, repErr);
-            }
-          }
+          // Report creation is now employee-initiated from the Admin Reports module.
+          // Collection reaching 'Sample Collected' no longer auto-creates a Report.
         }
 
         const newPhlebId = input.phlebotomistId || input.assignedTo;
@@ -2223,7 +2190,7 @@ exports.handler = async (event) => {
         const newReportData = {
           ...input,
           id: reportId,
-          status: input.status || 'Processing',
+          status: input.status || 'Pending Upload', // Default: Pending Upload (e-commerce lifecycle)
           priority: input.priority || 'Routine',
           results: input.results || [],
         };
@@ -2232,7 +2199,7 @@ exports.handler = async (event) => {
       }
 
       case 'updateReportStatus': {
-        const { id, status } = args;
+        const { id, status, documentId } = args;
         const identityForCheck = identity;
         const canEdit = await hasPermission(identityForCheck, 'reports', 'edit');
         if (!canEdit) {
@@ -2242,32 +2209,34 @@ exports.handler = async (event) => {
         const existingReport = await reportRepo.getById(id);
         if (!existingReport) throw new Error('Report not found');
 
-        const validStatuses = ['Processing', 'Generated', 'Awaiting Verification', 'Pending Upload', 'Published'];
+        // Backward-compat statuses (Processing/Generated/Awaiting Verification) remain
+        // valid for existing DB records but are not exposed as active UI buttons.
+        const validStatuses = ['Processing', 'Generated', 'Awaiting Verification', 'Pending Upload', 'Submitted', 'Published'];
         if (!validStatuses.includes(status)) {
           throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
         }
 
-        await reportRepo.updateStatus(id, status);
+        // Build update fields
+        const updateFields = { status };
 
-        // Side effect: publish â†’ mark booking + collection as Completed
-        if (status === 'Published') {
-          const updatedReport = await reportRepo.getById(id);
-          if (updatedReport && updatedReport.bookingId) {
-            try {
-              await bookingRepo.updateStatus(updatedReport.bookingId, 'Completed');
-              if (updatedReport.patientId) {
-                const collections = await collectionRepo.getByPatientId(updatedReport.patientId);
-                const matchingTask = collections.find(c => c.bookingId === updatedReport.bookingId);
-                if (matchingTask && matchingTask.status !== 'Completed') {
-                  await collectionRepo.update(matchingTask.id, { status: 'Completed' });
-                }
-              }
-            } catch (syncErr) {
-              logger.warn(`Failed to sync booking/collection for published report ${id}`, syncErr);
-            }
-          }
+        if (status === 'Submitted') {
+          if (!documentId) throw new Error('documentId is required when submitting a report');
+          const doc = await documentRepo.getById(documentId);
+          if (!doc) throw new Error('Document not found');
+          if (doc.status !== 'UPLOADED') throw new Error('Document must be fully uploaded before submitting a report');
+          updateFields.documentId = documentId;
+          updateFields.submittedAt = new Date().toISOString();
+          updateFields.submittedBy = identityForCheck.sub || identityForCheck.username || 'unknown';
         }
 
+        if (status === 'Published') {
+          updateFields.publishedAt = new Date().toISOString();
+          updateFields.publishedBy = identityForCheck.sub || identityForCheck.username || 'unknown';
+          // NOTE: Publishing a report does NOT automatically complete Booking or Collection.
+          // Booking completion is handled independently via Collection → Booking sync.
+        }
+
+        await reportRepo.update(id, updateFields);
         return true; // Schema: updateReportStatus returns Boolean!
       }
 
@@ -2530,7 +2499,10 @@ exports.handler = async (event) => {
 
         await documentRepo.createMetadata(metadata, identity.sub);
         const uploadUrl = await storageRepo.getPresignedUploadUrl(fileKey, contentType);
-        return { documentId, uploadUrl, fileKey };
+        // Schema: DocumentUploadResponse { id: ID!, uploadUrl: String! }
+        // Must return 'id' (not 'documentId') to satisfy the non-nullable ID! field.
+        return { id: documentId, uploadUrl, fileKey };
+
       }
 
       case 'completeDocumentUpload': {

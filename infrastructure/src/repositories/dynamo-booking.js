@@ -246,7 +246,7 @@ class DynamoBookingRepository {
     return this._mapFromDb(Attributes);
   }
 
-  async confirmBooking(bookingId, paymentMethod = 'Online', providerTxnId = null) {
+  async confirmBooking(bookingId, paymentMethod = 'Online', providerTxnId = null, paymentStatus = 'Paid') {
     const now = new Date().toISOString();
     const collectionId = `COL-${bookingId.replace('bk_', '')}`;
 
@@ -280,7 +280,7 @@ class DynamoBookingRepository {
             ':gsi2pk': `PATIENT#${patientKey}`,
             ':gsi2sk': gsi2sk,
             ':status': 'Confirmed',
-            ':pStatus': 'Paid',
+            ':pStatus': paymentStatus,
             ':pMethod': paymentMethod || booking.payment?.method || 'Online',
             ':pTxnId': providerTxnId || booking.payment?.providerTransactionId || 'CONFIRMED',
             ':updatedAt': now,
@@ -337,7 +337,7 @@ class DynamoBookingRepository {
           ':gsi2pk': `PATIENT#${patientKey}`,
           ':gsi2sk': gsi2sk,
           ':status': 'Confirmed',
-          ':pStatus': 'Paid',
+          ':pStatus': paymentStatus,
           ':pMethod': paymentMethod || booking.payment?.method || 'Online',
           ':updatedAt': now,
         },

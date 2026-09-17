@@ -1,184 +1,157 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ReportTaskModel } from '@/domains/reports/model';
-import { AdminIcon } from '@/components/admin/navigation/AdminIcons'; // Reusing for icons
+import { AdminIcon } from '@/components/admin/navigation/AdminIcons';
+import { reportsService } from '@/services';
 
 interface ReportPreviewModalProps {
   report: ReportTaskModel;
   onClose: () => void;
 }
 
+/**
+ * ReportPreviewModal — document-delivery viewer.
+ *
+ * If the report has a documentId, fetches a presigned S3 download URL and
+ * opens the actual uploaded PDF in a new tab.
+ * If there is no documentId, shows a clear "Document not available" state.
+ *
+ * No LIMS functionality: no results table, no pathologist signature,
+ * no window.print(), no fabricated medical data.
+ */
 export function ReportPreviewModal({ report, onClose }: ReportPreviewModalProps) {
-  // Prevent background scrolling
+  const [isFetching, setIsFetching] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
   useEffect(() => {
     document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
+    return () => { document.body.style.overflow = 'auto'; };
   }, []);
 
-  const handlePrint = () => {
-    window.print();
+  const handleDownload = async () => {
+    if (!report.documentId) return;
+    setIsFetching(true);
+    setFetchError(null);
+    const res = await reportsService.getDocumentDownloadUrl(report.documentId);
+    setIsFetching(false);
+    if (res.isSuccess) {
+      window.open(res.value, '_blank', 'noopener,noreferrer');
+    } else {
+      setFetchError(res.error?.message || 'Could not generate download link. Please try again.');
+    }
+  };
+
+  const hasDocument = !!report.documentId;
+
+  const formatDate = (iso?: string) => {
+    if (!iso) return '—';
+    try { return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }); }
+    catch { return iso; }
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 print:p-0 print:bg-white print:block">
-      {/* Hide the rest of the app when printing */}
-      <style dangerouslySetInnerHTML={{__html: `
-        @media print {
-          body > *:not(#report-modal-root) {
-            display: none !important;
-          }
-          #report-modal-root {
-            position: absolute;
-            left: 0;
-            top: 0;
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-          }
-        }
-      `}} />
-      
-      <div id="report-modal-root" className="bg-slate-100 w-full max-w-4xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden print:w-full print:h-auto print:rounded-none print:shadow-none print:bg-white">
-        
-        {/* Header - Not printed */}
-        <div className="bg-slate-900 text-white p-4 flex justify-between items-center print:hidden shrink-0">
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+
+        {/* Header */}
+        <div className="bg-slate-900 text-white px-6 py-4 flex justify-between items-center shrink-0">
           <div>
-            <h2 className="text-lg font-bold">Report Preview</h2>
-            <p className="text-sm text-slate-400">PDF Document Simulation</p>
+            <h2 className="text-base font-bold">Report Document</h2>
+            <p className="text-xs text-slate-400 mt-0.5">{report.testType}</p>
           </div>
-          <div className="flex gap-3">
-            <button 
-              onClick={handlePrint}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg flex items-center gap-2 transition-colors"
-            >
-              <AdminIcon name="download" className="w-4 h-4" /> Save as PDF
-            </button>
-            <button 
-              onClick={onClose}
-              className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-300 hover:text-white"
-            >
-              <AdminIcon name="x" className="w-5 h-5" />
-            </button>
-          </div>
+          <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-300 hover:text-white" aria-label="Close">
+            <AdminIcon name="x" className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* Scrollable Document Area */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-8 flex justify-center print:overflow-visible print:p-0">
-          
-          {/* A4 Paper Simulation */}
-          <div 
-            id="printable-report"
-            className="bg-white w-full max-w-[794px] min-h-[1123px] shadow-md p-8 sm:p-12 relative print:shadow-none print:w-full print:max-w-none print:min-h-0 print:p-0"
-            style={{ fontFamily: 'sans-serif' }}
-          >
-            {/* Report Header */}
-            <div className="flex justify-between items-start border-b-2 border-blue-900 pb-6 mb-8">
-              <div>
-                <h1 className="text-3xl font-extrabold text-blue-900 tracking-tight m-0">AGAM DIAGNOSTICS</h1>
-                <p className="text-sm text-slate-500 font-medium mt-1">Advanced Clinical Laboratory</p>
-                <div className="mt-4 text-xs text-slate-500 space-y-1">
-                  <p>123 Medical Innovation Way</p>
-                  <p>Tech City, TC 10020</p>
-                  <p>Ph: +1 (555) 123-4567</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-slate-800">LABORATORY REPORT</div>
-                <div className="mt-4 flex flex-col items-end gap-1 text-sm">
-                  <div className="bg-slate-100 px-3 py-1 rounded text-slate-700">
-                    <span className="font-bold">Report ID:</span> {report.id}
-                  </div>
-                  <div className="bg-slate-100 px-3 py-1 rounded text-slate-700">
-                    <span className="font-bold">Date:</span> {new Date().toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* Body */}
+        <div className="p-6 flex flex-col gap-5">
 
-            {/* Patient Details */}
-            <div className="grid grid-cols-2 gap-6 mb-8 bg-slate-50 p-6 rounded-lg border border-slate-100">
+          {/* Report Metadata */}
+          <div className="bg-slate-50 rounded-xl p-4 grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <div className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">Patient</div>
+              <div className="font-bold text-slate-800">{report.patient?.name || '—'}</div>
+            </div>
+            <div>
+              <div className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">Report ID</div>
+              <div className="font-mono font-semibold text-slate-600 text-xs">{report.id}</div>
+            </div>
+            {report.bookingId && (
               <div>
-                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Patient Information</p>
-                <p className="text-lg font-bold text-slate-800">{report.patient.name}</p>
-                <p className="text-sm text-slate-600 mt-1">
-                  {report.patient.age} Yrs / {report.patient.gender}
+                <div className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">Booking</div>
+                <div className="font-mono font-semibold text-slate-600 text-xs">{report.bookingId}</div>
+              </div>
+            )}
+            <div>
+              <div className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">Status</div>
+              <div className="font-bold text-slate-800">{report.status}</div>
+            </div>
+            {report.publishedAt && (
+              <div className="col-span-2">
+                <div className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">Published</div>
+                <div className="text-slate-700 font-medium">{formatDate(report.publishedAt)}</div>
+              </div>
+            )}
+          </div>
+
+          {/* Document Section */}
+          {hasDocument ? (
+            <div className="border border-slate-200 rounded-xl p-5 flex flex-col items-center gap-4 text-center">
+              <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center">
+                <AdminIcon name="file" className="w-7 h-7 text-blue-600" />
+              </div>
+              <div>
+                <p className="font-bold text-slate-800 text-sm">Report document is available</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  The report PDF will open in a new tab via a secure, time-limited link.
                 </p>
-                <p className="text-sm text-slate-600 mt-1">ID: {report.patient.id}</p>
               </div>
-              <div>
-                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Test Details</p>
-                <p className="text-sm text-slate-800 font-bold">{report.testType}</p>
-                <p className="text-sm text-slate-600 mt-1">Priority: <span className="font-medium text-amber-600">{report.priority}</span></p>
-                <p className="text-sm text-slate-600 mt-1">Time: {report.time}</p>
-              </div>
-            </div>
 
-            {/* Results Table */}
-            <div className="mb-12">
-              <h3 className="text-lg font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2">Investigation Results</h3>
-              
-              {report.results && report.results.length > 0 ? (
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b-2 border-slate-200">
-                      <th className="py-3 px-2 text-slate-500 font-bold w-2/5">PARAMETER</th>
-                      <th className="py-3 px-2 text-slate-500 font-bold w-1/5">RESULT</th>
-                      <th className="py-3 px-2 text-slate-500 font-bold w-1/5">UNIT</th>
-                      <th className="py-3 px-2 text-slate-500 font-bold w-1/5">REFERENCE</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {report.results.map((res, idx) => {
-                      return (
-                        <tr key={idx} className="border-b border-slate-100 last:border-0">
-                          <td className="py-4 px-2 font-medium text-slate-800">{res.parameter}</td>
-                          <td className="py-4 px-2">
-                            <span className={`font-bold ${res.isAbnormal ? 'text-red-600' : 'text-slate-800'}`}>
-                              {res.value} {res.isAbnormal && '*'}
-                            </span>
-                          </td>
-                          <td className="py-4 px-2 text-slate-600">{res.unit}</td>
-                          <td className="py-4 px-2 text-slate-600">
-                            {res.reference || 'N/A'}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              ) : (
-                <div className="py-8 text-center text-slate-500 bg-slate-50 rounded border border-dashed border-slate-200">
-                  <p className="font-medium">No results recorded yet.</p>
-                  <p className="text-xs mt-1">Results will appear here once processing is completed.</p>
+              {fetchError && (
+                <div className="w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-xs font-semibold text-red-600">
+                  {fetchError}
                 </div>
               )}
-            </div>
 
-            {/* Footer / Signatures */}
-            <div className="absolute bottom-12 left-12 right-12 pt-8 border-t border-slate-200 flex justify-between items-end">
-              <div>
-                <p className="text-xs text-slate-400">Generated electronically by Agam Diagnostics System</p>
-                <p className="text-xs text-slate-400 mt-1">Status: <span className="font-bold text-slate-600">{report.status}</span></p>
+              <button
+                onClick={handleDownload}
+                disabled={isFetching}
+                className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm font-bold rounded-lg transition-colors"
+              >
+                <AdminIcon name="download" className="w-4 h-4" />
+                {isFetching ? 'Fetching link…' : 'Open / Download Report'}
+              </button>
+
+              <p className="text-xs text-slate-400">
+                Download link is valid for 15 minutes after clicking.
+              </p>
+            </div>
+          ) : (
+            /* No document state — shown for legacy Published records without documentId */
+            <div className="border border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center gap-3 text-center">
+              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
+                <AdminIcon name="file" className="w-6 h-6 text-slate-400" />
               </div>
-              <div className="text-center">
-                {report.status === 'Published' ? (
-                  <>
-                    <div className="w-32 h-12 border-2 border-blue-900/20 text-blue-900/40 rounded flex items-center justify-center font-bold text-xl italic mb-2 transform -rotate-2">
-                      e-SIGNED
-                    </div>
-                    <p className="text-sm font-bold text-slate-800">Dr. Sarah Jenkins</p>
-                    <p className="text-xs text-slate-500">Chief Pathologist</p>
-                  </>
-                ) : (
-                  <div className="text-sm font-bold text-slate-400 italic py-4">
-                    [ Pending Digital Signature ]
-                  </div>
-                )}
+              <div>
+                <p className="font-bold text-slate-600 text-sm">Document not available</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  {report.status === 'Published'
+                    ? 'This report was published before document upload was introduced. No file is on record.'
+                    : 'No document has been uploaded for this report yet.'}
+                </p>
               </div>
             </div>
-          </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-slate-100 flex justify-end">
+          <button onClick={onClose} className="px-5 py-2 text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+            Close
+          </button>
         </div>
       </div>
     </div>

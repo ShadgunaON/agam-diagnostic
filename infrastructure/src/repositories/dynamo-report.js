@@ -84,6 +84,55 @@ class DynamoReportRepository {
     return this._mapFromDb(Attributes);
   }
 
+  /**
+   * Generic multi-field update for a Report record.
+   * Accepts any fields that are not primary-key or GSI keys.
+   * Used for: status + documentId + submittedAt + submittedBy + publishedAt + publishedBy.
+   */
+  async update(id, fields) {
+    if (!fields || Object.keys(fields).length === 0) return this.getById(id);
+
+    const now = new Date().toISOString();
+    const protectedKeys = ['id', 'PK', 'SK', 'GSI1PK', 'GSI1SK', 'GSI2PK', 'GSI2SK', 'GSI3PK', 'GSI3SK'];
+
+    // Always update updatedAt
+    const setClauses = ['#f_updatedAt = :updatedAt'];
+    const removeClauses = [];
+    const attrNames = { '#f_updatedAt': 'updatedAt' };
+    const attrValues = { ':updatedAt': now };
+
+    Object.entries(fields).forEach(([k, v]) => {
+      if (protectedKeys.includes(k)) return;
+      const nameKey = `#f_${k}`;
+      const valKey = `:fv_${k}`;
+      if (v === null || v === undefined) {
+        removeClauses.push(nameKey);
+        attrNames[nameKey] = k;
+      } else {
+        setClauses.push(`${nameKey} = ${valKey}`);
+        attrNames[nameKey] = k;
+        attrValues[valKey] = v;
+      }
+    });
+
+    let updateExpression = `SET ${setClauses.join(', ')}`;
+    if (removeClauses.length > 0) {
+      updateExpression += ` REMOVE ${removeClauses.join(', ')}`;
+    }
+
+    const params = {
+      TableName: TABLE_NAME,
+      Key: { PK: `REPORT#${id}`, SK: 'METADATA' },
+      UpdateExpression: updateExpression,
+      ExpressionAttributeNames: attrNames,
+      ExpressionAttributeValues: attrValues,
+      ReturnValues: 'ALL_NEW',
+    };
+
+    const { Attributes } = await docClient.send(new UpdateCommand(params));
+    return this._mapFromDb(Attributes);
+  }
+
   async getByPatientId(patientId) {
     const params = {
       TableName: TABLE_NAME,

@@ -157,7 +157,7 @@ type Mutation {
   
   # Report Mutations
   createReportTask(input: String!): Report!
-  updateReportStatus(id: ID!, status: String!, results: String): Boolean!
+  updateReportStatus(id: ID!, status: String!, documentId: ID): Boolean!
   
   # Invoice Mutations
   createInvoice(input: String!): Invoice!
@@ -321,14 +321,20 @@ type Report {
   patientId: ID!
   bookingId: ID
   status: String!
-  priority: String
+  priority: String          # Deprecated — retained for existing records
   createdAt: String!
   testType: String!
-  time: String
+  time: String              # Deprecated — retained for existing records
   url: String
   pdfKey: String
   patient: PatientSnapshot!
-  results: [TestResult!]
+  results: [TestResult!]    # Deprecated — retained for backward compat, never populated
+  # Document-delivery fields (new e-commerce lifecycle)
+  documentId: ID            # Links to Document record once uploaded
+  submittedAt: String       # ISO timestamp when employee submitted
+  submittedBy: String       # Cognito sub of submitting employee
+  publishedAt: String       # ISO timestamp when published to customer
+  publishedBy: String       # Cognito sub of publishing employee
 }
 
 type Invoice {

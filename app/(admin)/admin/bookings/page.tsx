@@ -82,8 +82,9 @@ export default function GlassBookingsPage() {
         setErrorState('none');
       } else {
         const msg = result.error?.message || '';
-        if (msg.includes('401')) setErrorState('401');
-        else if (msg.includes('403') || msg.includes('Access denied')) setErrorState('403');
+        const lowerMsg = msg.toLowerCase();
+        if (lowerMsg.includes('401') || lowerMsg.includes('expired') || lowerMsg.includes('unauthorized')) setErrorState('401');
+        else if (lowerMsg.includes('403') || lowerMsg.includes('access denied')) setErrorState('403');
         else setErrorState('500');
       }
     } catch (err) {
