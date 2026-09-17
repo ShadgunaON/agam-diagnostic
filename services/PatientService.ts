@@ -57,11 +57,11 @@ export class PatientService {
     }
   }
 
-  async getAll(page = 1, limit = 10, cursor: string | null = null, search = '', sort = 'date_newest'): Promise<Result<PaginatedResponse<PatientModel>>> {
+  async getAll(page = 1, limit = 10, cursor: string | null = null, search = '', sort = 'date_newest', gender = 'All', status = 'All'): Promise<Result<PaginatedResponse<PatientModel>>> {
     try {
       const res = await this._graphqlFetch<{ patients: { data: PatientModel[], nextCursor: string | null, meta: any } }>(
-        `query GetPatients($limit: Int, $cursor: String, $search: String, $sort: String) {
-          patients(limit: $limit, cursor: $cursor, search: $search, sort: $sort) {
+        `query GetPatients($limit: Int, $cursor: String, $search: String, $sort: String, $gender: String, $status: String) {
+          patients(limit: $limit, cursor: $cursor, search: $search, sort: $sort, gender: $gender, status: $status) {
             data {
               id name age gender phone email status bloodGroup relation dobOrAge ownerSub createdAt updatedAt
             }
@@ -69,7 +69,7 @@ export class PatientService {
             meta { total page limit totalPages }
           }
         }`,
-        { limit, cursor, search, sort }
+        { limit, cursor, search, sort, gender: gender === 'All' ? null : gender, status: status === 'All' ? null : status }
       );
       return success(res!.patients);
     } catch (err) {

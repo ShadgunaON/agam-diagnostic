@@ -42,10 +42,10 @@ export default function PatientsPage() {
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
-  // Reset pagination when search or sort changes
+  // Reset pagination when search or sort or filters change
   useEffect(() => {
     setCursorStack([]);
-  }, [debouncedSearch, sortBy]);
+  }, [debouncedSearch, sortBy, genderFilter, statusFilter]);
 
   useEffect(() => {
     setMounted(true);
@@ -58,7 +58,7 @@ export default function PatientsPage() {
       const currentCursor = cursorStack.length > 0 ? cursorStack[cursorStack.length - 1] : null;
       const sortParam = sortBy === 'oldest' ? 'date_oldest' : 'date_newest';
       
-      const result = await patientService.getAll(1, 10, currentCursor, debouncedSearch, sortParam);
+      const result = await patientService.getAll(1, 10, currentCursor, debouncedSearch, sortParam, genderFilter, statusFilter);
 
       if (result.isSuccess && result.value) {
         setPatients(result.value.data);
@@ -70,27 +70,12 @@ export default function PatientsPage() {
       setIsLoading(false);
     };
     loadPatients();
-  }, [cursorStack, debouncedSearch, sortBy]);
+  }, [cursorStack, debouncedSearch, sortBy, genderFilter, statusFilter]);
 
 
   const filteredAndSortedPatients = React.useMemo(() => {
-    let result = [...patients];
-
-    if (genderFilter !== 'All') {
-      result = result.filter(p => {
-        if (genderFilter === 'Unknown/Unspecified') {
-          return !p.gender;
-        }
-        return p.gender === genderFilter;
-      });
-    }
-
-    if (statusFilter !== 'All') {
-      result = result.filter(p => p.status === statusFilter);
-    }
-
-    return result;
-  }, [patients, genderFilter, statusFilter]);
+    return patients;
+  }, [patients]);
 
   const paginatedData = React.useMemo(() => {
     return filteredAndSortedPatients;

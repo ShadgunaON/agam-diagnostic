@@ -1462,8 +1462,8 @@ exports.handler = async (event) => {
           if (!(await hasPermission(identityForCheck, 'patients', 'view'))) {
             throw new Error('Access denied: Missing patients.view permission');
           }
-          const { limit = 20, cursor = null, search = '', sort = 'date_newest' } = args;
-          const paginated = await patientRepo.getPaginated({ limit, cursor, search, sort });
+          const { limit = 20, cursor = null, search = '', sort = 'date_newest', gender = null, status = null } = args;
+          const paginated = await patientRepo.getPaginated({ limit, cursor, search, sort, gender, status });
           const totalCount = paginated.totalCount ?? paginated.data.length;
           return { data: paginated.data, nextCursor: paginated.nextCursor, meta: { total: totalCount, page: 1, limit, totalPages: Math.ceil(totalCount / limit) || 1 } };
         } else if (await isPhlebotomist(identityForCheck)) {
@@ -2458,6 +2458,12 @@ exports.handler = async (event) => {
         }
 
         await invoiceRepo.update(id, { paymentMethod });
+
+        if (paymentMethod === 'Cash' && existingInvoice.bookingId) {
+          const bookingRepo = require('../repositories/dynamo-booking');
+          // If Pay at Lab (Cash), confirm the booking so it drops into the Collections Queue, but leave payment as Pending
+          await bookingRepo.confirmBooking(existingInvoice.bookingId, 'Cash', 'PAY_AT_LAB', 'Pending');
+        }
 
         return true; // Schema returns Boolean!
       }

@@ -115,7 +115,7 @@ class DynamoPatientRepository {
    * Uses GSI1 (ENTITY#PATIENT partition) with DynamoDB-native Limit + ExclusiveStartKey.
    * cursor is a base64-encoded JSON LastEvaluatedKey.
    */
-  async getPaginated({ limit = 20, cursor = null, sort = 'date_newest', search = '' } = {}) {
+  async getPaginated({ limit = 20, cursor = null, sort = 'date_newest', search = '', gender = null, status = null } = {}) {
     const params = {
       TableName: TABLE_NAME,
       IndexName: 'GSI1',
@@ -140,6 +140,33 @@ class DynamoPatientRepository {
       params.ExpressionAttributeValues[':qUpper'] = qUpper;
       params.ExpressionAttributeValues[':qTitle'] = qTitle;
       params.ExpressionAttributeValues[':qOriginal'] = qOriginal;
+    }
+
+    const filterConditions = [];
+    if (params.FilterExpression) {
+      filterConditions.push(`(${params.FilterExpression})`);
+    }
+
+    if (gender && gender !== 'All') {
+      if (gender === 'Unknown/Unspecified') {
+        filterConditions.push('attribute_not_exists(#gender)');
+      } else {
+        filterConditions.push('#gender = :gender');
+        params.ExpressionAttributeValues[':gender'] = gender;
+      }
+      params.ExpressionAttributeNames = params.ExpressionAttributeNames || {};
+      params.ExpressionAttributeNames['#gender'] = 'gender';
+    }
+
+    if (status && status !== 'All') {
+      filterConditions.push('#status = :status');
+      params.ExpressionAttributeValues[':status'] = status;
+      params.ExpressionAttributeNames = params.ExpressionAttributeNames || {};
+      params.ExpressionAttributeNames['#status'] = 'status';
+    }
+
+    if (filterConditions.length > 0) {
+      params.FilterExpression = filterConditions.join(' AND ');
     }
 
     if (cursor) {
