@@ -124,7 +124,9 @@ export function ReportSubmitModal({ report, onClose, onSuccess }: ReportSubmitMo
         },
         body: JSON.stringify({
           query: `mutation CompleteReportUpload($id: ID!) {
-            completeDocumentUpload(id: $id)
+            completeDocumentUpload(id: $id) {
+              id
+            }
           }`,
           variables: { id: documentId },
         }),
