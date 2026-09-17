@@ -469,31 +469,35 @@ export class AuthService {
       const response = await this.cognitoClient.send(command);
 
       if (response.AuthenticationResult && response.AuthenticationResult.AccessToken) {
-        this.storeTokens(response.AuthenticationResult);
+        const userRes = this.buildUserFromAuthResult(response.AuthenticationResult, cleanEmail);
+        
+        if (userRes.isFailure) {
+          return failure(new ServerError('Failed to build user profile from token.'));
+        }
+
         this.clearStoredSession(cleanEmail);
 
-        const user: UserProfile = {
-          id: `usr_${cleanEmail.replace(/[^a-zA-Z0-9]/g, '_')}`,
-          fullName: registrationData?.fullName || cleanEmail.split('@')[0],
-          email: cleanEmail,
-          mobile: registrationData?.mobile || '',
-          gender: registrationData?.gender,
-          dobOrAge: registrationData?.dobOrAge,
-          role: 'patient',
-          isProfileComplete: !!registrationData?.fullName,
-          savedPatients: registrationData?.fullName
-            ? [
-                {
-                  id: `pat_${Date.now()}`,
-                  name: registrationData.fullName,
-                  relation: 'Myself',
-                  age: registrationData.dobOrAge || '30',
-                  gender: registrationData.gender || 'Male',
-                },
-              ]
-            : [],
-          savedAddresses: [],
-        };
+        const user = userRes.value.user;
+
+        // If it's a new registration, augment the user profile with provided data
+        if (registrationData?.fullName) {
+          user.fullName = registrationData.fullName;
+          user.isProfileComplete = true;
+          
+          if (registrationData.mobile) user.mobile = registrationData.mobile;
+          if (registrationData.gender) user.gender = registrationData.gender;
+          if (registrationData.dobOrAge) user.dobOrAge = registrationData.dobOrAge;
+          
+          user.savedPatients = [
+            {
+              id: `pat_${Date.now()}`,
+              name: registrationData.fullName,
+              relation: 'Myself',
+              age: registrationData.dobOrAge || '30',
+              gender: registrationData.gender || 'Male',
+            },
+          ];
+        }
 
         return success({
           success: true,
