@@ -53,11 +53,13 @@ export class PageService {
         cache: 'no-store',
       });
 
-      if (!response.ok) return null;
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
       const { data, errors } = await response.json();
       if (errors?.length) {
         console.error('[PageService] GraphQL errors:', errors);
-        throw new Error(errors[0].message);
+        throw new Error(errors.map((e: any) => e.message).join('; '));
       }
       return data as T;
     } catch (e) {

@@ -125,7 +125,7 @@ exports.handler = async (event) => {
     'catalogTests', 'catalogPackages', 'catalogServices',
     'testBySlug', 'packageBySlug', 'serviceBySlug',
     'blogs', 'blogById', 'publicReviews', 'globalSearch',
-    'newsletterSubscribe', 'createInquiry'
+    'newsletterSubscribe', 'createInquiry', 'pageById'
   ]);
 
   const { fieldName } = event.info;
