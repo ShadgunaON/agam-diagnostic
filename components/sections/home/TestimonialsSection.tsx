@@ -8,13 +8,25 @@ import { ReviewModel } from '@/domains/review/model';
 
 export interface TestimonialsSectionProps {
   className?: string;
+  eyebrow?: string;
+  heading?: string;
+  description?: string;
+  initialReviews?: ReviewModel[];
 }
 
-export function TestimonialsSection({ className = '' }: TestimonialsSectionProps) {
-  const [reviews, setReviews] = useState<ReviewModel[]>([]);
-  const [loading, setLoading] = useState(true);
+export function TestimonialsSection({ 
+  className = '',
+  eyebrow = "Patient Stories",
+  heading = "What Our Patients Say",
+  description = "Don&apos;t just take our word for it. Here is what people across Madurai think about our services.",
+  initialReviews = []
+}: TestimonialsSectionProps) {
+  const [reviews, setReviews] = useState<ReviewModel[]>(initialReviews);
+  const [loading, setLoading] = useState(initialReviews.length === 0);
   
   useEffect(() => {
+    if (initialReviews.length > 0) return;
+    
     const fetchReviews = async () => {
       try {
         const res = await reviewService.getPublicReviews();
@@ -37,9 +49,9 @@ export function TestimonialsSection({ className = '' }: TestimonialsSectionProps
     <section className={`section bg-white ${className}`} id="testimonials">
       <div className="container">
         <div className="section-header section-header--center">
-          <div className="section-header__overline">Patient Stories</div>
-          <h2 className="section-header__title">What Our Patients Say</h2>
-          <p className="section-header__desc">Don&apos;t just take our word for it. Here is what people across Madurai think about our services.</p>
+          <div className="section-header__overline">{eyebrow}</div>
+          <h2 className="section-header__title">{heading}</h2>
+          <p className="section-header__desc" dangerouslySetInnerHTML={{ __html: description }}></p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -14,14 +14,14 @@ export interface ServicesHeroSectionProps {
 
 export function ServicesHeroSection({ data, className = '' }: ServicesHeroSectionProps) {
   return (
-    <Section 
-      className={`hero-premium section ${className}`.trim()}
-      style={{ padding: 0, background: 'var(--color-bg-alt)', overflow: 'hidden', position: 'relative' }}
+    <section 
+      className={`hero-premium pt-0 mt-0 ${className}`.trim()}
+      style={{ background: 'var(--color-bg-alt)', overflow: 'hidden', position: 'relative', paddingTop: 0, marginTop: 0 }}
     >
       <div className="grid grid-cols-1 md:grid-cols-[45%_55%] items-stretch">
         
         {/* Content Left */}
-        <div className="flex flex-col justify-center relative z-10 px-6 py-4 md:py-6 md:pl-[max(1.5rem,calc((100vw-var(--max-width))/2+1.5rem))] md:pr-8">
+        <div className="flex flex-col justify-center relative z-10 px-6 py-8 md:pt-6 md:pb-12 md:pl-[max(1.5rem,calc((100vw-var(--max-width))/2+1.5rem))] md:pr-8">
           <div className="breadcrumb" style={{ marginBottom: 'var(--sp-3)' }}>
             <Link href="/">Home</Link><span className="breadcrumb__sep">›</span><span className="breadcrumb__current">Diagnostic Services</span>
           </div>
@@ -39,6 +39,6 @@ export function ServicesHeroSection({ data, className = '' }: ServicesHeroSectio
         </div>
         
       </div>
-    </Section>
+    </section>
   );
 }

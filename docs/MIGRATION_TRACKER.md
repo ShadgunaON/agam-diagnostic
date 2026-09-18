@@ -1693,3 +1693,38 @@ ame, phone, and email. AppSync immediately rejected the entire query with a vali
 - **Files Changed:** infrastructure/schema.graphql, infrastructure/src/handlers/graphql.js, services/PatientService.ts, app/(admin)/admin/patients/page.tsx
 - **Fix Applied:** Added sort to the patients GraphQL query. Passed cursor, limit, search, and sort parameters to the backend PatientRepository's getPaginated method. Rewrote the frontend table to use cursor-based server-side pagination with the ConfigurableDataTable.
 - **Status:** FIXED + VERIFIED
+
+## Phase 1 - Home Page CMS Upgrade (2026-09-18)
+
+**Status**: Implemented locally; backend deployment pending; no deployment performed; no mocks introduced.
+
+**Section Inventory & Editable Fields**:
+- **Page Settings/SEO**: Title, slug, meta description (Draft/Published isolation).
+- **Hero**: Eyebrow, Heading, Description, CTA Text, CTA Link, Background Image.
+- **Statistics**: Value, Label, Icon (AdminArrayEditor + AdminIconPicker).
+- **Diagnostic Solutions**: Reference selector (AdminReferenceSelector mapped to Catalog Services).
+- **Health Checkup Plans**: Reference selector (AdminReferenceSelector mapped to Catalog Packages).
+- **Patient Reviews**: Reference selector (AdminReferenceSelector mapped to Public Reviews).
+- **Quality & Care**: Title, Description, Icon (AdminArrayEditor + AdminIconPicker).
+- **Health Insights**: Reference selector (AdminReferenceSelector mapped to Blogs).
+- **Main Lab**: Lab Name, Address, Phone, Hours, Image, Map Link, Booking CTA, Directions CTA.
+- **FAQ**: Structured Question/Answer array (AdminArrayEditor).
+- **Bottom CTA**: Heading, Description, Button Text, Link.
+
+**Architecture**:
+- Extracted generic reusable Admin primitives (AdminIconPicker, AdminArrayEditor, AdminImageEditor, AdminReferenceSelector).
+- AdminReferenceSelector fetches real entity display data using atchResolver.ts to prevent N+1 queries.
+- Draft vs Published isolation strictly enforced across both content and SEO metadata.
+- /admin/website/pages/home/preview securely renders draftContent without insecure public preview routes.
+- The public pp/(public)/page.tsx consumes purely publishedContent while mapping new structured CMS JSON payloads into the existing component props (no UI redesign).
+
+**Dependencies**:
+- **Backend Schema & Lambdas**: Remote AWS AppSync backend does not yet support the \updatePage\ and \publishPage\ GraphQL mutations. Clicking 'Save' triggers a genuine GraphQL FieldUndefined error. 
+- **Media Uploads**: S3 Asset uploads are unavailable. \AdminImageEditor\ intentionally stubs out upload capabilities and relies on existing asset references to avoid introducing fake local file storage mechanisms.
+
+**Files Changed/Added**:
+- \components/admin/cms/*\ (New generic editor primitives)
+- \pp/(admin)/admin/website/pages/home/page.tsx\ (Complete refactoring of CMS Editor)
+- \pp/(admin)/admin/website/pages/home/preview/page.tsx\ (New Secure Preview implementation)
+- \pp/(public)/page.tsx\ (CMS Hydration logic updated)
+

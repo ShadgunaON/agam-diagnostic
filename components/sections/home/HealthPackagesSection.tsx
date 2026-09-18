@@ -6,17 +6,24 @@ import { PackageCard } from '@/components/common/PackageCard';
 
 export interface HealthPackagesSectionProps {
   data: PackageData[];
+  eyebrow?: string;
+  heading?: string;
   className?: string;
 }
 
-export function HealthPackagesSection({ data, className = '' }: HealthPackagesSectionProps) {
+export function HealthPackagesSection({ 
+  data, 
+  eyebrow = "Popular Packages",
+  heading = "Comprehensive Health<br />Checkup Plans",
+  className = '' 
+}: HealthPackagesSectionProps) {
   return (
     <section className={`section bg-tint-blue ${className}`} id="packages">
       <div className="container">
         <div className="section-header-split">
           <div>
-            <div className="section-header__overline">Popular Packages</div>
-            <h2 className="section-header__title" style={{ lineHeight: 1.2 }}>Comprehensive Health<br />Checkup Plans</h2>
+            <div className="section-header__overline">{eyebrow}</div>
+            <h2 className="section-header__title" style={{ lineHeight: 1.2 }} dangerouslySetInnerHTML={{ __html: heading }}></h2>
           </div>
           <Link href="/health-packages" className="btn btn--outline">View All Packages</Link>
         </div>

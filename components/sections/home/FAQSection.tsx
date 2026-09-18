@@ -7,6 +7,9 @@ import { Section, Container } from '@/components/ui';
 
 export interface FAQSectionProps {
   data: FAQData[];
+  eyebrow?: string;
+  heading?: string;
+  description?: string;
   className?: string;
 }
 
@@ -14,7 +17,13 @@ export interface FAQSectionProps {
  * FAQ Section — matches approved HTML wireframe index.html lines 514-551.
  * Container max-width: 800px. Accordion items are separate rounded cards with gap.
  */
-export function FAQSection({ data, className = '' }: FAQSectionProps) {
+export function FAQSection({ 
+  data, 
+  eyebrow = "Have Questions?",
+  heading = "Frequently Asked Questions",
+  description = "Find answers to common questions about our services and booking process.",
+  className = '' 
+}: FAQSectionProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   const toggleFAQ = (idx: number) => {
@@ -25,8 +34,9 @@ export function FAQSection({ data, className = '' }: FAQSectionProps) {
     <section className={`section ${className || 'bg-white'}`.trim()} id="faq">
       <div className="container" style={{ maxWidth: '800px' }}>
         <div className="section-header section-header--center">
-          <div className="section-header__overline">FAQ</div>
-          <h2 className="section-header__title">Frequently Asked Questions</h2>
+          <div className="section-header__overline">{eyebrow}</div>
+          <h2 className="section-header__title">{heading}</h2>
+          {description && <p className="section-header__desc">{description}</p>}
         </div>
         
         <div className="accordion">

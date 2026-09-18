@@ -1,22 +1,26 @@
 import React, { useState } from 'react';
 
-export interface AdminInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface AdminInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   icon?: React.ReactNode;
   rightElement?: React.ReactNode;
   wrapperClassName?: string;
+  label?: string;
+  multiline?: boolean;
+  rows?: number;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 }
 
-export const AdminInput = React.forwardRef<HTMLInputElement, AdminInputProps>(
-  ({ className = '', wrapperClassName = '', icon, rightElement, disabled, onFocus, onBlur, ...props }, ref) => {
+export const AdminInput = React.forwardRef<HTMLInputElement | HTMLTextAreaElement, AdminInputProps>(
+  ({ className = '', wrapperClassName = '', icon, rightElement, disabled, onFocus, onBlur, label, multiline, rows, ...props }, ref) => {
     
     const [isFocused, setIsFocused] = useState(false);
 
-    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    const handleFocus = (e: any) => {
       setIsFocused(true);
       if (onFocus) onFocus(e);
     };
 
-    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const handleBlur = (e: any) => {
       setIsFocused(false);
       if (onBlur) onBlur(e);
     };
@@ -31,23 +35,35 @@ export const AdminInput = React.forwardRef<HTMLInputElement, AdminInputProps>(
     // Default shape is rounded-md, but can be overridden by wrapperClassName (e.g. rounded-full)
     const shapeClasses = wrapperClassName.includes('rounded-') ? '' : 'rounded-md';
 
-    return (
+    const inputWrapper = (
       <div className={`${wrapperBase} ${wrapperDefault} ${wrapperHover} ${wrapperFocus} ${wrapperDisabled} ${shapeClasses} ${wrapperClassName}`}>
         {icon && (
           <div className="pl-3.5 pr-1.5 flex items-center justify-center shrink-0 text-slate-400">
             {icon}
           </div>
         )}
-        <input
-          ref={ref}
-          disabled={disabled}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          className={`flex-1 bg-transparent border-none outline-none text-[13px] text-slate-900 placeholder:text-slate-400 h-full py-2 min-w-0 ${icon ? 'pl-1' : 'pl-3.5'} ${rightElement ? 'pr-1' : 'pr-3.5'} ${className}`}
-          // Reset global CSS that might override padding or bg
-          style={{ boxShadow: 'none', background: 'transparent' }}
-          {...props}
-        />
+        {multiline ? (
+          <textarea
+            ref={ref as React.Ref<HTMLTextAreaElement>}
+            disabled={disabled}
+            onFocus={handleFocus as any}
+            onBlur={handleBlur as any}
+            rows={rows}
+            className={`flex-1 bg-transparent border-none outline-none text-[13px] text-slate-900 placeholder:text-slate-400 min-w-0 py-2.5 resize-y ${icon ? 'pl-1' : 'pl-3.5'} ${rightElement ? 'pr-1' : 'pr-3.5'} ${className}`}
+            style={{ boxShadow: 'none', background: 'transparent' }}
+            {...(props as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
+          />
+        ) : (
+          <input
+            ref={ref as React.Ref<HTMLInputElement>}
+            disabled={disabled}
+            onFocus={handleFocus as any}
+            onBlur={handleBlur as any}
+            className={`flex-1 bg-transparent border-none outline-none text-[13px] text-slate-900 placeholder:text-slate-400 min-w-0 h-full py-2 ${icon ? 'pl-1' : 'pl-3.5'} ${rightElement ? 'pr-1' : 'pr-3.5'} ${className}`}
+            style={{ boxShadow: 'none', background: 'transparent' }}
+            {...(props as React.InputHTMLAttributes<HTMLInputElement>)}
+          />
+        )}
         {rightElement && (
           <div className="pr-2 pl-1.5 flex items-center shrink-0">
             {rightElement}
@@ -55,6 +71,17 @@ export const AdminInput = React.forwardRef<HTMLInputElement, AdminInputProps>(
         )}
       </div>
     );
+
+    if (label) {
+      return (
+        <div className="flex flex-col gap-1.5 w-full">
+          <label className="text-xs font-semibold text-slate-700">{label}</label>
+          {inputWrapper}
+        </div>
+      );
+    }
+    
+    return inputWrapper;
   }
 );
 

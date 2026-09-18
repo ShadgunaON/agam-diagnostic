@@ -131,7 +131,7 @@ export function ServicesCatalogSection({ data, className = '' }: ServicesCatalog
               </div>
 
               {/* Floating Capsule Tooltip (Revealed on hover) */}
-              <div className="absolute left-1/2 -translate-x-1/2 bottom-[calc(100%+16px)] w-[280px] bg-slate-900 text-slate-100 p-4 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none transition-all duration-300 z-50 transform translate-y-4 group-hover:translate-y-0">
+              <div className="absolute left-1/2 -translate-x-1/2 top-[calc(100%+16px)] w-[280px] bg-slate-900 text-slate-100 p-4 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none transition-all duration-300 z-50 transform -translate-y-4 group-hover:translate-y-0">
                 <div className="flex flex-col h-full justify-start w-full">
                   <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">About</h4>
                   <p className="text-[13px] text-slate-200 font-medium leading-snug line-clamp-2 m-0 mb-3">{service.description}</p>
@@ -147,7 +147,7 @@ export function ServicesCatalogSection({ data, className = '' }: ServicesCatalog
                   </div>
                 </div>
                 {/* Tooltip Arrow */}
-                <div className="absolute top-full left-1/2 -translate-x-1/2 border-[8px] border-transparent border-t-slate-900"></div>
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-[8px] border-transparent border-b-slate-900"></div>
               </div>
             </div>
           ))}

@@ -4,16 +4,26 @@ import { Button, Container, Section } from '@/components/ui';
 
 export interface ContactPreviewSectionProps {
   data: ContactPreviewData;
+  eyebrow?: string;
+  heading?: string;
+  description?: string;
   className?: string;
 }
 
-export function ContactPreviewSection({ data, className = '' }: ContactPreviewSectionProps) {
+export function ContactPreviewSection({ 
+  data, 
+  eyebrow = "Visit Us",
+  heading = "Agam Diagnostics - Main Lab",
+  description = "",
+  className = '' 
+}: ContactPreviewSectionProps) {
   return (
     <section className={`section bg-light-gray ${className}`} id="location">
       <div className="container">
         <div className="section-header section-header--center">
-          <div className="section-header__overline">Visit Us</div>
-          <h2 className="section-header__title">Agam Diagnostics – Main Lab</h2>
+          <div className="section-header__overline">{eyebrow}</div>
+          <h2 className="section-header__title">{heading}</h2>
+          {description && <p className="section-header__desc">{description}</p>}
         </div>
         <div className="location-card">
           <div className="location-card__map">

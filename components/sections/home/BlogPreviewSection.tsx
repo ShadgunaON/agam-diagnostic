@@ -6,17 +6,26 @@ import { BlogCard } from '@/components/common';
 
 export interface BlogPreviewSectionProps {
   data: BlogPreviewData[];
+  eyebrow?: string;
+  heading?: string;
+  description?: string;
   className?: string;
 }
 
-export function BlogPreviewSection({ data, className = '' }: BlogPreviewSectionProps) {
+export function BlogPreviewSection({ 
+  data, 
+  eyebrow = "Our Latest Research",
+  heading = "Health Insights & Articles",
+  description = "Stay informed with the latest updates in healthcare and wellness.",
+  className = '' 
+}: BlogPreviewSectionProps) {
   return (
     <section className={`section bg-white ${className}`} id="blog">
       <div className="container">
         <div className="section-header section-header--center">
-          <div className="section-header__overline">Our Latest Research</div>
-          <h2 className="section-header__title">Health Insights &amp; Articles</h2>
-          <p className="section-header__desc">Stay informed with the latest updates in healthcare and wellness.</p>
+          <div className="section-header__overline">{eyebrow}</div>
+          <h2 className="section-header__title">{heading}</h2>
+          <p className="section-header__desc">{description}</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {data.map((blog, idx) => (

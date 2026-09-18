@@ -113,6 +113,9 @@ type Query {
   staffById(id: ID!): Staff
   adminRoles: [Role!]! @aws_cognito_user_pools
   adminPermissionsMap: String!
+
+  # CMS Pages
+  pageById(id: ID!): Page @aws_api_key @aws_cognito_user_pools
 }
 
 type Mutation {
@@ -195,6 +198,10 @@ type Mutation {
   updateStaff(id: ID!, name: String, email: String, phone: String, role: String, department: String, shift: String, status: String): Staff!
   createRole(title: String!, internal: String!, desc: String, color: String): Role!
   updatePermissions(records: String!): Boolean!
+
+  # CMS Pages
+  updatePage(id: ID!, content: String, seo: String): Page!
+  publishPage(id: ID!): Page!
 }
 
 type GlobalSearchResult @aws_api_key @aws_cognito_user_pools {
@@ -707,4 +714,22 @@ type Inquiry {
 type InquiryConnection {
   items: [Inquiry!]!
   nextCursor: String
+}
+
+# CMS Page Model
+type Page @aws_api_key @aws_cognito_user_pools {
+  id: ID!
+  slug: String!
+  title: String!
+  status: String!          # "DRAFT" | "PUBLISHED"
+  draftContent: String     # Stringified JSON
+  publishedContent: String # Stringified JSON
+  draftSeo: String
+  publishedSeo: String
+  createdAt: String
+  updatedAt: String
+  createdBy: String
+  updatedBy: String
+  publishedAt: String
+  publishedBy: String
 }

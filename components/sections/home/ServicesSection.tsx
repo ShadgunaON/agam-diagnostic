@@ -6,17 +6,26 @@ import { Button } from '@/components/ui';
 
 export interface ServicesSectionProps {
   data: ServiceData[];
+  eyebrow?: string;
+  heading?: string;
+  description?: string;
   className?: string;
 }
 
-export function ServicesSection({ data, className = '' }: ServicesSectionProps) {
+export function ServicesSection({ 
+  data, 
+  eyebrow = "Our Services", 
+  heading = "Comprehensive Diagnostic Solutions", 
+  description = "Advanced technology, expert pathologists, and a patient-first approach.",
+  className = '' 
+}: ServicesSectionProps) {
   return (
     <section className={`section bg-white ${className}`} id="services">
       <div className="container">
         <div className="section-header section-header--center">
-          <div className="section-header__overline">Our Services</div>
-          <h2 className="section-header__title">Comprehensive Diagnostic Solutions</h2>
-          <p className="section-header__desc">Advanced technology, expert pathologists, and a patient-first approach.</p>
+          <div className="section-header__overline">{eyebrow}</div>
+          <h2 className="section-header__title">{heading}</h2>
+          <p className="section-header__desc">{description}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

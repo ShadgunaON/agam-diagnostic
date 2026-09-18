@@ -77,3 +77,4 @@ const paymentProvider = env.useMockData ? new MockPaymentProvider() : new ApiPay
 export const paymentService = new PaymentService(paymentProvider, invoiceService);
 
 
+export { pageService } from './PageService';

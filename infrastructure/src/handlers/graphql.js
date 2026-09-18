@@ -34,6 +34,7 @@ const serviceRepo = require('../repositories/dynamo-service');
 const collectionRepo = require('../repositories/dynamo-collection');
 const blogRepo = require('../repositories/dynamo-blog');
 const newsletterRepo = require('../repositories/dynamo-newsletter');
+const pageRepo = require('../repositories/dynamo-page');
 const staffRepo = require('../repositories/dynamo-staff');
 const reviewRepo = require('../repositories/dynamo-review');
 const documentRepo = require('../repositories/dynamo-document');
@@ -1275,6 +1276,25 @@ exports.handler = async (event) => {
         };
       }
 
+      case 'pageById': {
+        const { id } = args;
+        if (!id) throw new Error('Missing id');
+        const page = await pageRepo.getById(id);
+        if (!page) return null;
+
+        // RBAC: If not admin, strip draft content
+        const identityForCheck = identity;
+        const isUserAdmin = identityForCheck ? (await isAdmin(identityForCheck)) : false;
+        
+        if (!isUserAdmin) {
+          page.draftContent = null;
+          page.draftSeo = null;
+          // If status is DRAFT and there's no publishedContent yet, we could either return null or the published parts (which are empty).
+          // We will return the object so the frontend can fallback.
+        }
+        return page;
+      }
+
       case 'testBySlug':
       case 'serviceBySlug':
       case 'packageBySlug':
@@ -1310,6 +1330,26 @@ exports.handler = async (event) => {
         const data = typeof input === 'string' ? JSON.parse(input) : input;
         await inquiryRepo.create(data);
         return true;
+      }
+
+      case 'updatePage': {
+        const identityForCheck = identity;
+        if (!(await isAdmin(identityForCheck)) && !(await hasPermission(identityForCheck, 'catalog', 'edit'))) {
+          throw new Error('Access denied: Requires admin or website edit privileges');
+        }
+        const { id, content, seo } = args;
+        if (!id) throw new Error('Missing id');
+        return await pageRepo.update(id, { content, seo, updatedBy: identity.sub });
+      }
+
+      case 'publishPage': {
+        const identityForCheck = identity;
+        if (!(await isAdmin(identityForCheck)) && !(await hasPermission(identityForCheck, 'catalog', 'edit'))) {
+          throw new Error('Access denied: Requires admin or website edit privileges');
+        }
+        const { id } = args;
+        if (!id) throw new Error('Missing id');
+        return await pageRepo.publish(id, identity.sub);
       }
 
       case 'createCatalogTest':
@@ -2525,7 +2565,19 @@ exports.handler = async (event) => {
           throw new Error(`Document is not in PENDING state`);
         }
 
-        return await documentRepo.updateStatus(id, 'UPLOADED');
+        const updatedDoc = await documentRepo.updateStatus(id, 'UPLOADED');
+
+        // Auto-complete the booking once the report is uploaded
+        if (updatedDoc && updatedDoc.entityType === 'Booking') {
+          try {
+            const bookingRepo = require('../repositories/dynamo-booking');
+            await bookingRepo.updateStatus(updatedDoc.entityId, 'Completed');
+          } catch (err) {
+            console.error('Failed to auto-update booking to Completed:', err);
+          }
+        }
+
+        return updatedDoc;
       }
 
       case 'documentDownloadUrl': {
