@@ -384,8 +384,7 @@ export default function HomeCMSPage() {
     setSuccessMsg('');
     try {
       const seoPayload = { title: seoTitle, description: seoDescription, canonicalUrl: seoCanonical, ogImage: seoOgImage };
-      const res = await pageService.updatePage('home', JSON.stringify(content), JSON.stringify(seoPayload));
-      if (!res) throw new Error('AppSync returned null — check auth token and permissions.');
+      await pageService.updatePage('home', JSON.stringify(content), JSON.stringify(seoPayload));
       setSavedContent(JSON.stringify(content));
       setSuccessMsg('Draft saved successfully.');
       fetchPage();
@@ -421,10 +420,8 @@ export default function HomeCMSPage() {
     setSuccessMsg('');
     try {
       const seoPayload = { title: seoTitle, description: seoDescription, canonicalUrl: seoCanonical, ogImage: seoOgImage };
-      const saved = await pageService.updatePage('home', JSON.stringify(content), JSON.stringify(seoPayload));
-      if (!saved) throw new Error('Draft save failed — AppSync returned null. Check your login session and admin permissions.');
-      const res = await pageService.publishPage('home');
-      if (!res) throw new Error('Publish failed — AppSync returned null. Check your login session and admin permissions.');
+      await pageService.updatePage('home', JSON.stringify(content), JSON.stringify(seoPayload));
+      await pageService.publishPage('home');
       setSavedContent(JSON.stringify(content));
       setSuccessMsg('Page published successfully! Reload the home page to see changes.');
       fetchPage();

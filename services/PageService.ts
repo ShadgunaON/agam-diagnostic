@@ -1,102 +1,100 @@
 import { CMSPage } from '@/domains/cms/models';
 
-/**
- * PageService — CMS page persistence via AppSync.
- *
- * Follows the same pattern as BookingService, BlogService, etc.:
- *  - Server-side: uses NEXT_PUBLIC_SITE_URL + '/api/graphql'
- *  - Client-side: uses '/api/graphql' (relative, same origin)
- *
- * The /api/graphql route proxies to AppSync, which routes to the Lambda
- * handler that reads/writes DynamoDB.
- *
- * Auth:
- *  - pageById (public query): uses API key (@aws_api_key on schema)
- *  - updatePage / publishPage (admin mutations): uses Cognito id_token
- */
 export class PageService {
+  /**
+   * Internal fetch — returns data or throws with the real error message.
+   * Never swallows errors silently.
+   */
   private async _graphqlFetch<T>(
     query: string,
     variables?: Record<string, unknown>,
     useApiKey = false
-  ): Promise<T | null> {
+  ): Promise<T> {
+    const isServer = typeof window === 'undefined';
+    const base = isServer
+      ? (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000')
+      : '';
+    const url = `${base}/api/graphql`;
+
+    const token = !isServer
+      ? (sessionStorage.getItem('cognito_id_token') ||
+         localStorage.getItem('cognito_id_token') || '')
+      : '';
+
+    const apiKey = process.env.APPSYNC_API_KEY || '';
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (useApiKey && apiKey) {
+      headers['x-api-key'] = apiKey;
+    } else if (token) {
+      headers['Authorization'] = token;
+    } else if (apiKey) {
+      // Last resort: API key (won't work for admin mutations but at least shows right error)
+      headers['x-api-key'] = apiKey;
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ query, variables }),
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      throw new Error(`GraphQL proxy HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const json = await response.json();
+
+    if (json.errors?.length) {
+      const msg = json.errors.map((e: any) => e.message).join('; ');
+      console.error('[PageService] AppSync errors:', json.errors);
+      throw new Error(msg);
+    }
+
+    if (!json.data) {
+      throw new Error('AppSync returned empty response (no data, no errors).');
+    }
+
+    return json.data as T;
+  }
+
+  // ── Public API ──────────────────────────────────────────────────────────────
+
+  /**
+   * Fetch a CMS page by ID.
+   * Uses API key — works server-side without a user token.
+   */
+  async getPageById(id: string): Promise<CMSPage | null> {
     try {
-      const isServer = typeof window === 'undefined';
-      const base = isServer
-        ? (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000')
-        : '';
-      const url = `${base}/api/graphql`;
-
-      const token = !isServer
-        ? (sessionStorage.getItem('cognito_id_token') ||
-           localStorage.getItem('cognito_id_token') || '')
-        : '';
-
-      const apiKey = process.env.APPSYNC_API_KEY || '';
-
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-
-      if (useApiKey && apiKey) {
-        headers['x-api-key'] = apiKey;
-      } else if (token) {
-        headers['Authorization'] = token;
-      } else if (apiKey) {
-        headers['x-api-key'] = apiKey;
-      }
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ query, variables }),
-        cache: 'no-store',
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      const { data, errors } = await response.json();
-      if (errors?.length) {
-        console.error('[PageService] GraphQL errors:', errors);
-        throw new Error(errors.map((e: any) => e.message).join('; '));
-      }
-      return data as T;
+      const query = `
+        query PageById($id: ID!) {
+          pageById(id: $id) {
+            id slug title status
+            draftContent publishedContent
+            draftSeo publishedSeo
+            createdAt updatedAt createdBy updatedBy
+            publishedAt publishedBy
+          }
+        }
+      `;
+      const data = await this._graphqlFetch<{ pageById: CMSPage }>(query, { id }, true);
+      return data?.pageById || null;
     } catch (e) {
-      console.error('[PageService] _graphqlFetch error:', e);
+      // Read failures are non-fatal — fall back to defaults
+      console.error('[PageService] getPageById failed:', e);
       return null;
     }
   }
 
   /**
-   * Fetch a CMS page by ID.
-   * Public query — uses API key so it works without auth on public pages.
+   * Save draft content + SEO.
+   * Throws on failure — caller must handle and show error to user.
    */
-  async getPageById(id: string): Promise<CMSPage | null> {
-    const query = `
-      query PageById($id: ID!) {
-        pageById(id: $id) {
-          id slug title status
-          draftContent publishedContent
-          draftSeo publishedSeo
-          createdAt updatedAt createdBy updatedBy
-          publishedAt publishedBy
-        }
-      }
-    `;
-    const data = await this._graphqlFetch<{ pageById: CMSPage }>(
-      query,
-      { id },
-      true /* useApiKey */
-    );
-    return data?.pageById || null;
-  }
-
-  /**
-   * Save draft content + SEO (admin mutation).
-   * Requires Cognito auth token.
-   */
-  async updatePage(id: string, content: string, seo?: string): Promise<CMSPage | null> {
+  async updatePage(id: string, content: string, seo?: string): Promise<CMSPage> {
     const query = `
       mutation UpdatePage($id: ID!, $content: String, $seo: String) {
         updatePage(id: $id, content: $content, seo: $seo) {
@@ -105,14 +103,15 @@ export class PageService {
       }
     `;
     const data = await this._graphqlFetch<{ updatePage: CMSPage }>(query, { id, content, seo });
-    return data?.updatePage || null;
+    if (!data?.updatePage) throw new Error('updatePage returned no data.');
+    return data.updatePage;
   }
 
   /**
-   * Promote draft → published (admin mutation).
-   * Requires Cognito auth token.
+   * Promote draft → published.
+   * Throws on failure — caller must handle and show error to user.
    */
-  async publishPage(id: string): Promise<CMSPage | null> {
+  async publishPage(id: string): Promise<CMSPage> {
     const query = `
       mutation PublishPage($id: ID!) {
         publishPage(id: $id) {
@@ -121,7 +120,8 @@ export class PageService {
       }
     `;
     const data = await this._graphqlFetch<{ publishPage: CMSPage }>(query, { id });
-    return data?.publishPage || null;
+    if (!data?.publishPage) throw new Error('publishPage returned no data.');
+    return data.publishPage;
   }
 }
 
