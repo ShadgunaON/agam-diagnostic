@@ -200,8 +200,8 @@ type Mutation {
   updatePermissions(records: String!): Boolean!
 
   # CMS Pages
-  updatePage(id: ID!, content: String, seo: String): Page!
-  publishPage(id: ID!): Page!
+  updatePage(id: ID!, content: String, seo: String): Page! @aws_cognito_user_pools
+  publishPage(id: ID!): Page! @aws_cognito_user_pools
 }
 
 type GlobalSearchResult @aws_api_key @aws_cognito_user_pools {
