@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Save, Eye, CheckCircle, AlertCircle, Clock, Globe, ChevronDown, ChevronUp,
   Plus, Trash2, Edit2, RefreshCw, Info, Loader2
@@ -223,6 +224,13 @@ export default function HomeCMSPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [activeSection, setActiveSection] = useState<CMSSectionKey>('overview');
+
+  // Sync activeSection from ?section= URL param (set by sidebar links)
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const sectionParam = searchParams.get('section') as CMSSectionKey | null;
+    if (sectionParam) setActiveSection(sectionParam);
+  }, [searchParams]);
 
   // Resolved entity caches (fetched once, passed into cards)
   const [resolvedPackages, setResolvedPackages] = useState<Record<string, ResolvedEntity>>({});
