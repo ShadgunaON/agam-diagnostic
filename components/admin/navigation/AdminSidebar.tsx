@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { AdminIcon, AdminIconName } from './AdminIcons';
 import { useRBAC } from '@/hooks/useRBAC';
 import { useAuth } from '@/context/AuthContext';
@@ -75,16 +75,20 @@ const adminNavigation: NavigationGroup[] = [
 
 // ── WebsiteCMSMenu ────────────────────────────────────────────────────────────
 function WebsiteCMSMenu({ isCollapsed, pathname }: { isCollapsed: boolean; pathname: string }) {
-  const router = useRouter();
-
-  // Track which page accordion is open
-  const [openPage, setOpenPage] = React.useState<string | null>(() => {
-    // Auto-open if currently on a CMS page
-    if (pathname.includes('/admin/website')) return 'home';
-    return null;
-  });
-
+  const searchParams = useSearchParams();
+  const activeSection = searchParams.get('section') || 'overview';
   const isCMSActive = pathname.includes('/admin/website');
+
+  const [cmsOpen, setCmsOpen] = React.useState(isCMSActive);
+  const [expandedPages, setExpandedPages] = React.useState<Record<string, boolean>>({ home: true });
+
+  React.useEffect(() => {
+    if (isCMSActive) { setCmsOpen(true); setExpandedPages(p => ({ ...p, home: true })); }
+  }, [isCMSActive]);
+
+  const togglePage = (id: string) => setExpandedPages(p => ({ ...p, [id]: !p[id] }));
+
+
 
   if (isCollapsed) {
     return (
@@ -103,9 +107,9 @@ function WebsiteCMSMenu({ isCollapsed, pathname }: { isCollapsed: boolean; pathn
 
   return (
     <div className="flex flex-col" style={{ gap: '2px' }}>
-      {/* ── Level 1: "Website CMS" label with globe icon ── */}
+      {/* Level 1 — Website CMS toggle */}
       <button
-        onClick={() => setOpenPage(prev => prev === 'cms' ? null : 'cms')}
+        onClick={() => setCmsOpen(p => !p)}
         className={`flex items-center w-full transition-all duration-200 group relative ${
           isCMSActive ? 'bg-blue-500/20 !text-blue-300' : '!text-slate-300 hover:bg-white/10 hover:!text-white'
         }`}
@@ -117,33 +121,43 @@ function WebsiteCMSMenu({ isCollapsed, pathname }: { isCollapsed: boolean; pathn
             style={{ left: 0, top: '50%', transform: 'translateY(-50%)', width: '3px', height: '20px', borderTopRightRadius: '9999px', borderBottomRightRadius: '9999px' }}
           />
         )}
-        <AdminIcon name="fileText" className={`transition-transform duration-200 ${isCMSActive ? 'scale-110' : 'group-hover:scale-110'}`} style={{ width: '18px', height: '18px' }} strokeWidth={isCMSActive ? 2.5 : 2} />
+        <AdminIcon
+          name="fileText"
+          className={`transition-transform duration-200 ${isCMSActive ? 'scale-110' : 'group-hover:scale-110'}`}
+          style={{ width: '18px', height: '18px' }}
+          strokeWidth={isCMSActive ? 2.5 : 2}
+        />
         <span className={`flex-1 leading-none tracking-wide text-left ${isCMSActive ? 'font-semibold' : 'font-medium'}`} style={{ fontSize: '14px' }}>
           Website CMS
         </span>
         <AdminIcon
           name="chevronRight"
-          style={{ width: '14px', height: '14px', transform: openPage === 'cms' || isCMSActive ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+          style={{ width: '14px', height: '14px', transform: cmsOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
           strokeWidth={2}
         />
       </button>
 
-      {/* ── Level 1 expanded: show pages ── */}
-      {(openPage === 'cms' || isCMSActive) && (
-        <div className="flex flex-col" style={{ paddingLeft: '12px', gap: '2px' }}>
+      {/* Level 2 — Pages (auto-expanded) */}
+      {cmsOpen && (
+        <div className="flex flex-col" style={{ paddingLeft: '8px', gap: '2px' }}>
           {CMS_PAGES.map(page => {
             const isPageActive = pathname === page.href || pathname.startsWith(page.href + '/');
-            const isPageOpen = openPage === page.id || isPageActive;
+            const isPageExpanded = expandedPages[page.id] ?? true;
 
             return (
-              <div key={page.id} className="flex flex-col" style={{ gap: '2px' }}>
-                {/* ── Level 2: Page name (e.g. "Home") ── */}
+              <div key={page.id} className="flex flex-col" style={{ gap: '1px' }}>
+                {/* Level 2 row — page name, clickable to collapse sections */}
                 <button
-                  onClick={() => setOpenPage(prev => prev === page.id ? 'cms' : page.id)}
+                  onClick={() => togglePage(page.id)}
                   className={`flex items-center w-full transition-all duration-200 group ${
                     isPageActive ? '!text-blue-300' : '!text-slate-400 hover:!text-slate-200'
                   }`}
-                  style={{ padding: '8px 10px', borderRadius: '8px', gap: '10px', backgroundColor: isPageActive ? 'rgba(59,130,246,0.08)' : 'transparent' }}
+                  style={{
+                    padding: '7px 10px',
+                    borderRadius: '8px',
+                    gap: '10px',
+                    backgroundColor: isPageActive ? 'rgba(59,130,246,0.08)' : 'transparent',
+                  }}
                 >
                   <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: isPageActive ? '#60a5fa' : '#475569', flexShrink: 0 }} />
                   <span className={`flex-1 text-left ${isPageActive ? 'font-semibold' : 'font-medium'}`} style={{ fontSize: '13px' }}>
@@ -151,35 +165,41 @@ function WebsiteCMSMenu({ isCollapsed, pathname }: { isCollapsed: boolean; pathn
                   </span>
                   <AdminIcon
                     name="chevronRight"
-                    style={{ width: '12px', height: '12px', transform: isPageOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+                    style={{ width: '11px', height: '11px', opacity: 0.5, transform: isPageExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
                     strokeWidth={2}
                   />
                 </button>
 
-                {/* ── Level 3: Sections ── */}
-                {isPageOpen && (
-                  <div className="flex flex-col" style={{ paddingLeft: '16px', gap: '1px' }}>
+                {/* Level 3 — Sections list, scrollable if needed */}
+                {isPageExpanded && (
+                  <div className="flex flex-col" style={{ paddingLeft: '14px', gap: '1px', paddingBottom: '4px' }}>
                     {page.sections.map(section => {
-                      const sectionHref = `${page.href}?section=${section.id}`;
-                      // Active if on the page AND either no section param (overview) or matching section
-                      const isActive = isPageActive && (
-                        typeof window !== 'undefined'
-                          ? new URLSearchParams(window.location.search).get('section') === section.id
-                          : false
-                      );
-
+                      const isActive = isPageActive && activeSection === section.id;
                       return (
                         <Link
                           key={section.id}
-                          href={sectionHref}
-                          className={`flex items-center transition-all duration-150 group ${
+                          href={`${page.href}?section=${section.id}`}
+                          className={`flex items-center transition-all duration-150 ${
                             isActive
                               ? '!text-blue-300 font-semibold'
                               : '!text-slate-500 hover:!text-slate-200 font-medium'
                           }`}
-                          style={{ padding: '6px 8px', borderRadius: '6px', gap: '8px', fontSize: '12.5px', backgroundColor: isActive ? 'rgba(59,130,246,0.1)' : 'transparent' }}
+                          style={{
+                            padding: '5px 8px',
+                            borderRadius: '6px',
+                            gap: '8px',
+                            fontSize: '12.5px',
+                            backgroundColor: isActive ? 'rgba(59,130,246,0.12)' : 'transparent',
+                          }}
                         >
-                          <div style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: isActive ? '#93c5fd' : '#334155', flexShrink: 0 }} />
+                          <div style={{
+                            width: isActive ? '5px' : '4px',
+                            height: isActive ? '5px' : '4px',
+                            borderRadius: '50%',
+                            backgroundColor: isActive ? '#93c5fd' : '#2d3f5e',
+                            flexShrink: 0,
+                            transition: 'all 0.15s',
+                          }} />
                           {section.label}
                         </Link>
                       );
