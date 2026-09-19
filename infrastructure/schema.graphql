@@ -201,7 +201,7 @@ type Mutation {
 
   # CMS Pages — restricted to AdminGroup at AppSync level
   updatePage(id: ID!, content: String, seo: String): Page @aws_cognito_user_pools
-  publishPage(id: ID!): Page @aws_cognito_user_pools
+  publishPage(id: ID!, content: String, seo: String): Page @aws_cognito_user_pools
 }
 
 type GlobalSearchResult @aws_api_key @aws_cognito_user_pools {

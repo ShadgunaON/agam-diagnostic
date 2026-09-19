@@ -13,22 +13,19 @@ class DynamoPageRepository {
     return rest;
   }
 
-  async getById(id) {
+  async getById(id, { consistentRead = false } = {}) {
     if (!id) return null;
-    const params = {
+    const response = await docClient.send(new GetCommand({
       TableName: TABLE_NAME,
-      Key: {
-        PK: `PAGE#${id}`,
-        SK: 'METADATA',
-      },
-    };
-
-    const response = await docClient.send(new GetCommand(params));
+      Key: { PK: `PAGE#${id}`, SK: 'METADATA' },
+      ConsistentRead: consistentRead,
+    }));
     return response.Item ? this._mapFromDb(response.Item) : null;
   }
 
   async update(id, updates) {
-    let existing = await this.getById(id);
+    // Strongly consistent read so we never miss a previous write
+    let existing = await this.getById(id, { consistentRead: true });
     const now = new Date().toISOString();
 
     if (!existing) {
@@ -44,7 +41,6 @@ class DynamoPageRepository {
 
     const item = {
       ...existing,
-      // Always guarantee required fields are present
       id,
       slug: existing.slug || id,
       title: existing.title || (id === 'home' ? 'Home Page' : 'Untitled'),
@@ -57,44 +53,45 @@ class DynamoPageRepository {
       updatedBy: updates.updatedBy || existing.updatedBy || 'admin',
     };
 
-    await docClient.send(
-      new PutCommand({
-        TableName: TABLE_NAME,
-        Item: item,
-      })
-    );
-
+    await docClient.send(new PutCommand({ TableName: TABLE_NAME, Item: item }));
     return this._mapFromDb(item);
   }
 
-  async publish(id, userId) {
-    const existing = await this.getById(id);
+  /**
+   * Publish accepts content + seo directly from the caller so there is zero
+   * chance of an eventual-consistency race between the updatePage write and
+   * the publishPage read.  If not supplied, falls back to the DB value using
+   * a strongly-consistent read.
+   */
+  async publish(id, userId, { draftContent, draftSeo } = {}) {
+    // Strongly consistent read — always sees the latest committed item
+    const existing = await this.getById(id, { consistentRead: true });
     if (!existing) throw new Error('Page not found');
 
     const now = new Date().toISOString();
 
+    // Prefer the explicitly-passed draft over whatever is in DynamoDB
+    const contentToPublish = draftContent !== undefined ? draftContent : existing.draftContent;
+    const seoToPublish     = draftSeo     !== undefined ? draftSeo     : existing.draftSeo;
+
     const item = {
       ...existing,
-      // Always guarantee required fields are present
       id,
       slug: existing.slug || id,
       title: existing.title || (id === 'home' ? 'Home Page' : 'Untitled'),
       PK: `PAGE#${id}`,
       SK: 'METADATA',
       status: 'PUBLISHED',
-      publishedContent: existing.draftContent,
-      publishedSeo: existing.draftSeo,
+      // Keep draft in sync so admin form stays up to date
+      draftContent: contentToPublish,
+      draftSeo: seoToPublish,
+      publishedContent: contentToPublish,
+      publishedSeo: seoToPublish,
       publishedAt: now,
       publishedBy: userId || 'admin',
     };
 
-    await docClient.send(
-      new PutCommand({
-        TableName: TABLE_NAME,
-        Item: item,
-      })
-    );
-
+    await docClient.send(new PutCommand({ TableName: TABLE_NAME, Item: item }));
     return this._mapFromDb(item);
   }
 }

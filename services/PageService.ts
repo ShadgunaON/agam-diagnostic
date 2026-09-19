@@ -66,7 +66,8 @@ export class PageService {
 
   /**
    * Fetch a CMS page by ID.
-   * Uses API key — works server-side without a user token.
+   * - If called from the browser (admin), uses the Cognito token so draftContent is returned.
+   * - If called server-side (public SSR), uses the API key (draftContent will be stripped by Lambda).
    */
   async getPageById(id: string): Promise<CMSPage | null> {
     try {
@@ -81,7 +82,10 @@ export class PageService {
           }
         }
       `;
-      const data = await this._graphqlFetch<{ pageById: CMSPage }>(query, { id }, true);
+      const isServer = typeof window === 'undefined';
+      // Server-side (public page SSR): use API key — draftContent stripped by Lambda
+      // Client-side (admin editor): use Cognito token — draftContent returned
+      const data = await this._graphqlFetch<{ pageById: CMSPage }>(query, { id }, isServer);
       return data?.pageById || null;
     } catch (e) {
       // Read failures are non-fatal — fall back to defaults
@@ -109,17 +113,19 @@ export class PageService {
 
   /**
    * Promote draft → published.
+   * Pass content + seo directly to avoid DynamoDB eventual-consistency race
+   * between the preceding updatePage write and the publishPage read.
    * Throws on failure — caller must handle and show error to user.
    */
-  async publishPage(id: string): Promise<CMSPage> {
+  async publishPage(id: string, content?: string, seo?: string): Promise<CMSPage> {
     const query = `
-      mutation PublishPage($id: ID!) {
-        publishPage(id: $id) {
-          id status publishedContent publishedSeo publishedAt
+      mutation PublishPage($id: ID!, $content: String, $seo: String) {
+        publishPage(id: $id, content: $content, seo: $seo) {
+          id status draftContent publishedContent draftSeo publishedSeo publishedAt
         }
       }
     `;
-    const data = await this._graphqlFetch<{ publishPage: CMSPage }>(query, { id });
+    const data = await this._graphqlFetch<{ publishPage: CMSPage }>(query, { id, content, seo });
     if (!data?.publishPage) throw new Error('publishPage returned no data.');
     return data.publishPage;
   }

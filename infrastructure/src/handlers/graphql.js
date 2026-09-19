@@ -1345,10 +1345,14 @@ exports.handler = async (event) => {
 
       case 'publishPage': {
         // Auth enforced by AppSync @aws_cognito_user_pools — Cognito token already validated.
-        const { id } = args;
+        const { id, content, seo } = args;
         if (!id) throw new Error('publishPage: Missing id argument');
         console.log('[publishPage] id:', id, 'identity.sub:', identity?.sub);
-        const publishResult = await pageRepo.publish(id, identity?.sub || 'admin');
+        // Pass content+seo directly so publish never needs a separate DynamoDB read
+        const publishResult = await pageRepo.publish(id, identity?.sub || 'admin', {
+          draftContent: content,
+          draftSeo: seo,
+        });
         console.log('[publishPage] result keys:', publishResult ? Object.keys(publishResult) : 'NULL');
         if (!publishResult) throw new Error('publishPage: pageRepo.publish returned null unexpectedly');
         return publishResult;

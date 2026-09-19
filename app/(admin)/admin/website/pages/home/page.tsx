@@ -411,11 +411,16 @@ export default function HomeCMSPage() {
     setSuccessMsg('');
     try {
       const seoPayload = { title: seoTitle, description: seoDescription, canonicalUrl: seoCanonical, ogImage: seoOgImage };
-      await pageService.updatePage('home', JSON.stringify(content), JSON.stringify(seoPayload));
-      await pageService.publishPage('home');
-      setSavedContent(JSON.stringify(content));
+      const contentStr = JSON.stringify(content);
+      const seoStr = JSON.stringify(seoPayload);
+      // Pass content+seo directly into publishPage to avoid DynamoDB eventual-consistency race
+      const published = await pageService.publishPage('home', contentStr, seoStr);
+      setSavedContent(contentStr);
+      // Update page data from the returned object — no need to re-fetch
+      if (published) {
+        setPageData(prev => prev ? { ...prev, ...published } : published);
+      }
       setSuccessMsg('Page published successfully! Reload the home page to see changes.');
-      fetchPage();
     } catch (err: any) {
       setErrorMsg(`Publish failed: ${err.message}`);
     } finally {
