@@ -1,9 +1,16 @@
+import { env } from '@/config/env';
 import { CMSPage } from '@/domains/cms/models';
 
 export class PageService {
   /**
    * Internal fetch — returns data or throws with the real error message.
-   * Never swallows errors silently.
+   *
+   * Server-side (SSR): calls AppSync directly with the API key.
+   *   This avoids a self-referential HTTP loop through /api/graphql which
+   *   requires NEXT_PUBLIC_SITE_URL to be correctly set — unreliable on Amplify.
+   *
+   * Client-side (browser): calls /api/graphql proxy with the Cognito token
+   *   (or API key for public queries) so auth is handled correctly.
    */
   private async _graphqlFetch<T>(
     query: string,
@@ -11,31 +18,42 @@ export class PageService {
     useApiKey = false
   ): Promise<T> {
     const isServer = typeof window === 'undefined';
-    const base = isServer
-      ? (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000')
-      : '';
-    const url = `${base}/api/graphql`;
 
-    const token = !isServer
-      ? (sessionStorage.getItem('cognito_id_token') ||
-         localStorage.getItem('cognito_id_token') || '')
-      : '';
-
-    const apiKey = process.env.APPSYNC_API_KEY || '';
-
+    // ── Auth headers ────────────────────────────────────────────────────────
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
 
-    if (useApiKey && apiKey) {
+    // Resolved API key — server env var takes priority, then build-time public var, then hardcoded fallback
+    const apiKey =
+      process.env.APPSYNC_API_KEY ||
+      process.env.NEXT_PUBLIC_APPSYNC_API_KEY ||
+      'da2-wyfofmw3ffgwrgdo5kyajft5yy'; // fallback from SAM outputs
+
+    if (isServer) {
+      // Server-side: always use API key for direct AppSync call
       headers['x-api-key'] = apiKey;
-    } else if (token) {
-      headers['Authorization'] = token;
-    } else if (apiKey) {
-      // Last resort: API key (won't work for admin mutations but at least shows right error)
-      headers['x-api-key'] = apiKey;
+    } else {
+      // Client-side: prefer Cognito token, fall back to API key
+      const token =
+        sessionStorage.getItem('cognito_id_token') ||
+        localStorage.getItem('cognito_id_token') ||
+        '';
+
+      if (!useApiKey && token) {
+        headers['Authorization'] = token;
+      } else {
+        headers['x-api-key'] = apiKey;
+      }
     }
 
+    // ── URL ─────────────────────────────────────────────────────────────────
+    const url = isServer
+      ? // Direct AppSync call — no proxy, no self-referential loop
+        (process.env.NEXT_PUBLIC_GRAPHQL_URL || env.graphqlUrl)
+      : '/api/graphql'; // Proxy route (browser)
+
+    // ── Fetch ────────────────────────────────────────────────────────────────
     const response = await fetch(url, {
       method: 'POST',
       headers,
@@ -44,7 +62,7 @@ export class PageService {
     });
 
     if (!response.ok) {
-      throw new Error(`GraphQL proxy HTTP ${response.status}: ${response.statusText}`);
+      throw new Error(`GraphQL HTTP ${response.status}: ${response.statusText}`);
     }
 
     const json = await response.json();
@@ -66,8 +84,8 @@ export class PageService {
 
   /**
    * Fetch a CMS page by ID.
-   * - If called from the browser (admin), uses the Cognito token so draftContent is returned.
-   * - If called server-side (public SSR), uses the API key (draftContent will be stripped by Lambda).
+   * - Server-side (public SSR): direct AppSync call with API key → draftContent stripped by Lambda.
+   * - Client-side (admin editor): proxy call with Cognito token → draftContent returned.
    */
   async getPageById(id: string): Promise<CMSPage | null> {
     try {
@@ -82,13 +100,12 @@ export class PageService {
           }
         }
       `;
+      // isServer determines auth: server → API key (SSR), browser → Cognito token (admin)
       const isServer = typeof window === 'undefined';
-      // Server-side (public page SSR): use API key — draftContent stripped by Lambda
-      // Client-side (admin editor): use Cognito token — draftContent returned
       const data = await this._graphqlFetch<{ pageById: CMSPage }>(query, { id }, isServer);
       return data?.pageById || null;
     } catch (e) {
-      // Read failures are non-fatal — fall back to defaults
+      // Read failures are non-fatal — fall back to static defaults
       console.error('[PageService] getPageById failed:', e);
       return null;
     }
@@ -113,8 +130,8 @@ export class PageService {
 
   /**
    * Promote draft → published.
-   * Pass content + seo directly to avoid DynamoDB eventual-consistency race
-   * between the preceding updatePage write and the publishPage read.
+   * Content + seo are passed directly so the Lambda does not need to re-read
+   * from DynamoDB — eliminating the eventual-consistency race condition.
    * Throws on failure — caller must handle and show error to user.
    */
   async publishPage(id: string, content?: string, seo?: string): Promise<CMSPage> {
