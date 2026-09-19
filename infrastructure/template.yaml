@@ -1322,6 +1322,14 @@ Resources:
       FieldName: publishPage
       DataSourceName: !GetAtt GraphQLDataSource.Name
 
+  GraphQLResolverQueryPageById:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Query
+      FieldName: pageById
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
 Outputs:
   CognitoUserPoolId:
     Description: "Cognito User Pool ID"
