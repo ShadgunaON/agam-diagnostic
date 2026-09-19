@@ -11,7 +11,7 @@ import { AdminButton } from '@/components/admin/primitives/AdminButton';
 import { AdminInput } from '@/components/admin/primitives/AdminInput';
 import { AdminIconPicker } from '@/components/admin/cms/AdminIconPicker';
 import { AdminImageEditor } from '@/components/admin/cms/AdminImageEditor';
-import { CMSSidebar, CMSSectionKey } from '@/components/admin/cms/CMSSidebar';
+import { CMSSectionKey } from '@/components/admin/cms/CMSSidebar';
 import { CMSModal } from '@/components/admin/cms/CMSModal';
 import { CMSCardItem } from '@/components/admin/cms/CMSCardItem';
 import { CMSEntityPicker, EntityOption } from '@/components/admin/cms/CMSEntityPicker';
@@ -130,23 +130,6 @@ const DEFAULT_CONTENT: HomePageContent = {
 
 // ── Resolved entities cache types ─────────────────────────────────────────────
 interface ResolvedEntity { id: string; title: string; subtitle?: string; badge?: string; }
-
-// ── Visibility map ────────────────────────────────────────────────────────────
-function buildVisibilityMap(c: HomePageContent | null): Partial<Record<CMSSectionKey, boolean>> {
-  if (!c) return {};
-  return {
-    hero: c.hero.isVisible,
-    statistics: c.statistics.isVisible,
-    diagnosticSolutions: c.diagnosticSolutions.isVisible,
-    healthCheckupPlans: c.healthCheckupPlans.isVisible,
-    patientReviews: c.patientReviews.isVisible,
-    qualityCare: c.qualityCare.isVisible,
-    healthArticles: c.healthArticles.isVisible,
-    mainLab: c.mainLab.isVisible,
-    faq: c.faq.isVisible,
-    bookingCta: c.bookingCta.isVisible,
-  };
-}
 
 // ── Inline Toggle ─────────────────────────────────────────────────────────────
 function VisibilityToggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
@@ -1164,7 +1147,6 @@ export default function HomeCMSPage() {
   }
 
   const status = pageData?.status || 'DRAFT';
-  const visibilityMap = buildVisibilityMap(content);
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-gray-50">
@@ -1227,27 +1209,8 @@ export default function HomeCMSPage() {
         </div>
       )}
 
-      {/* ── Two-column body ── */}
+      {/* Editor panel — full width, no inner sidebar */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <div className="shrink-0 hidden lg:flex flex-col w-56 bg-white border-r border-gray-200 overflow-y-auto px-3 py-5">
-          <CMSSidebar
-            activeSection={activeSection}
-            onSelect={setActiveSection}
-            visibilityMap={visibilityMap}
-          />
-        </div>
-
-        {/* Mobile section selector */}
-        <div className="lg:hidden fixed bottom-4 left-4 right-4 z-40 bg-white rounded-xl border border-gray-200 shadow-xl px-4 py-3">
-          <CMSSidebar
-            activeSection={activeSection}
-            onSelect={s => { setActiveSection(s); }}
-            visibilityMap={visibilityMap}
-          />
-        </div>
-
-        {/* Editor panel */}
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-2xl mx-auto px-5 py-6 pb-32">
             {renderActivePanel()}
