@@ -1305,6 +1305,23 @@ Resources:
       TypeName: Mutation
       FieldName: updatePermissions
       DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationUpdatePage:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: updatePage
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
+  GraphQLResolverMutationPublishPage:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      TypeName: Mutation
+      FieldName: publishPage
+      DataSourceName: !GetAtt GraphQLDataSource.Name
+
 Outputs:
   CognitoUserPoolId:
     Description: "Cognito User Pool ID"
