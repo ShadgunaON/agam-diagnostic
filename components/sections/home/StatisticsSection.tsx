@@ -2,6 +2,7 @@ import React from 'react';
 import { StatisticData } from '@/data/home';
 import { Container } from '@/components/ui';
 import { StatisticCard } from '@/components/common/StatisticCard';
+import { resolveIcon } from '@/lib/iconMap';
 
 export interface StatisticsSectionProps {
   data: StatisticData[];
@@ -18,7 +19,7 @@ export function StatisticsSection({ data, className = '' }: StatisticsSectionPro
               key={idx}
               value={stat.value}
               label={stat.label}
-              icon={stat.icon}
+              icon={resolveIcon(stat.icon)}
             />
           ))}
         </div>

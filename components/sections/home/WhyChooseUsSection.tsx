@@ -1,8 +1,8 @@
 import React from 'react';
 import { WhyChooseUsData } from '@/data/home';
-import { Typography } from '@/components/ui';
 import { Section, Container, Grid } from '@/components/ui';
 import { FeatureCard } from '@/components/common';
+import { resolveIcon } from '@/lib/iconMap';
 
 export interface WhyChooseUsSectionProps {
   data: WhyChooseUsData[];
@@ -34,7 +34,7 @@ export function WhyChooseUsSection({
               key={idx}
               title={feature.title}
               description={feature.description}
-              icon={feature.icon}
+              icon={resolveIcon(feature.icon)}
             />
           ))}
         </div>
