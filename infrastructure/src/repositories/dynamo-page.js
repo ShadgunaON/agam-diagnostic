@@ -44,6 +44,10 @@ class DynamoPageRepository {
 
     const item = {
       ...existing,
+      // Always guarantee required fields are present
+      id,
+      slug: existing.slug || id,
+      title: existing.title || (id === 'home' ? 'Home Page' : 'Untitled'),
       PK: `PAGE#${id}`,
       SK: 'METADATA',
       status: 'DRAFT',
@@ -65,12 +69,16 @@ class DynamoPageRepository {
 
   async publish(id, userId) {
     const existing = await this.getById(id);
-    if (!existing) throw new Error("Page not found");
+    if (!existing) throw new Error('Page not found');
 
     const now = new Date().toISOString();
 
     const item = {
       ...existing,
+      // Always guarantee required fields are present
+      id,
+      slug: existing.slug || id,
+      title: existing.title || (id === 'home' ? 'Home Page' : 'Untitled'),
       PK: `PAGE#${id}`,
       SK: 'METADATA',
       status: 'PUBLISHED',

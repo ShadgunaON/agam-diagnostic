@@ -719,11 +719,11 @@ type InquiryConnection {
 # CMS Page Model
 type Page @aws_api_key @aws_cognito_user_pools {
   id: ID!
-  slug: String!
-  title: String!
-  status: String!          # "DRAFT" | "PUBLISHED"
-  draftContent: String     # Stringified JSON
-  publishedContent: String # Stringified JSON
+  slug: String
+  title: String
+  status: String
+  draftContent: String
+  publishedContent: String
   draftSeo: String
   publishedSeo: String
   createdAt: String
