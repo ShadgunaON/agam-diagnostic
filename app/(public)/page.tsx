@@ -156,7 +156,7 @@ export default async function HomePage() {
         if (blogs.length > 0) {
           resolvedBlogs = blogs.map(b => ({
             title: b.title,
-            excerpt: b.description || b.excerpt || '',
+            excerpt: b.description || '',
             date: new Date(Number(b.date || Date.now())).toLocaleDateString(),
             category: 'Health',
             href: `/blog/${b.slug || b.id}`,
