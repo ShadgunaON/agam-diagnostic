@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import { siteConfig } from '@/config/site';
 
 import { pageService } from '@/services/PageService';
+import { MediaService } from '@/services/MediaService';
 import { fetchBatchedByIds } from '@/lib/api/cms/batchResolver';
 import { HomePageContent } from '@/domains/cms/models';
 
@@ -217,14 +218,23 @@ export default async function HomePage() {
     ? parseHeroHeading(heroHeading)
     : { titlePart1: heroData.titlePart1, titleSpan: heroData.titleSpan };
 
+  let resolvedHeroImage = content.hero?.image;
+  if (resolvedHeroImage && !resolvedHeroImage.startsWith('http') && !resolvedHeroImage.startsWith('data:') && !resolvedHeroImage.startsWith('/')) {
+    try {
+      resolvedHeroImage = await MediaService.getDownloadUrl(resolvedHeroImage);
+    } catch (e) {
+      console.error('[HomePage] Failed to fetch presigned URL for hero image:', e);
+    }
+  }
+
   const cmsHeroData = {
     ...heroData,
     pillText:    content.hero?.eyebrow      || heroData.pillText,
     titlePart1:  titlePart1                 || heroData.titlePart1,
     titleSpan:   titleSpan                  || heroData.titleSpan,
     description: content.hero?.description  || heroData.description,
-    // Pass image from CMS if set; HeroSection reads it via (data as any).image
-    ...(content.hero?.image ? { image: content.hero.image } : {}),
+    // Pass resolved image from CMS if set; HeroSection reads it via (data as any).image
+    ...(resolvedHeroImage ? { image: resolvedHeroImage } : {}),
   };
 
   // Render CMS-driven layout

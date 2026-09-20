@@ -2497,6 +2497,39 @@ exports.handler = async (event) => {
         return await invoiceRepo.update(id, input);
       }
 
+      case 'initiateMediaUpload': {
+        const { input } = args;
+        const identityForCheck = identity;
+        if (!isAdmin(identityForCheck) && !isStaff(identityForCheck)) {
+          throw new Error('Access denied: Only admins and staff can upload CMS media.');
+        }
+
+        const { fileName, contentType, fileSize, category } = input;
+        if (!fileName || !contentType) throw new Error('Missing file details');
+        if (fileSize > 10 * 1024 * 1024) throw new Error('File exceeds 10MB limit');
+
+        const timestamp = Date.now();
+        const safeName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const folder = category || 'general';
+        const fileKey = `public/cms/${folder}/${timestamp}-${safeName}`;
+
+        const uploadUrl = await storageRepo.getPresignedUploadUrl(fileKey, contentType);
+        return { uploadUrl, fileKey };
+      }
+
+      case 'mediaDownloadUrl': {
+        const { key } = args;
+        if (!key) throw new Error('S3 Key is required');
+        
+        // SECURITY FIX: Restrict downloadable keys to the CMS media namespace ONLY.
+        // This prevents attackers from signing and downloading private patient documents.
+        if (!key.startsWith('public/cms/')) {
+          throw new Error('Access denied: Only public CMS media keys can be accessed here.');
+        }
+        
+        return await storageRepo.getPresignedDownloadUrl(key);
+      }
+
       // ---------------------------------------------------------
       // NEW: Unified Document Resolvers
       // ---------------------------------------------------------

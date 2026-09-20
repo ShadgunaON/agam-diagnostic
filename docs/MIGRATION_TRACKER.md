@@ -1728,3 +1728,11 @@ ame, phone, and email. AppSync immediately rejected the entire query with a vali
 - \pp/(admin)/admin/website/pages/home/preview/page.tsx\ (New Secure Preview implementation)
 - \pp/(public)/page.tsx\ (CMS Hydration logic updated)
 
+
+## CMS Media Upload (Pending Deployment)
+- [x] Backend Schema: Added initiateMediaUpload and mediaDownloadUrl to support secure presigned S3 URLs.
+- [x] Backend Resolvers: Implemented in graphql.js to use S3-Storage utility.
+- [x] Frontend Component: Updated AdminImageEditor to directly upload to S3 using PUT and store S3 object keys.
+- [x] Frontend SSR: Updated public page and preview route to dynamically fetch presigned GET URLs during SSR.
+- [ ] **Deployment Requirement:** The backend infrastructure (AWS SAM) must be deployed for the new GraphQL schema and resolvers to become active. Attempting to upload before deployment will fail.
+

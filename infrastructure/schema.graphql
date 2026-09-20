@@ -46,6 +46,9 @@ type Query {
   documentById(id: ID!): DocumentItem
   documentDownloadUrl(id: ID!): String!
   
+  # Media Queries
+  mediaDownloadUrl(key: String!): String! @aws_api_key @aws_cognito_user_pools
+  
   # Review Queries
   reviewById(id: ID!): Review
   reviewsByPatient(patientId: ID!): [Review!]!
@@ -144,6 +147,9 @@ type Mutation {
   createBlog(input: String!): BlogItem!
   updateBlog(id: ID!, input: String!): BlogItem!
   deleteBlog(id: ID!): Boolean!
+  
+  # Media Mutations
+  initiateMediaUpload(input: MediaUploadInput!): MediaUploadResponse!
   
   # Patient Mutations
   createPatient(input: String!): Patient!
@@ -676,20 +682,31 @@ type BlogItem @aws_api_key @aws_cognito_user_pools {
   coverImage: String
 }
 
-type DocumentItem {
-  id: ID!
+input DocumentUploadInput {
   entityType: String!
   entityId: ID!
-  title: String!
-  type: String!
-  url: String!
-  createdAt: String
-  uploadedBy: String
+  patientId: ID!
+  bookingId: ID
+  fileName: String!
+  contentType: String!
+  fileSize: Int!
+}
+
+input MediaUploadInput {
+  fileName: String!
+  contentType: String!
+  fileSize: Int!
+  category: String
 }
 
 type DocumentUploadResponse {
   id: ID!
   uploadUrl: String!
+}
+
+type MediaUploadResponse {
+  uploadUrl: String!
+  fileKey: String!
 }
 
 type Subscriber {

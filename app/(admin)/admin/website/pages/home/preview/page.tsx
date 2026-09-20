@@ -1,5 +1,6 @@
 import React from 'react';
 import { pageService } from '@/services/PageService';
+import { MediaService } from '@/services/MediaService';
 import { fetchBatchedByIds } from '@/lib/api/cms/batchResolver';
 import { HomePageContent } from '@/domains/cms/models';
 
@@ -110,6 +111,15 @@ export default async function HomePreviewPage() {
     return <div className="p-12 text-center text-gray-500">No Draft Content Found</div>;
   }
 
+  let resolvedHeroImage = content.hero?.image;
+  if (resolvedHeroImage && !resolvedHeroImage.startsWith('http') && !resolvedHeroImage.startsWith('data:') && !resolvedHeroImage.startsWith('/')) {
+    try {
+      resolvedHeroImage = await MediaService.getDownloadUrl(resolvedHeroImage);
+    } catch (e) {
+      console.error('[Preview] Failed to fetch presigned URL for hero image:', e);
+    }
+  }
+
   return (
     <div className="preview-container bg-white">
       <div className="bg-amber-100 text-amber-800 text-center text-sm py-2 font-medium sticky top-0 z-50 shadow">
@@ -122,6 +132,7 @@ export default async function HomePreviewPage() {
           titlePart1: content.hero.heading || heroData.titlePart1,
           titleSpan: '', // CMS heading holds the full heading now
           description: content.hero.description || heroData.description,
+          ...(resolvedHeroImage ? { image: resolvedHeroImage } : {}),
         }} />}
         
         {content.statistics?.isVisible !== false && <StatisticsSection data={content.statistics.stats.length > 0 ? content.statistics.stats : statisticsData} />}
