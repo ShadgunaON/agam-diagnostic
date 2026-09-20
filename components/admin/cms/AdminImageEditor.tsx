@@ -34,7 +34,13 @@ export function AdminImageEditor({ value, onChange, label = 'Image', altText, on
           <AdminInput 
             label="Existing Asset Reference"
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => {
+              if (e.target.value.startsWith('data:image')) {
+                alert("Base64 direct image upload is not supported because it exceeds database limits. Please upload the image elsewhere and paste a valid URL instead (e.g., /assets/... or https://...).");
+                return;
+              }
+              onChange(e.target.value);
+            }}
             placeholder="/assets/hero.jpg or existing S3 URL"
           />
           

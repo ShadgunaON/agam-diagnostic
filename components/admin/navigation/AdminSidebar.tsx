@@ -36,7 +36,7 @@ const CMS_PAGES = [
       { id: 'healthArticles',     label: 'Health Insights' },
       { id: 'mainLab',            label: 'Main Lab' },
       { id: 'faq',                label: 'FAQ' },
-      { id: 'bottomCta',          label: 'Bottom CTA' },
+      { id: 'bookingCta',         label: 'Bottom CTA' },
       { id: 'seo',                label: 'SEO' },
     ],
   },

@@ -438,7 +438,7 @@ export default function HomeCMSPage() {
       // Ensure exactly 3 slots
       while (ids.length < 3) ids.push('');
       if (slotIndex !== undefined) ids[slotIndex] = entity.id;
-      updateContent('healthCheckupPlans', { packageIds: ids.filter(Boolean) });
+      updateContent('healthCheckupPlans', { packageIds: ids });
       // Update resolved cache
       setResolvedPackages(prev => ({ ...prev, [entity.id]: entity }));
     } else if (type === 'service') {
@@ -763,7 +763,7 @@ export default function HomeCMSPage() {
                     onRemove={!isEmpty ? () => {
                       const next = [...ids];
                       next[slotIdx] = '';
-                      updateContent('healthCheckupPlans', { packageIds: next.filter(Boolean) });
+                      updateContent('healthCheckupPlans', { packageIds: next });
                     } : undefined}
                   />
                 </div>

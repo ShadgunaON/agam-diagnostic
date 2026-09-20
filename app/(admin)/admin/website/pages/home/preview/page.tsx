@@ -46,6 +46,12 @@ export default async function HomePreviewPage() {
     } catch (e) {
       console.error('Failed to parse draft CMS content for home page', e);
     }
+  } else if (page?.publishedContent) {
+    try {
+      content = JSON.parse(page.publishedContent);
+    } catch (e) {
+      console.error('Failed to parse published CMS content for home page', e);
+    }
   }
 
   // --- Resolve References via Batching if CMS Content Exists ---
@@ -65,8 +71,9 @@ export default async function HomePreviewPage() {
       }));
     }
 
-    if (content.healthCheckupPlans?.packageIds?.length) {
-      const pkgs = await fetchBatchedByIds<PackageItem>('packageById', content.healthCheckupPlans.packageIds, 'id title description price slug');
+    const validPackageIds = content.healthCheckupPlans?.packageIds?.filter(Boolean) || [];
+    if (validPackageIds.length > 0) {
+      const pkgs = await fetchBatchedByIds<PackageItem>('packageById', validPackageIds, 'id title description price slug');
       resolvedPackages = pkgs.map(p => ({
         category: 'Health Checkup',
         title: p.title,

@@ -124,11 +124,12 @@ export default async function HomePage() {
       }
     }
 
-    if (content.healthCheckupPlans?.packageIds?.length) {
+    const validPackageIds = content.healthCheckupPlans?.packageIds?.filter(Boolean) || [];
+    if (validPackageIds.length > 0) {
       try {
         const pkgs = await fetchBatchedByIds<PackageItem>(
           'packageById',
-          content.healthCheckupPlans.packageIds,
+          validPackageIds,
           'id title description price slug'
         );
         if (pkgs.length > 0) {
