@@ -969,7 +969,6 @@ export default function HomeCMSPage() {
             <AdminInput label="Operating Hours" value={content.mainLab.hours} onChange={e => updateContent('mainLab', { hours: e.target.value })} placeholder="Mon-Sun: 6AM–10PM" />
           </FieldRow>
           <AdminInput label="Google Maps Link" value={content.mainLab.mapLink} onChange={e => updateContent('mainLab', { mapLink: e.target.value })} placeholder="https://maps.google.com/..." />
-          <AdminImageEditor label="Lab Image" value={content.mainLab.image} onChange={url => updateContent('mainLab', { image: url })} />
         </div>
 
         <div className="grid grid-cols-2 gap-4">

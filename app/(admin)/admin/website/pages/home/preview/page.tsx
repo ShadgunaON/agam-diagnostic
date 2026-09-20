@@ -175,6 +175,7 @@ export default async function HomePreviewPage() {
               ...contactData,
               address: [content.mainLab.address],
               phone: content.mainLab.phone,
+              hours: content.mainLab.hours ? [content.mainLab.hours] : contactData.hours,
               email: contactData.email,
             }}
             eyebrow={content.mainLab.eyebrow}

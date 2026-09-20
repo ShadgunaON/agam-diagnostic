@@ -291,6 +291,7 @@ export default async function HomePage() {
             ...contactData,
             address: [content.mainLab?.address || contactData.address?.[0] || ''],
             phone: content.mainLab?.phone || contactData.phone,
+            hours: content.mainLab?.hours ? [content.mainLab.hours] : contactData.hours,
           }}
           eyebrow={content.mainLab?.eyebrow}
           heading={content.mainLab?.heading}
