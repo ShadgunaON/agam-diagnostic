@@ -1,4 +1,5 @@
 import React from 'react';
+import * as LucideIcons from 'lucide-react';
 import { Section, Container, Grid } from '@/components/ui';
 import { FeatureCard } from '@/components/common';
 
@@ -12,14 +13,25 @@ export interface CoreValuesSectionProps {
 }
 
 export function CoreValuesSection({ data, className = '' }: CoreValuesSectionProps) {
-  const getIcon = (name: string) => {
-    switch (name) {
-      case 'target': return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>;
-      case 'shield-check': return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>;
-      case 'heart': return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78v0z"/></svg>;
-      case 'zap': return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>;
-      default: return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/></svg>;
-    }
+    const getIcon = (iconNameStr?: string) => {
+    if (!iconNameStr) return <LucideIcons.CheckCircle className="w-6 h-6" />;
+    
+    const legacyMap: Record<string, string> = {
+      'award': 'Award', 'clock': 'Clock', 'home': 'Home', 'phone': 'Phone',
+      'target': 'Target', 'shield': 'Shield', 'calendar': 'Calendar', 'activity': 'Activity',
+      'checkup': 'Activity', 'dna': 'Dna', 'genetics': 'Dna', 'microscope': 'Microscope',
+      'molecular': 'Microscope', 'rt-pcr': 'TestTube', 'pcr': 'TestTube', 'flask': 'FlaskConical',
+      'beaker': 'Beaker', 'heart': 'Heart', 'brain': 'Brain', 'bone': 'Bone', 'lungs': 'Wind',
+      'liver': 'Activity', 'kidney': 'Activity', 'stomach': 'Activity', 'blood': 'Droplet',
+      'primary': 'Star', 'secondary': 'CheckCircle', 'accent': 'Award', 'blue': 'Shield',
+      'phone-call': 'PhoneCall', 'mail': 'Mail', 'map-pin': 'MapPin'
+    };
+    
+    const mappedName = legacyMap[iconNameStr] || iconNameStr;
+    const toPascalCase = (str: string) => str.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
+    
+    const IconComponent = (LucideIcons as any)[toPascalCase(mappedName)] || LucideIcons.CheckCircle;
+    return <IconComponent className="w-6 h-6" strokeWidth={2} />;
   };
 
   return (

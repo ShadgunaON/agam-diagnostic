@@ -12,6 +12,7 @@ interface PackagesFeaturedSectionProps {
   data: FeaturedPackage[];
   title?: string;
   subtitle?: string;
+  eyebrow?: string;
   showAgeFilter?: boolean;
   id?: string;
 }
@@ -25,10 +26,11 @@ const ageCategories = [
 
 export function PackagesFeaturedSection({ 
   data, 
-  title = "Featured Health Packages",
-  subtitle = "Our most recommended packages — chosen by doctors and trusted by thousands of families in Madurai.",
+  title = "Most Popular Packages", 
+  subtitle = "Our most frequently booked health packages designed for comprehensive wellness.",
+  eyebrow = "Most Popular",
   showAgeFilter = true,
-  id
+  id = "featured-packages"
 }: PackagesFeaturedSectionProps) {
   const [activeAge, setActiveAge] = useState('all');
   const { items, addItem, updateQuantity, removeItem } = useCart();
@@ -71,14 +73,16 @@ export function PackagesFeaturedSection({
     <section id={id} className="section section--alt">
       <div className="container">
         <div className="section-header section-header--center" style={{ marginBottom: 'var(--sp-8)' }}>
-          <div className="section-header__overline">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '14px', height: '14px' }}>
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-            </svg>
-            Most Popular
-          </div>
-          <h2 className="section-header__title">{title}</h2>
-          <p className="section-header__desc">{subtitle}</p>
+          {eyebrow && (
+            <div className="section-header__overline">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '14px', height: '14px' }}>
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+              {eyebrow}
+            </div>
+          )}
+          {title && <h2 className="section-header__title">{title}</h2>}
+          {subtitle && <p className="section-header__desc">{subtitle}</p>}
         </div>
 
         {showAgeFilter && (

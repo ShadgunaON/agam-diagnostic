@@ -1,4 +1,7 @@
-import React from 'react';
+const fs = require('fs');
+const path = require('path');
+
+const generatePageCode = (isPreview) => `import React from 'react';
 import { Metadata } from 'next';
 import { CTASection, ErrorState } from '@/components/common';
 import { 
@@ -12,22 +15,22 @@ import {
 import { packageService, pageService } from '@/services';
 import { siteConfig } from '@/config/site';
 import { HealthPackagesPageContent } from '@/domains/cms/models';
+${isPreview ? "import { AdminAuthGuard } from '@/components/admin/auth';" : ""}
 
-
-export const metadata: Metadata = {
-  title: `Health Packages — Preventive Health Checkups | ${siteConfig.name}`,
+${!isPreview ? `export const metadata: Metadata = {
+  title: \`Health Packages — Preventive Health Checkups | \${siteConfig.name}\`,
   description: 'Explore NABL-accredited health packages at Agam Diagnostics, Madurai. Comprehensive checkups for women, men & lifestyle wellness with free home collection.',
 };
 
 export const dynamic = 'force-dynamic';
-
+` : ""}
 export default async function HealthPackagesPage() {
   let content: HealthPackagesPageContent | null = null;
   
   try {
     const pageData = await pageService.getPageById('health-packages');
     if (pageData) {
-      const raw = pageData.publishedContent;
+      const raw = ${isPreview ? "pageData.draftContent" : "pageData.publishedContent"};
       if (raw) {
         content = JSON.parse(raw) as HealthPackagesPageContent;
       }
@@ -42,11 +45,11 @@ export default async function HealthPackagesPage() {
   const fallbackProcess = await packageService.getProcessSteps();
   const fallbackFeatured = await packageService.getFeaturedPackages();
 
-  const heroData = content?.hero || (fallbackHero.isSuccess ? fallbackHero.value : null);
-  const benefitsData = content?.benefits || { items: fallbackBenefits.isSuccess ? fallbackBenefits.value : [] };
-  const processData = content?.process || { steps: fallbackProcess.isSuccess ? fallbackProcess.value : [] };
+  const heroData = content?.hero || fallbackHero.value;
+  const benefitsData = content?.benefits || { items: fallbackBenefits.value };
+  const processData = content?.process || { steps: fallbackProcess.value };
   
-  let featuredPackages = fallbackFeatured.isSuccess ? fallbackFeatured.value : [];
+  let featuredPackages = fallbackFeatured.value || [];
 
   if (content?.featured?.packageIds && content.featured.packageIds.length > 0) {
     // Note: To avoid overfetching or unbounded reads, we use the catalog fetch limit. 
@@ -69,10 +72,7 @@ export default async function HealthPackagesPage() {
         testCount: pkg!.testIds?.length ?? 0,
         ageGroups: [],
         highlightText: '',
-        benefit: '',
-        badgeText: '',
-        badgeColor: '',
-        highlightIcon: ''
+        benefit: ''
       }));
     }
   }
@@ -130,5 +130,13 @@ export default async function HealthPackagesPage() {
     </>
   );
 
-  return pageContent;
+  ${isPreview ? `return <AdminAuthGuard>{pageContent}</AdminAuthGuard>;` : `return pageContent;`}
 }
+`;
+
+fs.writeFileSync(path.join(process.cwd(), 'app', '(public)', 'health-packages', 'page.tsx'), generatePageCode(false), 'utf8');
+
+fs.mkdirSync(path.join(process.cwd(), 'app', '(public)', 'preview', 'health-packages'), { recursive: true });
+fs.writeFileSync(path.join(process.cwd(), 'app', '(public)', 'preview', 'health-packages', 'page.tsx'), generatePageCode(true), 'utf8');
+
+console.log("Created public and preview pages for health packages");

@@ -4,7 +4,15 @@ import Image from 'next/image';
 import { Section, Container, Grid } from '@/components/ui';
 import { packagesData } from '@/data/packages';
 
-export function PackagesCategorySection() {
+export interface PackagesCategorySectionProps {
+  data?: {
+    title?: string;
+    description?: string;
+    eyebrow?: string;
+  };
+}
+
+export function PackagesCategorySection({ data }: PackagesCategorySectionProps) {
   const womenCount = packagesData.featured.filter(pkg => pkg.slug.includes('women') || pkg.slug.includes('basic') || pkg.slug.includes('master')).length;
   const menCount = packagesData.featured.filter(pkg => pkg.slug.includes('men') || pkg.slug.includes('basic') || pkg.slug.includes('master') || pkg.slug.includes('cardiac') || pkg.slug.includes('executive')).length;
   const lifestyleCount = packagesData.featured.filter(pkg => pkg.slug.includes('diabetic') || pkg.slug.includes('executive') || pkg.slug.includes('master')).length;
@@ -13,14 +21,16 @@ export function PackagesCategorySection() {
     <section id="browse-category" className="section">
       <div className="container">
         <div className="section-header section-header--center" style={{ marginBottom: 'var(--sp-8)' }}>
-          <div className="section-header__overline">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '14px', height: '14px' }}>
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-            </svg>
-            Browse by Category
-          </div>
-          <h2 className="section-header__title">Find the Right Package for You</h2>
-          <p className="section-header__desc">Our health packages are organized into three categories based on gender-specific needs and modern lifestyle risks. Choose yours below.</p>
+          {data?.eyebrow && (
+            <div className="section-header__overline">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '14px', height: '14px' }}>
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+              </svg>
+              {data.eyebrow}
+            </div>
+          )}
+          {data?.title && <h2 className="section-header__title">{data.title}</h2>}
+          {data?.description && <p className="section-header__desc">{data.description}</p>}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 reveal">
           

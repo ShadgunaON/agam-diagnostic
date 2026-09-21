@@ -9,7 +9,11 @@ export interface PackagesHeroSectionProps {
     title: string;
     description: string;
     image: string;
-    pill: string;
+    pill?: string;
+    imageAlt?: string;
+    primaryActionLabel?: string;
+    primaryActionLink?: string;
+    eyebrow?: string;
   };
   className?: string;
 }
@@ -21,19 +25,21 @@ export function PackagesHeroSection({ data, className = '' }: PackagesHeroSectio
         
         <div className="flex flex-col justify-center relative z-10 px-6 py-6 md:py-8 md:pl-[max(1.5rem,calc((100vw-var(--max-width))/2+1.5rem))] md:pr-8">
           <div className="breadcrumb" style={{ marginBottom: 'var(--sp-3)' }}>
-            <Link href="/">Home</Link><span className="breadcrumb__sep">›</span><span className="breadcrumb__current">Health Packages</span>
+            <Link href="/">Home</Link><span className="breadcrumb__sep">›</span><span className="breadcrumb__current">{data.eyebrow || 'Health Packages'}</span>
           </div>
-          <span className="hero-premium__pill">
-            {data.pill}
-          </span>
+          {data.pill && (
+            <span className="hero-premium__pill">
+              {data.pill}
+            </span>
+          )}
           <h1 className="hero-premium__title" style={{ fontSize: 'var(--fs-3xl)', marginBottom: 'var(--sp-3)' }}>{data.title}</h1>
           <p className="hero-premium__desc" style={{ fontSize: 'var(--fs-base)', color: 'var(--color-text)', marginBottom: 'var(--sp-5)', lineHeight: 'var(--lh-relaxed)', maxWidth: '480px' }}>
             {data.description}
           </p>
           
           <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
-            <Button href="/book" className="btn btn--primary">
-              Book Appointment
+            <Button href={data.primaryActionLink || "/book"} className="btn btn--primary">
+              {data.primaryActionLabel || "Book Appointment"}
             </Button>
           </div>
         </div>
@@ -42,7 +48,7 @@ export function PackagesHeroSection({ data, className = '' }: PackagesHeroSectio
           <div className="hidden md:block absolute inset-0 z-10" style={{ background: 'linear-gradient(to right, var(--color-bg-alt) 0%, transparent 15%)' }}></div>
           <Image 
             src={data.image} 
-            alt={data.title} 
+            alt={data.imageAlt || data.title} 
             fill
             className="w-full h-full object-cover object-top md:object-[20%_center] lg:object-center rounded-2xl md:rounded-none"
             unoptimized

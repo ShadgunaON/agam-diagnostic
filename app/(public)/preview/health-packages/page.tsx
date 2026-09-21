@@ -12,14 +12,8 @@ import {
 import { packageService, pageService } from '@/services';
 import { siteConfig } from '@/config/site';
 import { HealthPackagesPageContent } from '@/domains/cms/models';
+import { AdminAuthGuard } from '@/components/admin/layout/AdminAuthGuard';
 
-
-export const metadata: Metadata = {
-  title: `Health Packages — Preventive Health Checkups | ${siteConfig.name}`,
-  description: 'Explore NABL-accredited health packages at Agam Diagnostics, Madurai. Comprehensive checkups for women, men & lifestyle wellness with free home collection.',
-};
-
-export const dynamic = 'force-dynamic';
 
 export default async function HealthPackagesPage() {
   let content: HealthPackagesPageContent | null = null;
@@ -27,7 +21,7 @@ export default async function HealthPackagesPage() {
   try {
     const pageData = await pageService.getPageById('health-packages');
     if (pageData) {
-      const raw = pageData.publishedContent;
+      const raw = pageData.draftContent;
       if (raw) {
         content = JSON.parse(raw) as HealthPackagesPageContent;
       }
@@ -130,5 +124,5 @@ export default async function HealthPackagesPage() {
     </>
   );
 
-  return pageContent;
+  return <AdminAuthGuard>{pageContent}</AdminAuthGuard>;
 }

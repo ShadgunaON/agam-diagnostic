@@ -122,7 +122,7 @@ exports.handler = async (event) => {
     staffId: event.identity?.claims?.['custom:staff_id'] || (role !== 'patient' ? sub : undefined)
   };
   const PUBLIC_FIELDS = new Set([
-    'catalogTests', 'catalogPackages', 'catalogServices',
+    'catalogTests', 'catalogPackages', 'packagesByIds', 'catalogServices',
     'testBySlug', 'packageBySlug', 'serviceBySlug',
     'blogs', 'blogById', 'publicReviews', 'globalSearch',
     'newsletterSubscribe', 'createInquiry', 'pageById'
@@ -621,6 +621,12 @@ exports.handler = async (event) => {
         const { id } = args;
         if (!id) throw new Error('Missing package ID');
         return await packageRepo.getById(id);
+      }
+      
+      case 'packagesByIds': {
+        const { ids } = args;
+        if (!ids || !Array.isArray(ids)) return [];
+        return await packageRepo.batchGet(ids);
       }
       
       case 'serviceById': {

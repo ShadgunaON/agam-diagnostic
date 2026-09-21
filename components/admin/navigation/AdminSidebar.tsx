@@ -69,6 +69,59 @@ const CMS_PAGES = [
       { id: 'catalog',            label: 'Services Catalog' },
       { id: 'bottomCta',          label: 'Bottom CTA' },
     ],
+  },
+  {
+    id: 'health-packages',
+    label: 'Health Packages',
+    href: '/admin/website/pages/health-packages',
+    sections: [
+      { id: 'hero',               label: 'Hero Section' },
+      { id: 'preventiveCare',     label: 'Preventive Care' },
+      { id: 'benefits',           label: 'Benefits' },
+      { id: 'process',            label: 'Process' },
+      { id: 'category',           label: 'Category' },
+      { id: 'featured',           label: 'Featured' },
+      { id: 'advantage',          label: 'Advantage' },
+      { id: 'bottomCta',          label: 'Bottom CTA' },
+    ],
+  },
+  {
+    id: 'lifestyle-health',
+    label: 'Lifestyle Health',
+    href: '/admin/website/pages/lifestyle-health',
+    sections: [
+      { id: 'hero',               label: 'Hero Section' },
+      { id: 'information',        label: 'Risk Awareness' },
+      { id: 'featured',           label: 'Featured Packages' },
+      { id: 'exploreCategories',  label: 'Explore Categories' },
+      { id: 'faq',                label: 'FAQ' },
+      { id: 'bottomCta',          label: 'Bottom CTA' },
+    ],
+  },
+  {
+    id: 'women-health',
+    label: 'Women\'s Health',
+    href: '/admin/website/pages/women-health',
+    sections: [
+      { id: 'hero',               label: 'Hero Section' },
+      { id: 'information',        label: 'Recommended For' },
+      { id: 'featured',           label: 'Featured Packages' },
+      { id: 'exploreCategories',  label: 'Explore Categories' },
+      { id: 'faq',                label: 'FAQ' },
+      { id: 'bottomCta',          label: 'Bottom CTA' },
+    ],
+  },
+  {
+    id: 'men-health',
+    label: 'Men\'s Health',
+    href: '/admin/website/pages/men-health',
+    sections: [
+      { id: 'hero',               label: 'Hero Section' },
+      { id: 'featured',           label: 'Featured Packages' },
+      { id: 'exploreCategories',  label: 'Explore Categories' },
+      { id: 'faq',                label: 'FAQ' },
+      { id: 'bottomCta',          label: 'Bottom CTA' },
+    ],
   }
 ];
 
@@ -110,10 +163,10 @@ function WebsiteCMSMenu({ isCollapsed, pathname }: { isCollapsed: boolean; pathn
   const isCMSActive = pathname.includes('/admin/website');
 
   const [cmsOpen, setCmsOpen] = React.useState(isCMSActive);
-  const [expandedPages, setExpandedPages] = React.useState<Record<string, boolean>>({ home: true });
+  const [expandedPages, setExpandedPages] = React.useState<Record<string, boolean>>({});
 
   React.useEffect(() => {
-    if (isCMSActive) { setCmsOpen(true); setExpandedPages(p => ({ ...p, home: true })); }
+    if (isCMSActive) { setCmsOpen(true); }
   }, [isCMSActive]);
 
   const togglePage = (id: string) => setExpandedPages(p => ({ ...p, [id]: !p[id] }));
@@ -172,7 +225,7 @@ function WebsiteCMSMenu({ isCollapsed, pathname }: { isCollapsed: boolean; pathn
         <div className="flex flex-col" style={{ paddingLeft: '8px', gap: '2px' }}>
           {CMS_PAGES.map(page => {
             const isPageActive = pathname === page.href || pathname.startsWith(page.href + '/');
-            const isPageExpanded = expandedPages[page.id] ?? true;
+            const isPageExpanded = expandedPages[page.id] ?? false;
 
             return (
               <div key={page.id} className="flex flex-col" style={{ gap: '1px' }}>

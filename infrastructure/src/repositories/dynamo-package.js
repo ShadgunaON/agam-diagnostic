@@ -1,5 +1,5 @@
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, PutCommand, QueryCommand, GetCommand, DeleteCommand } = require('@aws-sdk/lib-dynamodb');
+const { DynamoDBDocumentClient, PutCommand, QueryCommand, GetCommand, DeleteCommand, BatchGetCommand } = require('@aws-sdk/lib-dynamodb');
 
 
 const client = new DynamoDBClient({});
@@ -44,6 +44,44 @@ class DynamoPackageRepository {
       },
     }));
     return response.Item ? this._mapFromDb(response.Item) : null;
+  }
+
+  async batchGet(ids) {
+    if (!ids || ids.length === 0) return [];
+    
+    // DynamoDB BatchGetItem can fetch up to 100 items at a time
+    // For simplicity, assuming the number of packages per category is < 100
+    const uniqueIds = [...new Set(ids)];
+    const keys = uniqueIds.map(id => ({ PK: `PACKAGE#${id}`, SK: 'METADATA' }));
+    
+    // Split into chunks of 100 if necessary
+    const chunks = [];
+    for (let i = 0; i < keys.length; i += 100) {
+      chunks.push(keys.slice(i, i + 100));
+    }
+    
+    let allItems = [];
+    for (const chunk of chunks) {
+      const response = await docClient.send(new BatchGetCommand({
+        RequestItems: {
+          [TABLE_NAME]: {
+            Keys: chunk
+          }
+        }
+      }));
+      if (response.Responses && response.Responses[TABLE_NAME]) {
+        allItems = allItems.concat(response.Responses[TABLE_NAME]);
+      }
+    }
+    
+    // Return items in the order of original IDs where possible
+    const itemsMap = {};
+    for (const item of allItems) {
+      const mapped = this._mapFromDb(item);
+      if (mapped) itemsMap[mapped.id] = mapped;
+    }
+    
+    return uniqueIds.map(id => itemsMap[id]).filter(Boolean);
   }
 
   async getBySlug(slug) {

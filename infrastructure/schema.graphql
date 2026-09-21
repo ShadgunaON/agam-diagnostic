@@ -11,6 +11,7 @@ type Query {
   # Catalog Queries
   catalogTests(page: Int, limit: Int, q: String): CatalogTestsConnection! @aws_api_key @aws_cognito_user_pools
   catalogPackages(page: Int, limit: Int, q: String): CatalogPackagesConnection! @aws_api_key @aws_cognito_user_pools
+  packagesByIds(ids: [ID!]!): [PackageItem!]! @aws_api_key @aws_cognito_user_pools
   catalogServices(page: Int, limit: Int, q: String): CatalogServicesConnection! @aws_api_key @aws_cognito_user_pools
   testBySlug(slug: String!): TestItem @aws_api_key @aws_cognito_user_pools
   packageBySlug(slug: String!): PackageItem @aws_api_key @aws_cognito_user_pools

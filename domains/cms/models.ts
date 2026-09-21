@@ -206,3 +206,138 @@ export interface ServicesPageContent {
     secondaryActionLink?: string;
   };
 }
+
+export interface HealthPackagesPageContent {
+  hero?: {
+    eyebrow?: string;
+    title?: string;
+    description?: string;
+    image?: string;
+    imageAlt?: string;
+    primaryActionLabel?: string;
+    primaryActionLink?: string;
+    isVisible?: boolean;
+  };
+  preventiveCare?: {
+    eyebrow?: string;
+    title?: string;
+    description?: string;
+    isVisible?: boolean;
+  };
+  benefits?: {
+    title?: string;
+    description?: string;
+    eyebrow?: string;
+    items?: Array<{
+      title: string;
+      description: string;
+      icon: string;
+      isVisible?: boolean;
+      order?: number;
+    }>;
+    isVisible?: boolean;
+  };
+  process?: {
+    title?: string;
+    description?: string;
+    eyebrow?: string;
+    steps?: Array<{
+      title: string;
+      description: string;
+      order?: number;
+    }>;
+    isVisible?: boolean;
+  };
+  category?: {
+    title?: string;
+    description?: string;
+    eyebrow?: string;
+    isVisible?: boolean;
+  };
+  featured?: {
+    title?: string;
+    description?: string;
+    eyebrow?: string;
+    packageIds?: string[];
+    isVisible?: boolean;
+  };
+  advantage?: {
+    title?: string;
+    description?: string;
+    eyebrow?: string;
+    items?: Array<{
+      title: string;
+      description: string;
+      icon: string;
+      order?: number;
+    }>;
+    isVisible?: boolean;
+  };
+  bottomCta?: {
+    title?: string;
+    description?: string;
+    primaryActionLabel?: string;
+    primaryActionLink?: string;
+    secondaryActionLabel?: string;
+    secondaryActionLink?: string;
+    isVisible?: boolean;
+  };
+}
+
+export interface CategoryPageContent {
+  hero?: {
+    eyebrow?: string;
+    title?: string;
+    description?: string;
+    image?: string;
+    imageAlt?: string;
+    primaryActionLabel?: string;
+    primaryActionLink?: string;
+    isVisible?: boolean;
+  };
+  information?: {
+    overline?: string;
+    title?: string;
+    description?: string;
+    items?: Array<{
+      title: string;
+      description: string;
+      icon: string;
+      colorTheme?: string;
+    }>;
+    isVisible?: boolean;
+  };
+  featured?: {
+    title?: string;
+    subtitle?: string;
+    packageIds?: string[];
+    isVisible?: boolean;
+  };
+  exploreCategories?: {
+    title?: string;
+    categories?: Array<{
+      id: string;
+      title: string;
+      description: string;
+      image: string;
+      link: string;
+      badges: string[];
+    }>;
+    isVisible?: boolean;
+  };
+  faq?: {
+    overline?: string;
+    title?: string;
+    items?: Array<{ question: string; answer: string }>;
+    isVisible?: boolean;
+  };
+  bottomCta?: {
+    title?: string;
+    description?: string;
+    primaryActionLabel?: string;
+    primaryActionLink?: string;
+    secondaryActionLabel?: string;
+    secondaryActionLink?: string;
+    isVisible?: boolean;
+  };
+}

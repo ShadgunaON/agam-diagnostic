@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
+import * as LucideIcons from 'lucide-react';
 import Link from 'next/link';
 import { Section, Container, Grid, Card } from '@/components/ui';
 import { Button } from '@/components/ui/Button';
@@ -48,27 +49,25 @@ export function ServicesCatalogSection({ data, className = '' }: ServicesCatalog
     return cleaned ? parseInt(cleaned, 10) : 499;
   };
 
-  const getIcon = (iconName: string) => {
-    const style = { width: '24px', height: '24px' };
-    switch (iconName) {
-      case 'checkup':
-        return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={style}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>;
-      case 'dna':
-      case 'genetics':
-        return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={style}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
-      case 'microscope':
-      case 'molecular':
-        return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={style}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>;
-      case 'rt-pcr':
-      case 'pcr':
-        return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={style}><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
-      case 'microbiology':
-        return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={style}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>;
-      case 'immunology':
-        return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={style}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
-      default:
-        return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={style}><circle cx="12" cy="12" r="10"/></svg>;
-    }
+    const getIcon = (iconNameStr?: string) => {
+    if (!iconNameStr) return <LucideIcons.CheckCircle className="w-6 h-6" />;
+    
+    const legacyMap: Record<string, string> = {
+      'award': 'Award', 'clock': 'Clock', 'home': 'Home', 'phone': 'Phone',
+      'target': 'Target', 'shield': 'Shield', 'calendar': 'Calendar', 'activity': 'Activity',
+      'checkup': 'Activity', 'dna': 'Dna', 'genetics': 'Dna', 'microscope': 'Microscope',
+      'molecular': 'Microscope', 'rt-pcr': 'TestTube', 'pcr': 'TestTube', 'flask': 'FlaskConical',
+      'beaker': 'Beaker', 'heart': 'Heart', 'brain': 'Brain', 'bone': 'Bone', 'lungs': 'Wind',
+      'liver': 'Activity', 'kidney': 'Activity', 'stomach': 'Activity', 'blood': 'Droplet',
+      'primary': 'Star', 'secondary': 'CheckCircle', 'accent': 'Award', 'blue': 'Shield',
+      'phone-call': 'PhoneCall', 'mail': 'Mail', 'map-pin': 'MapPin'
+    };
+    
+    const mappedName = legacyMap[iconNameStr] || iconNameStr;
+    const toPascalCase = (str: string) => str.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
+    
+    const IconComponent = (LucideIcons as any)[toPascalCase(mappedName)] || LucideIcons.CheckCircle;
+    return <IconComponent className="w-6 h-6" strokeWidth={2} />;
   };
 
   return (

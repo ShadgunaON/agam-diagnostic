@@ -88,7 +88,26 @@ export class PackageService {
       if (!res?.packageBySlug) return failure(new Error('Package not found'));
       return success(res.packageBySlug);
     } catch (err) {
-      return failure(err instanceof Error ? err : new Error('Failed to get package'));
+      return failure(err instanceof Error ? err : new Error('Failed to fetch package'));
+    }
+  }
+
+  async getPackagesByIds(ids: string[]): Promise<Result<PackageItem[]>> {
+    if (!ids || ids.length === 0) return success([]);
+    try {
+      const res = await this._graphqlFetch<{ packagesByIds: PackageItem[] }>(
+        `query PackagesByIds($ids: [ID!]!) {
+          packagesByIds(ids: $ids) {
+            id slug title category price status description
+            packagePrice individualValue sortOrder
+          }
+        }`,
+        { ids }
+      );
+      if (!res?.packagesByIds) return success([]);
+      return success(res.packagesByIds);
+    } catch (err) {
+      return failure(err instanceof Error ? err : new Error('Failed to fetch packages by ids'));
     }
   }
 

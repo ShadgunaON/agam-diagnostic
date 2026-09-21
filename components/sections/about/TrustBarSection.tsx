@@ -12,18 +12,24 @@ export interface TrustBarSectionProps {
 }
 
 export function TrustBarSection({ data, className = '', style }: TrustBarSectionProps) {
-  const getIcon = (name: string) => {
-    // Handle legacy lowercase names from fallback data
-    const iconMap: Record<string, string> = {
-      shield: 'ShieldCheck',
-      clock: 'Clock',
-      home: 'Home',
-      phone: 'Phone',
+    const getIcon = (iconNameStr?: string) => {
+    if (!iconNameStr) return <LucideIcons.CheckCircle className="w-6 h-6" />;
+    
+    const legacyMap: Record<string, string> = {
+      'award': 'Award', 'clock': 'Clock', 'home': 'Home', 'phone': 'Phone',
+      'target': 'Target', 'shield': 'Shield', 'calendar': 'Calendar', 'activity': 'Activity',
+      'checkup': 'Activity', 'dna': 'Dna', 'genetics': 'Dna', 'microscope': 'Microscope',
+      'molecular': 'Microscope', 'rt-pcr': 'TestTube', 'pcr': 'TestTube', 'flask': 'FlaskConical',
+      'beaker': 'Beaker', 'heart': 'Heart', 'brain': 'Brain', 'bone': 'Bone', 'lungs': 'Wind',
+      'liver': 'Activity', 'kidney': 'Activity', 'stomach': 'Activity', 'blood': 'Droplet',
+      'primary': 'Star', 'secondary': 'CheckCircle', 'accent': 'Award', 'blue': 'Shield',
+      'phone-call': 'PhoneCall', 'mail': 'Mail', 'map-pin': 'MapPin'
     };
     
-    const iconName = iconMap[name] || name || 'CheckCircle2';
-    const IconComponent = (LucideIcons as any)[iconName] || LucideIcons.CheckCircle2;
+    const mappedName = legacyMap[iconNameStr] || iconNameStr;
+    const toPascalCase = (str: string) => str.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
     
+    const IconComponent = (LucideIcons as any)[toPascalCase(mappedName)] || LucideIcons.CheckCircle;
     return <IconComponent className="w-6 h-6" strokeWidth={2} />;
   };
 
