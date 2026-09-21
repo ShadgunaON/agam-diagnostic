@@ -1,3 +1,4 @@
+import { AdminAuthGuard } from '@/components/admin/layout/AdminAuthGuard';
 import React from 'react';
 import { pageService } from '@/services/PageService';
 import { MediaService } from '@/services/MediaService';
@@ -37,7 +38,7 @@ import {
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function HomePreviewPage() {
+async function HomePreviewPage() {
   const page = await pageService.getPageById('home');
   let content: HomePageContent | null = null;
   
@@ -86,7 +87,7 @@ export default async function HomePreviewPage() {
     }
 
     if (content.healthArticles?.blogIds?.length) {
-      const blogs = await fetchBatchedByIds<BlogArticle>('blogById', content.healthArticles.blogIds, 'id title excerpt date author slug');
+      const blogs = await fetchBatchedByIds<BlogArticle>('blogById', content.healthArticles.blogIds, 'id title excerpt date author slug', 'idOrSlug');
       resolvedBlogs = blogs.map(b => ({
         title: b.title,
         excerpt: b.description || '',
@@ -214,5 +215,16 @@ export default async function HomePreviewPage() {
         )}
       </main>
     </div>
+  );
+}
+
+
+
+
+export default function ProtectedHomePreviewPage() {
+  return (
+    <AdminAuthGuard>
+      <HomePreviewPage />
+    </AdminAuthGuard>
   );
 }

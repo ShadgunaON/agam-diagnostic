@@ -8,8 +8,7 @@ export interface MilestoneItem {
   title: string;
   progress: number;
   description: string;
-  bg: string;
-  color: string;
+  variant?: string;
 }
 
 export interface JourneyTrackerSectionProps {
@@ -79,6 +78,9 @@ export function JourneyTrackerSection({ data, className = '' }: JourneyTrackerSe
               if (idx === 2) icon = <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>;
               if (idx === 3) icon = <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>;
 
+              const vBg = item.variant === 'blue' ? '#E0F2FE' : item.variant === 'green' ? '#ECFCCB' : item.variant === 'orange' ? '#FFEDD5' : '#F3E8FF';
+              const vColor = item.variant === 'blue' ? '#0284C7' : item.variant === 'green' ? '#4D7C0F' : item.variant === 'orange' ? '#C2410C' : '#7C3AED';
+
               return (
                 <div 
                   key={idx}
@@ -86,7 +88,7 @@ export function JourneyTrackerSection({ data, className = '' }: JourneyTrackerSe
                 >
                   <div 
                     className="jt-panel-icon"
-                    style={{ background: item.bg, color: item.color }}
+                    style={{ background: vBg, color: vColor }}
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       {icon}

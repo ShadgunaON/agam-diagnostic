@@ -1182,7 +1182,7 @@ export default function HomeCMSPage() {
           <AdminButton
             variant="ghost"
             size="sm"
-            onClick={() => window.open('/admin/website/pages/home/preview', '_blank')}
+            onClick={() => window.open('/preview/home', '_blank')}
           >
             <Eye size={14} className="mr-1.5" /> Preview
           </AdminButton>

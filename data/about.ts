@@ -58,58 +58,50 @@ export const aboutData = {
       title: "Founded in Madurai",
       progress: 0,
       description: "Started with a vision to bring world-class diagnostic facilities to South Tamil Nadu, establishing our very first referral laboratory.",
-      bg: "#E0F2FE",
-      color: "#0284C7"
+      variant: 'blue'
     },
     {
       year: "2018",
       title: "NABL Certified",
       progress: 33,
       description: "Achieved the prestigious NABL accreditation, reinforcing our commitment to global quality standards and diagnostic precision.",
-      bg: "#ECFCCB",
-      color: "#4D7C0F"
+      variant: 'green'
     },
     {
       year: "2021",
       title: "Automated Labs",
       progress: 66,
       description: "Upgraded to state-of-the-art robotic track systems, drastically reducing report turnaround times by eliminating manual routing errors.",
-      bg: "#F3E8FF",
-      color: "#7C3AED"
+      variant: 'purple'
     },
     {
       year: "2024",
       title: "50,000+ Patients",
       progress: 100,
       description: "Reached a major milestone of trust by successfully serving over fifty thousand patients across multiple branches.",
-      bg: "#FFEDD5",
-      color: "#C2410C"
+      variant: 'orange'
     }
   ],
   techFeatures: [
     {
       title: "Advanced Diagnostic Equipment",
       description: "Utilizing latest generation analyzers for superior accuracy.",
-      bg: "#F3E8FF",
-      color: "#7C3AED"
+      variant: 'purple'
     },
     {
       title: "Fully Automated Systems",
       description: "Robotic track systems route samples instantly and safely.",
-      bg: "#E0F2FE",
-      color: "#0284C7"
+      variant: 'blue'
     },
     {
       title: "Multi-Level Quality Assurance",
       description: "Rigorous internal and external QC measures implemented daily.",
-      bg: "#ECFCCB",
-      color: "#4D7C0F"
+      variant: 'green'
     },
     {
       title: "Digital Report Management",
       description: "Instant LIS integration dispatches reports safely online.",
-      bg: "#FFEDD5",
-      color: "#C2410C"
+      variant: 'orange'
     }
   ],
   team: [

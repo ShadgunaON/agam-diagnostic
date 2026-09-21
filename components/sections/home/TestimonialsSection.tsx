@@ -60,9 +60,9 @@ export function TestimonialsSection({
               Loading patient stories...
             </div>
           ) : hasDynamicReviews ? (
-            reviews.map((review) => (
+            reviews.map((review, index) => (
               <TestimonialCard
-                key={review.id}
+                key={review.id || index}
                 quote={(review as any).content || review.comment || ''}
                 authorName={review.displayName || 'Verified Patient'}
                 authorRole={review.verified ? 'Verified Patient' : 'Patient'}

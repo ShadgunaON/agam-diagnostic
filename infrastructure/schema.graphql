@@ -50,7 +50,7 @@ type Query {
   mediaDownloadUrl(key: String!): String! @aws_api_key @aws_cognito_user_pools
   
   # Review Queries
-  reviewById(id: ID!): Review
+  reviewById(id: ID!): Review @aws_api_key @aws_cognito_user_pools
   reviewsByPatient(patientId: ID!): [Review!]!
   reviewByBooking(bookingId: ID!): Review
   publicReviews(limit: Int): [Review!]! @aws_api_key @aws_cognito_user_pools
@@ -65,9 +65,9 @@ type Query {
   # Targeted single-record lookups (replaces REST GET /api/bookings/:id and /api/invoices/:id)
   bookingById(id: ID!): Booking
   invoiceById(id: ID!): FullInvoice
-  testById(id: ID!): TestItem
-  packageById(id: ID!): PackageItem
-  serviceById(id: ID!): ServiceItem
+  testById(id: ID!): TestItem @aws_api_key @aws_cognito_user_pools
+  packageById(id: ID!): PackageItem @aws_api_key @aws_cognito_user_pools
+  serviceById(id: ID!): ServiceItem @aws_api_key @aws_cognito_user_pools
 
   # Patient-scoped booking list (replaces REST GET /api/bookings?patientId=)
   myBookings: [Booking!]!

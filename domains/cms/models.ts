@@ -105,3 +105,77 @@ export interface HomePageContent {
     isVisible: boolean;
   };
 }
+
+export type FeatureVariant = 'blue' | 'purple' | 'green' | 'orange' | string;
+
+export interface AboutPageContent {
+  hero?: {
+    isVisible?: boolean;
+    title?: string;
+    description?: string;
+    image?: string;
+    badges?: string[];
+  };
+  trustFeatures?: {
+    isVisible?: boolean;
+    items?: Array<{ title: string; description: string; icon: string }>;
+  };
+  story?: {
+    isVisible?: boolean;
+    title?: string;
+    paragraphs?: string[];
+    image?: string;
+    stat?: { value: string; label: string };
+  };
+  missionVision?: {
+    isVisible?: boolean;
+    mission?: { title: string; description: string };
+    vision?: { title: string; description: string };
+  };
+  differenceFeatures?: {
+    isVisible?: boolean;
+    items?: Array<{ title: string; description: string; variant: FeatureVariant }>;
+  };
+  milestones?: {
+    isVisible?: boolean;
+    items?: Array<{ year: string; title: string; progress: number; description: string; variant: FeatureVariant }>;
+  };
+  techFeatures?: {
+    isVisible?: boolean;
+    items?: Array<{ title: string; description: string; variant: FeatureVariant }>;
+  };
+  team?: {
+    isVisible?: boolean;
+    members?: Array<{ name: string; role: string; qualification: string; image: string }>;
+  };
+  recognitions?: {
+    isVisible?: boolean;
+    accreditations?: {
+      title?: string;
+      intro?: string;
+      items?: Array<{ title: string; description: string }>;
+    };
+    awards?: {
+      title?: string;
+      items?: Array<{ title: string; category: string; description: string }>;
+    };
+  };
+  contactPreview?: {
+    isVisible?: boolean;
+  };
+  reviewsCta?: {
+    isVisible?: boolean;
+    eyebrow?: string;
+    title?: string;
+    description?: string;
+    buttonText?: string;
+    buttonLink?: string;
+  };
+  bottomCta?: {
+    isVisible?: boolean;
+    title?: string;
+    description?: string;
+    primaryActionLabel?: string;
+    primaryActionLink?: string;
+  };
+}

@@ -40,6 +40,25 @@ const CMS_PAGES = [
       { id: 'seo',                label: 'SEO' },
     ],
   },
+  {
+    id: 'about',
+    label: 'About',
+    href: '/admin/website/pages/about',
+    sections: [
+      { id: 'hero',               label: 'Hero Section' },
+      { id: 'trustFeatures',      label: 'Trust Bar' },
+      { id: 'story',              label: 'Who We Are (Story)' },
+      { id: 'missionVision',      label: 'Mission & Vision' },
+      { id: 'differenceFeatures', label: 'Agam Difference' },
+      { id: 'milestones',         label: 'Journey Tracker' },
+      { id: 'techFeatures',       label: 'Technology' },
+      { id: 'team',               label: 'Team' },
+      { id: 'recognitions',       label: 'Recognitions' },
+      { id: 'contactPreview',     label: 'Contact Section' },
+      { id: 'reviewsCta',         label: 'Reviews CTA' },
+      { id: 'bottomCta',          label: 'Bottom CTA' },
+    ],
+  }
 ];
 
 // ── Static navigation (non-CMS) ───────────────────────────────────────────────
@@ -54,11 +73,11 @@ const adminNavigation: NavigationGroup[] = [
   {
     title: 'Operations',
     items: [
-      { title: 'Bookings',             href: '/admin/bookings',    icon: 'calendar',     moduleId: 'orders'      },
-      { title: 'Collections',          href: '/admin/collections', icon: 'mapPin',       moduleId: 'collections' },
-      { title: 'Patients',             href: '/admin/patients',    icon: 'users',        moduleId: 'patients'    },
-      { title: 'Ledger & Invoices',    href: '/admin/invoices',    icon: 'fileText',     moduleId: 'invoices'    },
-      { title: 'Reports',              href: '/admin/reports',     icon: 'file',         moduleId: 'reports'     },
+      // { title: 'Bookings',             href: '/admin/bookings',    icon: 'calendar',     moduleId: 'orders'      },
+      // { title: 'Collections',          href: '/admin/collections', icon: 'mapPin',       moduleId: 'collections' },
+      // { title: 'Patients',             href: '/admin/patients',    icon: 'users',        moduleId: 'patients'    },
+      // { title: 'Ledger & Invoices',    href: '/admin/invoices',    icon: 'fileText',     moduleId: 'invoices'    },
+      // { title: 'Reports',              href: '/admin/reports',     icon: 'file',         moduleId: 'reports'     },
       { title: 'Reviews',              href: '/admin/reviews',     icon: 'fileText',     moduleId: 'reviews'     },
     ],
   },

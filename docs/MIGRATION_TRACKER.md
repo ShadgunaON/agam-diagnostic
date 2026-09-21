@@ -1736,3 +1736,10 @@ ame, phone, and email. AppSync immediately rejected the entire query with a vali
 - [x] Frontend SSR: Updated public page and preview route to dynamically fetch presigned GET URLs during SSR.
 - [ ] **Deployment Requirement:** The backend infrastructure (AWS SAM) must be deployed for the new GraphQL schema and resolvers to become active. Attempting to upload before deployment will fail.
 
+
+## Admin Navigation Cleanup (Sprint 6D)
+- [x] Operational modules (Bookings, Collections, Patients, Ledger & Invoices, Reports) were temporarily hidden from the active Admin navigation sidebar.
+- [x] The underlying backend resources, database tables, models, and GraphQL schemas remain entirely untouched.
+- [x] The frontend route folders (/admin/bookings, etc.) still exist locally and were intentionally not deleted.
+- [x] This is a UI-only change to align the current CMS/Admin capabilities.
+

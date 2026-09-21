@@ -11,7 +11,8 @@ import { apiClient } from '@/repositories/registry';
 export async function fetchBatchedByIds<T>(
   queryName: string,
   ids: string[],
-  fields: string
+  fields: string,
+  idParamName: string = 'id'
 ): Promise<T[]> {
   if (!ids || ids.length === 0) return [];
 
@@ -23,7 +24,7 @@ export async function fetchBatchedByIds<T>(
   // }
   
   const queryParts = ids.map((id, index) => {
-    return `item_${index}: ${queryName}(id: "${id}") { ${fields} }`;
+    return `item_${index}: ${queryName}(${idParamName}: "${id}") { ${fields} }`;
   });
 
   const query = `

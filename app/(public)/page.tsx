@@ -153,7 +153,8 @@ export default async function HomePage() {
         const blogs = await fetchBatchedByIds<BlogArticle>(
           'blogById',
           content.healthArticles.blogIds,
-          'id title excerpt date author slug'
+          'id title excerpt date author slug',
+          'idOrSlug'
         );
         if (blogs.length > 0) {
           resolvedBlogs = blogs.map(b => ({
