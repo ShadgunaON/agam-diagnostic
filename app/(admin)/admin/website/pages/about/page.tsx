@@ -288,7 +288,8 @@ export default function AboutCMSPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] -mx-4 -my-4 lg:-mx-8 lg:-my-8 bg-gray-50">
+    <div className="flex flex-col h-full overflow-hidden bg-gray-50">
+
       
       {/* ── Top Action Bar ────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-6 py-4 bg-white border-b shrink-0 z-10 sticky top-0">
