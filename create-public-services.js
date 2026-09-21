@@ -1,9 +1,12 @@
-import React from 'react';
+const fs = require('fs');
+const path = require('path');
+
+const code = `import React from 'react';
 import { Metadata } from 'next';
 import { siteConfig } from '@/config/site';
 import { pageService } from '@/services/PageService';
 import { MediaService } from '@/services/MediaService';
-import { serviceCatalogService } from '@/services';
+import { serviceCatalogService } from '@/services/ServiceCatalogService';
 import { ServicesPageContent } from '@/domains/cms/models';
 
 import { ServicesHeroSection, ServicesCatalogSection } from '@/components/sections/services';
@@ -12,7 +15,7 @@ import { TrustBarSection as TrustBar } from '@/components/sections/about';
 import { ErrorState, EmptyState } from '@/components/common';
 
 export const metadata: Metadata = {
-  title: `Clinical & Diagnostic Services | ${siteConfig.name}`,
+  title: \`Clinical & Diagnostic Services | \${siteConfig.name}\`,
   description: 'Explore our comprehensive range of clinical and diagnostic services.',
 };
 
@@ -41,7 +44,7 @@ const defaultTrustBarData = [
 ];
 
 export default async function ServicesPage() {
-  const [page, catalogResult] = await Promise.all([
+  const [pageResult, catalogResult] = await Promise.all([
     pageService.getPageById('services'),
     serviceCatalogService.getCatalog(1, 100),
   ]);
@@ -52,6 +55,7 @@ export default async function ServicesPage() {
 
   const catalog = catalogResult.value.data;
   
+  const page = pageResult.isSuccess ? pageResult.value : null;
   let content: ServicesPageContent | null = null;
   
   if (page?.publishedContent) {
@@ -113,3 +117,7 @@ export default async function ServicesPage() {
     </>
   );
 }
+`;
+
+fs.writeFileSync(path.join(process.cwd(), 'app', '(public)', 'services', 'page.tsx'), code, 'utf8');
+console.log("Created public services page");

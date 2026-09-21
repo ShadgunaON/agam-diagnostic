@@ -58,6 +58,17 @@ const CMS_PAGES = [
       { id: 'reviewsCta',         label: 'Reviews CTA' },
       { id: 'bottomCta',          label: 'Bottom CTA' },
     ],
+  },
+  {
+    id: 'services',
+    label: 'Services',
+    href: '/admin/website/pages/services',
+    sections: [
+      { id: 'hero',               label: 'Hero Section' },
+      { id: 'trustFeatures',      label: 'Trust Bar' },
+      { id: 'catalog',            label: 'Services Catalog' },
+      { id: 'bottomCta',          label: 'Bottom CTA' },
+    ],
   }
 ];
 

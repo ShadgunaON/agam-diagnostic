@@ -179,3 +179,30 @@ export interface AboutPageContent {
     primaryActionLink?: string;
   };
 }
+
+export interface ServicesPageContent {
+  hero?: {
+    isVisible?: boolean;
+    eyebrow?: string;
+    title?: string;
+    description?: string;
+    image?: string;
+    badges?: string[];
+  };
+  trustFeatures?: {
+    isVisible?: boolean;
+    items?: Array<{ title: string; description: string; icon: string }>;
+  };
+  catalog?: {
+    isVisible?: boolean;
+  };
+  bottomCta?: {
+    isVisible?: boolean;
+    title?: string;
+    description?: string;
+    primaryActionLabel?: string;
+    primaryActionLink?: string;
+    secondaryActionLabel?: string;
+    secondaryActionLink?: string;
+  };
+}

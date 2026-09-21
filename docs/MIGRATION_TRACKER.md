@@ -1743,3 +1743,15 @@ ame, phone, and email. AppSync immediately rejected the entire query with a vali
 - [x] The frontend route folders (/admin/bookings, etc.) still exist locally and were intentionally not deleted.
 - [x] This is a UI-only change to align the current CMS/Admin capabilities.
 
+
+---
+
+## 2026-09-21: Services Page CMS Implementation (Draft/Publish)
+- Implemented Services Page CMS under Website -> Pages -> Services.
+- Sections covered: Hero Section, Trust Bar, Services Catalog Visibility, Bottom CTA.
+- Retained established Catalog -> Services data architecture as the single source of truth for the actual service list.
+- Configured secure Draft/Publish flow utilizing the PageService.
+- Confirmed full Preview mode securely rendering Draft content for Admins via AdminAuthGuard.
+- Verified TypeScript compilation and Production Build success.
+- Checked off consistency requirements (changes immediately render on public load).
+- Changes are verified and tested but NOT committed/pushed/deployed as per instructions.
